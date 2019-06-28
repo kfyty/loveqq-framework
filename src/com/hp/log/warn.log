@@ -1,0 +1,44 @@
+2019-06-27 16:44:16 下午 [Thread: main][ Class:com.alibaba.druid.pool.DruidDataSource >> Method: com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:966) ]
+ERROR:{dataSource-1} init error
+java.sql.SQLException: url not set
+	at com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:872)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:1300)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:1296)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:109)
+	at selectList(SqlSession.java:114)
+	at com.kfyty.jdbc.SqlSession.invoke(SqlSession.java:97)
+	at com.sun.proxy.$Proxy0.findAllTjzbMore(Unknown Source)
+	at com.kfyty.Main.main(Main.java:26)
+2019-06-27 16:45:33 下午 [Thread: main][ Class:com.alibaba.druid.pool.DruidDataSource >> Method: com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:966) ]
+ERROR:{dataSource-1} init error
+java.sql.SQLException: url not set
+	at com.alibaba.druid.pool.DruidDataSource.init(DruidDataSource.java:872)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:1300)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:1296)
+	at com.alibaba.druid.pool.DruidDataSource.getConnection(DruidDataSource.java:109)
+	at selectList(SqlSession.java:114)
+	at com.kfyty.jdbc.SqlSession.invoke(SqlSession.java:97)
+	at com.sun.proxy.$Proxy0.findAllTjzbMore(Unknown Source)
+	at com.kfyty.Main.main(Main.java:26)
+2019-06-27 16:57:08 下午 [Thread: main][ Class:com.kfyty.util.DataSourceUtil >> Method: com.kfyty.util.DataSourceUtil.getDataSource(DataSourceUtil.java:24) ]
+ERROR:load properties failed:
+java.lang.NullPointerException
+	at java.util.Properties$LineReader.readLine(Properties.java:434)
+	at java.util.Properties.load0(Properties.java:353)
+	at java.util.Properties.load(Properties.java:341)
+	at com.kfyty.util.DataSourceUtil.getDataSource(DataSourceUtil.java:21)
+	at com.kfyty.Main.main(Main.java:24)
+2019-06-28 11:49:52 上午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:72) ]
+ERROR:cannot find parameter:[id] from method @Param!
+2019-06-28 12:05:37 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:72) ]
+ERROR:cannot find parameter:[test.id] from method @Param annotation !
+2019-06-28 12:05:37 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:72) ]
+ERROR:cannot find parameter:[test.name] from method @Param annotation !
+2019-06-28 12:56:57 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:77) ]
+ERROR:cannot find parameter:[test.id] from method @Param annotation !
+2019-06-28 12:58:01 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:77) ]
+ERROR:cannot find parameter:[test.id] from method @Param annotation !
+2019-06-28 12:59:12 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:77) ]
+ERROR:cannot find parameter:[test.id] from method @Param annotation !
+2019-06-28 12:59:41 下午 [Thread: main][ Class:com.kfyty.jdbc.SqlSession >> Method: com.kfyty.jdbc.SqlSession.parseSQL(SqlSession.java:77) ]
+ERROR:cannot find parameter:[test.id] from method @Param annotation !
