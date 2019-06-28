@@ -73,9 +73,13 @@ public class SqlSession implements InvocationHandler {
     }
 
     public Map<String, Object> parseSQL(String sql, Map<String, Object> parameters) throws NoSuchFieldException, IllegalAccessException {
-        List<String> params = this.getParamFromSQL(sql);
         List<Object> args = new ArrayList<>();
-        for(String param : params) {
+        Map<String, List<String>> params = this.getParamFromSQL(sql);
+        for(String param : params.get("$")) {
+            Object o = (param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param));
+            sql = sql.replace("${" + param + "}", o.toString());
+        }
+        for(String param : params.get("#")) {
             Object o = param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
             if(o == null) {
                 log.error("cannot find parameter:[{}] from method @Param annotation !", param);
@@ -142,8 +146,8 @@ public class SqlSession implements InvocationHandler {
         return list;
     }
 
-    public String replaceParam(String sql, List<String> params) {
-        for(String param : params) {
+    public String replaceParam(String sql, Map<String, List<String>> params) {
+        for(String param : params.get("#")) {
             sql = sql.replace("#{" + param + "}", "?");
         }
         return sql;
@@ -172,17 +176,20 @@ public class SqlSession implements InvocationHandler {
         return params;
     }
 
-    public List<String> getParamFromSQL(String sql) {
+    public Map<String, List<String>> getParamFromSQL(String sql) {
         int begin = 0;
         int end = begin;
-        List<String> params = new ArrayList<>();
+        Map<String, List<String>> params = new HashMap<>();
+        params.put("#", new ArrayList<>());
+        params.put("$", new ArrayList<>());
         while(begin != -1 && end != -1) {
-            begin = sql.indexOf("#{", end);
+            begin = Math.min(sql.indexOf("#{", end), sql.indexOf("${", end));
+            begin = begin != -1 ? begin : Math.max(sql.indexOf("#{", end), sql.indexOf("${", end));
             end = sql.indexOf("}", begin);
             if(begin == -1 || end == -1) {
                 break;
             }
-            params.add(sql.substring(begin + 2, end));
+            Object o = sql.charAt(begin) == '#' ? params.get("#").add(sql.substring(begin + 2, end)) : params.get("$").add(sql.substring(begin + 2, end));
         }
         return params;
     }

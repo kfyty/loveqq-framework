@@ -17,6 +17,6 @@ public class Main  {
     public static void main(String[] args) throws Exception {
         SqlSession session = new SqlSession(DataSourceUtil.getDataSource("/druid.properties"));
         TestMapper testMapper = (TestMapper) session.getProxyObject(TestMapper.class);
-        testMapper.findAllTest().stream().forEach(System.out::println);
+        testMapper.findTestLike(5, "t").stream().forEach(System.out::println);
     }
 }
