@@ -40,8 +40,8 @@ public class SqlSession implements InvocationHandler {
         return method.invoke(this, returnType, map.get("sql"), map.get("args"));
     }
 
-    public Object getProxyObject(Class<?> interfaces) {
-        return Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {interfaces}, this);
+    public <T> T getProxyObject(Class<T> interfaces) {
+        return (T) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {interfaces}, this);
     }
 
     public Class<?> getReturnType(Method method) {
