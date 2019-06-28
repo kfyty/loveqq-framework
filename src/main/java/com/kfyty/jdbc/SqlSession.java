@@ -49,9 +49,22 @@ public class SqlSession implements InvocationHandler {
         return type instanceof ParameterizedType ? (Class<?>)((ParameterizedType) type).getActualTypeArguments()[0] : method.getReturnType();
     }
 
+    public Annotation[] getAnnotationFromMethod(Method method) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        List<Annotation> annotations = new ArrayList<>();
+        for(Annotation annotation : method.getAnnotations()) {
+            Object o = annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
+            if(o instanceof String) {
+                annotations.add(annotation);
+                continue;
+            }
+            annotations.addAll(Arrays.asList((Annotation[]) o));
+        }
+        return annotations.toArray(new Annotation[0]);
+    }
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Annotation[] annotations = method.getAnnotations();
+        Annotation[] annotations = this.getAnnotationFromMethod(method);
         if(annotations.length == 1) {
             return this.query(this.getReturnType(method), annotations[0], this.getParamFromMethod(method.getParameters(), args));
         }

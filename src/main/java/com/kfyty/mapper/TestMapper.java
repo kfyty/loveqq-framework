@@ -19,7 +19,8 @@ import java.util.List;
 public interface TestMapper {
 
     @SelectOne("select * from test where id = #{id}")
-    public Test findTestById(@Param("id") Integer id) throws SQLException;
+    @SelectOne("select * from test where name = #{name}")
+    public List<Test> findTestById(@Param("id") Integer id, @Param("name") String name) throws SQLException;
 
     @SelectList("select * from test")
     public List<Test> findAllTest() throws SQLException;
