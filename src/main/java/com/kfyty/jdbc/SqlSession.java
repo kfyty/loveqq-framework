@@ -101,8 +101,7 @@ public class SqlSession implements InvocationHandler {
     public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException {
         try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
              ResultSet resultSet = preparedStatement.executeQuery()) {
-            List<T> list =  fillObject(resultSet, clazz);
-            return list;
+            return fillObject(resultSet, clazz);
         } finally {
             this.close();
         }
