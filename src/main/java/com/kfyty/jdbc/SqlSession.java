@@ -93,23 +93,27 @@ public class SqlSession implements InvocationHandler {
         return map;
     }
 
-    public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws Exception {
+    public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException {
         List<T> list = selectList(clazz, sql, params);
         return list == null || list.size() == 0 ? null : list.get(0);
     }
 
     public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException {
-        PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        List<T> list =  fillObject(resultSet, clazz);
-        preparedStatement.close();
-        return list;
+        try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            List<T> list =  fillObject(resultSet, clazz);
+            return list;
+        } finally {
+            this.close();
+        }
     }
 
-    public void execute(@Nullable Class<?> non, String sql, Object ... params) throws Exception {
-        PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
-        preparedStatement.execute();
-        preparedStatement.close();
+    public void execute(@Nullable Class<?> non, String sql, Object ... params) throws SQLException {
+        try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params)) {
+            preparedStatement.execute();
+        } finally {
+            this.close();
+        }
     }
 
     public PreparedStatement getPreparedStatement(String sql, Object ... params) throws SQLException {
@@ -195,11 +199,9 @@ public class SqlSession implements InvocationHandler {
     }
 
     public void close() throws SQLException {
-        synchronized (this) {
-            if(!dataSource.getConnection().isClosed()) {
-                dataSource.getConnection().close();
-            }
-            dataSource = null;
+        if(this.dataSource.getConnection().isClosed()) {
+            return;
         }
+        this.dataSource.getConnection().close();
     }
 }
