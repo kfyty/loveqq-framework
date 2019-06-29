@@ -25,7 +25,7 @@ public interface TestMapper {
     @SelectList("select * from test")
     public List<Test> findAllTest() throws SQLException;
 
-    @SelectList("select * from test where id = #{id} and name like '%${value}%'")
+    @SelectList("select * from test where id = #{id} or name like '%${value}%'")
     public List<Test> findTestLike(@Param("id") Integer id, @Param("value") String value) throws SQLException;
 
     @Execute("insert into test values (#{test.id}, #{test.name})")

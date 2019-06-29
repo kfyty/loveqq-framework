@@ -88,20 +88,23 @@ public class SqlSession implements InvocationHandler {
     public Map<String, Object> parseSQL(String sql, Map<String, Object> parameters) throws NoSuchFieldException, IllegalAccessException {
         List<Object> args = new ArrayList<>();
         Map<String, List<String>> params = this.getParamFromSQL(sql);
-        for(String param : params.get("$")) {
-            Object o = (param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param));
-            sql = sql.replace("${" + param + "}", o.toString());
-        }
-        for(String param : params.get("#")) {
-            Object o = param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
-            if(o == null) {
-                log.error("cannot find parameter:[{}] from method @Param annotation !", param);
-                return null;
+        for(Iterator<Map.Entry<String, List<String>>> i = params.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, List<String>> next = i.next();
+            for(String param : next.getValue()) {
+                Object o = param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
+                if(o == null) {
+                    log.error("cannot find parameter:[{}] from method @Param annotation !", param);
+                    return null;
+                }
+                if(next.getKey().equals("#")) {
+                    args.add(o);
+                    continue;
+                }
+                sql = sql.replace("${" + param + "}", o.toString());
             }
-            args.add(o);
         }
         Map<String, Object> map = new HashMap<>();
-        map.put("sql", this.replaceParam(sql, params));
+        map.put("sql", this.replaceParam(sql, params.get("#")));
         map.put("args", args.toArray());
         return map;
     }
@@ -162,8 +165,8 @@ public class SqlSession implements InvocationHandler {
         return list;
     }
 
-    public String replaceParam(String sql, Map<String, List<String>> params) {
-        for(String param : params.get("#")) {
+    public String replaceParam(String sql, List<String> params) {
+        for(String param : params) {
             sql = sql.replace("#{" + param + "}", "?");
         }
         return sql;
