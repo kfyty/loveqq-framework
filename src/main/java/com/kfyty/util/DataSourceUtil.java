@@ -15,7 +15,7 @@ import java.util.Properties;
  */
 @Slf4j
 public class DataSourceUtil {
-    public static DataSource getDataSource(String propertiesPath) {
+    public static DataSource getDruidDataSource(String propertiesPath) {
         try {
             Properties properties = new Properties();
             properties.load(DataSourceUtil.class.getResourceAsStream(propertiesPath));

@@ -53,11 +53,11 @@ public class SqlSession implements InvocationHandler {
         List<Annotation> annotations = new ArrayList<>();
         for(Annotation annotation : method.getAnnotations()) {
             Object o = annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
-            if(o instanceof String) {
-                annotations.add(annotation);
+            if(o.getClass().isArray()) {
+                annotations.addAll(Arrays.asList((Annotation[]) o));
                 continue;
             }
-            annotations.addAll(Arrays.asList((Annotation[]) o));
+            annotations.add(annotation);
         }
         return annotations.toArray(new Annotation[0]);
     }
@@ -110,8 +110,7 @@ public class SqlSession implements InvocationHandler {
     }
 
     public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException {
-        List<T> list = selectList(clazz, sql, params);
-        return list == null || list.size() == 0 ? null : list.get(0);
+        return Optional.ofNullable(selectList(clazz, sql, params)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
     }
 
     public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException {
@@ -142,9 +141,14 @@ public class SqlSession implements InvocationHandler {
         return preparedStatement;
     }
 
+    public Map<String, Field> getSuperClassField(Class<?> clazz, boolean containPrivate) {
+        return Arrays.stream(clazz.getSuperclass().getDeclaredFields()).filter(e -> containPrivate ? true : !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(e -> e.getName(), e -> e));
+    }
+
     public  <T> List<T> fillObject(ResultSet resultSet, Class<T> clazz) throws SQLException, IllegalAccessException, InstantiationException {
         List<T> list = new ArrayList<>();
         Map<String, Field> fieldMap = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(e -> e.getName(), e -> e));
+        fieldMap.putAll(this.getSuperClassField(clazz, false));
         while (resultSet.next()) {
             T o = clazz.newInstance();
             ResultSetMetaData metaData = resultSet.getMetaData();
