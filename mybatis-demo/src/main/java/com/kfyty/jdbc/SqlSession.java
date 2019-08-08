@@ -28,6 +28,11 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SqlSession implements InvocationHandler {
+    private static final String[] NUMBER_TYPE = {
+            "byte", "short", "int", "long", "float", "double",
+            "Byte", "Short", "Integer", "Long", "Float", "Double", "String"
+    };
+
     @Setter
     private DataSource dataSource;
 
@@ -88,8 +93,7 @@ public class SqlSession implements InvocationHandler {
     public Map<String, Object> parseSQL(String sql, Map<String, Object> parameters) throws NoSuchFieldException, IllegalAccessException {
         List<Object> args = new ArrayList<>();
         Map<String, List<String>> params = this.getParamFromSQL(sql);
-        for(Iterator<Map.Entry<String, List<String>>> i = params.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry<String, List<String>> next = i.next();
+        for(Map.Entry<String, List<String>> next : params.entrySet()) {
             for(String param : next.getValue()) {
                 Object o = param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
                 if(o == null) {
@@ -109,7 +113,15 @@ public class SqlSession implements InvocationHandler {
         return map;
     }
 
-    public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException {
+    public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
+        if(Arrays.stream(NUMBER_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
+            try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                return Optional.ofNullable(this.fillBaseType(resultSet, clazz)).orElse(null);
+            } finally {
+                this.close();
+            }
+        }
         return Optional.ofNullable(selectList(clazz, sql, params)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
     }
 
@@ -142,12 +154,25 @@ public class SqlSession implements InvocationHandler {
     }
 
     public Map<String, Field> getSuperClassField(Class<?> clazz, boolean containPrivate) {
-        return Arrays.stream(clazz.getSuperclass().getDeclaredFields()).filter(e -> containPrivate ? true : !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(e -> e.getName(), e -> e));
+        return Arrays.stream(clazz.getSuperclass().getDeclaredFields()).filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e));
+    }
+
+    public <T> Class<T> convert2Wrapper(Class<T> clazz) throws ClassNotFoundException {
+        String type = clazz.getSimpleName();
+        return Character.isUpperCase(type.charAt(0)) ? clazz :
+                type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
+    }
+
+    public <T> T fillBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ClassNotFoundException {
+        if(resultSet == null || !resultSet.next()) {
+            log.error("fill number error: result set:[{}]", resultSet);
+        }
+        return this.convert2Wrapper(clazz).getConstructor(String.class).newInstance(resultSet.getString(1));
     }
 
     public  <T> List<T> fillObject(ResultSet resultSet, Class<T> clazz) throws SQLException, IllegalAccessException, InstantiationException {
         List<T> list = new ArrayList<>();
-        Map<String, Field> fieldMap = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(e -> e.getName(), e -> e));
+        Map<String, Field> fieldMap = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e));
         fieldMap.putAll(this.getSuperClassField(clazz, false));
         while (resultSet.next()) {
             T o = clazz.newInstance();
@@ -177,7 +202,7 @@ public class SqlSession implements InvocationHandler {
     }
 
     public String getFieldName(String column) {
-        column = Optional.ofNullable(column).map(e -> e.toLowerCase()).orElseThrow(() -> new NullPointerException("column is null"));
+        column = Optional.ofNullable(column).map(String::toLowerCase).orElseThrow(() -> new NullPointerException("column is null"));
         while(column.contains("_")) {
             int index = column.indexOf('_');
             if(index < column.length() - 1) {
