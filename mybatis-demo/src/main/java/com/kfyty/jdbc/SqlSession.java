@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -135,37 +136,34 @@ public class SqlSession implements InvocationHandler {
     }
 
     public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
-        if(Arrays.stream(NUMBER_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
-            try (Connection connection = dataSource.getConnection();
-                 PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
-                if(log.isDebugEnabled()) {
-                    log.debug(": {} --> execute sql statement:[{}] --> parameters:{} --> return type:[{}]", ++count, sql, params, clazz);
-                }
-                return Optional.ofNullable(this.fillBaseType(resultSet, clazz)).orElse(null);
-            }
-        }
         return Optional.ofNullable(selectList(clazz, sql, params)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
     }
 
-    public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException {
+    public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params);
              ResultSet resultSet = preparedStatement.executeQuery()) {
+            List<T> list = fillObject(resultSet, clazz);
             if(log.isDebugEnabled()) {
-                log.debug(": {} --> execute sql statement:[{}] --> parameters:{} --> return type:[{}]", ++count, sql, params, clazz);
+                log.debug(": {} --> executed sql statement:[{}] --> parameters:{} --> return type:[{}]", ++count, sql, params, clazz);
             }
-            return fillObject(resultSet, clazz);
+            return list;
+        } catch(SQLException e) {
+            log.error(": {} --> failed execute sql statement:[{}] --> parameters:{}", ++count, sql, params);
+            throw e;
         }
     }
 
     public void execute(@Nullable Class<?> non, String sql, Object ... params) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params)) {
-            if(log.isDebugEnabled()) {
-                log.debug(": {} --> execute sql statement:[{}] --> parameters:{}", ++count, sql, params);
-            }
             preparedStatement.execute();
+            if(log.isDebugEnabled()) {
+                log.debug(": {} --> executed sql statement:[{}] --> parameters:{}", ++count, sql, params);
+            }
+        } catch(SQLException e) {
+            log.error(": {} --> failed execute sql statement:[{}] --> parameters:{}", ++count, sql, params);
+            throw e;
         }
     }
 
@@ -173,6 +171,9 @@ public class SqlSession implements InvocationHandler {
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         for(int i = 0; params != null && i < params.length; i++) {
             preparedStatement.setObject(i + 1, params[i]);
+        }
+        if(log.isDebugEnabled()) {
+            log.debug(": {} --> prepare statement:[{}] --> parameters:{}", count + 1, sql, params);
         }
         return preparedStatement;
     }
@@ -187,14 +188,22 @@ public class SqlSession implements InvocationHandler {
                 type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
     }
 
-    public <T> T fillBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ClassNotFoundException {
-        if(resultSet == null || !resultSet.next()) {
+    public <T> List<T> fillBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ClassNotFoundException {
+        if(resultSet == null) {
             log.error("fill number error: result set:[{}]", resultSet);
         }
-        return this.convert2Wrapper(clazz).getConstructor(String.class).newInstance(resultSet.getString(1));
+        List<T> list = new ArrayList<>();
+        Constructor<T> constructor = this.convert2Wrapper(clazz).getConstructor(String.class);
+        while(resultSet.next()) {
+            list.add(constructor.newInstance(resultSet.getString(1)));
+        }
+        return list;
     }
 
-    public  <T> List<T> fillObject(ResultSet resultSet, Class<T> clazz) throws SQLException, IllegalAccessException, InstantiationException {
+    public  <T> List<T> fillObject(ResultSet resultSet, Class<T> clazz) throws SQLException, IllegalAccessException, InstantiationException, NoSuchMethodException, ClassNotFoundException, InvocationTargetException {
+        if(Arrays.stream(NUMBER_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
+            return this.fillBaseType(resultSet, clazz);
+        }
         List<T> list = new ArrayList<>();
         Map<String, Field> fieldMap = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e));
         fieldMap.putAll(this.getSuperClassField(clazz, false));
