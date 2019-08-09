@@ -2,19 +2,33 @@ package com.kfyty.jdbc;
 
 import com.kfyty.annotation.Param;
 import com.sun.istack.internal.Nullable;
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -26,15 +40,22 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @NoArgsConstructor
-@AllArgsConstructor
 public class SqlSession implements InvocationHandler {
     private static final String[] NUMBER_TYPE = {
             "byte", "short", "int", "long", "float", "double",
             "Byte", "Short", "Integer", "Long", "Float", "Double", "String"
     };
 
+    @Getter
+    private Integer count;
+
     @Setter
     private DataSource dataSource;
+
+    public SqlSession(DataSource dataSource) {
+        this.count = 0;
+        this.dataSource = dataSource;
+    }
 
     private Object query(Class<?> returnType, Annotation annotation, Map<String, Object> params) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
         String annotationName = annotation.annotationType().getSimpleName();
@@ -97,7 +118,7 @@ public class SqlSession implements InvocationHandler {
             for(String param : next.getValue()) {
                 Object o = param.contains(".") ? this.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
                 if(o == null) {
-                    log.error("cannot find parameter:[{}] from method @Param annotation !", param);
+                    log.error(": cannot find parameter:[{}] from method @Param annotation !", param);
                     return null;
                 }
                 if(next.getKey().equals("#")) {
@@ -115,40 +136,43 @@ public class SqlSession implements InvocationHandler {
 
     public <T> T selectOne(Class<T> clazz, String sql, Object ... params) throws IllegalAccessException, SQLException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
         if(Arrays.stream(NUMBER_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
-            try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
+            try (Connection connection = dataSource.getConnection();
+                 PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params);
                  ResultSet resultSet = preparedStatement.executeQuery()) {
+                if(log.isDebugEnabled()) {
+                    log.debug(": {} --> execute sql statement:[{}] --> parameters:{} --> return type:[{}]", ++count, sql, params, clazz);
+                }
                 return Optional.ofNullable(this.fillBaseType(resultSet, clazz)).orElse(null);
-            } finally {
-                this.close();
             }
         }
         return Optional.ofNullable(selectList(clazz, sql, params)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
     }
 
     public <T> List<T> selectList(Class<T> clazz, String sql, Object ... params) throws SQLException, InstantiationException, IllegalAccessException {
-        try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params);
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params);
              ResultSet resultSet = preparedStatement.executeQuery()) {
+            if(log.isDebugEnabled()) {
+                log.debug(": {} --> execute sql statement:[{}] --> parameters:{} --> return type:[{}]", ++count, sql, params, clazz);
+            }
             return fillObject(resultSet, clazz);
-        } finally {
-            this.close();
         }
     }
 
     public void execute(@Nullable Class<?> non, String sql, Object ... params) throws SQLException {
-        try (PreparedStatement preparedStatement = this.getPreparedStatement(sql, params)) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = this.getPreparedStatement(connection, sql, params)) {
+            if(log.isDebugEnabled()) {
+                log.debug(": {} --> execute sql statement:[{}] --> parameters:{}", ++count, sql, params);
+            }
             preparedStatement.execute();
-        } finally {
-            this.close();
         }
     }
 
-    public PreparedStatement getPreparedStatement(String sql, Object ... params) throws SQLException {
-        PreparedStatement preparedStatement = dataSource.getConnection().prepareStatement(sql);
+    public PreparedStatement getPreparedStatement(Connection connection, String sql, Object ... params) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
         for(int i = 0; params != null && i < params.length; i++) {
             preparedStatement.setObject(i + 1, params[i]);
-        }
-        if(log.isDebugEnabled()) {
-            log.debug("execute sql statement:[{}], parameters:{}", sql, params);
         }
         return preparedStatement;
     }
@@ -240,12 +264,5 @@ public class SqlSession implements InvocationHandler {
             Object o = sql.charAt(begin) == '#' ? params.get("#").add(sql.substring(begin + 2, end)) : params.get("$").add(sql.substring(begin + 2, end));
         }
         return params;
-    }
-
-    public void close() throws SQLException {
-        if(this.dataSource.getConnection().isClosed()) {
-            return;
-        }
-        this.dataSource.getConnection().close();
     }
 }
