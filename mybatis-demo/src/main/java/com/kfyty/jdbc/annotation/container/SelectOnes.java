@@ -1,6 +1,6 @@
-package com.kfyty.annotation.container;
+package com.kfyty.jdbc.annotation.container;
 
-import com.kfyty.annotation.SelectOne;
+import com.kfyty.jdbc.annotation.SelectOne;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

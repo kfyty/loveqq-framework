@@ -1,6 +1,6 @@
-package com.kfyty.annotation;
+package com.kfyty.jdbc.annotation;
 
-import com.kfyty.annotation.container.SelectLists;
+import com.kfyty.jdbc.annotation.container.SelectOnes;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -10,7 +10,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(SelectLists.class)
-public @interface SelectList {
+@Repeatable(SelectOnes.class)
+public @interface SelectOne {
     String value() default "";
+
+    SubQuery[] subQuery() default {};
 }

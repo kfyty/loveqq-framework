@@ -1,12 +1,12 @@
-package com.kfyty.annotation;
+package com.kfyty.generate.pojo.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.PARAMETER)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Param {
-    String value() default "";
+public @interface FileSuffix {
+    String value() default "Pojo.java";
 }
