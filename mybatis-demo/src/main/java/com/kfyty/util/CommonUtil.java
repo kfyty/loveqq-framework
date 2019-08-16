@@ -3,13 +3,14 @@ package com.kfyty.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
  * 功能描述: 通用工具类
  *
- * @author zhangkun@wisdombud.com
+ * @author kfyty725@hotmail.com
  * @date 2019/6/27 11:07
  * @since JDK 1.8
  */
@@ -24,6 +25,10 @@ public class CommonUtil {
 
     public static boolean empty(Collection c) {
         return !Optional.ofNullable(c).filter(e -> !e.isEmpty()).isPresent();
+    }
+
+    public static boolean empty(Map m) {
+        return !Optional.ofNullable(m).filter(e -> !e.isEmpty()).isPresent();
     }
 
     public static String getStackTrace(Throwable throwable) {

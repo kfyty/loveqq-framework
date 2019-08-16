@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * 功能描述: 数据库信息
  *
- * @author zhangkun@wisdombud.com
+ * @author kfyty725@hotmail.com
  * @date 2019/8/12 11:18
  * @since JDK 1.8
  */

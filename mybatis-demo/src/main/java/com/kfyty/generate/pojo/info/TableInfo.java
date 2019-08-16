@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 功能描述: 数据表信息
  *
- * @author zhangkun@wisdombud.com
+ * @author kfyty725@hotmail.com
  * @date 2019/8/12 17:17
  * @since JDK 1.8
  */

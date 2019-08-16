@@ -13,4 +13,6 @@ import java.lang.annotation.Target;
 @Repeatable(Executes.class)
 public @interface Execute {
     String value() default "";
+
+    ForEach[] forEach() default {};
 }

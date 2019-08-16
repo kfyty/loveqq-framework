@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * 功能描述: 生成 pojo
  *
- * @author zhangkun@wisdombud.com
+ * @author kfyty725@hotmail.com
  * @date 2019/8/12 10:28
  * @since JDK 1.8
  */

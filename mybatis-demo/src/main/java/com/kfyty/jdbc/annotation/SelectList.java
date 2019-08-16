@@ -14,5 +14,7 @@ import java.lang.annotation.Target;
 public @interface SelectList {
     String value() default "";
 
+    ForEach[] forEach() default {};
+
     SubQuery[] subQuery() default {};
 }
