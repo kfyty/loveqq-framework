@@ -37,6 +37,8 @@ public class GeneratePojoConfigurable {
 
     private Set<String> tables;
 
+    private String queryTableSql;
+
     private String packageName;
 
     private String fileSuffix;
@@ -61,6 +63,7 @@ public class GeneratePojoConfigurable {
         this.dataBaseMapper = Optional.ofNullable(configurationClass.getMethod("dataBaseMapping").getAnnotation(DataBaseMapping.class)).map(DataBaseMapping::value).orElse(null);
         this.dataBaseName = Optional.ofNullable(configurationClass.getMethod("dataBaseName").getAnnotation(DataBase.class)).map(DataBase::value).orElse(null);
         this.tables = Optional.ofNullable(configurationClass.getMethod("table").getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value())).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
+        this.queryTableSql = Optional.ofNullable(configurationClass.getMethod("table").getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
         this.packageName = Optional.ofNullable(configurationClass.getMethod("packageName").getAnnotation(Package.class)).map(Package::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getMethod("filePath").getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
         this.sameFile = Optional.ofNullable(configurationClass.getMethod("sameFile").getAnnotation(SameFile.class)).map(SameFile::value).orElse(null);

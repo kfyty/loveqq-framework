@@ -2,6 +2,7 @@ package com.kfyty.generate.pojo.database;
 
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
 import com.kfyty.generate.pojo.info.AbstractTableInfo;
+import com.kfyty.jdbc.annotation.SelectList;
 
 import java.util.List;
 
@@ -14,7 +15,14 @@ import java.util.List;
  */
 public interface DataBaseMapper {
 
+    @SelectList
+    default List<String> findTableList() {
+        return null;
+    }
+
+    @SelectList
     List<? extends AbstractDataBaseInfo> findDataBaseInfo(String dataBaseName);
 
+    @SelectList
     List<? extends AbstractTableInfo> findTableInfo(String dataBaseName, String tableName);
 }

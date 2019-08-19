@@ -106,6 +106,9 @@ public class SqlSession implements InvocationHandler {
      */
     private String parseForEach(Annotation annotation, Map<String, Object> params) throws Exception {
         String sql = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
+        if(CommonUtil.empty(sql)) {
+            throw new NullPointerException("sql statement is null !");
+        }
         if(!(annotation instanceof SelectList || annotation instanceof Execute)) {
             return sql;
         }

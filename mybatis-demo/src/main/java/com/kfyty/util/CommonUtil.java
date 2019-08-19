@@ -2,6 +2,10 @@ package com.kfyty.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -52,21 +56,11 @@ public class CommonUtil {
         return !isClass ? s : s.length() == 1 ? Character.toUpperCase(s.charAt(0)) + "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
-    public static String getBinaryBit(int n) {
-        int bit = Integer.SIZE;
-        StringBuilder result = new StringBuilder(bit);
-        for(int i = 0; i < bit; i++) {
-            result.append(n << i >> bit - 1 == -1 ? '1' : '0');
-        }
-        return result.toString();
-    }
-
-    public static String getBinaryBit(long n) {
-        int bit = Long.SIZE;
-        StringBuilder result = new StringBuilder(bit);
-        for(int i = 0; i < bit; i++) {
-            result.append(n << i >> bit - 1 == -1 ? '1' : '0');
-        }
-        return result.toString();
+    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
+        InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
+        Field field = invocationHandler.getClass().getDeclaredField("memberValues");
+        field.setAccessible(true);
+        Map memberValues = (Map) field.get(invocationHandler);
+        memberValues.put(annotationField, value);
     }
 }

@@ -5,6 +5,7 @@ import com.kfyty.generate.pojo.configuration.GeneratePojoConfiguration;
 import com.kfyty.generate.pojo.database.DataBaseMapper;
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
 import com.kfyty.jdbc.SqlSession;
+import com.kfyty.jdbc.annotation.SelectList;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,8 +13,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -64,13 +67,23 @@ public class GeneratePojo {
         log.debug(": generate resource:[{}] success --> [{}]", this.file.getName(), this.file.getAbsolutePath());
     }
 
-    public void generate() throws IOException {
+    private List<? extends AbstractDataBaseInfo> handleDataBaseInfo(DataBaseMapper dataBaseMapper) throws Exception {
+        Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
+        if(!CommonUtil.empty(configurable.getQueryTableSql())) {
+            SelectList annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(SelectList.class);
+            CommonUtil.setAnnotationValue(annotation, "value", configurable.getQueryTableSql());
+            tables.addAll(dataBaseMapper.findTableList());
+        }
+        List<? extends AbstractDataBaseInfo> dataBaseInfo = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
+        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.ofNullable(configurable.getTables()).filter(e -> !e.isEmpty()).map(e -> dataBaseInfo.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
+        return CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfo : filteredDataBaseInfo;
+    }
+
+    public void generate() throws Exception {
         SqlSession sqlSession = new SqlSession(configurable.getDataSource());
         DataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
-        List<? extends AbstractDataBaseInfo> dataBaseInfo = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
-        List<? extends AbstractDataBaseInfo> dataBaseInfos = Optional.ofNullable(configurable.getTables()).filter(e -> !e.isEmpty()).map(e -> dataBaseInfo.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
-        dataBaseInfos = CommonUtil.empty(dataBaseInfos) ? dataBaseInfo : dataBaseInfos;
-        for (AbstractDataBaseInfo info : dataBaseInfos) {
+        List<? extends AbstractDataBaseInfo> dataBaseInfo = handleDataBaseInfo(dataBaseMapper);
+        for (AbstractDataBaseInfo info : dataBaseInfo) {
             info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));
             this.write(info);
         }
