@@ -30,9 +30,12 @@ import java.util.stream.Collectors;
 public class GeneratePojo {
     private File file;
 
+    private SqlSession sqlSession;
+
     private GeneratePojoConfigurable configurable;
 
     public GeneratePojo(GeneratePojoConfiguration pojoConfiguration) throws Exception {
+        this.sqlSession = new SqlSession();
         this.configurable = new GeneratePojoConfigurable(pojoConfiguration);
     }
 
@@ -79,8 +82,18 @@ public class GeneratePojo {
         return CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfo : filteredDataBaseInfo;
     }
 
+    public GeneratePojo refreshGenerateConfiguration(GeneratePojoConfiguration configuration) throws Exception {
+        this.configurable.refreshGenerateConfiguration(configuration);
+        return this;
+    }
+
+    public GeneratePojo refreshGenerateTemplate(GenerateTemplate generateTemplate) throws Exception {
+        this.configurable.refreshGenerateTemplate(generateTemplate);
+        return this;
+    }
+
     public void generate() throws Exception {
-        SqlSession sqlSession = new SqlSession(configurable.getDataSource());
+        this.sqlSession.setDataSource(configurable.getDataSource());
         DataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
         List<? extends AbstractDataBaseInfo> dataBaseInfo = handleDataBaseInfo(dataBaseMapper);
         for (AbstractDataBaseInfo info : dataBaseInfo) {

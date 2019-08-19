@@ -53,6 +53,16 @@ public class GeneratePojoConfigurable {
         this.initGeneratePojoConfigurable(configuration);
     }
 
+    public void refreshGenerateConfiguration(GeneratePojoConfiguration configuration) throws Exception {
+        this.initGeneratePojoConfigurable(configuration);
+    }
+
+    public void refreshGenerateTemplate(GenerateTemplate generateTemplate) throws Exception {
+        this.generateTemplate = Optional.ofNullable(generateTemplate).orElseThrow(() -> new NullPointerException("generate template is null !"));
+        this.fileSuffix = Optional.ofNullable(generateTemplate.fileSuffix()).orElse("");
+        this.fileTypeSuffix = Optional.ofNullable(generateTemplate.fileTypeSuffix()).orElse("");
+    }
+
     private void initGeneratePojoConfigurable(GeneratePojoConfiguration configuration) throws Exception {
         this.initGeneratePojoConfigurableFromAnnotation(configuration);
         this.initGeneratePojoConfigurableFromReturnValue(configuration);
