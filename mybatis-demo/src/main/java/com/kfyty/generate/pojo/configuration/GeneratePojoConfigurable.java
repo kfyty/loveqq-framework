@@ -72,10 +72,10 @@ public class GeneratePojoConfigurable {
     private void initGeneratePojoConfigurableFromReturnValue(GeneratePojoConfiguration configuration) {
         this.dataSource = Optional.ofNullable(configuration.getDataSource()).orElseThrow(() -> new NullPointerException("data source is null !"));
         this.generateTemplate = Optional.ofNullable(configuration.getGenerateTemplate()).orElseThrow(() -> new NullPointerException("generate template is null !"));
-        this.fileSuffix = configuration.getGenerateTemplate().fileSuffix();
-        this.fileTypeSuffix = configuration.getGenerateTemplate().fileTypeSuffix();
+        this.fileSuffix = Optional.ofNullable(configuration.getGenerateTemplate().fileSuffix()).orElse("");
+        this.fileTypeSuffix = Optional.ofNullable(configuration.getGenerateTemplate().fileTypeSuffix()).orElse("");
         if(this.dataBaseMapper == null) {
-            this.dataBaseMapper = configuration.dataBaseMapping();
+            this.dataBaseMapper = Optional.ofNullable(configuration.dataBaseMapping()).orElseThrow(() -> new NullPointerException("data base mapper is null !"));
         }
         if(CommonUtil.empty(this.dataBaseName)) {
             this.dataBaseName = Optional.ofNullable(configuration.dataBaseName()).orElseThrow(() -> new NullPointerException("data base name is null !"));
