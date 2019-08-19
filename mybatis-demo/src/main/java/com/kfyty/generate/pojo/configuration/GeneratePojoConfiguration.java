@@ -1,9 +1,12 @@
 package com.kfyty.generate.pojo.configuration;
 
+import com.kfyty.generate.pojo.GenerateTemplate;
+import com.kfyty.generate.pojo.database.DataBaseMapper;
+
 import javax.sql.DataSource;
 
 /**
- * 功能描述: 生成 pojo 配置接口
+ * 功能描述: 生成 pojo 配置接口，注解优先于返回值
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/12 10:33:20
@@ -13,15 +16,27 @@ public interface GeneratePojoConfiguration {
 
     DataSource getDataSource();
 
-    void dataBaseType();
+    Class<? extends DataBaseMapper> dataBaseMapping();
 
-    void dataBaseName();
+    String dataBaseName();
 
-    void table();
+    default GenerateTemplate getGenerateTemplate() {
+        return new GenerateTemplate() {};
+    }
 
-    void packageName();
+    default String[] table() {
+        return null;
+    }
 
-    void fileSuffix();
+    default String packageName() {
+        return null;
+    }
 
-    void filePath();
+    default String filePath() {
+        return null;
+    }
+
+    default Boolean sameFile() {
+        return false;
+    }
 }

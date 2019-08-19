@@ -10,9 +10,9 @@ import lombok.Data;
  * @since JDK 1.8
  */
 @Data
-public class TableInfo {
-    private String tableName;
-    private String field;
-    private String fieldType;
-    private String fieldComment;
+public class AbstractTableInfo {
+    protected String tableName;
+    protected String field;
+    protected String fieldType;
+    protected String fieldComment;
 }

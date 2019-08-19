@@ -12,9 +12,9 @@ import java.util.List;
  * @since JDK 1.8
  */
 @Data
-public class DataBaseInfo {
-    private String dataBaseName;
-    private String tableName;
-    private String tableComment;
-    private List<TableInfo> tableInfos;
+public class AbstractDataBaseInfo {
+    protected String dataBaseName;
+    protected String tableName;
+    protected String tableComment;
+    protected List<? extends AbstractTableInfo> tableInfos;
 }

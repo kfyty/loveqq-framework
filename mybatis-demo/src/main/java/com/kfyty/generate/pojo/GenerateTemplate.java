@@ -1,7 +1,7 @@
 package com.kfyty.generate.pojo;
 
-import com.kfyty.generate.pojo.info.DataBaseInfo;
-import com.kfyty.generate.pojo.info.TableInfo;
+import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
+import com.kfyty.generate.pojo.info.AbstractTableInfo;
 import com.kfyty.util.CommonUtil;
 
 import java.io.BufferedWriter;
@@ -22,6 +22,8 @@ public interface GenerateTemplate {
                 return "String";
             case "varchar2":
                 return "String";
+            case "nvarchar2" :
+                return "String";
             case "number":
                 return "Long";
             case "int":
@@ -38,12 +40,22 @@ public interface GenerateTemplate {
                 return "Date";
             case "datetime":
                 return "Date";
+            case "blob" :
+                return "byte[]";
             default :
-                return "String";
+                throw new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !");
         }
     }
 
-    default void generate(DataBaseInfo dataBaseInfo, String packageName, BufferedWriter out) throws IOException {
+    default String fileSuffix() {
+        return "Pojo";
+    }
+
+    default String fileTypeSuffix() {
+        return ".java";
+    }
+
+    default void generate(AbstractDataBaseInfo dataBaseInfo, String packageName, BufferedWriter out) throws IOException {
         if(!CommonUtil.empty(packageName)) {
             out.write("package " + packageName + ";\n\n");
         }
@@ -55,8 +67,8 @@ public interface GenerateTemplate {
         out.write(" * By kfyty\n");
         out.write(" */\n");
         generateClassAnnotation(dataBaseInfo, out);
-        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + "Pojo {\n");
-        for (TableInfo tableInfo : dataBaseInfo.getTableInfos()) {
+        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix() + " {\n");
+        for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
             out.write("\t/**\n");
             out.write("\t * " + tableInfo.getFieldComment() + "\n");
             out.write("\t */\n");
@@ -64,19 +76,18 @@ public interface GenerateTemplate {
             out.write("\tprivate " + convert2JavaType(tableInfo.getFieldType()) + " " + CommonUtil.convert2Hump(tableInfo.getField(), false) + ";\n\n");
         }
         out.write("}\n");
-        out.flush();
     }
 
-    default void generateImport(DataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
+    default void generateImport(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
         out.write("import java.util.Date;\n\n");
         out.write("import lombok.Data;\n\n");
     }
 
-    default void generateClassAnnotation(DataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
+    default void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
         out.write("@Data\n");
     }
 
-    default void generateFieldAnnotation(TableInfo tableInfo, BufferedWriter out) throws IOException {
+    default void generateFieldAnnotation(AbstractTableInfo tableInfo, BufferedWriter out) throws IOException {
 
     }
 }

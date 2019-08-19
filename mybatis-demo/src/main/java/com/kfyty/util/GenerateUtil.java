@@ -1,11 +1,7 @@
 package com.kfyty.util;
 
 import com.kfyty.generate.pojo.GeneratePojo;
-import com.kfyty.generate.pojo.GenerateTemplate;
 import com.kfyty.generate.pojo.configuration.GeneratePojoConfiguration;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * 功能描述: 生成资源工具类
@@ -16,19 +12,11 @@ import java.util.List;
  */
 public class GenerateUtil {
 
-    public static void generatePojo(GeneratePojoConfiguration generatePojoConfiguration) throws NoSuchMethodException, IOException {
+    public static void generatePojo(GeneratePojoConfiguration generatePojoConfiguration) throws Exception {
         new GeneratePojo(generatePojoConfiguration).generate();
     }
 
-    public static void generatePojo(List<GeneratePojoConfiguration> generatePojoConfigurations) throws NoSuchMethodException, IOException {
-        new GeneratePojo(generatePojoConfigurations).generate();
-    }
-
-    public static void generatePojo(GeneratePojoConfiguration generatePojoConfiguration, GenerateTemplate generateTemplate) throws NoSuchMethodException, IOException {
-        new GeneratePojo(generatePojoConfiguration, generateTemplate).generate();
-    }
-
-    public static void generatePojo(List<GeneratePojoConfiguration> generatePojoConfigurations, GenerateTemplate generateTemplate) throws NoSuchMethodException, IOException {
-        new GeneratePojo(generatePojoConfigurations, generateTemplate).generate();
+    public static void generatePojo(Class<? extends GeneratePojoConfiguration> generatePojoConfigurationClass) throws Exception {
+        generatePojo(generatePojoConfigurationClass.newInstance());
     }
 }
