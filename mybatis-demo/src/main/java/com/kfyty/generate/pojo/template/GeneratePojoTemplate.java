@@ -1,4 +1,4 @@
-package com.kfyty.generate.pojo;
+package com.kfyty.generate.pojo.template;
 
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
 import com.kfyty.generate.pojo.info.AbstractTableInfo;
@@ -14,7 +14,7 @@ import java.io.IOException;
  * @date 2019/8/13 17:33:27
  * @since JDK 1.8
  */
-public interface GenerateTemplate {
+public interface GeneratePojoTemplate {
 
     default String convert2JavaType(String dataBaseType) {
         switch (dataBaseType.toLowerCase()) {
@@ -39,6 +39,8 @@ public interface GenerateTemplate {
             case "date":
                 return "Date";
             case "datetime":
+                return "Date";
+            case "timestamp" :
                 return "Date";
             case "blob" :
                 return "byte[]";

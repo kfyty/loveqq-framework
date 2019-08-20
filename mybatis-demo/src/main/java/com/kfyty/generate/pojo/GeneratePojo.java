@@ -4,6 +4,7 @@ import com.kfyty.generate.pojo.configuration.GeneratePojoConfigurable;
 import com.kfyty.generate.pojo.configuration.GeneratePojoConfiguration;
 import com.kfyty.generate.pojo.database.DataBaseMapper;
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
+import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.jdbc.annotation.SelectList;
 import com.kfyty.util.CommonUtil;
@@ -87,7 +88,7 @@ public class GeneratePojo {
         return this;
     }
 
-    public GeneratePojo refreshGenerateTemplate(GenerateTemplate generateTemplate) throws Exception {
+    public GeneratePojo refreshGenerateTemplate(GeneratePojoTemplate generateTemplate) throws Exception {
         this.configurable.refreshGenerateTemplate(generateTemplate);
         return this;
     }

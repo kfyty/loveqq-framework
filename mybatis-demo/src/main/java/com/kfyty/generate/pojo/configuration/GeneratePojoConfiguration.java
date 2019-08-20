@@ -1,6 +1,6 @@
 package com.kfyty.generate.pojo.configuration;
 
-import com.kfyty.generate.pojo.GenerateTemplate;
+import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
 import com.kfyty.generate.pojo.database.DataBaseMapper;
 
 import javax.sql.DataSource;
@@ -16,12 +16,16 @@ public interface GeneratePojoConfiguration {
 
     DataSource getDataSource();
 
-    Class<? extends DataBaseMapper> dataBaseMapping();
+    default Class<? extends DataBaseMapper> dataBaseMapping() {
+        return null;
+    }
 
-    String dataBaseName();
+    default String dataBaseName() {
+        return null;
+    }
 
-    default GenerateTemplate getGenerateTemplate() {
-        return new GenerateTemplate() {};
+    default GeneratePojoTemplate getGenerateTemplate() {
+        return new GeneratePojoTemplate() {};
     }
 
     default String[] table() {
