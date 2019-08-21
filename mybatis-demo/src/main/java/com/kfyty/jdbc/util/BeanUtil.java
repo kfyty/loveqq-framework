@@ -94,7 +94,7 @@ public class BeanUtil {
         return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(HashSet::new).orElse(null);
     }
 
-    public static <T, K, V> Map<?, V> fillMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+    public static <T, K, V> Map<K, V> fillMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(CommonUtil.empty(returnType.getKey())) {
             log.error(": fill map error, key is null !");
             return null;

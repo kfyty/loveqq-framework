@@ -50,7 +50,7 @@ public class SqlSession implements InvocationHandler {
      * @return              返回值
      * @throws Exception
      */
-    private Object query(Annotation annotation, ReturnType returnType, Map<String, Object> params) throws Exception {
+    private Object requestQuery(Annotation annotation, ReturnType returnType, Map<String, Object> params) throws Exception {
         checkMapKey(annotation, returnType);
         String annotationName = annotation.annotationType().getSimpleName();
         String methodName = Character.toLowerCase(annotationName.charAt(0)) + annotationName.substring(1);
@@ -181,7 +181,7 @@ public class SqlSession implements InvocationHandler {
             Map<String, Object> params = this.getParamFromAnnotation(subQuery.paramField(), subQuery.mapperField(), obj);
             ReturnType returnType = CommonUtil.getReturnType(returnField.getGenericType(), returnField.getType());
             returnField.setAccessible(true);
-            returnField.set(obj, this.query(subQuery, returnType, params));
+            returnField.set(obj, this.requestQuery(subQuery, returnType, params));
         }
     }
 
@@ -227,11 +227,11 @@ public class SqlSession implements InvocationHandler {
         Annotation[] annotations = this.getAnnotationFromMethod(method);
         ReturnType returnType = CommonUtil.getReturnType(method.getGenericReturnType(), method.getReturnType());
         if(annotations.length == 1) {
-            return this.query(annotations[0], returnType, this.getParamFromMethod(method.getParameters(), args));
+            return this.requestQuery(annotations[0], returnType, this.getParamFromMethod(method.getParameters(), args));
         }
         List<Object> os = new ArrayList<>();
         for(Annotation annotation : annotations) {
-            os.add(this.query(annotation, returnType, this.getParamFromMethod(method.getParameters(), args)));
+            os.add(this.requestQuery(annotation, returnType, this.getParamFromMethod(method.getParameters(), args)));
         }
         return os;
     }

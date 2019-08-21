@@ -97,9 +97,10 @@ public class CommonUtil {
                 type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
     }
 
-    public static <T, K, V> ReturnType getReturnType(Type genericType, Class<T> type) {
+    public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
-            return new ReturnType(false, type.getComponentType(), null, null);
+            log.error(": not support array type of return type now !");
+            return null;
         }
         if(!(genericType instanceof ParameterizedType)) {
             return new ReturnType(false, type, null, null);
