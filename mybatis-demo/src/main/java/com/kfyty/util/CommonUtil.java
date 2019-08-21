@@ -99,11 +99,10 @@ public class CommonUtil {
 
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
-            log.error(": not support array type of return type now !");
-            return null;
+            return new ReturnType(true, false, type.getComponentType(), null, null);
         }
         if(!(genericType instanceof ParameterizedType)) {
-            return new ReturnType(false, type, null, null);
+            return new ReturnType(false, false, type, null, null);
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericType;
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
@@ -112,14 +111,14 @@ public class CommonUtil {
                 log.error(": indeterminate of the parameterized type !");
                 return null;
             }
-            return new ReturnType(true, type, (Class<K>) actualTypeArguments[0], null);
+            return new ReturnType(false, true, type, (Class<K>) actualTypeArguments[0], null);
         }
         if(Map.class.isAssignableFrom(type)) {
             if(CommonUtil.empty(actualTypeArguments) || actualTypeArguments.length != 2) {
                 log.error(": indeterminate of the parameterized type !");
                 return null;
             }
-            return new ReturnType(true, type, (Class<K>) actualTypeArguments[0], (Class<V>) actualTypeArguments[1]);
+            return new ReturnType(false, true, type, (Class<K>) actualTypeArguments[0], (Class<V>) actualTypeArguments[1]);
         }
         return null;
     }

@@ -4,6 +4,7 @@ import com.kfyty.jdbc.ReturnType;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
@@ -32,6 +33,9 @@ public class BeanUtil {
     };
 
     public static <T, K, V> Object fillObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+        if(returnType.isArray()) {
+            return fillArrayObject(resultSet, returnType.getReturnType());
+        }
         if(!returnType.isParameterizedType()) {
             return fillSingleObject(resultSet, returnType.getReturnType());
         }
@@ -58,6 +62,10 @@ public class BeanUtil {
 
     public static <T> T fillSingleObject(ResultSet resultSet, Class<T> clazz) throws Exception {
         return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
+    }
+
+    public static <T> T[] fillArrayObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+        return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(e -> e.toArray((T[]) Array.newInstance(clazz, 0))).orElse(null);
     }
 
     public static <T> List<T> fillListObject(ResultSet resultSet, Class<T> clazz) throws Exception {
