@@ -6,7 +6,7 @@ import com.kfyty.generate.pojo.database.DataBaseMapper;
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
 import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
 import com.kfyty.jdbc.SqlSession;
-import com.kfyty.jdbc.annotation.SelectList;
+import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,7 +74,7 @@ public class GeneratePojo {
     private List<? extends AbstractDataBaseInfo> handleDataBaseInfo(DataBaseMapper dataBaseMapper) throws Exception {
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
         if(!CommonUtil.empty(configurable.getQueryTableSql())) {
-            SelectList annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(SelectList.class);
+            Query annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(Query.class);
             CommonUtil.setAnnotationValue(annotation, "value", configurable.getQueryTableSql());
             tables.addAll(dataBaseMapper.findTableList());
         }

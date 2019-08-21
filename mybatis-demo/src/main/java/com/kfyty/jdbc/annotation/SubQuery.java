@@ -5,13 +5,15 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SubQuery {
-    String query();
+    String value();
+
+    String key() default "";
 
     String returnField();
-
-    boolean returnSingle() default false;
 
     String[] paramField();
 
     String[] mapperField();
+
+    ForEach[] forEach() default {};
 }

@@ -2,7 +2,8 @@ package com.kfyty.generate.pojo.database;
 
 import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
 import com.kfyty.generate.pojo.info.AbstractTableInfo;
-import com.kfyty.jdbc.annotation.SelectList;
+import com.kfyty.jdbc.annotation.Param;
+import com.kfyty.jdbc.annotation.Query;
 
 import java.util.List;
 
@@ -14,15 +15,14 @@ import java.util.List;
  * @since JDK 1.8
  */
 public interface DataBaseMapper {
-
-    @SelectList
+    @Query
     default List<String> findTableList() {
         return null;
     }
 
-    @SelectList
-    List<? extends AbstractDataBaseInfo> findDataBaseInfo(String dataBaseName);
+    @Query
+    List<? extends AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);
 
-    @SelectList
-    List<? extends AbstractTableInfo> findTableInfo(String dataBaseName, String tableName);
+    @Query
+    List<? extends AbstractTableInfo> findTableInfo(@Param("dataBaseName") String dataBaseName,@Param("tableName")  String tableName);
 }
