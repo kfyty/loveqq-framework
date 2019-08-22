@@ -1,14 +1,14 @@
-package com.kfyty.generate.pojo.configuration;
+package com.kfyty.generate.configuration;
 
-import com.kfyty.generate.pojo.annotation.GenerateTemplate;
-import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
-import com.kfyty.generate.pojo.annotation.DataBase;
-import com.kfyty.generate.pojo.annotation.DataBaseMapping;
-import com.kfyty.generate.pojo.annotation.FilePath;
-import com.kfyty.generate.pojo.annotation.Package;
-import com.kfyty.generate.pojo.annotation.SameFile;
-import com.kfyty.generate.pojo.annotation.Table;
-import com.kfyty.generate.pojo.database.DataBaseMapper;
+import com.kfyty.generate.annotation.DataBase;
+import com.kfyty.generate.annotation.DataBaseMapping;
+import com.kfyty.generate.annotation.FilePath;
+import com.kfyty.generate.annotation.GeneratingTemplate;
+import com.kfyty.generate.annotation.Package;
+import com.kfyty.generate.annotation.SameFile;
+import com.kfyty.generate.annotation.Table;
+import com.kfyty.generate.database.DataBaseMapper;
+import com.kfyty.generate.template.GenerateTemplate;
 import com.kfyty.util.CommonUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +28,11 @@ import java.util.Set;
  */
 @Slf4j
 @Getter
-public class GeneratePojoConfigurable {
+public class GenerateConfigurable {
 
     private DataSource dataSource;
 
-    private GeneratePojoTemplate generateTemplate;
+    private GenerateTemplate generateTemplate;
 
     private Class<? extends DataBaseMapper> dataBaseMapper;
 
@@ -52,27 +52,27 @@ public class GeneratePojoConfigurable {
 
     private Boolean sameFile;
 
-    public GeneratePojoConfigurable(GeneratePojoConfiguration configuration) throws Exception {
+    public GenerateConfigurable(GenerateConfiguration configuration) throws Exception {
         this.initGeneratePojoConfigurable(configuration);
     }
 
-    public void refreshGenerateConfiguration(GeneratePojoConfiguration configuration) throws Exception {
+    public void refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
         this.initGeneratePojoConfigurable(configuration);
     }
 
-    public void refreshGenerateTemplate(GeneratePojoTemplate generateTemplate) throws Exception {
+    public void refreshGenerateTemplate(GenerateTemplate generateTemplate) throws Exception {
         this.generateTemplate = Optional.ofNullable(generateTemplate).orElseThrow(() -> new NullPointerException("generate template is null !"));
         this.fileSuffix = Optional.ofNullable(generateTemplate.fileSuffix()).orElse("");
         this.fileTypeSuffix = Optional.ofNullable(generateTemplate.fileTypeSuffix()).orElse("");
     }
 
-    private void initGeneratePojoConfigurable(GeneratePojoConfiguration configuration) throws Exception {
+    private void initGeneratePojoConfigurable(GenerateConfiguration configuration) throws Exception {
         this.initGeneratePojoConfigurableFromAnnotation(configuration);
         this.initGeneratePojoConfigurableFromReturnValue(configuration);
     }
 
-    private void initGeneratePojoConfigurableFromAnnotation(GeneratePojoConfiguration configuration) throws Exception {
-        Class<? extends GeneratePojoConfiguration> configurationClass = configuration.getClass();
+    private void initGeneratePojoConfigurableFromAnnotation(GenerateConfiguration configuration) throws Exception {
+        Class<? extends GenerateConfiguration> configurationClass = configuration.getClass();
         this.dataBaseMapper = Optional.ofNullable(configurationClass.getAnnotation(DataBaseMapping.class)).map(DataBaseMapping::value).orElse(null);
         this.dataBaseName = Optional.ofNullable(configurationClass.getAnnotation(DataBase.class)).map(DataBase::value).orElse(null);
         this.tables = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value())).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
@@ -80,7 +80,7 @@ public class GeneratePojoConfigurable {
         this.packageName = Optional.ofNullable(configurationClass.getAnnotation(Package.class)).map(Package::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
         this.sameFile = Optional.ofNullable(configurationClass.getAnnotation(SameFile.class)).map(e -> true).orElse(null);
-        this.generateTemplate = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> {
+        this.generateTemplate = Optional.ofNullable(configurationClass.getAnnotation(GeneratingTemplate.class)).map(e -> {
             try {
                 return e.value().newInstance();
             } catch (Exception e1) {
@@ -90,7 +90,7 @@ public class GeneratePojoConfigurable {
         }).orElse(null);
     }
 
-    private void initGeneratePojoConfigurableFromReturnValue(GeneratePojoConfiguration configuration) {
+    private void initGeneratePojoConfigurableFromReturnValue(GenerateConfiguration configuration) {
         this.dataSource = Optional.ofNullable(configuration.getDataSource()).orElseThrow(() -> new NullPointerException("data source is null !"));
         if(this.dataBaseMapper == null) {
             this.dataBaseMapper = Optional.ofNullable(configuration.dataBaseMapping()).orElseThrow(() -> new NullPointerException("data base mapper is null !"));
@@ -98,8 +98,8 @@ public class GeneratePojoConfigurable {
         if(this.generateTemplate == null) {
             this.generateTemplate = Optional.ofNullable(configuration.getGenerateTemplate()).orElseThrow(() -> new NullPointerException("generate template is null !"));
         }
-        this.fileSuffix = Optional.ofNullable(configuration.getGenerateTemplate().fileSuffix()).orElse("");
-        this.fileTypeSuffix = Optional.ofNullable(configuration.getGenerateTemplate().fileTypeSuffix()).orElse("");
+        this.fileSuffix = Optional.ofNullable(this.generateTemplate.fileSuffix()).orElse("");
+        this.fileTypeSuffix = Optional.ofNullable(this.generateTemplate.fileTypeSuffix()).orElse("");
         if(CommonUtil.empty(this.dataBaseName)) {
             this.dataBaseName = Optional.ofNullable(configuration.dataBaseName()).orElseThrow(() -> new NullPointerException("data base name is null !"));
         }

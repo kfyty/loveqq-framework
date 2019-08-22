@@ -1,7 +1,7 @@
-package com.kfyty.generate.pojo.database;
+package com.kfyty.generate.database;
 
-import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
-import com.kfyty.generate.pojo.info.AbstractTableInfo;
+import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.generate.info.AbstractTableInfo;
 import com.kfyty.jdbc.annotation.Param;
 import com.kfyty.jdbc.annotation.Query;
 

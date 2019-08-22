@@ -1,7 +1,7 @@
-package com.kfyty.generate.pojo.configuration;
+package com.kfyty.generate.configuration;
 
-import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
-import com.kfyty.generate.pojo.database.DataBaseMapper;
+import com.kfyty.generate.database.DataBaseMapper;
+import com.kfyty.generate.template.GenerateTemplate;
 
 import javax.sql.DataSource;
 
@@ -12,7 +12,7 @@ import javax.sql.DataSource;
  * @date 2019/8/12 10:33:20
  * @since JDK 1.8
  */
-public interface GeneratePojoConfiguration {
+public interface GenerateConfiguration {
 
     DataSource getDataSource();
 
@@ -24,8 +24,8 @@ public interface GeneratePojoConfiguration {
         return null;
     }
 
-    default GeneratePojoTemplate getGenerateTemplate() {
-        return new GeneratePojoTemplate() {};
+    default GenerateTemplate getGenerateTemplate() {
+        return new GenerateTemplate() {};
     }
 
     default String[] table() {

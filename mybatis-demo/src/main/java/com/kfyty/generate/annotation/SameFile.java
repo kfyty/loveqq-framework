@@ -1,4 +1,4 @@
-package com.kfyty.generate.pojo.annotation;
+package com.kfyty.generate.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DataBase {
-    String value() default "";
+public @interface SameFile {
 }

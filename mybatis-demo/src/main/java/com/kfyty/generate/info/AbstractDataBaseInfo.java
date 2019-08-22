@@ -1,4 +1,4 @@
-package com.kfyty.generate.pojo.info;
+package com.kfyty.generate.info;
 
 import lombok.Data;
 

@@ -1,10 +1,10 @@
-package com.kfyty.generate.pojo;
+package com.kfyty.generate;
 
-import com.kfyty.generate.pojo.configuration.GeneratePojoConfigurable;
-import com.kfyty.generate.pojo.configuration.GeneratePojoConfiguration;
-import com.kfyty.generate.pojo.database.DataBaseMapper;
-import com.kfyty.generate.pojo.info.AbstractDataBaseInfo;
-import com.kfyty.generate.pojo.template.GeneratePojoTemplate;
+import com.kfyty.generate.configuration.GenerateConfigurable;
+import com.kfyty.generate.configuration.GenerateConfiguration;
+import com.kfyty.generate.database.DataBaseMapper;
+import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
  * @since JDK 1.8
  */
 @Slf4j
-public class GeneratePojo {
+public class GenerateSources {
     private File file;
 
     private SqlSession sqlSession;
 
-    private GeneratePojoConfigurable configurable;
+    private GenerateConfigurable configurable;
 
-    public GeneratePojo(GeneratePojoConfiguration pojoConfiguration) throws Exception {
+    public GenerateSources(GenerateConfiguration pojoConfiguration) throws Exception {
         this.sqlSession = new SqlSession();
-        this.configurable = new GeneratePojoConfigurable(pojoConfiguration);
+        this.configurable = new GenerateConfigurable(pojoConfiguration);
     }
 
     private String initDirectory(AbstractDataBaseInfo info) {
@@ -83,12 +83,12 @@ public class GeneratePojo {
         return CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfo : filteredDataBaseInfo;
     }
 
-    public GeneratePojo refreshGenerateConfiguration(GeneratePojoConfiguration configuration) throws Exception {
+    public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
         this.configurable.refreshGenerateConfiguration(configuration);
         return this;
     }
 
-    public GeneratePojo refreshGenerateTemplate(GeneratePojoTemplate generateTemplate) throws Exception {
+    public GenerateSources refreshGenerateTemplate(GeneratePojoTemplate generateTemplate) throws Exception {
         this.configurable.refreshGenerateTemplate(generateTemplate);
         return this;
     }

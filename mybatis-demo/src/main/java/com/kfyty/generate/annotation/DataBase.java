@@ -1,6 +1,4 @@
-package com.kfyty.generate.pojo.annotation;
-
-import com.kfyty.generate.pojo.database.DataBaseMapper;
+package com.kfyty.generate.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DataBaseMapping {
-    Class<? extends DataBaseMapper> value();
+public @interface DataBase {
+    String value() default "";
 }
