@@ -2,12 +2,14 @@ package com.kfyty.generate;
 
 import com.kfyty.generate.configuration.GenerateConfigurable;
 import com.kfyty.generate.configuration.GenerateConfiguration;
-import com.kfyty.generate.database.DataBaseMapper;
+import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedWriter;
@@ -35,9 +37,14 @@ public class GenerateSources {
 
     private GenerateConfigurable configurable;
 
-    public GenerateSources(GenerateConfiguration pojoConfiguration) throws Exception {
+    public GenerateSources(GenerateConfigurable generateConfigurable) {
         this.sqlSession = new SqlSession();
-        this.configurable = new GenerateConfigurable(pojoConfiguration);
+        this.configurable = generateConfigurable;
+    }
+
+    public GenerateSources(GenerateConfiguration generateConfiguration) throws Exception {
+        this.sqlSession = new SqlSession();
+        this.configurable = new GenerateConfigurable(generateConfiguration);
     }
 
     private String initDirectory(AbstractDataBaseInfo info) {
@@ -71,7 +78,7 @@ public class GenerateSources {
         log.debug(": generate resource:[{}] success --> [{}]", this.file.getName(), this.file.getAbsolutePath());
     }
 
-    private List<? extends AbstractDataBaseInfo> handleDataBaseInfo(DataBaseMapper dataBaseMapper) throws Exception {
+    private List<? extends AbstractDataBaseInfo> handleDataBaseInfo(AbstractDataBaseMapper dataBaseMapper) throws Exception {
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
         if(!CommonUtil.empty(configurable.getQueryTableSql())) {
             Query annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(Query.class);
@@ -88,14 +95,14 @@ public class GenerateSources {
         return this;
     }
 
-    public GenerateSources refreshGenerateTemplate(GeneratePojoTemplate generateTemplate) throws Exception {
+    public GenerateSources refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) throws Exception {
         this.configurable.refreshGenerateTemplate(generateTemplate);
         return this;
     }
 
     public void generate() throws Exception {
         this.sqlSession.setDataSource(configurable.getDataSource());
-        DataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
+        AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
         List<? extends AbstractDataBaseInfo> dataBaseInfo = handleDataBaseInfo(dataBaseMapper);
         for (AbstractDataBaseInfo info : dataBaseInfo) {
             info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));

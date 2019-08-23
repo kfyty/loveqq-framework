@@ -1,6 +1,6 @@
 package com.kfyty.generate.annotation;
 
-import com.kfyty.generate.template.GenerateTemplate;
+import com.kfyty.generate.template.AbstractGenerateTemplate;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GeneratingTemplate {
-    Class<? extends GenerateTemplate> value();
+public @interface GenerateTemplate {
+    Class<? extends AbstractGenerateTemplate> value();
 }

@@ -1,7 +1,7 @@
 package com.kfyty.generate.configuration;
 
-import com.kfyty.generate.database.DataBaseMapper;
-import com.kfyty.generate.template.GenerateTemplate;
+import com.kfyty.generate.database.AbstractDataBaseMapper;
+import com.kfyty.generate.template.AbstractGenerateTemplate;
 
 import javax.sql.DataSource;
 
@@ -16,7 +16,7 @@ public interface GenerateConfiguration {
 
     DataSource getDataSource();
 
-    default Class<? extends DataBaseMapper> dataBaseMapping() {
+    default Class<? extends AbstractDataBaseMapper> dataBaseMapping() {
         return null;
     }
 
@@ -24,8 +24,8 @@ public interface GenerateConfiguration {
         return null;
     }
 
-    default GenerateTemplate getGenerateTemplate() {
-        return new GenerateTemplate() {};
+    default AbstractGenerateTemplate getGenerateTemplate() {
+        return null;
     }
 
     default String[] table() {

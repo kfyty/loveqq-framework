@@ -1,6 +1,6 @@
 package com.kfyty.generate.annotation;
 
-import com.kfyty.generate.database.DataBaseMapper;
+import com.kfyty.generate.database.AbstractDataBaseMapper;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DataBaseMapping {
-    Class<? extends DataBaseMapper> value();
+public @interface DataBaseMapper {
+    Class<? extends AbstractDataBaseMapper> value();
 }

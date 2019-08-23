@@ -11,6 +11,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -145,6 +146,9 @@ public class CommonUtil {
         return map;
     }
 
+    public static boolean isAbstract(Class<?> clazz) {
+        return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
+    }
 
     public static void saveProxyClass(String savePath, Object object, Object proxy) throws Exception {
         Class<?> clazz = Class.forName("sun.misc.ProxyGenerator");

@@ -17,11 +17,11 @@ import java.util.jar.JarFile;
  * @since JDK 1.8
  */
 public class PackageUtil {
-    public static Set<String> parseBasePackage(String packageName) throws IOException {
+    public static Set<Class<?>> parseBasePackage(String packageName) throws IOException, ClassNotFoundException {
         return parseBasePackage(packageName, true);
     }
 
-    public static Set<String> parseBasePackage(String basePackage, boolean containChild) throws IOException {
+    public static Set<Class<?>> parseBasePackage(String basePackage, boolean containChild) throws IOException, ClassNotFoundException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(basePackage.replace(".", "/"));
         return url == null ? null :
                 url.getProtocol().equalsIgnoreCase("jar") ?
@@ -29,8 +29,8 @@ public class PackageUtil {
                 parseBasePackageByFile(url.getPath(), containChild);
     }
 
-    private static Set<String> parseBasePackageByJar(String jarURL, boolean containChild) throws IOException {
-        Set<String> set = new HashSet<>();
+    private static Set<Class<?>> parseBasePackageByJar(String jarURL, boolean containChild) throws IOException, ClassNotFoundException {
+        Set<Class<?>> set = new HashSet<>();
         String[] jarInfo = jarURL.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
         String packagePath = jarInfo[1].substring(1);
@@ -38,21 +38,23 @@ public class PackageUtil {
             String entryName = entries.nextElement().getName();
             if (containChild) {
                 if (entryName.startsWith(packagePath) && entryName.endsWith(".class")) {
-                    set.add(entryName.replace(File.separator, ".").substring(0, entryName.lastIndexOf(".")));
+                    String className = entryName.replace("/", ".").substring(0, entryName.lastIndexOf("."));
+                    set.add(Class.forName(className));
                 }
                 continue;
             }
             int index = entryName.lastIndexOf("/");
             String tempPath = index == -1 ? entryName : entryName.substring(0, index);
             if (tempPath.equals(packagePath) && entryName.endsWith(".class")) {
-                set.add(entryName.replace(File.separator, ".").substring(0, entryName.lastIndexOf(".")));
+                String className = entryName.replace("/", ".").substring(0, entryName.lastIndexOf("."));
+                set.add(Class.forName(className));
             }
         }
         return set;
     }
 
-    private static Set<String> parseBasePackageByFile(String directoryPath, boolean containChild) {
-        Set<String> set = new HashSet<>();
+    private static Set<Class<?>> parseBasePackageByFile(String directoryPath, boolean containChild) throws ClassNotFoundException {
+        Set<Class<?>> set = new HashSet<>();
         File[] files = new File(directoryPath).listFiles();
         for(File file : files) {
             if(file.isDirectory()) {
@@ -65,7 +67,7 @@ public class PackageUtil {
             if(classPath.endsWith(".class")) {
                 classPath = classPath.substring(classPath.indexOf(File.separator + "classes") + 9, classPath.lastIndexOf("."));
                 classPath = classPath.replace(File.separator, ".");
-                set.add(classPath);
+                set.add(Class.forName(classPath));
             }
         }
         return set;

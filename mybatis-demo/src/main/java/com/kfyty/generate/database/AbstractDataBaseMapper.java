@@ -14,7 +14,7 @@ import java.util.List;
  * @date 2019/8/19 14:15:05
  * @since JDK 1.8
  */
-public interface DataBaseMapper {
+public interface AbstractDataBaseMapper {
     @Query
     default List<String> findTableList() {
         return null;

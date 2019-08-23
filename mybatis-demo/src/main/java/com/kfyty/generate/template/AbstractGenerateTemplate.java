@@ -12,7 +12,7 @@ import java.io.IOException;
  * @date 2019/8/22 16:07:16
  * @since JDK 1.8
  */
-public interface GenerateTemplate {
+public interface AbstractGenerateTemplate {
     default String convert2JavaType(String dataBaseType) {
         switch (dataBaseType.toLowerCase()) {
             case "varchar":

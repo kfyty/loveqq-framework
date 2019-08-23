@@ -14,7 +14,7 @@ import java.util.List;
  * @date 2019/8/19 14:17:49
  * @since JDK 1.8
  */
-public interface MySQLDataBaseMapper extends DataBaseMapper {
+public interface MySQLDataBaseMapper extends AbstractDataBaseMapper {
     @Override
     @Query("select table_schema dataBaseName, table_name, table_comment from information_schema.tables where table_schema = #{dataBaseName}")
     List<AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);

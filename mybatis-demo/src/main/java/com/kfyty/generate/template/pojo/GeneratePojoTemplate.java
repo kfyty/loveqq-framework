@@ -2,20 +2,20 @@ package com.kfyty.generate.template.pojo;
 
 import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.info.AbstractTableInfo;
-import com.kfyty.generate.template.GenerateTemplate;
+import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.util.CommonUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 
 /**
- * 功能描述: 生成模板
+ * 功能描述: 生成 pojo 模板
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/13 17:33:27
  * @since JDK 1.8
  */
-public class GeneratePojoTemplate implements GenerateTemplate {
+public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     @Override
     public String fileSuffix() {
         return "Pojo";
