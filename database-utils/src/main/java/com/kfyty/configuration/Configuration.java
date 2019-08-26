@@ -1,0 +1,24 @@
+package com.kfyty.configuration;
+
+/**
+ * 功能描述: 自动配置接口
+ *
+ * @author kfyty725@hotmail.com
+ * @date 2019/8/26 19:18
+ * @since JDK 1.8
+ */
+public abstract class Configuration {
+
+    private boolean autoConfiguration;
+
+    public abstract void autoConfigurationAfterCheck();
+
+    public boolean isAutoConfiguration() {
+        return this.autoConfiguration;
+    }
+
+    public Configuration enableAutoConfiguration() {
+        this.autoConfiguration = true;
+        return this;
+    }
+}

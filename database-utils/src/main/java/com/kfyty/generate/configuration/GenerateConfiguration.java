@@ -24,7 +24,7 @@ public interface GenerateConfiguration {
         return null;
     }
 
-    default AbstractGenerateTemplate getGenerateTemplate() {
+    default AbstractGenerateTemplate[] getGenerateTemplate() {
         return null;
     }
 

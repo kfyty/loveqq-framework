@@ -1,5 +1,6 @@
 package com.kfyty.generate.configuration;
 
+import com.kfyty.configuration.Configuration;
 import com.kfyty.generate.annotation.DataBase;
 import com.kfyty.generate.annotation.DataBaseMapper;
 import com.kfyty.generate.annotation.FilePath;
@@ -14,10 +15,13 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: 生成配置
@@ -28,15 +32,13 @@ import java.util.Set;
  */
 @Data
 @Slf4j
-public class GenerateConfigurable {
-
-    private boolean autoGenerate;
+public class GenerateConfigurable extends Configuration {
 
     private DataSource dataSource;
 
-    private AbstractGenerateTemplate generateTemplate;
+    private Integer currentGenerateTemplateCursor;
 
-    private Set<AbstractGenerateTemplate> generateTemplateSet;
+    private List<AbstractGenerateTemplate> generateTemplateList;
 
     private Class<? extends AbstractDataBaseMapper> dataBaseMapper;
 
@@ -48,16 +50,13 @@ public class GenerateConfigurable {
 
     private String packageName;
 
-    private String fileSuffix;
-
-    private String fileTypeSuffix;
-
     private String filePath;
 
     private Boolean sameFile;
 
     public GenerateConfigurable() throws Exception {
-        this.generateTemplateSet = new HashSet<>();
+        this.currentGenerateTemplateCursor = -1;
+        this.generateTemplateList = new ArrayList<>();
     }
 
     public GenerateConfigurable(GenerateConfiguration configuration) throws Exception {
@@ -65,25 +64,33 @@ public class GenerateConfigurable {
         this.initGeneratePojoConfigurable(configuration);
     }
 
+    public boolean hasGenerateTemplate() {
+        return currentGenerateTemplateCursor < generateTemplateList.size() - 1;
+    }
+
+    public AbstractGenerateTemplate getCurrentGenerateTemplate() {
+        return generateTemplateList.get(currentGenerateTemplateCursor);
+    }
+
+    public AbstractGenerateTemplate getNextGenerateTemplate() {
+        currentGenerateTemplateCursor++;
+        return getCurrentGenerateTemplate();
+    }
+
     public void refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
         this.initGeneratePojoConfigurable(configuration);
     }
 
     public void refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) throws Exception {
-        this.generateTemplate = Optional.ofNullable(generateTemplate).orElseThrow(() -> new NullPointerException("generate template is null !"));
-        this.fileSuffix = Optional.ofNullable(generateTemplate.fileSuffix()).orElse("");
-        this.fileTypeSuffix = Optional.ofNullable(generateTemplate.fileTypeSuffix()).orElse("");
+        Optional.ofNullable(generateTemplate).orElseThrow(() -> new NullPointerException("generate template is null !"));
+        this.generateTemplateList.add(currentGenerateTemplateCursor + 1, generateTemplate);
     }
 
+    @Override
     public void autoConfigurationAfterCheck() {
         Optional.ofNullable(this.dataSource).orElseThrow(() -> new NullPointerException("data source is null !"));
         Optional.ofNullable(this.dataBaseMapper).orElseThrow(() -> new NullPointerException("data base mapper is null !"));
-        if(this.generateTemplate != null) {
-            this.generateTemplateSet.add(this.generateTemplate);
-        }
-        if(CommonUtil.empty(generateTemplateSet)) {
-            throw new NullPointerException("generate template is null !");
-        }
+        this.generateTemplateList = Optional.ofNullable(generateTemplateList).filter(e -> !e.isEmpty()).map(e -> e.stream().distinct().collect(Collectors.toList())).orElseThrow(() -> new NullPointerException("generate template is null !"));
     }
 
     private void initGeneratePojoConfigurable(GenerateConfiguration configuration) throws Exception {
@@ -100,14 +107,17 @@ public class GenerateConfigurable {
         this.packageName = Optional.ofNullable(configurationClass.getAnnotation(Package.class)).map(Package::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
         this.sameFile = Optional.ofNullable(configurationClass.getAnnotation(SameFile.class)).map(e -> true).orElse(null);
-        this.generateTemplate = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> {
+        List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> {
             try {
-                return e.value().newInstance();
-            } catch (Exception e1) {
-                log.error(": instance generate template error:{}", e1);
+                return (AbstractGenerateTemplate) clazz.newInstance();
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 return null;
             }
-        }).orElse(null);
+        }).collect(Collectors.toList())).orElse(null);
+        if(!CommonUtil.empty(generateTemplateList)) {
+            this.generateTemplateList.addAll(generateTemplateList);
+        }
     }
 
     private void initGeneratePojoConfigurableFromReturnValue(GenerateConfiguration configuration) {
@@ -115,20 +125,16 @@ public class GenerateConfigurable {
         if(this.dataBaseMapper == null) {
             if(configuration.dataBaseMapping() != null) {
                 this.dataBaseMapper = configuration.dataBaseMapping();
-            } else if(!autoGenerate) {
+            } else if(!isAutoConfiguration()) {
                 throw new NullPointerException("data base mapper is null !");
             }
         }
-        if(this.generateTemplate == null) {
-            if(configuration.getGenerateTemplate() != null) {
-                this.generateTemplate = configuration.getGenerateTemplate();
-            } else if(!autoGenerate) {
+        if(CommonUtil.empty(this.generateTemplateList)) {
+            if(!CommonUtil.empty(configuration.getGenerateTemplate())) {
+                this.generateTemplateList.addAll(Arrays.stream(configuration.getGenerateTemplate()).distinct().collect(Collectors.toList()));
+            } else if(!isAutoConfiguration()) {
                 throw new NullPointerException("generate template is null !");
             }
-        }
-        if(this.generateTemplate != null) {
-            this.fileSuffix = Optional.ofNullable(this.generateTemplate.fileSuffix()).orElse("");
-            this.fileTypeSuffix = Optional.ofNullable(this.generateTemplate.fileTypeSuffix()).orElse("");
         }
         if(CommonUtil.empty(this.dataBaseName)) {
             this.dataBaseName = Optional.ofNullable(configuration.dataBaseName()).orElseThrow(() -> new NullPointerException("data base name is null !"));

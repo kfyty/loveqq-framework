@@ -5,11 +5,9 @@ import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
-import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedWriter;
@@ -23,7 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 功能描述: 生成 pojo
+ * 功能描述: 生成资源
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/12 10:28
@@ -31,20 +29,23 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class GenerateSources {
-    private File file;
 
     private SqlSession sqlSession;
 
     private GenerateConfigurable configurable;
 
-    public GenerateSources(GenerateConfigurable generateConfigurable) {
+    private List<? extends AbstractDataBaseInfo> dataBaseInfoList;
+
+    public GenerateSources(GenerateConfigurable generateConfigurable) throws Exception {
         this.sqlSession = new SqlSession();
         this.configurable = generateConfigurable;
+        this.initDataBaseInfo();
     }
 
     public GenerateSources(GenerateConfiguration generateConfiguration) throws Exception {
         this.sqlSession = new SqlSession();
         this.configurable = new GenerateConfigurable(generateConfiguration);
+        this.initDataBaseInfo();
     }
 
     private String initDirectory(AbstractDataBaseInfo info) {
@@ -53,41 +54,44 @@ public class GenerateSources {
                 parentPath + configurable.getPackageName().replace(".", File.separator) :
                 parentPath + File.separator + configurable.getPackageName().replace(".", File.separator);
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
-        return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) +
-                configurable.getFileSuffix() + configurable.getFileTypeSuffix();
+        String fileSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileSuffix()).orElse("");
+        String fileTypeSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileTypeSuffix()).orElse(".java");
+        return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + fileSuffix + fileTypeSuffix;
     }
 
-    private void initFile(AbstractDataBaseInfo info) throws IOException {
-        this.file = new File(this.initDirectory(info));
-        if(this.file.exists() && !this.file.delete()) {
+    private File initFile(AbstractDataBaseInfo info) throws IOException {
+        File file = new File(this.initDirectory(info));
+        if(file.exists() && !file.delete()) {
             log.error(": delete file failed !");
-            return ;
+            return null;
         }
-        if(!this.file.createNewFile()) {
+        if(!file.createNewFile()) {
             log.error(": create file failed !");
+            return null;
         }
+        return file;
     }
 
-    private void write(AbstractDataBaseInfo dataBaseInfo) throws IOException {
-        if(this.file == null || !configurable.getSameFile()) {
-            this.initFile(dataBaseInfo);
-        }
-        BufferedWriter out = new BufferedWriter(new FileWriter(this.file, configurable.getSameFile()));
-        configurable.getGenerateTemplate().generate(dataBaseInfo, configurable.getPackageName(), out);
-        out.flush();
-        log.debug(": generate resource:[{}] success --> [{}]", this.file.getName(), this.file.getAbsolutePath());
-    }
+    private void initDataBaseInfo() throws Exception {
+        this.sqlSession.setDataSource(configurable.getDataSource());
+        AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
 
-    private List<? extends AbstractDataBaseInfo> handleDataBaseInfo(AbstractDataBaseMapper dataBaseMapper) throws Exception {
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
         if(!CommonUtil.empty(configurable.getQueryTableSql())) {
             Query annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(Query.class);
             CommonUtil.setAnnotationValue(annotation, "value", configurable.getQueryTableSql());
             tables.addAll(dataBaseMapper.findTableList());
         }
-        List<? extends AbstractDataBaseInfo> dataBaseInfo = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
-        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.ofNullable(configurable.getTables()).filter(e -> !e.isEmpty()).map(e -> dataBaseInfo.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
-        return CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfo : filteredDataBaseInfo;
+
+        List<? extends AbstractDataBaseInfo> dataBaseInfos = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
+        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.ofNullable(configurable.getTables()).filter(e -> !e.isEmpty()).map(e -> dataBaseInfos.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
+        this.dataBaseInfoList = CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfos : filteredDataBaseInfo;
+        for (AbstractDataBaseInfo info : this.dataBaseInfoList) {
+            info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));
+        }
+        if(log.isDebugEnabled()) {
+            log.debug(": initialize data base info success !");
+        }
     }
 
     public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
@@ -101,12 +105,22 @@ public class GenerateSources {
     }
 
     public void generate() throws Exception {
-        this.sqlSession.setDataSource(configurable.getDataSource());
-        AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
-        List<? extends AbstractDataBaseInfo> dataBaseInfo = handleDataBaseInfo(dataBaseMapper);
-        for (AbstractDataBaseInfo info : dataBaseInfo) {
-            info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));
-            this.write(info);
+        File file = null;
+        BufferedWriter out = null;
+        while(configurable.hasGenerateTemplate()) {
+            AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
+            for (AbstractDataBaseInfo dataBaseInfo : this.dataBaseInfoList) {
+                if(file == null || !configurable.getSameFile()) {
+                    file = this.initFile(dataBaseInfo);
+                    out = new BufferedWriter(new FileWriter(file, configurable.getSameFile()));
+                }
+                nextGenerateTemplate.generate(dataBaseInfo, configurable.getPackageName(), out);
+                out.flush();
+                log.debug(": generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
+            }
+            if(out != null && !configurable.getSameFile()) {
+                out.close();
+            }
         }
     }
 }
