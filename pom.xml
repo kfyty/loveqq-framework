@@ -4,16 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.kfyty.demo</groupId>
-    <artifactId>demo</artifactId>
+    <groupId>com.kfyty</groupId>
+    <artifactId>utils</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <!-- 本地测试模块，请自建或删除 -->
-        <module>main</module>
-        <module>mybatis-demo</module>
-        <module>spring-data-jpa-demo</module>
+        <module>database-utils</module>
     </modules>
 
     <build>
