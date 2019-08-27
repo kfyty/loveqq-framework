@@ -6,7 +6,6 @@ import com.kfyty.generate.annotation.DataBaseMapper;
 import com.kfyty.generate.annotation.FilePath;
 import com.kfyty.generate.annotation.GenerateTemplate;
 import com.kfyty.generate.annotation.Package;
-import com.kfyty.generate.annotation.SameFile;
 import com.kfyty.generate.annotation.Table;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
@@ -51,8 +50,6 @@ public class GenerateConfigurable extends Configuration {
     private String packageName;
 
     private String filePath;
-
-    private Boolean sameFile;
 
     public GenerateConfigurable() throws Exception {
         this.currentGenerateTemplateCursor = -1;
@@ -106,7 +103,6 @@ public class GenerateConfigurable extends Configuration {
         this.queryTableSql = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
         this.packageName = Optional.ofNullable(configurationClass.getAnnotation(Package.class)).map(Package::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
-        this.sameFile = Optional.ofNullable(configurationClass.getAnnotation(SameFile.class)).map(e -> true).orElse(null);
         List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> {
             try {
                 return (AbstractGenerateTemplate) clazz.newInstance();
@@ -147,9 +143,6 @@ public class GenerateConfigurable extends Configuration {
         }
         if(CommonUtil.empty(this.filePath)) {
             this.filePath = Optional.ofNullable(configuration.filePath()).orElse("");
-        }
-        if(this.sameFile == null) {
-            this.sameFile = Optional.ofNullable(configuration.sameFile()).orElse(false);
         }
     }
 }

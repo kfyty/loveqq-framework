@@ -54,6 +54,10 @@ public interface AbstractGenerateTemplate {
         return ".java";
     }
 
+    default boolean sameFile() {
+        return false;
+    }
+
     default void generate(AbstractDataBaseInfo dataBaseInfo, String packageName, BufferedWriter out) throws IOException {
 
     }

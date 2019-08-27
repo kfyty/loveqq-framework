@@ -11,13 +11,15 @@ public abstract class Configuration {
 
     private boolean autoConfiguration;
 
-    public abstract void autoConfigurationAfterCheck();
+    public void autoConfigurationAfterCheck() {
 
-    public boolean isAutoConfiguration() {
+    }
+
+    public final boolean isAutoConfiguration() {
         return this.autoConfiguration;
     }
 
-    public Configuration enableAutoConfiguration() {
+    public final Configuration enableAutoConfiguration() {
         this.autoConfiguration = true;
         return this;
     }

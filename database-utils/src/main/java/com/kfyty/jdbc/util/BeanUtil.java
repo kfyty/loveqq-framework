@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,8 +29,9 @@ import java.util.Set;
 @Slf4j
 public class BeanUtil {
     private static final String[] BASE_TYPE = {
+            "String", "Date",
             "byte", "short", "int", "long", "float", "double",
-            "Byte", "Short", "Integer", "Long", "Float", "Double", "String"
+            "Byte", "Short", "Integer", "Long", "Float", "Double"
     };
 
     public static <T, K, V> Object fillObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
@@ -48,15 +50,35 @@ public class BeanUtil {
         return fillMapObject(resultSet, returnType);
     }
 
+    public static <T> List<T> fillDateType(ResultSet resultSet, Class clazz) throws Exception {
+        if(resultSet == null || !resultSet.next()) {
+            log.error(": fill date error: result set is null !");
+            return null;
+        }
+        List<T> list = new ArrayList<>();
+        do {
+            T date = (T) resultSet.getObject(1);
+            if(date == null) {
+                continue;
+            }
+            list.add(date);
+        } while(resultSet.next());
+        return list;
+    }
+
     public static <T> List<T> fillBaseType(ResultSet resultSet, Class<T> clazz) throws Exception {
-        if(resultSet == null) {
-            log.error(": fill number error: result set:[{}]", resultSet);
+        if(Date.class.isAssignableFrom(clazz)) {
+            return fillDateType(resultSet, clazz);
+        }
+        if(resultSet == null || !resultSet.next()) {
+            log.error(": fill number error: result set is null !");
+            return null;
         }
         List<T> list = new ArrayList<>();
         Constructor<T> constructor = CommonUtil.convert2Wrapper(clazz).getConstructor(String.class);
-        while(resultSet.next()) {
+        do {
             list.add(constructor.newInstance(resultSet.getString(1)));
-        }
+        } while(resultSet.next());
         return list;
     }
 
@@ -72,9 +94,13 @@ public class BeanUtil {
         if(Arrays.stream(BASE_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
             return fillBaseType(resultSet, clazz);
         }
+        if(resultSet == null || !resultSet.next()) {
+            log.error(": fill object error: result set is null !");
+            return null;
+        }
         List<T> list = new ArrayList<>();
         Map<String, Field> fieldMap = CommonUtil.getFieldMap(clazz);
-        while (resultSet.next()) {
+        do {
             T o = clazz.newInstance();
             ResultSetMetaData metaData = resultSet.getMetaData();
             for(int i = 1; i <= metaData.getColumnCount(); i++) {
@@ -94,7 +120,7 @@ public class BeanUtil {
                 }
             }
             list.add(o);
-        }
+        } while(resultSet.next());
         return list;
     }
 

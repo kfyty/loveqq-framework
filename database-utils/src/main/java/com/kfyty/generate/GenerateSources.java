@@ -110,15 +110,15 @@ public class GenerateSources {
         while(configurable.hasGenerateTemplate()) {
             AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
             for (AbstractDataBaseInfo dataBaseInfo : this.dataBaseInfoList) {
-                if(file == null || !configurable.getSameFile()) {
+                if(file == null || !nextGenerateTemplate.sameFile()) {
                     file = this.initFile(dataBaseInfo);
-                    out = new BufferedWriter(new FileWriter(file, configurable.getSameFile()));
+                    out = new BufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
                 nextGenerateTemplate.generate(dataBaseInfo, configurable.getPackageName(), out);
                 out.flush();
                 log.debug(": generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
-            if(out != null && !configurable.getSameFile()) {
+            if(out != null && !nextGenerateTemplate.sameFile()) {
                 out.close();
             }
         }
