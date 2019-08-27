@@ -117,7 +117,7 @@ public class GenerateSources {
         while(configurable.hasGenerateTemplate()) {
             AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
             for (AbstractDataBaseInfo dataBaseInfo : this.dataBaseInfoList) {
-                if(file == null || !nextGenerateTemplate.sameFile()) {
+                if(file == null || out == null || !nextGenerateTemplate.sameFile()) {
                     file = this.initFile(dataBaseInfo);
                     out = new BufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
@@ -127,6 +127,7 @@ public class GenerateSources {
             }
             if(out != null && !nextGenerateTemplate.sameFile()) {
                 out.close();
+                out = null;
             }
         }
     }
