@@ -36,16 +36,13 @@ public class GenerateSources {
 
     private List<? extends AbstractDataBaseInfo> dataBaseInfoList;
 
-    public GenerateSources(GenerateConfigurable generateConfigurable) throws Exception {
+    public GenerateSources() {
         this.sqlSession = new SqlSession();
-        this.configurable = generateConfigurable;
-        this.initDataBaseInfo();
     }
 
     public GenerateSources(GenerateConfiguration generateConfiguration) throws Exception {
         this.sqlSession = new SqlSession();
         this.configurable = new GenerateConfigurable(generateConfiguration);
-        this.initDataBaseInfo();
     }
 
     private String initDirectory(AbstractDataBaseInfo info) {
@@ -96,6 +93,13 @@ public class GenerateSources {
 
     public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
         this.configurable.refreshGenerateConfiguration(configuration);
+        this.dataBaseInfoList = null;
+        return this;
+    }
+
+    public GenerateSources refreshGenerateConfigurable(GenerateConfigurable configurable) throws Exception {
+        this.configurable = configurable;
+        this.dataBaseInfoList = null;
         return this;
     }
 
@@ -105,6 +109,9 @@ public class GenerateSources {
     }
 
     public void generate() throws Exception {
+        if(this.dataBaseInfoList == null) {
+            this.initDataBaseInfo();
+        }
         File file = null;
         BufferedWriter out = null;
         while(configurable.hasGenerateTemplate()) {

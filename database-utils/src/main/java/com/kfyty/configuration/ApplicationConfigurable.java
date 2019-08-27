@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 功能描述: 应用配置
@@ -19,12 +21,18 @@ public class ApplicationConfigurable {
     @Getter
     private GenerateConfigurable generateConfigurable;
 
-    private ApplicationConfigurable() {
+    @Getter
+    private Map<Class<?>, Object> beanResources;
 
+    private ApplicationConfigurable() {
+        this.beanResources = new HashMap<>();
     }
 
     public static ApplicationConfigurable initApplicationConfigurable() throws Exception {
         ApplicationConfigurable applicationConfigurable = new ApplicationConfigurable();
+        applicationConfigurable.initAutoConfiguration();
+        applicationConfigurable.beanResources.put(ApplicationConfigurable.class, applicationConfigurable);
+        applicationConfigurable.beanResources.put(GenerateSources.class, new GenerateSources());
         return applicationConfigurable;
     }
 
@@ -59,10 +67,14 @@ public class ApplicationConfigurable {
         }
     }
 
+    public void handleDependency() throws Exception {
+        ((GenerateSources) this.beanResources.get(GenerateSources.class)).refreshGenerateConfigurable(this.generateConfigurable);
+    }
+
     public void executeAutoGenerateSources() throws Exception {
         if(!this.getGenerateConfigurable().isAutoConfiguration()) {
             return;
         }
-        new GenerateSources(generateConfigurable).generate();
+        ((GenerateSources) this.beanResources.get(GenerateSources.class)).refreshGenerateConfigurable(this.generateConfigurable).generate();
     }
 }

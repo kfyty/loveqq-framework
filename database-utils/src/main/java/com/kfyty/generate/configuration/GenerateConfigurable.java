@@ -126,7 +126,7 @@ public class GenerateConfigurable extends Configuration {
             }
         }
         if(CommonUtil.empty(this.generateTemplateList)) {
-            if(!CommonUtil.empty(configuration.getGenerateTemplate())) {
+            if(configuration.getGenerateTemplate() != null) {
                 this.generateTemplateList.addAll(Arrays.stream(configuration.getGenerateTemplate()).distinct().collect(Collectors.toList()));
             } else if(!isAutoConfiguration()) {
                 throw new NullPointerException("generate template is null !");

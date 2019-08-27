@@ -25,7 +25,7 @@ public interface GenerateConfiguration {
     }
 
     default AbstractGenerateTemplate[] getGenerateTemplate() {
-        return null;
+        return new AbstractGenerateTemplate[0];
     }
 
     default String[] table() {

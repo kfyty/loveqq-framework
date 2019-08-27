@@ -1,5 +1,6 @@
 package com.kfyty;
 
+import com.kfyty.configuration.ApplicationConfigurable;
 import com.kfyty.parser.ClassAnnotationParser;
 import com.kfyty.util.PackageUtil;
 
@@ -13,12 +14,17 @@ import java.util.Set;
  * @since JDK 1.8
  */
 public class KfytyApplication {
+    private static ApplicationConfigurable applicationConfigurable;
+
+    public static <T> T getResources(Class<T> clazz) {
+        return (T) applicationConfigurable.getBeanResources().get(clazz);
+    }
 
     public static void run(Class<?> clazz) throws Exception {
         new KfytyApplication().run(clazz, PackageUtil.parseBasePackage(clazz.getPackage().getName()));
     }
 
     public void run(Class<?> clazz, Set<Class<?>> classSet) throws Exception {
-        new ClassAnnotationParser().parseClassAnnotation(clazz, classSet);
+        applicationConfigurable = new ClassAnnotationParser().parseClassAnnotation(clazz, classSet);
     }
 }
