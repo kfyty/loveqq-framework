@@ -27,18 +27,12 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
             out.write("package " + packageName + ";\n\n");
         }
         generateImport(dataBaseInfo, out);
-        out.write("/**\n");
-        out.write(" * TABLE_NAME: " + dataBaseInfo.getTableName() + "\n");
-        out.write(" * TABLE_COMMENT: " + dataBaseInfo.getTableComment() + "\n");
-        out.write(" *\n");
-        out.write(" * By kfyty\n");
-        out.write(" */\n");
+        generateClassComment(dataBaseInfo, out);
         generateClassAnnotation(dataBaseInfo, out);
-        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix() + " {\n");
+        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) +
+                fileSuffix() + generateExtendsClass(dataBaseInfo) + generateImplmentsClass(dataBaseInfo) + " {\n");
         for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
-            out.write("\t/**\n");
-            out.write("\t * " + tableInfo.getFieldComment() + "\n");
-            out.write("\t */\n");
+            generateFieldComment(tableInfo, out);
             generateFieldAnnotation(tableInfo, out);
             out.write("\tprivate " + convert2JavaType(tableInfo.getFieldType()) + " " + CommonUtil.convert2Hump(tableInfo.getField(), false) + ";\n\n");
         }
@@ -50,8 +44,32 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         out.write("import lombok.Data;\n\n");
     }
 
+    public void generateClassComment(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
+        out.write("/**\n");
+        out.write(" * TABLE_NAME: " + dataBaseInfo.getTableName() + "\n");
+        out.write(" * TABLE_COMMENT: " + dataBaseInfo.getTableComment() + "\n");
+        out.write(" *\n");
+        out.write(" * By kfyty\n");
+        out.write(" */\n");
+    }
+
+    public String generateExtendsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+        return "";
+    }
+
+    public String generateImplmentsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+        return "";
+    }
+
+
     public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
         out.write("@Data\n");
+    }
+
+    public void generateFieldComment(AbstractTableInfo tableInfo, BufferedWriter out) throws IOException {
+        out.write("\t/**\n");
+        out.write("\t * " + tableInfo.getFieldComment() + "\n");
+        out.write("\t */\n");
     }
 
     public void generateFieldAnnotation(AbstractTableInfo tableInfo, BufferedWriter out) throws IOException {

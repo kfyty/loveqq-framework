@@ -112,14 +112,14 @@ public class CommonUtil {
                 log.error(": indeterminate of the parameterized type !");
                 return null;
             }
-            return new ReturnType(false, true, type, (Class<K>) actualTypeArguments[0], null);
+            return new ReturnType(false, true, type, actualTypeArguments[0], null);
         }
         if(Map.class.isAssignableFrom(type)) {
             if(CommonUtil.empty(actualTypeArguments) || actualTypeArguments.length != 2) {
                 log.error(": indeterminate of the parameterized type !");
                 return null;
             }
-            return new ReturnType(false, true, type, (Class<K>) actualTypeArguments[0], (Class<V>) actualTypeArguments[1]);
+            return new ReturnType(false, true, type, actualTypeArguments[0], actualTypeArguments[1]);
         }
         return null;
     }
