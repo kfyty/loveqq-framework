@@ -39,8 +39,4 @@ public interface GenerateConfiguration {
     default String filePath() {
         return null;
     }
-
-    default Boolean sameFile() {
-        return false;
-    }
 }

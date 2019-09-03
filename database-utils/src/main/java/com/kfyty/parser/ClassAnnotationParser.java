@@ -1,10 +1,12 @@
 package com.kfyty.parser;
 
+import com.kfyty.KfytyApplication;
 import com.kfyty.configuration.ApplicationConfigurable;
 import com.kfyty.configuration.annotation.Component;
 import com.kfyty.configuration.annotation.Configuration;
 import com.kfyty.configuration.annotation.EnableAutoGenerateSources;
 import com.kfyty.configuration.annotation.KfytyBootApplication;
+import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
@@ -12,6 +14,7 @@ import com.kfyty.util.CommonUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,43 +27,40 @@ import java.util.Set;
 @Slf4j
 public class ClassAnnotationParser {
     @Getter
-    private ApplicationConfigurable configuration;
+    private ApplicationConfigurable applicationConfigurable;
 
     private MethodAnnotationParser methodAnnotationParser;
 
     private FieldAnnotationParser fieldAnnotationParser;
 
-    public ClassAnnotationParser() throws Exception {
-        this.configuration = ApplicationConfigurable.initApplicationConfigurable();
-        this.methodAnnotationParser = new MethodAnnotationParser(configuration);
-        this.fieldAnnotationParser = new FieldAnnotationParser(configuration);
+    public ApplicationConfigurable initClassAnnotationParser() throws Exception {
+        this.applicationConfigurable = ApplicationConfigurable.initApplicationConfigurable();
+        this.methodAnnotationParser = new MethodAnnotationParser(applicationConfigurable);
+        this.fieldAnnotationParser = new FieldAnnotationParser(applicationConfigurable);
+        return this.applicationConfigurable;
     }
 
     public ApplicationConfigurable parseClassAnnotation(Class<?> clazz, Set<Class<?>> classSet) throws Exception {
         if(clazz == null || CommonUtil.empty(classSet) || !clazz.isAnnotationPresent(KfytyBootApplication.class)) {
             return null;
         }
-        this.parseAutoConfiguration(classSet);
-        this.configuration.autoConfigurationAfterCheck();
-        this.configuration.handleDependency();
-        this.methodAnnotationParser.parseMethodAnnotation(classSet);
-        this.fieldAnnotationParser.parseFieldAnnotation(classSet);
+        this.findAutoConfiguration(classSet);
+        this.methodAnnotationParser.parseMethodAnnotation();
+        this.fieldAnnotationParser.parseFieldAnnotation();
+
+        this.parseAutoConfiguration();
+        this.applicationConfigurable.autoConfigurationAfterCheck();
+
         if(clazz.isAnnotationPresent(EnableAutoGenerateSources.class)) {
-            this.configuration.executeAutoGenerateSources();
+            this.applicationConfigurable.executeAutoGenerateSources();
         }
-        return configuration;
+        return applicationConfigurable;
     }
 
-    private void parseAutoConfiguration(Set<Class<?>> classSet) throws Exception {
+    private void findAutoConfiguration(Set<Class<?>> classSet) throws Exception {
         for(Class<?> clazz : classSet) {
-           if(clazz.isAnnotationPresent(Configuration.class)) {
-               this.parseConfigurationAnnotation(clazz, CommonUtil.isAbstract(clazz) ? clazz : clazz.newInstance());
-               if(log.isDebugEnabled()) {
-                   log.debug(": found auto configuration: [{}] !", clazz);
-               }
-           }
-           if(clazz.isAnnotationPresent(Component.class)) {
-               this.parseComponentAnnotation(clazz, CommonUtil.isAbstract(clazz) ? clazz : clazz.newInstance());
+           if(clazz.isAnnotationPresent(Configuration.class) || clazz.isAnnotationPresent(Component.class)) {
+               this.applicationConfigurable.getBeanResources().put(clazz, CommonUtil.isAbstract(clazz) ? clazz : clazz.newInstance());
                if(log.isDebugEnabled()) {
                    log.debug(": found component: [{}] !", clazz);
                }
@@ -68,20 +68,32 @@ public class ClassAnnotationParser {
         }
     }
 
+    private void parseAutoConfiguration() throws Exception {
+        for (Map.Entry<Class<?>, Object> entry : this.applicationConfigurable.getBeanResources().entrySet()) {
+            if(entry.getKey().isAnnotationPresent(Configuration.class)) {
+                this.parseConfigurationAnnotation(entry.getKey(), entry.getValue());
+                continue;
+            }
+            if(entry.getKey().isAnnotationPresent(Component.class)) {
+                this.parseComponentAnnotation(entry.getKey(), entry.getValue());
+                continue;
+            }
+        }
+    }
+
     private void parseConfigurationAnnotation(Class<?> clazz, Object value) throws Exception {
-        this.configuration.getBeanResources().put(clazz, value);
         if(GenerateConfiguration.class.isAssignableFrom(clazz)) {
-            this.configuration.getGenerateConfigurable().refreshGenerateConfiguration((GenerateConfiguration) value);
+            this.applicationConfigurable.getGenerateConfigurable().refreshGenerateConfiguration((GenerateConfiguration) value);
+            KfytyApplication.getResources(GenerateSources.class).refreshGenerateConfigurable(this.applicationConfigurable.getGenerateConfigurable());
         }
     }
 
     private void parseComponentAnnotation(Class<?> clazz, Object value) throws Exception {
-        this.configuration.getBeanResources().put(clazz, value);
         if(AbstractDataBaseMapper.class.isAssignableFrom(clazz)) {
-            this.configuration.getGenerateConfigurable().setDataBaseMapper((Class<? extends AbstractDataBaseMapper>) clazz);
+            this.applicationConfigurable.getGenerateConfigurable().setDataBaseMapper((Class<? extends AbstractDataBaseMapper>) clazz);
         }
         if(AbstractGenerateTemplate.class.isAssignableFrom(clazz)) {
-            this.configuration.getGenerateConfigurable().getGenerateTemplateList().add((AbstractGenerateTemplate) value);
+            this.applicationConfigurable.getGenerateConfigurable().getGenerateTemplateList().add((AbstractGenerateTemplate) value);
         }
     }
 }

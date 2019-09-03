@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * 功能描述: 属性注解解析器
@@ -21,38 +21,30 @@ import java.util.Set;
 @Slf4j
 @AllArgsConstructor
 public class FieldAnnotationParser {
+
     private ApplicationConfigurable applicationConfigurable;
 
-    public void parseFieldAnnotation(Set<Class<?>> classSet) throws Exception {
-        if(CommonUtil.empty(classSet)) {
-            return;
-        }
-        for (Class<?> clazz : classSet) {
-            if(clazz.isAnnotationPresent(Configuration.class) || clazz.isAnnotationPresent(Component.class)) {
-                this.parseAutoConfiguration(clazz);
+    public void parseFieldAnnotation() throws Exception {
+        for (Map.Entry<Class<?>, Object> entry : this.applicationConfigurable.getBeanResources().entrySet()) {
+            if(entry.getKey().isAnnotationPresent(Configuration.class) || entry.getKey().isAnnotationPresent(Component.class)) {
+                this.parseAutoConfiguration(entry.getKey(), entry.getValue());
             }
         }
     }
 
-    private void parseAutoConfiguration(Class<?> clazz) throws Exception {
+    private void parseAutoConfiguration(Class<?> clazz, Object value) throws Exception {
         Field[] fields = clazz.getDeclaredFields();
-        Object o = this.applicationConfigurable.getBeanResources().get(clazz);
         if(CommonUtil.empty(fields)) {
             return;
         }
-        if(o == null) {
-            log.error(": not found bean resources: [{}] !", clazz);
-            return;
-        }
         for (Field field : fields) {
-            this.parseAutoWriedAnnotation(o, field);
+            if(field.isAnnotationPresent(AutoWired.class)) {
+                this.parseAutoWriedAnnotation(value, field);
+            }
         }
     }
 
     private void parseAutoWriedAnnotation(Object o, Field field) throws Exception {
-        if(!field.isAnnotationPresent(AutoWired.class)) {
-            return;
-        }
         Object value = this.applicationConfigurable.getBeanResources().get(field.getType());
         if(value == null) {
             log.error(": not found bean resources: [{}] !", field.getType());

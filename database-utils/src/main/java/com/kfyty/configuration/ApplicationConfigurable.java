@@ -31,7 +31,6 @@ public class ApplicationConfigurable {
     public static ApplicationConfigurable initApplicationConfigurable() throws Exception {
         ApplicationConfigurable applicationConfigurable = new ApplicationConfigurable();
         applicationConfigurable.initAutoConfiguration();
-        applicationConfigurable.beanResources.put(ApplicationConfigurable.class, applicationConfigurable);
         applicationConfigurable.beanResources.put(GenerateSources.class, new GenerateSources());
         return applicationConfigurable;
     }
@@ -67,14 +66,10 @@ public class ApplicationConfigurable {
         }
     }
 
-    public void handleDependency() throws Exception {
-        ((GenerateSources) this.beanResources.get(GenerateSources.class)).refreshGenerateConfigurable(this.generateConfigurable);
-    }
-
     public void executeAutoGenerateSources() throws Exception {
         if(!this.getGenerateConfigurable().isAutoConfiguration()) {
             return;
         }
-        ((GenerateSources) this.beanResources.get(GenerateSources.class)).refreshGenerateConfigurable(this.generateConfigurable).generate();
+        ((GenerateSources) this.beanResources.get(GenerateSources.class)).generate();
     }
 }

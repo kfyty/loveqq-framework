@@ -25,6 +25,8 @@ public class KfytyApplication {
     }
 
     public void run(Class<?> clazz, Set<Class<?>> classSet) throws Exception {
-        applicationConfigurable = new ClassAnnotationParser().parseClassAnnotation(clazz, classSet);
+        ClassAnnotationParser classAnnotationParser = new ClassAnnotationParser();
+        applicationConfigurable = classAnnotationParser.initClassAnnotationParser();
+        classAnnotationParser.parseClassAnnotation(clazz, classSet);
     }
 }
