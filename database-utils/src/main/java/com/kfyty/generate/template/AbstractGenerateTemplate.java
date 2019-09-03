@@ -47,7 +47,7 @@ public interface AbstractGenerateTemplate {
     }
 
     default String fileSuffix() {
-        return null;
+        return "";
     }
 
     default String fileTypeSuffix() {
@@ -58,7 +58,7 @@ public interface AbstractGenerateTemplate {
         return false;
     }
 
-    default void generate(AbstractDataBaseInfo dataBaseInfo, String packageName, BufferedWriter out) throws IOException {
+    default void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
 
     }
 }

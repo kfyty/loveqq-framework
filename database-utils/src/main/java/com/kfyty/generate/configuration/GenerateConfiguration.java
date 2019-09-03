@@ -32,7 +32,7 @@ public interface GenerateConfiguration {
         return null;
     }
 
-    default String packageName() {
+    default String basePackage() {
         return null;
     }
 

@@ -22,15 +22,17 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String packageName, BufferedWriter out) throws IOException {
-        if(!CommonUtil.empty(packageName)) {
-            out.write("package " + packageName + ";\n\n");
+    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
+        if(!CommonUtil.empty(basePackage)) {
+            out.write("package " + basePackage + "." + fileSuffix().toLowerCase() + ";\n\n");
         }
-        generateImport(dataBaseInfo, out);
+        generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
         generateClassAnnotation(dataBaseInfo, out);
-        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) +
-                fileSuffix() + generateExtendsClass(dataBaseInfo) + generateImplmentsClass(dataBaseInfo) + " {\n");
+        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+        out.write(CommonUtil.empty(generateExtendsClass(dataBaseInfo)) ? "" : " extends " + generateExtendsClass(dataBaseInfo));
+        out.write(CommonUtil.empty(generateImplementsInterfaces(dataBaseInfo)) ? "" : " implements " + generateImplementsInterfaces(dataBaseInfo));
+        out.write(" {\n");
         for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
             generateFieldComment(tableInfo, out);
             generateFieldAnnotation(tableInfo, out);
@@ -39,7 +41,7 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         out.write("}\n");
     }
 
-    public void generateImport(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
+    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
         out.write("import java.util.Date;\n\n");
         out.write("import lombok.Data;\n\n");
     }
@@ -57,10 +59,9 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         return "";
     }
 
-    public String generateImplmentsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+    public String generateImplementsInterfaces(AbstractDataBaseInfo dataBaseInfo) throws IOException {
         return "";
     }
-
 
     public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
         out.write("@Data\n");

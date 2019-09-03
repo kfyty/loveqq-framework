@@ -40,16 +40,22 @@ public class GenerateSources {
         this.sqlSession = new SqlSession();
     }
 
-    public GenerateSources(GenerateConfiguration generateConfiguration) throws Exception {
+    public GenerateSources(GenerateConfiguration generateConfiguration) {
         this.sqlSession = new SqlSession();
         this.configurable = new GenerateConfigurable(generateConfiguration);
     }
 
-    private String initDirectory(AbstractDataBaseInfo info) {
+    private String initFilePath() {
+        String basePackage = CommonUtil.empty(configurable.getBasePackage()) ? "" : configurable.getBasePackage() + ".";
+        String packageName = basePackage + configurable.getCurrentGenerateTemplate().fileSuffix().toLowerCase();
         String parentPath = new File(configurable.getFilePath()).getAbsolutePath();
-        String savePath = parentPath.endsWith(File.separator) ?
-                parentPath + configurable.getPackageName().replace(".", File.separator) :
-                parentPath + File.separator + configurable.getPackageName().replace(".", File.separator);
+        return parentPath.endsWith(File.separator) ?
+                parentPath + packageName.replace(".", File.separator) :
+                parentPath + File.separator + packageName.replace(".", File.separator);
+    }
+
+    private String initDirectory(AbstractDataBaseInfo info) {
+        String savePath = this.initFilePath();
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
         String fileSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileSuffix()).orElse("");
         String fileTypeSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileTypeSuffix()).orElse(".java");
@@ -91,19 +97,19 @@ public class GenerateSources {
         }
     }
 
-    public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
+    public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) {
         this.configurable.refreshGenerateConfiguration(configuration);
         this.dataBaseInfoList = null;
         return this;
     }
 
-    public GenerateSources refreshGenerateConfigurable(GenerateConfigurable configurable) throws Exception {
+    public GenerateSources refreshGenerateConfigurable(GenerateConfigurable configurable) {
         this.configurable = configurable;
         this.dataBaseInfoList = null;
         return this;
     }
 
-    public GenerateSources refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) throws Exception {
+    public GenerateSources refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) {
         this.configurable.refreshGenerateTemplate(generateTemplate);
         return this;
     }
@@ -121,7 +127,7 @@ public class GenerateSources {
                     file = this.initFile(dataBaseInfo);
                     out = new BufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
-                nextGenerateTemplate.generate(dataBaseInfo, configurable.getPackageName(), out);
+                nextGenerateTemplate.generate(dataBaseInfo, configurable.getBasePackage(), out);
                 out.flush();
                 log.debug(": generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }

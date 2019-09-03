@@ -5,7 +5,7 @@ import com.kfyty.generate.annotation.DataBase;
 import com.kfyty.generate.annotation.DataBaseMapper;
 import com.kfyty.generate.annotation.FilePath;
 import com.kfyty.generate.annotation.GenerateTemplate;
-import com.kfyty.generate.annotation.Package;
+import com.kfyty.generate.annotation.BasePackage;
 import com.kfyty.generate.annotation.Table;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
@@ -47,18 +47,18 @@ public class GenerateConfigurable extends Configuration {
 
     private String queryTableSql;
 
-    private String packageName;
+    private String basePackage;
 
     private String filePath;
 
-    public GenerateConfigurable() throws Exception {
+    public GenerateConfigurable() {
         this.currentGenerateTemplateCursor = -1;
         this.generateTemplateList = new ArrayList<>();
     }
 
-    public GenerateConfigurable(GenerateConfiguration configuration) throws Exception {
+    public GenerateConfigurable(GenerateConfiguration configuration) {
         this();
-        this.initGeneratePojoConfigurable(configuration);
+        this.initGenerateConfigurable(configuration);
     }
 
     public boolean hasGenerateTemplate() {
@@ -74,11 +74,11 @@ public class GenerateConfigurable extends Configuration {
         return getCurrentGenerateTemplate();
     }
 
-    public void refreshGenerateConfiguration(GenerateConfiguration configuration) throws Exception {
-        this.initGeneratePojoConfigurable(configuration);
+    public void refreshGenerateConfiguration(GenerateConfiguration configuration) {
+        this.initGenerateConfigurable(configuration);
     }
 
-    public void refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) throws Exception {
+    public void refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) {
         Optional.ofNullable(generateTemplate).orElseThrow(() -> new NullPointerException("generate template is null !"));
         this.generateTemplateList.add(currentGenerateTemplateCursor + 1, generateTemplate);
     }
@@ -90,18 +90,18 @@ public class GenerateConfigurable extends Configuration {
         this.generateTemplateList = Optional.ofNullable(generateTemplateList).filter(e -> !e.isEmpty()).map(e -> e.stream().distinct().collect(Collectors.toList())).orElseThrow(() -> new NullPointerException("generate template is null !"));
     }
 
-    private void initGeneratePojoConfigurable(GenerateConfiguration configuration) throws Exception {
-        this.initGeneratePojoConfigurableFromAnnotation(configuration);
-        this.initGeneratePojoConfigurableFromReturnValue(configuration);
+    private void initGenerateConfigurable(GenerateConfiguration configuration) {
+        this.initGenerateConfigurableFromAnnotation(configuration);
+        this.initGenerateConfigurableFromReturnValue(configuration);
     }
 
-    private void initGeneratePojoConfigurableFromAnnotation(GenerateConfiguration configuration) throws Exception {
+    private void initGenerateConfigurableFromAnnotation(GenerateConfiguration configuration) {
         Class<? extends GenerateConfiguration> configurationClass = configuration.getClass();
         this.dataBaseMapper = dataBaseMapper != null ? dataBaseMapper : Optional.ofNullable(configurationClass.getAnnotation(DataBaseMapper.class)).map(DataBaseMapper::value).orElse(null);
         this.dataBaseName = Optional.ofNullable(configurationClass.getAnnotation(DataBase.class)).map(DataBase::value).orElse(null);
         this.tables = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value())).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
         this.queryTableSql = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
-        this.packageName = Optional.ofNullable(configurationClass.getAnnotation(Package.class)).map(Package::value).orElse(null);
+        this.basePackage = Optional.ofNullable(configurationClass.getAnnotation(BasePackage.class)).map(BasePackage::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
         List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> {
             try {
@@ -116,7 +116,7 @@ public class GenerateConfigurable extends Configuration {
         }
     }
 
-    private void initGeneratePojoConfigurableFromReturnValue(GenerateConfiguration configuration) {
+    private void initGenerateConfigurableFromReturnValue(GenerateConfiguration configuration) {
         this.dataSource = Optional.ofNullable(configuration.getDataSource()).orElseThrow(() -> new NullPointerException("data source is null !"));
         if(this.dataBaseMapper == null) {
             if(configuration.dataBaseMapping() != null) {
@@ -138,8 +138,8 @@ public class GenerateConfigurable extends Configuration {
         if(CommonUtil.empty(this.tables)) {
             this.tables = Optional.ofNullable(configuration.table()).map(e -> new HashSet<>(Arrays.asList(e))).orElse(null);
         }
-        if(CommonUtil.empty(this.packageName)) {
-            this.packageName = Optional.ofNullable(configuration.packageName()).orElse("");
+        if(CommonUtil.empty(this.basePackage)) {
+            this.basePackage = Optional.ofNullable(configuration.basePackage()).orElse("");
         }
         if(CommonUtil.empty(this.filePath)) {
             this.filePath = Optional.ofNullable(configuration.filePath()).orElse("");
