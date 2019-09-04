@@ -71,6 +71,53 @@ public class CommonUtil {
         return !isClass ? s : s.length() == 1 ? Character.toUpperCase(s.charAt(0)) + "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
+    public static String convert2JavaType(String dataBaseType) {
+        switch (dataBaseType.toLowerCase()) {
+            case "varchar":
+                return "String";
+            case "varchar2":
+                return "String";
+            case "nvarchar2" :
+                return "String";
+            case "number":
+                return "Long";
+            case "int":
+                return "Integer";
+            case "integer":
+                return "Integer";
+            case "bigint":
+                return "Long";
+            case "float":
+                return "Float";
+            case "text":
+                return "String";
+            case "date":
+                return "Date";
+            case "datetime":
+                return "Date";
+            case "timestamp" :
+                return "Date";
+            case "blob" :
+                return "byte[]";
+            default :
+                throw new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !");
+        }
+    }
+
+    public static String fillString(String s, Object ... params) {
+        int index = -1;
+        int paramIndex = 0;
+        StringBuilder sb = new StringBuilder(s);
+        while((index = sb.indexOf("{}", index)) != -1) {
+            if(sb.charAt(index - 1) == '#' || sb.charAt(index - 1) == '$') {
+                index++;
+                continue;
+            }
+            sb.replace(index, index + 2, Optional.ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
+        }
+        return sb.toString();
+    }
+
     public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
         InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
         Field field = invocationHandler.getClass().getDeclaredField("memberValues");

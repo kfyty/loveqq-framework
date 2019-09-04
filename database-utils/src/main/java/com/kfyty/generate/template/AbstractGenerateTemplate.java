@@ -1,8 +1,9 @@
 package com.kfyty.generate.template;
 
+import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.util.CommonUtil;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 /**
@@ -14,36 +15,7 @@ import java.io.IOException;
  */
 public interface AbstractGenerateTemplate {
     default String convert2JavaType(String dataBaseType) {
-        switch (dataBaseType.toLowerCase()) {
-            case "varchar":
-                return "String";
-            case "varchar2":
-                return "String";
-            case "nvarchar2" :
-                return "String";
-            case "number":
-                return "Long";
-            case "int":
-                return "Integer";
-            case "integer":
-                return "Integer";
-            case "bigint":
-                return "Long";
-            case "float":
-                return "Float";
-            case "text":
-                return "String";
-            case "date":
-                return "Date";
-            case "datetime":
-                return "Date";
-            case "timestamp" :
-                return "Date";
-            case "blob" :
-                return "byte[]";
-            default :
-                throw new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !");
-        }
+        return CommonUtil.convert2JavaType(dataBaseType);
     }
 
     default String fileSuffix() {
@@ -58,7 +30,7 @@ public interface AbstractGenerateTemplate {
         return false;
     }
 
-    default void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
+    default void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 }

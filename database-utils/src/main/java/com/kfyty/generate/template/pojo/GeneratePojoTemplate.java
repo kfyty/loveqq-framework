@@ -1,11 +1,11 @@
 package com.kfyty.generate.template.pojo;
 
+import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.info.AbstractTableInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.util.CommonUtil;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 /**
@@ -16,43 +16,54 @@ import java.io.IOException;
  * @since JDK 1.8
  */
 public class GeneratePojoTemplate implements AbstractGenerateTemplate {
+
     @Override
     public String fileSuffix() {
         return "Pojo";
     }
 
+    public String entityFileSuffix() {
+        return "Pojo";
+    }
+
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
+    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         if(!CommonUtil.empty(basePackage)) {
-            out.write("package " + basePackage + "." + fileSuffix().toLowerCase() + ";\n\n");
+            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase());
         }
         generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
         generateClassAnnotation(dataBaseInfo, out);
-        out.write("public class " + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+        generateClassDefinition(dataBaseInfo, out);
         out.write(CommonUtil.empty(generateExtendsClass(dataBaseInfo)) ? "" : " extends " + generateExtendsClass(dataBaseInfo));
         out.write(CommonUtil.empty(generateImplementsInterfaces(dataBaseInfo)) ? "" : " implements " + generateImplementsInterfaces(dataBaseInfo));
-        out.write(" {\n");
-        for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
-            generateFieldComment(tableInfo, out);
-            generateFieldAnnotation(tableInfo, out);
-            out.write("\tprivate " + convert2JavaType(tableInfo.getFieldType()) + " " + CommonUtil.convert2Hump(tableInfo.getField(), false) + ";\n\n");
-        }
-        out.write("}\n");
+        out.writeLine(" {");
+        generateTableInfo(dataBaseInfo, out);
+        out.writeLine("}");
     }
 
-    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
-        out.write("import java.util.Date;\n\n");
-        out.write("import lombok.Data;\n\n");
+    public void imports(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        String entityPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase() + ".";
+        String entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
+        out.writeLine("import {};\n", entityPackageName + entityClassName);
     }
 
-    public void generateClassComment(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
-        out.write("/**\n");
-        out.write(" * TABLE_NAME: " + dataBaseInfo.getTableName() + "\n");
-        out.write(" * TABLE_COMMENT: " + dataBaseInfo.getTableComment() + "\n");
-        out.write(" *\n");
-        out.write(" * By kfyty\n");
-        out.write(" */\n");
+    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("import java.util.Date;\n");
+        out.writeLine("import lombok.Data;\n");
+    }
+
+    public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.write("public class {}", CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+    }
+
+    public void generateClassComment(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("/**");
+        out.writeLine(" * TABLE_NAME: {}", dataBaseInfo.getTableName());
+        out.writeLine(" * TABLE_COMMENT: {}", dataBaseInfo.getTableComment());
+        out.writeLine(" *");
+        out.writeLine(" * By kfyty");
+        out.writeLine(" */");
     }
 
     public String generateExtendsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
@@ -63,17 +74,25 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         return "";
     }
 
-    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
-        out.write("@Data\n");
+    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("@Data");
     }
 
-    public void generateFieldComment(AbstractTableInfo tableInfo, BufferedWriter out) throws IOException {
-        out.write("\t/**\n");
-        out.write("\t * " + tableInfo.getFieldComment() + "\n");
-        out.write("\t */\n");
+    public void generateTableInfo(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
+            generateFieldComment(tableInfo, out);
+            generateFieldAnnotation(tableInfo, out);
+            out.writeLine("\tprivate {} {};\n", convert2JavaType(tableInfo.getFieldType()), CommonUtil.convert2Hump(tableInfo.getField(), false));
+        }
     }
 
-    public void generateFieldAnnotation(AbstractTableInfo tableInfo, BufferedWriter out) throws IOException {
+    public void generateFieldComment(AbstractTableInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("\t/**");
+        out.writeLine("\t * {}", tableInfo.getFieldComment());
+        out.writeLine("\t */");
+    }
+
+    public void generateFieldAnnotation(AbstractTableInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 }

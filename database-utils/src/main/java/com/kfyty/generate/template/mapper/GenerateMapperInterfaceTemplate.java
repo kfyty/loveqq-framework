@@ -1,10 +1,10 @@
 package com.kfyty.generate.template.mapper;
 
+import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
 import com.kfyty.util.CommonUtil;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 /**
@@ -15,53 +15,65 @@ import java.io.IOException;
  * @since JDK 1.8
  */
 public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
+
     @Override
     public String fileSuffix() {
         return "Mapper";
     }
 
-    public String entityFileSuffix() {
-        return "Pojo";
-    }
-
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
+    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         if(!CommonUtil.empty(basePackage)) {
-            out.write("package " + basePackage + "." + fileSuffix().toLowerCase() + ";\n\n");
+            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase());
         }
-        String className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true);
         generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
         generateClassAnnotation(dataBaseInfo, out);
-        out.write("public interface " + className + fileSuffix());
+        generateClassDefinition(dataBaseInfo, out);
         out.write(CommonUtil.empty(generateExtendsInterfaces(dataBaseInfo)) ? "" : " implements " + generateExtendsInterfaces(dataBaseInfo));
-        out.write(" {\n\n");
-
-        out.write("\tList<" + className + entityFileSuffix() + "> findBy(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n\n");
-
-        generateCustomerMapperInterfaces(dataBaseInfo, basePackage, out);
-        out.write("}\n");
+        out.writeLine(" {\n");
+        generateMapperInterfaces(dataBaseInfo, basePackage, out);
+        out.writeLine("}");
     }
 
     @Override
-    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) throws IOException {
-        String packageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase() + ".";
-        out.write("import " + packageName + CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix() + ";\n\n");
-        out.write("import org.apache.ibatis.annotations.Param;\n");
-        out.write("import org.springframework.stereotype.Repository;\n\n");
-        out.write("import java.sql.SQLException;\n\n");
+    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        super.imports(dataBaseInfo, basePackage, out);
+        out.writeLine("import org.apache.ibatis.annotations.Param;");
+        out.writeLine("import org.springframework.stereotype.Repository;\n");
+        out.writeLine("import java.sql.SQLException;\n");
     }
 
     @Override
-    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, BufferedWriter out) throws IOException {
-        out.write("@Repository\n");
+    public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.write("public interface {}", CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+    }
+
+    @Override
+    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("@Repository");
     }
 
     public String generateExtendsInterfaces(AbstractDataBaseInfo dataBaseInfo) {
         return "";
     }
 
-    public void generateCustomerMapperInterfaces(AbstractDataBaseInfo dataBaseInfo, String basePackage, BufferedWriter out) {
+    public void generateMapperInterfaces(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        String varName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false);
+        String className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true);
+        String entityVarName = varName + entityFileSuffix();
+        String entityClassName = className + entityFileSuffix();
 
+        out.writeLine("\t{} findById(@Param(\"id\") String id) throws SQLException;\n", entityClassName);
+
+        out.writeLine("\tList<{}> findBy(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n", entityClassName);
+
+        out.writeLine("\tList<{}> findLike(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n", entityClassName);
+
+        out.writeLine("\tvoid insert(@Param(\"{}\") {} {}) throws SQLException;\n", entityVarName, entityClassName, entityVarName);
+
+        out.writeLine("\tvoid updateById(@Param(\"id\") String id, @Param(\"{}\") {} {}) throws SQLException;\n", entityVarName, entityClassName, entityVarName);
+
+        out.writeLine("\tvoid deleteById(@Param(\"id\") String id) throws SQLException;\n");
     }
 }

@@ -10,7 +10,6 @@ import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,7 +46,8 @@ public class GenerateSources {
 
     private String initFilePath() {
         String basePackage = CommonUtil.empty(configurable.getBasePackage()) ? "" : configurable.getBasePackage() + ".";
-        String packageName = basePackage + configurable.getCurrentGenerateTemplate().fileSuffix().toLowerCase();
+        String fileSuffix = configurable.getCurrentGenerateTemplate().fileSuffix().toLowerCase();
+        String packageName = basePackage + (!fileSuffix.endsWith("impl") ? fileSuffix : fileSuffix.replace("impl", ".impl"));
         String parentPath = new File(configurable.getFilePath()).getAbsolutePath();
         return parentPath.endsWith(File.separator) ?
                 parentPath + packageName.replace(".", File.separator) :
@@ -119,13 +119,13 @@ public class GenerateSources {
             this.initDataBaseInfo();
         }
         File file = null;
-        BufferedWriter out = null;
+        GenerateSourcesBufferedWriter out = null;
         while(configurable.hasGenerateTemplate()) {
             AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
             for (AbstractDataBaseInfo dataBaseInfo : this.dataBaseInfoList) {
                 if(file == null || out == null || !nextGenerateTemplate.sameFile()) {
                     file = this.initFile(dataBaseInfo);
-                    out = new BufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
+                    out = new GenerateSourcesBufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
                 nextGenerateTemplate.generate(dataBaseInfo, configurable.getBasePackage(), out);
                 out.flush();
