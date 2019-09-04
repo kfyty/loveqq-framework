@@ -61,6 +61,10 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
         out.writeLine("\t\tselect * from {} where ${field} like '%${value}%'", dataBaseInfo.getTableName());
         out.writeLine("\t</select>\n");
 
+        out.writeLine("\t<select id=\"findAll\" resultType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t\tselect * from {}", dataBaseInfo.getTableName());
+        out.writeLine("\t</select>\n");
+
         out.writeLine("\t<insert id=\"insertById\" parameterType=\"{}\">", entityPackageName + entityClassName);
         out.write("\t\tinsert into {} values (", dataBaseInfo.getTableName());
         for (int i = 0; i < dataBaseInfo.getTableInfos().size(); i++) {

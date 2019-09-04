@@ -24,7 +24,7 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
     @Override
     public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         if(!CommonUtil.empty(basePackage)) {
-            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase());
+            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase().replace("impl", ".impl"));
         }
         generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
@@ -69,6 +69,8 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
         out.writeLine("\tList<{}> findBy(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n", entityClassName);
 
         out.writeLine("\tList<{}> findLike(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n", entityClassName);
+
+        out.writeLine("\tList<{}> findAll() throws SQLException;\n", entityClassName);
 
         out.writeLine("\tvoid insert(@Param(\"{}\") {} {}) throws SQLException;\n", entityVarName, entityClassName, entityVarName);
 

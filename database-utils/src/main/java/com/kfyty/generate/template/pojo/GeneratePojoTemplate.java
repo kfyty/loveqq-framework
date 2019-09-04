@@ -29,7 +29,7 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     @Override
     public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         if(!CommonUtil.empty(basePackage)) {
-            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase());
+            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase().replace("impl", ".impl"));
         }
         generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
