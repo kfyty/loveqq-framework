@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(Queries.class)
 public @interface Query {
-    String value() default "";
+    String value();
 
     String key() default "";
 

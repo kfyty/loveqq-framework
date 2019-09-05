@@ -5,6 +5,7 @@ import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.util.CommonUtil;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * 功能描述: 生成模板接口
@@ -15,7 +16,7 @@ import java.io.IOException;
  */
 public interface AbstractGenerateTemplate {
     default String convert2JavaType(String dataBaseType) {
-        return CommonUtil.convert2JavaType(dataBaseType);
+        return Optional.ofNullable(CommonUtil.convert2JavaType(dataBaseType)).orElseThrow(() -> new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !"));
     }
 
     default String fileSuffix() {

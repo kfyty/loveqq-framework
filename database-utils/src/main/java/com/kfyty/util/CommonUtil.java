@@ -73,6 +73,8 @@ public class CommonUtil {
 
     public static String convert2JavaType(String dataBaseType) {
         switch (dataBaseType.toLowerCase()) {
+            case "char":
+                return "String";
             case "varchar":
                 return "String";
             case "varchar2":
@@ -89,18 +91,28 @@ public class CommonUtil {
                 return "Long";
             case "float":
                 return "Float";
+            case "decimal" :
+                return "BigDecimal";
             case "text":
                 return "String";
             case "date":
                 return "Date";
+            case "time":
+                return "Date";
             case "datetime":
+                return "Date";
+            case "datetime2":
                 return "Date";
             case "timestamp" :
                 return "Date";
             case "blob" :
                 return "byte[]";
+            case "binary":
+                return "byte[]";
+            case "varbinary":
+                return "byte[]";
             default :
-                throw new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !");
+                return null;
         }
     }
 

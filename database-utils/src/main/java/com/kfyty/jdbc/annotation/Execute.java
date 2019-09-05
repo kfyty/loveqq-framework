@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(Executes.class)
 public @interface Execute {
-    String value() default "";
+    String value();
 
     ForEach[] forEach() default {};
 }

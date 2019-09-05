@@ -15,14 +15,14 @@ import java.util.List;
  * @since JDK 1.8
  */
 public interface AbstractDataBaseMapper {
-    @Query
+    @Query("")
     default List<String> findTableList() {
         return null;
     }
 
-    @Query
+    @Query("")
     List<? extends AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);
 
-    @Query
+    @Query("")
     List<? extends AbstractTableInfo> findTableInfo(@Param("dataBaseName") String dataBaseName,@Param("tableName")  String tableName);
 }
