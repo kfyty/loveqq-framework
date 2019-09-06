@@ -63,10 +63,11 @@ public class CommonUtil {
         s = Optional.ofNullable(s).map(e -> e.contains("_") || Pattern.compile("[A-Z0-9]*").matcher(e).matches() ? e.toLowerCase() : e).orElseThrow(() -> new NullPointerException("column is null"));
         while(s.contains("_")) {
             int index = s.indexOf('_');
-            if(index < s.length() - 1) {
-                char ch = s.charAt(index + 1);
-                s = s.replace("_" + ch, "" + Character.toUpperCase(ch));
+            if(index == s.length() - 1) {
+                break;
             }
+            char ch = s.charAt(index + 1);
+            s = s.replace("_" + ch, "" + Character.toUpperCase(ch));
         }
         return !isClass ? s : s.length() == 1 ? Character.toUpperCase(s.charAt(0)) + "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
