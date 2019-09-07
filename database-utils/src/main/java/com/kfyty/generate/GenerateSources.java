@@ -37,11 +37,12 @@ public class GenerateSources {
 
     public GenerateSources() {
         this.sqlSession = new SqlSession();
+        this.configurable = new GenerateConfigurable();
     }
 
     public GenerateSources(GenerateConfiguration generateConfiguration) {
-        this.sqlSession = new SqlSession();
-        this.configurable = new GenerateConfigurable(generateConfiguration);
+        this();
+        this.configurable.refreshGenerateConfiguration(generateConfiguration);
     }
 
     private String initFilePath() {
