@@ -155,25 +155,51 @@ public class CommonUtil {
                 type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
     }
 
-    public static Field getField(Class<?> clazz, String fieldName) throws Exception {
+    public static Field getField(Class<?> clazz, String fieldName) {
+        return getField(clazz, fieldName, false);
+    }
+
+    public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        } catch(NoSuchFieldException e) {
+            return getSuperField(clazz, fieldName, containPrivate);
+        }
+    }
+
+    public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
         if(clazz.getSimpleName().equals("Object")) {
             log.error(": no field found:[{}] !", fieldName);
             return null;
         }
         try {
-            return clazz.getDeclaredField(fieldName);
+            clazz = clazz.getSuperclass();
+            Field field = clazz.getDeclaredField(fieldName);
+            return !containPrivate && Modifier.isPrivate(field.getModifiers()) ? null : field;
         } catch(NoSuchFieldException e) {
-            return getField(clazz.getSuperclass(), fieldName);
+            return getSuperField(clazz, fieldName, containPrivate);
         }
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz) {
+        return getFieldMap(clazz, false);
+    }
+
+    public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
+        Map<String, Field> map = new HashMap<>();
+        map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
+        map.putAll(getSuperFieldMap(clazz, containPrivate));
+        return map;
+    }
+
+    public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
         if(clazz == null || clazz.getSimpleName().equals("Object")) {
             return new HashMap<>(0);
         }
+        clazz = clazz.getSuperclass();
         Map<String, Field> map = new HashMap<>();
-        map.putAll(getFieldMap(clazz.getSuperclass()));
-        map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
+        map.putAll(Arrays.stream(clazz.getDeclaredFields()).filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e)));
+        map.putAll(getSuperFieldMap(clazz, containPrivate));
         return map;
     }
 

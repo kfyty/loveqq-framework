@@ -146,4 +146,36 @@ public class BeanUtil {
         }
         return map;
     }
+
+    public static <T> T copyBean(T source, T target) throws IllegalAccessException {
+        Map<String, Field> sourceFileMap = CommonUtil.getFieldMap(source.getClass());
+        Map<String, Field> targetFieldMap = CommonUtil.getFieldMap(target.getClass());
+        for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
+            if(!targetFieldMap.containsKey(fieldEntry.getKey())) {
+                log.error(" : cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass());
+                return null;
+            }
+            Field field = targetFieldMap.get(fieldEntry.getKey());
+            boolean isAccessible = field.isAccessible();
+            field.setAccessible(true);
+            field.set(target, fieldEntry.getValue());
+            field.setAccessible(isAccessible);
+        }
+        return target;
+    }
+
+    public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz) throws IllegalAccessException, InstantiationException {
+        if(CommonUtil.empty(map) || clazz == null) {
+            return null;
+        }
+        T o = clazz.newInstance();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Field field = CommonUtil.getField(clazz, entry.getKey());
+            boolean isAccessible = field.isAccessible();
+            field.setAccessible(true);
+            field.set(o, entry.getValue());
+            field.setAccessible(isAccessible);
+        }
+        return o;
+    }
 }

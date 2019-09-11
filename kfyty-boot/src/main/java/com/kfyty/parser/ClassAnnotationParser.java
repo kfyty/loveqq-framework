@@ -10,6 +10,12 @@ import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
+import com.kfyty.jdbc.SqlSession;
+import com.kfyty.mvc.annotation.Controller;
+import com.kfyty.mvc.annotation.Repository;
+import com.kfyty.mvc.annotation.RestController;
+import com.kfyty.mvc.annotation.Service;
+import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.util.CommonUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -70,15 +76,35 @@ public class ClassAnnotationParser {
         return applicationConfigurable;
     }
 
-    private void findAutoConfiguration(Set<Class<?>> classSet) throws Exception {
-        for(Class<?> clazz : classSet) {
-           if(clazz.isAnnotationPresent(Configuration.class) || clazz.isAnnotationPresent(Component.class)) {
-               this.applicationConfigurable.getBeanResources().put(clazz, CommonUtil.isAbstract(clazz) ? clazz : clazz.newInstance());
-               if(log.isDebugEnabled()) {
-                   log.debug(": found component: [{}] !", clazz);
-               }
-           }
+    private Object newInstance(Class<?> clazz) throws IllegalAccessException, InstantiationException {
+        if(!CommonUtil.isAbstract(clazz)) {
+            return clazz.newInstance();
         }
+        if(clazz.isInterface() && clazz.isAnnotationPresent(Repository.class)) {
+            return KfytyApplication.getResources(SqlSession.class).getProxyObject(clazz);
+        }
+        throw new InstantiationException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
+    }
+
+    private void findAutoConfiguration(Set<Class<?>> classSet) throws Exception {
+        classSet.stream()
+                .filter(e ->
+                        e.isAnnotationPresent(Configuration.class)      ||
+                        e.isAnnotationPresent(Component.class)          ||
+                        e.isAnnotationPresent(Controller.class)         ||
+                        e.isAnnotationPresent(RestController.class)     ||
+                        e.isAnnotationPresent(Service.class)            ||
+                        e.isAnnotationPresent(Repository.class))
+                .forEach(e -> {
+                    try {
+                        this.applicationConfigurable.getBeanResources().put(e, this.newInstance(e));
+                        if(log.isDebugEnabled()) {
+                            log.debug(": found component: [{}] !", e);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
     }
 
     private void parseAutoConfiguration() throws Exception {
@@ -89,6 +115,10 @@ public class ClassAnnotationParser {
             }
             if(entry.getKey().isAnnotationPresent(Component.class)) {
                 this.parseComponentAnnotation(entry.getKey(), entry.getValue());
+                continue;
+            }
+            if(entry.getKey().isAnnotationPresent(Controller.class) || entry.getKey().isAnnotationPresent(RestController.class)) {
+                this.parseControllerAnnotation(entry.getKey());
                 continue;
             }
         }
@@ -117,5 +147,11 @@ public class ClassAnnotationParser {
         if(AbstractGenerateTemplate.class.isAssignableFrom(clazz)) {
             this.applicationConfigurable.getGenerateConfigurable().getGenerateTemplateList().add((AbstractGenerateTemplate) value);
         }
+    }
+
+    private void parseControllerAnnotation(Class<?> clazz) {
+        MVCAnnotationHandler mvcAnnotationHandler = KfytyApplication.getResources(MVCAnnotationHandler.class);
+        mvcAnnotationHandler.setMappingController(KfytyApplication.getResources(clazz));
+        mvcAnnotationHandler.buildURLMappingMap();
     }
 }
