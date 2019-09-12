@@ -35,6 +35,7 @@ public class MVCAnnotationHandler {
 
     public void setMappingController(Object mappingController) {
         this.mappingController = mappingController;
+        this.urlMappingList.clear();
         this.handleAnnotation();
     }
 

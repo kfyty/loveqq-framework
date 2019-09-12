@@ -55,23 +55,23 @@ public class DispatcherServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.preparedRequestResponse(req, resp);
         this.processRequest(req, resp);
     }
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        preparedRequestResponse(request, response);
         try (PrintWriter out = response.getWriter()) {
             String requestURI = request.getRequestURI();
             Map<RequestMethod, URLMapping> urlMappingMap = KfytyApplication.getResources(URLMapping.class).getUrlMappingMap().get(requestURI);
             if (CommonUtil.empty(urlMappingMap)) {
-                this.forward2Jsp(request, response, "/404");
+                this.forward2Jsp(request, response, "redirect:/404");
                 log.error(": cannot found url mapping: [{}] !", requestURI);
                 return;
             }
 
             URLMapping urlMapping = urlMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
             if (urlMapping == null) {
-                this.forward2Jsp(request, response, "/404");
+                this.forward2Jsp(request, response, "redirect:/404");
                 log.error(": cannot found request method mapping [{}] from url mapping [{}] !", request.getMethod(), requestURI);
                 return;
             }
@@ -89,8 +89,8 @@ public class DispatcherServlet extends HttpServlet {
                 this.forward2Jsp(request, response, o.toString().trim());
                 return;
             }
-        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
-            this.forward2Jsp(request, response, "/500");
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            this.forward2Jsp(request, response, "redirect:/500");
             e.printStackTrace();
         }
     }
@@ -101,7 +101,7 @@ public class DispatcherServlet extends HttpServlet {
         response.setContentType("text/html; charset=utf-8");
     }
 
-    private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, Method method) throws IOException, InstantiationException, IllegalAccessException {
+    private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, Method method) throws IOException, ServletException {
         Parameter[] parameters = method.getParameters();
         if(CommonUtil.empty(parameters)) {
             return null;
@@ -122,7 +122,7 @@ public class DispatcherServlet extends HttpServlet {
                 continue;
             }
             if(parameters[i].isAnnotationPresent(RequestParam.class)) {
-                paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(request.getParameter(parameters[i].getAnnotation(RequestParam.class).value())), parameters[i].getType());
+                paramValues[i] = this.parseRequestParamAnnotation(request, response, parameters[i]);
                 continue;
             }
             paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request)), parameters[i].getType());
@@ -130,9 +130,18 @@ public class DispatcherServlet extends HttpServlet {
         return paramValues;
     }
 
+    private Object parseRequestParamAnnotation(HttpServletRequest request, HttpServletResponse response, Parameter parameter) throws ServletException, IOException {
+        Class<?> type = parameter.getType();
+        String value = parameter.getAnnotation(RequestParam.class).value();
+        return CommonUtil.isBaseDataType(type) ?
+                JsonUtil.convert2Object(JsonUtil.convert2Json(request.getParameter(value)), type) :
+                JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request, value)), type);
+    }
+
     private void forward2Jsp(HttpServletRequest request, HttpServletResponse response, String jsp) throws ServletException, IOException {
         if(jsp.startsWith("redirect:")) {
             response.sendRedirect(jsp.replace("redirect:", "") + suffix);
+            return ;
         }
         request.getRequestDispatcher(prefix + jsp.replace("forward:", "") + suffix).forward(request, response);
     }

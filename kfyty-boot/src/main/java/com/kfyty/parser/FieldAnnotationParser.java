@@ -4,12 +4,15 @@ import com.kfyty.configuration.ApplicationConfigurable;
 import com.kfyty.configuration.annotation.AutoWired;
 import com.kfyty.configuration.annotation.Component;
 import com.kfyty.configuration.annotation.Configuration;
+import com.kfyty.mvc.annotation.Controller;
+import com.kfyty.mvc.annotation.Repository;
+import com.kfyty.mvc.annotation.RestController;
+import com.kfyty.mvc.annotation.Service;
 import com.kfyty.util.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 
 /**
  * 功能描述: 属性注解解析器
@@ -24,12 +27,22 @@ public class FieldAnnotationParser {
 
     private ApplicationConfigurable applicationConfigurable;
 
-    public void parseFieldAnnotation() throws Exception {
-        for (Map.Entry<Class<?>, Object> entry : this.applicationConfigurable.getBeanResources().entrySet()) {
-            if(entry.getKey().isAnnotationPresent(Configuration.class) || entry.getKey().isAnnotationPresent(Component.class)) {
-                this.parseAutoConfiguration(entry.getKey(), entry.getValue());
-            }
-        }
+    public void parseFieldAnnotation() {
+        this.applicationConfigurable.getBeanResources().entrySet().stream()
+                .filter(e ->
+                        e.getKey().isAnnotationPresent(Configuration.class)      ||
+                        e.getKey().isAnnotationPresent(Component.class)          ||
+                        e.getKey().isAnnotationPresent(Controller.class)         ||
+                        e.getKey().isAnnotationPresent(RestController.class)     ||
+                        e.getKey().isAnnotationPresent(Service.class)            ||
+                        e.getKey().isAnnotationPresent(Repository.class))
+                .forEach(e -> {
+                    try {
+                        this.parseAutoConfiguration(e.getKey(), e.getValue());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
     }
 
     private void parseAutoConfiguration(Class<?> clazz, Object value) throws Exception {

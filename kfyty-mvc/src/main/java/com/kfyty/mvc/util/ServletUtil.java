@@ -1,5 +1,7 @@
 package com.kfyty.mvc.util;
 
+import com.kfyty.util.CommonUtil;
+
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -39,5 +41,24 @@ public class ServletUtil {
             map.put(paramName, request.getParameter(paramName));
         }
         return map;
+    }
+
+    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) {
+        if(request == null) {
+            return null;
+        }
+        if(CommonUtil.empty(prefix)) {
+            return getRequestParametersMap(request);
+        }
+        prefix += ".";
+        Map<String, Object> map = new HashMap<>();
+        Enumeration parameterNames = request.getParameterNames();
+        while(parameterNames.hasMoreElements()) {
+            String paramName = (String) parameterNames.nextElement();
+            if(paramName.startsWith(prefix)) {
+                map.put(paramName.replace(prefix, ""), request.getParameter(paramName));
+            }
+        }
+        return !CommonUtil.empty(map) ? map : getRequestParametersMap(request);
     }
 }

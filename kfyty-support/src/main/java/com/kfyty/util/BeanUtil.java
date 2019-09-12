@@ -9,7 +9,6 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,12 +26,6 @@ import java.util.Set;
  */
 @Slf4j
 public class BeanUtil {
-    private static final String[] BASE_TYPE = {
-            "String", "Date",
-            "byte", "short", "int", "long", "float", "double",
-            "Byte", "Short", "Integer", "Long", "Float", "Double"
-    };
-
     public static <T, K, V> Object fillObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(returnType.isArray()) {
             return fillArrayObject(resultSet, returnType.getReturnType());
@@ -70,7 +63,7 @@ public class BeanUtil {
             return fillDateType(resultSet, clazz);
         }
         if(resultSet == null || !resultSet.next()) {
-            log.error(": fill number error: result set is null !");
+            log.error(": fill base data type error: result set is null !");
             return null;
         }
         List<T> list = new ArrayList<>();
@@ -90,7 +83,7 @@ public class BeanUtil {
     }
 
     public static <T> List<T> fillListObject(ResultSet resultSet, Class<T> clazz) throws Exception {
-        if(Arrays.stream(BASE_TYPE).filter(e -> e.equals(clazz.getSimpleName())).anyMatch(e -> e.length() > 0)) {
+        if(CommonUtil.isBaseDataType(clazz)) {
             return fillBaseType(resultSet, clazz);
         }
         if(resultSet == null || !resultSet.next()) {

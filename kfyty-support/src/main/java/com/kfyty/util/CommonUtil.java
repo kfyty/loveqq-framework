@@ -12,9 +12,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,6 +156,20 @@ public class CommonUtil {
         String type = clazz.getSimpleName();
         return Character.isUpperCase(type.charAt(0)) ? clazz :
                 type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
+    }
+
+    public static boolean isBaseDataType(Class clazz) {
+        return byte.class.isAssignableFrom(clazz)           ||
+                short.class.isAssignableFrom(clazz)         ||
+                int.class.isAssignableFrom(clazz)           ||
+                long.class.isAssignableFrom(clazz)          ||
+                float.class.isAssignableFrom(clazz)         ||
+                double.class.isAssignableFrom(clazz)        ||
+                Number.class.isAssignableFrom(clazz)        ||
+                BigInteger.class.isAssignableFrom(clazz)    ||
+                BigDecimal.class.isAssignableFrom(clazz)    ||
+                CharSequence.class.isAssignableFrom(clazz)  ||
+                Date.class.isAssignableFrom(clazz);
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {

@@ -12,6 +12,7 @@ import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.mvc.annotation.Controller;
+import com.kfyty.mvc.annotation.Mapper;
 import com.kfyty.mvc.annotation.Repository;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.Service;
@@ -80,13 +81,13 @@ public class ClassAnnotationParser {
         if(!CommonUtil.isAbstract(clazz)) {
             return clazz.newInstance();
         }
-        if(clazz.isInterface() && clazz.isAnnotationPresent(Repository.class)) {
+        if(clazz.isInterface() && clazz.isAnnotationPresent(Mapper.class)) {
             return KfytyApplication.getResources(SqlSession.class).getProxyObject(clazz);
         }
         throw new InstantiationException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
     }
 
-    private void findAutoConfiguration(Set<Class<?>> classSet) throws Exception {
+    private void findAutoConfiguration(Set<Class<?>> classSet) {
         classSet.stream()
                 .filter(e ->
                         e.isAnnotationPresent(Configuration.class)      ||
@@ -94,7 +95,8 @@ public class ClassAnnotationParser {
                         e.isAnnotationPresent(Controller.class)         ||
                         e.isAnnotationPresent(RestController.class)     ||
                         e.isAnnotationPresent(Service.class)            ||
-                        e.isAnnotationPresent(Repository.class))
+                        e.isAnnotationPresent(Repository.class)         ||
+                        e.isAnnotationPresent(Mapper.class))
                 .forEach(e -> {
                     try {
                         this.applicationConfigurable.getBeanResources().put(e, this.newInstance(e));
