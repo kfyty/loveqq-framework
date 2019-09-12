@@ -99,6 +99,7 @@ public class DispatcherServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html; charset=utf-8");
+        ServletUtil.preparedRequestParam(request);
     }
 
     private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, Method method) throws IOException, ServletException {
@@ -134,7 +135,7 @@ public class DispatcherServlet extends HttpServlet {
         Class<?> type = parameter.getType();
         String value = parameter.getAnnotation(RequestParam.class).value();
         return CommonUtil.isBaseDataType(type) ?
-                JsonUtil.convert2Object(JsonUtil.convert2Json(request.getParameter(value)), type) :
+                JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getParameter(request, value)), type) :
                 JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request, value)), type);
     }
 

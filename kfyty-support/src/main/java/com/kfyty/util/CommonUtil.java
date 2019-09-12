@@ -243,7 +243,7 @@ public class CommonUtil {
      */
     public static Object parseValue(String param, Object value) throws Exception {
         String[] fields = param.split("\\.");
-        for(int i = 1; i < fields.length; i++) {
+        for(int i = 0; i < fields.length; i++) {
             Field field = value.getClass().getDeclaredField(fields[i]);
             field.setAccessible(true);
             value = field.get(value);

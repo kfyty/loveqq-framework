@@ -17,7 +17,22 @@ import java.util.Map;
  * @since JDK 1.8
  */
 public class ServletUtil {
+    private static String currentRequestParam;
+
+    public static void preparedRequestParam(HttpServletRequest request) throws IOException {
+        currentRequestParam = null;
+        currentRequestParam = getRequestJson(request);
+    }
+
+    public static String getParameter(HttpServletRequest request, String paramName) {
+        String param = request.getParameter(paramName);
+        return !CommonUtil.empty(param) ? param : tryGetParameter(request, paramName);
+    }
+
     public static String getRequestJson(HttpServletRequest request) throws IOException {
+        if(!CommonUtil.empty(currentRequestParam)) {
+            return currentRequestParam;
+        }
         int contentLength = request.getContentLength();
         if(contentLength < 0) {
             return null;
@@ -40,7 +55,7 @@ public class ServletUtil {
             String paramName = (String) parameterNames.nextElement();
             map.put(paramName, request.getParameter(paramName));
         }
-        return map;
+        return !CommonUtil.empty(map) ? map : tryGetRequestParametersMap(request);
     }
 
     public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) {
@@ -57,6 +72,57 @@ public class ServletUtil {
             String paramName = (String) parameterNames.nextElement();
             if(paramName.startsWith(prefix)) {
                 map.put(paramName.replace(prefix, ""), request.getParameter(paramName));
+            }
+        }
+        return !CommonUtil.empty(map) ? map : tryGetRequestParametersMap(request, prefix);
+    }
+
+    public static String tryGetParameter(HttpServletRequest request, String paramName) {
+        String[] split = currentRequestParam.split("&");
+        if(CommonUtil.empty(split)) {
+            return null;
+        }
+        for (String s : split) {
+            String[] paramMap = s.split("=");
+            if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
+                continue;
+            }
+            if(paramMap[0].equals(paramName)) {
+                return paramMap[1];
+            }
+        }
+        return null;
+    }
+
+    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) {
+        String[] split = currentRequestParam.split("&");
+        if(CommonUtil.empty(split)) {
+            return null;
+        }
+        Map<String, Object> map = new HashMap<>();
+        for (String s : split) {
+            String[] paramMap = s.split("=");
+            if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
+                continue;
+            }
+            map.put(paramMap[0], paramMap[1]);
+        }
+        return CommonUtil.empty(map) ? null : map;
+    }
+
+    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) {
+        String[] split = currentRequestParam.split("&");
+        if(CommonUtil.empty(split)) {
+            return null;
+        }
+        Map<String, Object> map = new HashMap<>();
+        for (String s : split) {
+            String[] paramMap = s.split("=");
+            if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
+                continue;
+            }
+            if(paramMap[0].startsWith(prefix)) {
+                map.put(paramMap[0].replace(prefix, ""), paramMap[1]);
             }
         }
         return !CommonUtil.empty(map) ? map : getRequestParametersMap(request);

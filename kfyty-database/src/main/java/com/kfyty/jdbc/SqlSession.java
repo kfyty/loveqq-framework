@@ -250,7 +250,7 @@ public class SqlSession implements InvocationHandler {
         Map<String, List<String>> params = this.getParamFromSQL(sql);
         for(Map.Entry<String, List<String>> next : params.entrySet()) {
             for(String param : next.getValue()) {
-                Object o = param.contains(".") ? CommonUtil.parseValue(param, parameters.get(param.split("\\.")[0])) : parameters.get(param);
+                Object o = !param.contains(".") ? parameters.get(param) : CommonUtil.parseValue(param.substring(param.indexOf(".") + 1), parameters.get(param.split("\\.")[0]));
                 if(o == null) {
                     log.error(": null parameter found:[{}] --> parameter value:[{}] !", param, o);
                     return null;
