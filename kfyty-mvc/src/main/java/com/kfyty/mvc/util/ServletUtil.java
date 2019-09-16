@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 功能描述: servlet 工具
@@ -17,19 +18,14 @@ import java.util.Map;
  * @since JDK 1.8
  */
 public class ServletUtil {
-    private static String currentRequestParam;
+    private static final String CURRENT_REQUEST_PARAM = "__CURRENT__REQUEST__PARAM__" + UUID.randomUUID();
 
     public static void preparedRequestParam(HttpServletRequest request) throws IOException {
-        currentRequestParam = null;
-        currentRequestParam = getRequestJson(request);
-    }
-
-    public static String getParameter(HttpServletRequest request, String paramName) {
-        String param = request.getParameter(paramName);
-        return !CommonUtil.empty(param) ? param : tryGetParameter(request, paramName);
+        request.setAttribute(CURRENT_REQUEST_PARAM, getRequestJson(request));
     }
 
     public static String getRequestJson(HttpServletRequest request) throws IOException {
+        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         if(!CommonUtil.empty(currentRequestParam)) {
             return currentRequestParam;
         }
@@ -43,6 +39,11 @@ public class ServletUtil {
             n = inputStream.read(buffer, i, contentLength - i);
         }
         return new String(buffer, "UTF-8");
+    }
+
+    public static String getParameter(HttpServletRequest request, String paramName) {
+        String param = request.getParameter(paramName);
+        return !CommonUtil.empty(param) ? param : tryGetParameter(request, paramName);
     }
 
     public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) {
@@ -77,7 +78,8 @@ public class ServletUtil {
         return !CommonUtil.empty(map) ? map : tryGetRequestParametersMap(request, prefix);
     }
 
-    public static String tryGetParameter(HttpServletRequest request, String paramName) {
+    private static String tryGetParameter(HttpServletRequest request, String paramName) {
+        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         String[] split = currentRequestParam.split("&");
         if(CommonUtil.empty(split)) {
             return null;
@@ -95,6 +97,7 @@ public class ServletUtil {
     }
 
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) {
+        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         String[] split = currentRequestParam.split("&");
         if(CommonUtil.empty(split)) {
             return null;
@@ -111,6 +114,7 @@ public class ServletUtil {
     }
 
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) {
+        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         String[] split = currentRequestParam.split("&");
         if(CommonUtil.empty(split)) {
             return null;
@@ -125,6 +129,6 @@ public class ServletUtil {
                 map.put(paramMap[0].replace(prefix, ""), paramMap[1]);
             }
         }
-        return !CommonUtil.empty(map) ? map : getRequestParametersMap(request);
+        return CommonUtil.empty(map) ? null : map;
     }
 }

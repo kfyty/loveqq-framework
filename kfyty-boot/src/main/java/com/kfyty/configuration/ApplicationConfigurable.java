@@ -4,7 +4,6 @@ import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfigurable;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
-import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.support.configuration.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,19 +37,20 @@ public class ApplicationConfigurable {
         applicationConfigurable.beanResources.put(SqlSession.class, new SqlSession());
         applicationConfigurable.beanResources.put(GenerateSources.class, new GenerateSources());
         applicationConfigurable.beanResources.put(MVCAnnotationHandler.class, new MVCAnnotationHandler());
-        applicationConfigurable.beanResources.put(URLMapping.class, new URLMapping());
         return applicationConfigurable;
     }
 
     public void initAutoConfiguration() throws Exception {
         Field[] fields = this.getClass().getDeclaredFields();
         for (Field field : fields) {
-            if(!com.kfyty.support.configuration.Configuration.class.isAssignableFrom(field.getType())) {
+            if(!Configuration.class.isAssignableFrom(field.getType())) {
                 continue;
             }
+            boolean isAccessible = field.isAccessible();
             field.setAccessible(true);
             Object o = field.getType().newInstance();
             field.set(this, o);
+            field.setAccessible(isAccessible);
             o.getClass().getMethod("enableAutoConfiguration").invoke(o);
         }
         if(log.isDebugEnabled()) {
@@ -64,8 +64,10 @@ public class ApplicationConfigurable {
             if(!Configuration.class.isAssignableFrom(field.getType())) {
                 continue;
             }
+            boolean isAccessible = field.isAccessible();
             field.setAccessible(true);
             Object o = field.get(this);
+            field.setAccessible(isAccessible);
             o.getClass().getMethod("autoConfigurationAfterCheck").invoke(o);
         }
         if(log.isDebugEnabled()) {

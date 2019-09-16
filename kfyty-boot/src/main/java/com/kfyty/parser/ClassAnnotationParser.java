@@ -18,7 +18,6 @@ import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.Service;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.util.CommonUtil;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -33,7 +32,7 @@ import java.util.Set;
  */
 @Slf4j
 public class ClassAnnotationParser {
-    @Getter
+
     private ApplicationConfigurable applicationConfigurable;
 
     private MethodAnnotationParser methodAnnotationParser;
@@ -127,7 +126,7 @@ public class ClassAnnotationParser {
     }
 
     private void executeAutoConfiguration(Class<?> bootClass) throws Exception {
-        if(bootClass == null) {
+        if(bootClass == null || !bootClass.isAnnotationPresent(KfytyBootApplication.class)) {
             return;
         }
         if(bootClass.isAnnotationPresent(EnableAutoGenerateSources.class)) {
@@ -151,7 +150,7 @@ public class ClassAnnotationParser {
         }
     }
 
-    private void parseControllerAnnotation(Class<?> clazz) {
+    private void parseControllerAnnotation(Class<?> clazz) throws Exception {
         MVCAnnotationHandler mvcAnnotationHandler = KfytyApplication.getResources(MVCAnnotationHandler.class);
         mvcAnnotationHandler.setMappingController(KfytyApplication.getResources(clazz));
         mvcAnnotationHandler.buildURLMappingMap();
