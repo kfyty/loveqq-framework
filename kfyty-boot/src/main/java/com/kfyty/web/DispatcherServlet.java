@@ -124,12 +124,12 @@ public class DispatcherServlet extends HttpServlet {
 
         Object[] paramValues = new Object[parameters.length];
         Map<String, Integer> restfulURLMappingIndex = urlMapping.getRestfulURLMappingIndex();
+        List<String> paths = Arrays.stream(uri.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
         for (int i = 0; i < parameters.length; i++) {
             if(!parameters[i].isAnnotationPresent(PathVariable.class)) {
                 continue;
             }
             Integer index = restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value());
-            List<String> paths = Arrays.stream(uri.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
             paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(index)), parameters[i].getType());
         }
         return paramValues;
