@@ -1,6 +1,7 @@
 package com.kfyty.web;
 
 import com.kfyty.KfytyApplication;
+import com.kfyty.mvc.annotation.PathVariable;
 import com.kfyty.mvc.annotation.RequestBody;
 import com.kfyty.mvc.annotation.RequestParam;
 import com.kfyty.mvc.mapping.URLMapping;
@@ -20,7 +21,11 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: 前端控制器
@@ -43,8 +48,8 @@ public class DispatcherServlet extends HttpServlet {
         try {
             super.init();
             log.info("initialize DispatcherServlet...");
-            prefix = config.getInitParameter(PREFIX_PARAM_NAME);
-            suffix = config.getInitParameter(SUFFIX_PARAM_NAME);
+            prefix = Optional.ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse("");
+            suffix = Optional.ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse("");
             KfytyApplication.run(null, config.getInitParameter(BASE_PACKAGE_PARAM_NAME), true);
             log.info("initialize DispatcherServlet success !");
         } catch (Exception e) {
@@ -61,8 +66,10 @@ public class DispatcherServlet extends HttpServlet {
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try (PrintWriter out = response.getWriter()) {
+
             String requestURI = request.getRequestURI();
-            Map<RequestMethod, URLMapping> urlMappingMap = KfytyApplication.getResources(URLMapping.class).getUrlMappingMap().get(requestURI);
+
+            Map<RequestMethod, URLMapping> urlMappingMap = this.getURLMappingMap(requestURI);
             if (CommonUtil.empty(urlMappingMap)) {
                 this.forward2Jsp(request, response, "redirect:/404");
                 log.error(": cannot found url mapping: [{}] !", requestURI);
@@ -76,10 +83,17 @@ public class DispatcherServlet extends HttpServlet {
                 return;
             }
 
-            Object[] params = this.preparedMethodParams(request, response, urlMapping.getMappingMethod());
+            if(log.isDebugEnabled()) {
+                log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), requestURI);
+            }
+
+            Object[] params = urlMapping.isRestfulUrl() ?
+                                    this.preparedMethodParams(requestURI, urlMapping) :
+                                    this.preparedMethodParams(request, response, urlMapping.getMappingMethod());
+
             Object o = urlMapping.getMappingMethod().invoke(urlMapping.getMappingController(), params);
 
-            if (urlMapping.getReturnJson()) {
+            if (urlMapping.isReturnJson()) {
                 out.write(JsonUtil.convert2Json(o));
                 out.flush();
                 return;
@@ -87,10 +101,10 @@ public class DispatcherServlet extends HttpServlet {
 
             if (String.class.isAssignableFrom(o.getClass())) {
                 this.forward2Jsp(request, response, o.toString().trim());
-                return;
+                return ;
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
-            this.forward2Jsp(request, response, "redirect:/500");
+            log.error(": server error !");
             e.printStackTrace();
         }
     }
@@ -100,6 +114,25 @@ public class DispatcherServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html; charset=utf-8");
         ServletUtil.preparedRequestParam(request);
+    }
+
+    private Object[] preparedMethodParams(String uri, URLMapping urlMapping) throws IOException, ServletException {
+        Parameter[] parameters = urlMapping.getMappingMethod().getParameters();
+        if(CommonUtil.empty(parameters)) {
+            return null;
+        }
+
+        Object[] paramValues = new Object[parameters.length];
+        Map<String, Integer> restfulURLMappingIndex = urlMapping.getRestfulURLMappingIndex();
+        for (int i = 0; i < parameters.length; i++) {
+            if(!parameters[i].isAnnotationPresent(PathVariable.class)) {
+                continue;
+            }
+            Integer index = restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value());
+            List<String> paths = Arrays.stream(uri.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
+            paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(index)), parameters[i].getType());
+        }
+        return paramValues;
     }
 
     private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, Method method) throws IOException, ServletException {
@@ -145,5 +178,23 @@ public class DispatcherServlet extends HttpServlet {
             return ;
         }
         request.getRequestDispatcher(prefix + jsp.replace("forward:", "") + suffix).forward(request, response);
+    }
+
+    private Map<RequestMethod, URLMapping> getURLMappingMap(String uri) {
+        Map<String, Map<RequestMethod, URLMapping>> allURLMappingMap = URLMapping.getUrlMappingMap();
+        Map<RequestMethod, URLMapping> urlMappingMap = allURLMappingMap.get(uri);
+        if(!CommonUtil.empty(urlMappingMap)) {
+            return urlMappingMap;
+        }
+        int index = 0;
+        String restfulURI = URLMapping.RESTFUL_IDENTIFY + uri;
+        while((index = restfulURI.lastIndexOf('/')) != -1) {
+            restfulURI = restfulURI.substring(0, index);
+            urlMappingMap = allURLMappingMap.get(restfulURI);
+            if(!CommonUtil.empty(urlMappingMap)) {
+                return urlMappingMap;
+            }
+        }
+        return null;
     }
 }

@@ -235,20 +235,20 @@ public class CommonUtil {
     }
 
     /**
-     * 根据属性参数，解析出 value 中对应的属性值
+     * 根据属性参数，解析出 object 中对应的属性值
      * @param param     属性参数，eg: obj.value
-     * @param value     对象，eg：obj
-     * @return          属性值，eg：value
+     * @param obj       包含 obj 属性的对象
+     * @return          属性值
      * @throws Exception
      */
-    public static Object parseValue(String param, Object value) throws Exception {
+    public static Object parseValue(String param, Object obj) throws Exception {
         String[] fields = param.split("\\.");
         for(int i = 0; i < fields.length; i++) {
-            Field field = value.getClass().getDeclaredField(fields[i]);
+            Field field = obj.getClass().getDeclaredField(fields[i]);
             field.setAccessible(true);
-            value = field.get(value);
+            obj = field.get(obj);
         }
-        return value;
+        return obj;
     }
 
     /**
