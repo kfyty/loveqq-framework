@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
@@ -78,10 +77,7 @@ public class DispatcherServlet extends HttpServlet {
                 log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), request.getRequestURI());
             }
 
-            Object[] params = urlMapping.isRestfulUrl() ?
-                                    this.preparedMethodParams(request.getRequestURI(), urlMapping) :
-                                    this.preparedMethodParams(request, response, urlMapping.getMappingMethod());
-
+            Object[] params = this.preparedMethodParams(request, response, urlMapping);
             Object o = urlMapping.getMappingMethod().invoke(urlMapping.getMappingController(), params);
 
             if (urlMapping.isReturnJson()) {
@@ -107,32 +103,14 @@ public class DispatcherServlet extends HttpServlet {
         ServletUtil.preparedRequestParam(request);
     }
 
-    private Object[] preparedMethodParams(String uri, URLMapping urlMapping) throws IOException, ServletException {
+    private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, URLMapping urlMapping) throws IOException, ServletException {
         Parameter[] parameters = urlMapping.getMappingMethod().getParameters();
         if(CommonUtil.empty(parameters)) {
             return null;
         }
-
         Object[] paramValues = new Object[parameters.length];
         Map<String, Integer> restfulURLMappingIndex = urlMapping.getRestfulURLMappingIndex();
-        List<String> paths = Arrays.stream(uri.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
-        for (int i = 0; i < parameters.length; i++) {
-            if(!parameters[i].isAnnotationPresent(PathVariable.class)) {
-                continue;
-            }
-            Integer index = restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value());
-            paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(index)), parameters[i].getType());
-        }
-        return paramValues;
-    }
-
-    private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, Method method) throws IOException, ServletException {
-        Parameter[] parameters = method.getParameters();
-        if(CommonUtil.empty(parameters)) {
-            return null;
-        }
-
-        Object[] paramValues = new Object[parameters.length];
+        List<String> paths = Arrays.stream(request.getRequestURI().split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
         for (int i = 0; i < parameters.length; i++) {
             if(HttpServletRequest.class.isAssignableFrom(parameters[i].getType())) {
                 paramValues[i] = request;
@@ -148,6 +126,10 @@ public class DispatcherServlet extends HttpServlet {
             }
             if(parameters[i].isAnnotationPresent(RequestParam.class)) {
                 paramValues[i] = this.parseRequestParamAnnotation(request, response, parameters[i]);
+                continue;
+            }
+            if(parameters[i].isAnnotationPresent(PathVariable.class)) {
+                paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value()))), parameters[i].getType());
                 continue;
             }
             paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request)), parameters[i].getType());
