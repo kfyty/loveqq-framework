@@ -30,12 +30,12 @@ public class MVCAnnotationHandler {
     /**
      * 验证是否是 restful 风格 url 的正则表达式
      */
-    private static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)\\}.*");
+    public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)\\}.*");
 
     /**
      * 匹配 {pathVariable} 的正则表达式
      */
-    private static final Pattern PATH_VARIABLE_PATTERN = Pattern.compile("^\\{.*\\}$");
+    public static final Pattern PATH_VARIABLE_PATTERN = Pattern.compile("^\\{.*\\}$");
 
     /**
      * 控制器类注解的 url
@@ -71,22 +71,20 @@ public class MVCAnnotationHandler {
         if(CommonUtil.empty(urlMappingList)) {
             return ;
         }
-        Map<String, Map<RequestMethod, URLMapping>> urlMappingMap = URLMapping.getUrlMappingMap();
-        for (URLMapping urlMapping : urlMappingList) {
-            if(!urlMappingMap.containsKey(urlMapping.getValidUrl())) {
-                urlMappingMap.put(urlMapping.getValidUrl(), urlMapping.buildMap());
+        Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> urlMappingMap = URLMapping.getUrlMappingMap();
+        for(URLMapping urlMapping : urlMappingList) {
+            if(!urlMappingMap.containsKey(urlMapping.getRequestMethod())) {
+                urlMappingMap.put(urlMapping.getRequestMethod(), urlMapping.buildMap());
                 continue;
             }
-            urlMappingMap.get(urlMapping.getValidUrl()).putAll(urlMapping.buildMap());
+            urlMappingMap.get(urlMapping.getRequestMethod()).putAll(urlMapping.buildMap());
         }
     }
 
     private void handleAnnotation() {
         Class<?> clazz = this.mappingController.getClass();
         if(clazz.isAnnotationPresent(RequestMapping.class)) {
-            String value = clazz.getAnnotation(RequestMapping.class).value().trim();
-            value = value.startsWith("/") ? value : "/" + value;
-            this.superUrl = !value.endsWith("/") ? value : value.substring(0, value.length() - 1);
+            this.superUrl = this.formatURL(clazz.getAnnotation(RequestMapping.class).value());
         }
         if(clazz.isAnnotationPresent(RestController.class) || clazz.isAnnotationPresent(ResponseBody.class)) {
             this.superReturnJson = true;
@@ -114,33 +112,36 @@ public class MVCAnnotationHandler {
         }
     }
 
+    private String formatURL(String url) {
+        url = url.trim();
+        url = url.startsWith("/") ? url : "/" + url;
+        return !url.endsWith("/") ? url : url.substring(0, url.length() - 1);
+    }
+
     private void parseRequestMappingAnnotation(Method method, URLMapping urlMapping) {
         RequestMapping annotation = method.getAnnotation(RequestMapping.class);
-        String mappingPath = annotation.value().trim();
-        mappingPath = mappingPath.startsWith("/") ? mappingPath : "/" + mappingPath;
-        mappingPath = !mappingPath.endsWith("/") ? mappingPath : mappingPath.substring(0, mappingPath.length() - 1);
+        String mappingPath = formatURL(annotation.value());
         urlMapping.setUrl(superUrl + mappingPath);
-        urlMapping.setValidUrl(superUrl + mappingPath);
         urlMapping.setRequestMethod(annotation.requestMethod());
-        if(RESTFUL_URL_PATTERN.matcher(mappingPath).matches()) {
-            this.parsePathVariable(superUrl + mappingPath, urlMapping);
-        }
+        this.parsePathVariable(superUrl + mappingPath, urlMapping);
         if(log.isDebugEnabled()) {
             log.debug(": found request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", urlMapping.getUrl(), urlMapping.getRequestMethod(), urlMapping.getMappingMethod());
         }
     }
 
     private void parsePathVariable(String mappingPath, URLMapping urlMapping) {
-        StringBuilder builder = new StringBuilder();
         List<String> paths = Arrays.stream(mappingPath.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
+        urlMapping.setUrlLength(paths.size());
+        if(!RESTFUL_URL_PATTERN.matcher(mappingPath).matches()) {
+            return ;
+        }
         for (int i = 0; i < paths.size(); i++) {
             if(!PATH_VARIABLE_PATTERN.matcher(paths.get(i)).matches()) {
-                builder.append("/").append(paths.get(i));
                 continue;
             }
             urlMapping.getRestfulURLMappingIndex().put(paths.get(i).replaceAll("[\\{\\}]", ""), i);
         }
         urlMapping.setRestfulUrl(true);
-        urlMapping.setValidUrl(builder.toString());
+        urlMapping.setPaths(paths);
     }
 }

@@ -4,6 +4,7 @@ import com.kfyty.KfytyApplication;
 import com.kfyty.mvc.annotation.PathVariable;
 import com.kfyty.mvc.annotation.RequestBody;
 import com.kfyty.mvc.annotation.RequestParam;
+import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.mvc.util.ServletUtil;
@@ -66,29 +67,19 @@ public class DispatcherServlet extends HttpServlet {
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try (PrintWriter out = response.getWriter()) {
-
-            String requestURI = request.getRequestURI();
-
-            Map<RequestMethod, URLMapping> urlMappingMap = this.getURLMappingMap(requestURI);
-            if (CommonUtil.empty(urlMappingMap)) {
-                this.forward2Jsp(request, response, "redirect:/404");
-                log.error(": cannot found url mapping: [{}] !", requestURI);
-                return;
-            }
-
-            URLMapping urlMapping = urlMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
+            URLMapping urlMapping = this.getURLMappingMap(request, response);
             if (urlMapping == null) {
                 this.forward2Jsp(request, response, "redirect:/404");
-                log.error(": cannot found request method mapping [{}] from url mapping [{}] !", request.getMethod(), requestURI);
-                return;
+                log.error(": cannot found url mapping: [{}] !", request.getRequestURI());
+                return ;
             }
 
             if(log.isDebugEnabled()) {
-                log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), requestURI);
+                log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), request.getRequestURI());
             }
 
             Object[] params = urlMapping.isRestfulUrl() ?
-                                    this.preparedMethodParams(requestURI, urlMapping) :
+                                    this.preparedMethodParams(request.getRequestURI(), urlMapping) :
                                     this.preparedMethodParams(request, response, urlMapping.getMappingMethod());
 
             Object o = urlMapping.getMappingMethod().invoke(urlMapping.getMappingController(), params);
@@ -180,19 +171,37 @@ public class DispatcherServlet extends HttpServlet {
         request.getRequestDispatcher(prefix + jsp.replace("forward:", "") + suffix).forward(request, response);
     }
 
-    private Map<RequestMethod, URLMapping> getURLMappingMap(String uri) {
-        Map<String, Map<RequestMethod, URLMapping>> allURLMappingMap = URLMapping.getUrlMappingMap();
-        Map<RequestMethod, URLMapping> urlMappingMap = allURLMappingMap.get(uri);
-        if(!CommonUtil.empty(urlMappingMap)) {
-            return urlMappingMap;
+    private URLMapping getURLMappingMap(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> allURLMappingMap = URLMapping.getUrlMappingMap();
+        Map<Integer, Map<String, URLMapping>> urlLengthMapMap = allURLMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
+        if(CommonUtil.empty(urlLengthMapMap)) {
+            return null;
         }
-        int index = 0;
-        String restfulURI = URLMapping.RESTFUL_IDENTIFY + uri;
-        while((index = restfulURI.lastIndexOf('/')) != -1) {
-            restfulURI = restfulURI.substring(0, index);
-            urlMappingMap = allURLMappingMap.get(restfulURI);
-            if(!CommonUtil.empty(urlMappingMap)) {
-                return urlMappingMap;
+        List<String> paths = Arrays.stream(request.getRequestURI().split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
+        Map<String, URLMapping> urlMappingMap = urlLengthMapMap.get(paths.size());
+        if(CommonUtil.empty(urlMappingMap)) {
+            return null;
+        }
+        return Optional.ofNullable(urlMappingMap.get(request.getRequestURI())).orElse(matchRestfulURLMapping(paths, urlMappingMap));
+    }
+
+    private URLMapping matchRestfulURLMapping(List<String> paths, Map<String, URLMapping> urlMappingMap) {
+        for(URLMapping urlMapping : urlMappingMap.values()) {
+            if(!urlMapping.isRestfulUrl()) {
+                continue;
+            }
+            boolean match = true;
+            for (int i = 0; i < paths.size(); i++) {
+                if(MVCAnnotationHandler.PATH_VARIABLE_PATTERN.matcher(urlMapping.getPaths().get(i)).matches()) {
+                    continue;
+                }
+                if(!urlMapping.getPaths().get(i).equals(paths.get(i))) {
+                    match = false;
+                    break;
+                }
+            }
+            if(match) {
+                return urlMapping;
             }
         }
         return null;
