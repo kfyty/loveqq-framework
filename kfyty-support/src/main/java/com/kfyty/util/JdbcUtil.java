@@ -8,6 +8,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 功能描述: jdbc 工具
@@ -24,7 +27,8 @@ public class JdbcUtil {
              ResultSet resultSet = preparedStatement.executeQuery()) {
             Object obj = BeanUtil.fillObject(resultSet, returnType);
             if(log.isDebugEnabled()) {
-                log.debug(": executed sql statement:[{}] --> parameters:{} --> return type:[{}]", sql, params, returnType.getReturnType());
+                int count = Optional.of(obj).filter(e -> e instanceof Collection).map(e -> ((Collection) e).size()).orElse(Optional.of(obj).filter(e -> e instanceof Map).map(e -> ((Map) e).size()).orElse(1));
+                log.debug(":                <==      Total: {} [{}]", count, obj.getClass());
             }
             return obj;
         } catch(Exception e) {
@@ -52,7 +56,8 @@ public class JdbcUtil {
             preparedStatement.setObject(i + 1, params[i]);
         }
         if(log.isDebugEnabled()) {
-            log.debug(": prepare statement:[{}] --> parameters:{}", sql, params);
+            log.debug(": ==>  Preparing: {}", sql);
+            log.debug(": ==> Parameters: {}", params);
         }
         return preparedStatement;
     }

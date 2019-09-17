@@ -108,7 +108,7 @@ public class BeanUtil {
                     continue;
                 }
                 if(log.isDebugEnabled()) {
-                    log.debug("Found column: [{}], but class:[{}] not field found!", metaData.getColumnName(i), clazz);
+                    log.warn("found column: [{}], but class:[{}] not field found !", metaData.getColumnName(i), clazz);
                 }
             }
             list.add(o);
