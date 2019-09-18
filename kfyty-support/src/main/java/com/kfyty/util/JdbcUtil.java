@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +58,7 @@ public class JdbcUtil {
         }
         if(log.isDebugEnabled()) {
             log.debug(": ==>  Preparing: {}", sql);
-            log.debug(": ==> Parameters: {}", params);
+            log.debug(": ==> Parameters: {}", Arrays.toString(params));
         }
         return preparedStatement;
     }
