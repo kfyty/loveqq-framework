@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,7 @@ public class MVCAnnotationHandler {
                 urlMappingMap.put(urlMapping.getRequestMethod(), urlMapping.buildMap());
                 continue;
             }
-            urlMappingMap.get(urlMapping.getRequestMethod()).putAll(urlMapping.buildMap());
+            Optional.ofNullable(urlMapping.buildMap()).ifPresent(e -> urlMappingMap.get(urlMapping.getRequestMethod()).putAll(e));
         }
     }
 

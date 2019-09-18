@@ -96,15 +96,13 @@ public class URLMapping {
             outerMap.put(this.urlLength, innerMap);
             return outerMap;
         }
-
-        URLMapping urlMapping = urlLengthMappingMap.get(this.urlLength).get(this.url);
-        if(urlMapping != null) {
+        Map<String, URLMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
+        if(urlMappingMap.containsKey(this.url)) {
             log.error(": mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod);
             throw new IllegalArgumentException(CommonUtil.fillString("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }
-
         innerMap.put(this.url, this);
-        urlLengthMappingMap.get(this.urlLength).putAll(innerMap);
-        return urlLengthMappingMap;
+        urlMappingMap.putAll(innerMap);
+        return null;
     }
 }

@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -164,10 +166,12 @@ public class DispatcherServlet extends HttpServlet {
         if(CommonUtil.empty(urlMappingMap)) {
             return null;
         }
-        return Optional.ofNullable(urlMappingMap.get(request.getRequestURI())).orElse(matchRestfulURLMapping(paths, urlMappingMap));
+        URLMapping urlMapping = urlMappingMap.get(request.getRequestURI());
+        return urlMapping != null ? urlMapping : matchRestfulURLMapping(request, paths, urlMappingMap);
     }
 
-    private URLMapping matchRestfulURLMapping(List<String> paths, Map<String, URLMapping> urlMappingMap) {
+    private URLMapping matchRestfulURLMapping(HttpServletRequest request, List<String> paths, Map<String, URLMapping> urlMappingMap) {
+        List<URLMapping> urlMappings = new ArrayList<>();
         for(URLMapping urlMapping : urlMappingMap.values()) {
             if(!urlMapping.isRestfulUrl()) {
                 continue;
@@ -183,9 +187,24 @@ public class DispatcherServlet extends HttpServlet {
                 }
             }
             if(match) {
-                return urlMapping;
+                urlMappings.add(urlMapping);
             }
         }
-        return null;
+        return marchBestMarch(request, urlMappings);
+    }
+
+    private URLMapping marchBestMarch(HttpServletRequest request, List<URLMapping> urlMappings) {
+        if(CommonUtil.empty(urlMappings)) {
+            return null;
+        }
+        if(urlMappings.size() == 1) {
+            return urlMappings.get(0);
+        }
+        urlMappings = urlMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
+        if(urlMappings.get(0).getRestfulURLMappingIndex().size() == urlMappings.get(1).getRestfulURLMappingIndex().size()) {
+            log.error(": mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod());
+            throw new IllegalArgumentException(CommonUtil.fillString("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
+        }
+        return urlMappings.get(0);
     }
 }
