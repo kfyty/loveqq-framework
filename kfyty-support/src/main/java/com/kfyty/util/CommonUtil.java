@@ -84,6 +84,8 @@ public class CommonUtil {
                 return "String";
             case "number":
                 return "Long";
+            case "tinyint":
+                return "Integer";
             case "int":
                 return "Integer";
             case "integer":
