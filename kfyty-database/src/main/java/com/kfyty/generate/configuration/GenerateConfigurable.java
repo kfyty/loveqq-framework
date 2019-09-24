@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +45,8 @@ public class GenerateConfigurable extends Configuration {
     private String dataBaseName;
 
     private Set<String> tables;
+
+    private Pattern tablePattern;
 
     private String queryTableSql;
 
@@ -99,7 +102,8 @@ public class GenerateConfigurable extends Configuration {
         Class<? extends GenerateConfiguration> configurationClass = configuration.getClass();
         this.dataBaseMapper = dataBaseMapper != null ? dataBaseMapper : Optional.ofNullable(configurationClass.getAnnotation(DataBaseMapper.class)).map(DataBaseMapper::value).orElse(null);
         this.dataBaseName = Optional.ofNullable(configurationClass.getAnnotation(DataBase.class)).map(DataBase::value).orElse(null);
-        this.tables = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value())).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
+        this.tables = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
+        this.tablePattern = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(Pattern.compile("([\\s\\S]*)"));
         this.queryTableSql = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
         this.basePackage = Optional.ofNullable(configurationClass.getAnnotation(BasePackage.class)).map(BasePackage::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);

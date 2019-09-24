@@ -8,6 +8,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Table {
+    String pattern() default "([\\s\\S]*)";
+
     String[] value() default "";
 
     String queryTableSql() default "";

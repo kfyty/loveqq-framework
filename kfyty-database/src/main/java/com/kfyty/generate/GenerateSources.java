@@ -42,7 +42,7 @@ public class GenerateSources {
 
     public GenerateSources(GenerateConfiguration generateConfiguration) {
         this();
-        this.configurable.refreshGenerateConfiguration(generateConfiguration);
+        this.refreshGenerateConfiguration(generateConfiguration);
     }
 
     private String initFilePath() {
@@ -81,6 +81,7 @@ public class GenerateSources {
         AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
 
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
+
         if(!CommonUtil.empty(configurable.getQueryTableSql())) {
             Query annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(Query.class);
             CommonUtil.setAnnotationValue(annotation, "value", configurable.getQueryTableSql());
@@ -88,8 +89,8 @@ public class GenerateSources {
         }
 
         List<? extends AbstractDataBaseInfo> dataBaseInfos = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
-        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.ofNullable(configurable.getTables()).filter(e -> !e.isEmpty()).map(e -> dataBaseInfos.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
-        this.dataBaseInfoList = CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfos : filteredDataBaseInfo;
+        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.of(tables).filter(e -> !e.isEmpty()).map(e -> dataBaseInfos.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
+        this.dataBaseInfoList = (CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfos : filteredDataBaseInfo).stream().filter(e -> configurable.getTablePattern().matcher(e.getTableName()).matches()).collect(Collectors.toList());
         for (AbstractDataBaseInfo info : this.dataBaseInfoList) {
             info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));
         }
