@@ -1,6 +1,4 @@
-package com.kfyty.generate.annotation;
-
-import com.kfyty.generate.template.AbstractGenerateTemplate;
+package com.kfyty.generate.configuration.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GenerateTemplate {
-    Class<? extends AbstractGenerateTemplate>[] value();
+public @interface FilePath {
+    String value() default "";
 }

@@ -16,6 +16,19 @@ import java.io.IOException;
  * @since JDK 1.8
  */
 public class GenerateMapperTemplate extends GeneratePojoTemplate {
+    protected String mapperPackageName;
+    protected String mapperClassName;
+    protected String mapperClassVariableName;
+    protected String mapperClassQualifiedName;
+
+    @Override
+    protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
+        super.initGenerateData(dataBaseInfo, basePackage);
+        this.mapperPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + mapperFileSuffix().toLowerCase();
+        this.mapperClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + mapperFileSuffix();
+        this.mapperClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + mapperFileSuffix();
+        this.mapperClassQualifiedName = this.mapperPackageName + "." + this.mapperClassName;
+    }
 
     public String mapperFileSuffix() {
         return "Mapper";
@@ -33,43 +46,36 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
 
     @Override
     public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        String mapperPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + mapperFileSuffix().toLowerCase() + ".";
-        String mapperClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + mapperFileSuffix();
+        initGenerateData(dataBaseInfo, basePackage);
         out.writeLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         out.writeLine("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0 //EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">");
-        out.writeLine("<mapper namespace=\"{}\">\n", mapperPackageName +mapperClassName);
+        out.writeLine("<mapper namespace=\"{}\">\n", this.mapperClassQualifiedName);
         generateMapper(dataBaseInfo, basePackage, out);
         out.writeLine("</mapper>");
     }
 
     public void generateMapper(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        String entityPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase() + ".";
-        String varName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false);
-        String className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true);
-        String entityVarName = varName + entityFileSuffix();
-        String entityClassName = className + entityFileSuffix();
-
-        out.writeLine("\t<select id=\"findById\" resultType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t<select id=\"findById\" resultType=\"{}\">", this.entityClassQualifiedName);
         out.writeLine("\t\tselect * from {} where id = #{id}", dataBaseInfo.getTableName());
         out.writeLine("\t</select>\n");
 
-        out.writeLine("\t<select id=\"findBy\" resultType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t<select id=\"findBy\" resultType=\"{}\">", this.entityClassQualifiedName);
         out.writeLine("\t\tselect * from {} where ${field} = #{value}", dataBaseInfo.getTableName());
         out.writeLine("\t</select>\n");
 
-        out.writeLine("\t<select id=\"findLike\" resultType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t<select id=\"findLike\" resultType=\"{}\">", this.entityClassQualifiedName);
         out.writeLine("\t\tselect * from {} where ${field} like '%${value}%'", dataBaseInfo.getTableName());
         out.writeLine("\t</select>\n");
 
-        out.writeLine("\t<select id=\"findAll\" resultType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t<select id=\"findAll\" resultType=\"{}\">", this.entityClassQualifiedName);
         out.writeLine("\t\tselect * from {}", dataBaseInfo.getTableName());
         out.writeLine("\t</select>\n");
 
-        out.writeLine("\t<insert id=\"insertById\" parameterType=\"{}\">", entityPackageName + entityClassName);
+        out.writeLine("\t<insert id=\"insertById\" parameterType=\"{}\">", this.entityClassQualifiedName);
         out.write("\t\tinsert into {} values (", dataBaseInfo.getTableName());
         for (int i = 0; i < dataBaseInfo.getTableInfos().size(); i++) {
             String field = dataBaseInfo.getTableInfos().get(i).getField();
-            out.write("#{{}.{}}", entityVarName, CommonUtil.convert2Hump(field, false));
+            out.write("#{{}.{}}", this.entityClassVariableName, CommonUtil.convert2Hump(field, false));
             if(i != dataBaseInfo.getTableInfos().size() - 1) {
                 out.write(", ");
             }
@@ -87,11 +93,11 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
                 continue;
             }
             if(!CommonUtil.convert2JavaType(tableInfo.getFieldType()).equals("String")) {
-                out.writeLine("\t\t\t<if test=\"{}.{} != null\">", entityVarName, classField);
+                out.writeLine("\t\t\t<if test=\"{}.{} != null\">", this.entityClassVariableName, classField);
             } else {
-                out.writeLine("\t\t\t<if test=\"{}.{} != null and {}.{} != ''\">", entityVarName, classField, entityVarName, classField);
+                out.writeLine("\t\t\t<if test=\"{}.{} != null and {}.{} != ''\">", this.entityClassVariableName, classField, this.entityClassVariableName, classField);
             }
-            out.writeLine("\t\t\t\t{} = #{{}.{}}", field, entityVarName, classField);
+            out.writeLine("\t\t\t\t{} = #{{}.{}}", field, this.entityClassVariableName, classField);
             out.writeLine("\t\t\t</if>");
         }
         out.writeLine("\t\t</set>");

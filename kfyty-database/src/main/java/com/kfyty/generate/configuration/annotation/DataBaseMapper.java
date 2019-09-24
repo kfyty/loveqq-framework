@@ -1,4 +1,6 @@
-package com.kfyty.generate.annotation;
+package com.kfyty.generate.configuration.annotation;
+
+import com.kfyty.generate.database.AbstractDataBaseMapper;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,10 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Table {
-    String pattern() default "([\\s\\S]*)";
-
-    String[] value() default "";
-
-    String queryTableSql() default "";
+public @interface DataBaseMapper {
+    Class<? extends AbstractDataBaseMapper> value();
 }

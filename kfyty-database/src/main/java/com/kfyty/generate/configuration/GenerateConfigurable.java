@@ -1,12 +1,12 @@
 package com.kfyty.generate.configuration;
 
 import com.kfyty.support.configuration.Configuration;
-import com.kfyty.generate.annotation.DataBase;
-import com.kfyty.generate.annotation.DataBaseMapper;
-import com.kfyty.generate.annotation.FilePath;
-import com.kfyty.generate.annotation.GenerateTemplate;
-import com.kfyty.generate.annotation.BasePackage;
-import com.kfyty.generate.annotation.Table;
+import com.kfyty.generate.configuration.annotation.DataBase;
+import com.kfyty.generate.configuration.annotation.DataBaseMapper;
+import com.kfyty.generate.configuration.annotation.FilePath;
+import com.kfyty.generate.configuration.annotation.GenerateTemplate;
+import com.kfyty.generate.configuration.annotation.BasePackage;
+import com.kfyty.generate.configuration.annotation.Table;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.util.CommonUtil;

@@ -16,6 +16,26 @@ import java.io.IOException;
  * @since JDK 1.8
  */
 public class GeneratePojoTemplate implements AbstractGenerateTemplate {
+    protected String packageName;
+    protected String className;
+    protected String classVariableName;
+    protected String classQualifiedName;
+
+    protected String entityPackageName;
+    protected String entityClassName;
+    protected String entityClassVariableName;
+    protected String entityClassQualifiedName;
+
+    protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
+        this.packageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + fileSuffix().toLowerCase().replace("impl", ".impl");
+        this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix();
+        this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + fileSuffix();
+        this.classQualifiedName = this.packageName + "." + this.className;
+        this.entityPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase().replace("impl", ".impl");
+        this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
+        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + entityFileSuffix();
+        this.entityClassQualifiedName = this.entityPackageName + "." + this.entityClassName;
+    }
 
     @Override
     public String fileSuffix() {
@@ -28,24 +48,27 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
 
     @Override
     public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        if(!CommonUtil.empty(basePackage)) {
-            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase().replace("impl", ".impl"));
-        }
+        initGenerateData(dataBaseInfo, basePackage);
+        generatePackage(dataBaseInfo, basePackage, out);
         generateImport(dataBaseInfo, basePackage, out);
         generateClassComment(dataBaseInfo, out);
         generateClassAnnotation(dataBaseInfo, out);
         generateClassDefinition(dataBaseInfo, out);
         out.write(CommonUtil.empty(generateExtendsClass(dataBaseInfo)) ? "" : " extends " + generateExtendsClass(dataBaseInfo));
+        out.write(CommonUtil.empty(generateExtendsInterfaces(dataBaseInfo)) ? "" : " extends " + generateExtendsInterfaces(dataBaseInfo));
         out.write(CommonUtil.empty(generateImplementsInterfaces(dataBaseInfo)) ? "" : " implements " + generateImplementsInterfaces(dataBaseInfo));
         out.writeLine(" {");
         generateTableInfo(dataBaseInfo, out);
+        generateCustomCode(dataBaseInfo, basePackage, out);
         out.writeLine("}");
     }
 
-    public void imports(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        String entityPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase() + ".";
-        String entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
-        out.writeLine("import {};\n", entityPackageName + entityClassName);
+    public void generatePackage(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("package {};\n", this.classQualifiedName);
+    }
+
+    public void importEntity(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        out.writeLine("import {};\n", this.entityClassQualifiedName);
     }
 
     public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
@@ -54,7 +77,7 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
-        out.write("public class {}", CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+        out.write("public class {}", this.className);
     }
 
     public void generateClassComment(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
@@ -67,6 +90,10 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     public String generateExtendsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+        return "";
+    }
+
+    public String generateExtendsInterfaces(AbstractDataBaseInfo dataBaseInfo) {
         return "";
     }
 
@@ -93,6 +120,10 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     public void generateFieldAnnotation(AbstractTableInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+
+    }
+
+    public void generateCustomCode(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 }

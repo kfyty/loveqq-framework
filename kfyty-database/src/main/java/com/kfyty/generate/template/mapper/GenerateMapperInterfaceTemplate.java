@@ -22,23 +22,8 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
     }
 
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        if(!CommonUtil.empty(basePackage)) {
-            out.writeLine("package {};\n", basePackage + "." + fileSuffix().toLowerCase().replace("impl", ".impl"));
-        }
-        generateImport(dataBaseInfo, basePackage, out);
-        generateClassComment(dataBaseInfo, out);
-        generateClassAnnotation(dataBaseInfo, out);
-        generateClassDefinition(dataBaseInfo, out);
-        out.write(CommonUtil.empty(generateExtendsInterfaces(dataBaseInfo)) ? "" : " implements " + generateExtendsInterfaces(dataBaseInfo));
-        out.writeLine(" {\n");
-        generateMapperInterfaces(dataBaseInfo, basePackage, out);
-        out.writeLine("}");
-    }
-
-    @Override
     public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        super.imports(dataBaseInfo, basePackage, out);
+        super.importEntity(dataBaseInfo, basePackage, out);
         out.writeLine("import org.apache.ibatis.annotations.Param;");
         out.writeLine("import org.springframework.stereotype.Repository;\n");
         out.writeLine("import java.sql.SQLException;\n");
@@ -46,7 +31,7 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
 
     @Override
     public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
-        out.write("public interface {}", CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix());
+        out.write("public interface {}", this.className);
     }
 
     @Override
@@ -54,8 +39,14 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
         out.writeLine("@Repository");
     }
 
-    public String generateExtendsInterfaces(AbstractDataBaseInfo dataBaseInfo) {
-        return "";
+    @Override
+    public void generateTableInfo(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+
+    }
+
+    @Override
+    public void generateCustomCode(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        generateMapperInterfaces(dataBaseInfo, basePackage, out);
     }
 
     public void generateMapperInterfaces(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {

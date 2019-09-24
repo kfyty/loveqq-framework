@@ -1,4 +1,4 @@
-package com.kfyty.generate.annotation;
+package com.kfyty.generate.configuration.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
