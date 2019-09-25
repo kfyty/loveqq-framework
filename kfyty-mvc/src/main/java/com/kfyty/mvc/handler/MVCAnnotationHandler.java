@@ -99,16 +99,14 @@ public class MVCAnnotationHandler {
             return ;
         }
         for (Method method : methods) {
-            URLMapping urlMapping = new URLMapping();
-            urlMapping.setReturnJson(superReturnJson);
-            urlMapping.setMappingMethod(method);
-            urlMapping.setMappingController(mappingController);
+            if(!method.isAnnotationPresent(RequestMapping.class)) {
+                continue;
+            }
+            URLMapping urlMapping = URLMapping.newURLMapping(mappingController, method, superReturnJson);
             if(method.isAnnotationPresent(ResponseBody.class)) {
                 urlMapping.setReturnJson(true);
             }
-            if(method.isAnnotationPresent(RequestMapping.class)) {
-                this.parseRequestMappingAnnotation(method, urlMapping);
-            }
+            this.parseRequestMappingAnnotation(urlMapping);
             this.urlMappingList.add(urlMapping);
         }
     }
@@ -119,21 +117,21 @@ public class MVCAnnotationHandler {
         return !url.endsWith("/") ? url : url.substring(0, url.length() - 1);
     }
 
-    private void parseRequestMappingAnnotation(Method method, URLMapping urlMapping) {
-        RequestMapping annotation = method.getAnnotation(RequestMapping.class);
+    private void parseRequestMappingAnnotation(URLMapping urlMapping) {
+        RequestMapping annotation = urlMapping.getMappingMethod().getAnnotation(RequestMapping.class);
         String mappingPath = formatURL(annotation.value());
         urlMapping.setUrl(superUrl + mappingPath);
         urlMapping.setRequestMethod(annotation.requestMethod());
-        this.parsePathVariable(superUrl + mappingPath, urlMapping);
+        this.parsePathVariable(urlMapping);
         if(log.isDebugEnabled()) {
             log.debug(": found request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", urlMapping.getUrl(), urlMapping.getRequestMethod(), urlMapping.getMappingMethod());
         }
     }
 
-    private void parsePathVariable(String mappingPath, URLMapping urlMapping) {
-        List<String> paths = Arrays.stream(mappingPath.split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
+    private void parsePathVariable(URLMapping urlMapping) {
+        List<String> paths = Arrays.stream(urlMapping.getUrl().split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
         urlMapping.setUrlLength(paths.size());
-        if(!RESTFUL_URL_PATTERN.matcher(mappingPath).matches()) {
+        if(!RESTFUL_URL_PATTERN.matcher(urlMapping.getUrl()).matches()) {
             return ;
         }
         for (int i = 0; i < paths.size(); i++) {

@@ -119,7 +119,7 @@ public class ClassAnnotationParser {
                 continue;
             }
             if(entry.getKey().isAnnotationPresent(Controller.class) || entry.getKey().isAnnotationPresent(RestController.class)) {
-                this.parseControllerAnnotation(entry.getKey());
+                this.parseControllerAnnotation(entry.getKey(), entry.getValue());
                 continue;
             }
         }
@@ -150,9 +150,9 @@ public class ClassAnnotationParser {
         }
     }
 
-    private void parseControllerAnnotation(Class<?> clazz) throws Exception {
+    private void parseControllerAnnotation(Class<?> clazz, Object value) throws Exception {
         MVCAnnotationHandler mvcAnnotationHandler = KfytyApplication.getResources(MVCAnnotationHandler.class);
-        mvcAnnotationHandler.setMappingController(KfytyApplication.getResources(clazz));
+        mvcAnnotationHandler.setMappingController(value);
         mvcAnnotationHandler.buildURLMappingMap();
     }
 }

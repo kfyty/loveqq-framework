@@ -83,6 +83,14 @@ public class URLMapping {
         this.restfulURLMappingIndex = new HashMap<>();
     }
 
+    public static URLMapping newURLMapping(Object mappingController, Method mappingMethod, boolean returnJson) {
+        URLMapping urlMapping = new URLMapping();
+        urlMapping.setMappingController(mappingController);
+        urlMapping.setMappingMethod(mappingMethod);
+        urlMapping.setReturnJson(returnJson);
+        return urlMapping;
+    }
+
     public static Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> getUrlMappingMap() {
         return urlMappingMap;
     }

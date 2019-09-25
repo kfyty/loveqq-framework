@@ -63,8 +63,10 @@ public class FieldAnnotationParser {
             log.error(": not found bean resources: [{}] !", field.getType());
             return;
         }
+        boolean isAccessible = field.isAccessible();
         field.setAccessible(true);
         field.set(o, value);
+        field.setAccessible(isAccessible);
         if(log.isDebugEnabled()) {
             log.debug(": found auto wired: [{}] !", field.getType());
         }
