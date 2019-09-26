@@ -110,6 +110,8 @@ public class CommonUtil {
                 return "Date";
             case "blob" :
                 return "byte[]";
+            case "longblob" :
+                return "byte[]";
             case "binary":
                 return "byte[]";
             case "varbinary":

@@ -78,8 +78,16 @@ public class BeanUtil {
         return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
     }
 
-    public static <T> T[] fillArrayObject(ResultSet resultSet, Class<T> clazz) throws Exception {
-        return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(e -> e.toArray((T[]) Array.newInstance(clazz, 0))).orElse(null);
+    public static <T> Object fillArrayObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+        List<T> list = Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).orElse(null);
+        if(CommonUtil.empty(list)) {
+            return null;
+        }
+        Object o = Array.newInstance(clazz, list.size());
+        for (int i = 0; i < list.size(); i++) {
+            Array.set(o, i, list.get(i));
+        }
+        return o;
     }
 
     public static <T> List<T> fillListObject(ResultSet resultSet, Class<T> clazz) throws Exception {
