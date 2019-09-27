@@ -75,45 +75,33 @@ public class CommonUtil {
     public static String convert2JavaType(String dataBaseType) {
         switch (dataBaseType.toLowerCase()) {
             case "char":
-                return "String";
+            case "text":
             case "varchar":
-                return "String";
             case "varchar2":
-                return "String";
             case "nvarchar2" :
                 return "String";
             case "number":
-                return "Long";
-            case "tinyint":
-                return "Integer";
-            case "int":
-                return "Integer";
-            case "integer":
-                return "Integer";
             case "bigint":
                 return "Long";
+            case "tinyint":
+            case "int":
+            case "integer":
+                return "Integer";
             case "float":
                 return "Float";
+            case "double":
+                return "Double";
             case "decimal" :
                 return "BigDecimal";
-            case "text":
-                return "String";
-            case "date":
-                return "Date";
             case "time":
-                return "Date";
+            case "date":
             case "datetime":
-                return "Date";
             case "datetime2":
-                return "Date";
             case "timestamp" :
                 return "Date";
             case "blob" :
-                return "byte[]";
             case "longblob" :
-                return "byte[]";
             case "binary":
-                return "byte[]";
             case "varbinary":
                 return "byte[]";
             default :
