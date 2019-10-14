@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -48,6 +49,22 @@ public class CommonUtil {
 
     public static boolean empty(Map m) {
         return !Optional.ofNullable(m).filter(e -> !e.isEmpty()).isPresent();
+    }
+
+    public static int size(Object obj) {
+        if(obj == null) {
+            return 0;
+        }
+        if(obj.getClass().isArray()) {
+            return Array.getLength(obj);
+        }
+        if(obj instanceof Collection) {
+            return ((Collection) obj).size();
+        }
+        if(obj instanceof Map) {
+            return ((Map) obj).size();
+        }
+        return 1;
     }
 
     public static String getStackTrace(Throwable throwable) {
