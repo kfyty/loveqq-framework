@@ -72,7 +72,14 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
         out.writeLine("\t</select>\n");
 
         out.writeLine("\t<insert id=\"insertById\" parameterType=\"{}\">", this.entityClassQualifiedName);
-        out.write("\t\tinsert into {} values (", dataBaseInfo.getTableName());
+        out.write("\t\tinsert into {} (", dataBaseInfo.getTableName());
+        for (int i = 0; i < dataBaseInfo.getTableInfos().size(); i++) {
+            out.write(dataBaseInfo.getTableInfos().get(i).getField());
+            if(i != dataBaseInfo.getTableInfos().size() - 1) {
+                out.write(", ");
+            }
+        }
+        out.write(") values (");
         for (int i = 0; i < dataBaseInfo.getTableInfos().size(); i++) {
             String field = dataBaseInfo.getTableInfos().get(i).getField();
             out.write("#{{}.{}}", this.entityClassVariableName, CommonUtil.convert2Hump(field, false));

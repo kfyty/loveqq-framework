@@ -25,7 +25,7 @@ public class JdbcUtil {
              ResultSet resultSet = preparedStatement.executeQuery()) {
             Object obj = BeanUtil.fillObject(resultSet, returnType);
             if(log.isDebugEnabled()) {
-                log.debug(":                <==      Total: {} [{}]", CommonUtil.size(obj), obj.getClass());
+                log.debug(":                <==      Total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
             }
             return obj;
         } catch(Exception e) {

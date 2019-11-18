@@ -98,6 +98,8 @@ public class CommonUtil {
             case "nvarchar2" :
                 return "String";
             case "number":
+            case "decimal" :
+                return "BigDecimal";
             case "bigint":
                 return "Long";
             case "tinyint":
@@ -108,8 +110,6 @@ public class CommonUtil {
                 return "Float";
             case "double":
                 return "Double";
-            case "decimal" :
-                return "BigDecimal";
             case "time":
             case "date":
             case "datetime":

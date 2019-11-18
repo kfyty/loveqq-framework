@@ -44,7 +44,7 @@ public class BeanUtil {
 
     public static <T> List<T> fillDateType(ResultSet resultSet, Class clazz) throws Exception {
         if(resultSet == null || !resultSet.next()) {
-            log.error(": fill date error: result set is null !");
+            log.debug(": fill date error: result set is null !");
             return null;
         }
         List<T> list = new ArrayList<>();
@@ -63,7 +63,7 @@ public class BeanUtil {
             return fillDateType(resultSet, clazz);
         }
         if(resultSet == null || !resultSet.next()) {
-            log.error(": fill base data type error: result set is null !");
+            log.debug(": fill base data type error: result set is null !");
             return null;
         }
         List<T> list = new ArrayList<>();
