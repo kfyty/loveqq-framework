@@ -95,7 +95,7 @@ public class BeanUtil {
             return fillBaseType(resultSet, clazz);
         }
         if(resultSet == null || !resultSet.next()) {
-            log.error(": fill object error: result set is null !");
+            log.debug(": fill object error: result set is null !");
             return null;
         }
         List<T> list = new ArrayList<>();
@@ -130,7 +130,7 @@ public class BeanUtil {
 
     public static <T, K, V> Map<K, V> fillMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(CommonUtil.empty(returnType.getKey())) {
-            log.error(": fill map error, key is null !");
+            log.debug(": fill map error, key is null !");
             return null;
         }
 

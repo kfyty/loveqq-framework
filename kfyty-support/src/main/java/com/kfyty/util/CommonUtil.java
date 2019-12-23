@@ -13,8 +13,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -175,8 +173,6 @@ public class CommonUtil {
                 float.class.isAssignableFrom(clazz)         ||
                 double.class.isAssignableFrom(clazz)        ||
                 Number.class.isAssignableFrom(clazz)        ||
-                BigInteger.class.isAssignableFrom(clazz)    ||
-                BigDecimal.class.isAssignableFrom(clazz)    ||
                 CharSequence.class.isAssignableFrom(clazz)  ||
                 Date.class.isAssignableFrom(clazz);
     }
