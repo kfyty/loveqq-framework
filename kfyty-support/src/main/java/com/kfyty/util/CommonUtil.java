@@ -91,6 +91,9 @@ public class CommonUtil {
         switch (dataBaseType.toLowerCase()) {
             case "char":
             case "text":
+            case "longtext":
+            case "clob":
+            case "nclob":
             case "varchar":
             case "varchar2":
             case "nvarchar2" :
@@ -129,10 +132,6 @@ public class CommonUtil {
         int paramIndex = 0;
         StringBuilder sb = new StringBuilder(s);
         while((index = sb.indexOf("{}", index)) != -1) {
-            if(sb.charAt(index - 1) == '#' || sb.charAt(index - 1) == '$') {
-                index++;
-                continue;
-            }
             sb.replace(index, index + 2, Optional.ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
         }
         return sb.toString();

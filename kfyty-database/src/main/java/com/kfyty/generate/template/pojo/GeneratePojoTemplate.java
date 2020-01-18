@@ -26,15 +26,25 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     protected String entityClassVariableName;
     protected String entityClassQualifiedName;
 
+    private String initPackageName(String basePackage, String suffix) {
+        if(CommonUtil.empty(basePackage) && CommonUtil.empty(suffix)) {
+            return "";
+        }
+        if(!CommonUtil.empty(basePackage) && !CommonUtil.empty(suffix)) {
+            return CommonUtil.fillString("{}.{}", basePackage, suffix.toLowerCase().replace("impl", ".impl"));
+        }
+        return !CommonUtil.empty(basePackage) ? basePackage : suffix.toLowerCase().replace("impl", ".impl");
+    }
+
     protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
-        this.packageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + fileSuffix().toLowerCase().replace("impl", ".impl");
+        this.packageName = initPackageName(basePackage, fileSuffix());
         this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix();
         this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + fileSuffix();
-        this.classQualifiedName = this.packageName + "." + this.className;
-        this.entityPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + entityFileSuffix().toLowerCase().replace("impl", ".impl");
+        this.classQualifiedName = CommonUtil.empty(packageName) ? className : packageName + "." + className;
+        this.entityPackageName = initPackageName(basePackage, entityFileSuffix());
         this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
         this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + entityFileSuffix();
-        this.entityClassQualifiedName = this.entityPackageName + "." + this.entityClassName;
+        this.entityClassQualifiedName = CommonUtil.empty(entityPackageName) ? entityClassName : entityPackageName + "." + entityClassName;
     }
 
     @Override
@@ -64,7 +74,7 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     public void generatePackage(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        out.writeLine("package {};\n", this.classQualifiedName);
+        out.writeLine("package {};\n", this.packageName);
     }
 
     public void importEntity(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
