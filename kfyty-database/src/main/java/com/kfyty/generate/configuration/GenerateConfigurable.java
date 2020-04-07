@@ -55,6 +55,11 @@ public class GenerateConfigurable extends Configuration {
     private String filePath;
 
     public GenerateConfigurable() {
+        this(false);
+    }
+
+    public GenerateConfigurable(boolean autoConfig) {
+        this.enableAutoConfiguration();
         this.currentGenerateTemplateCursor = -1;
         this.generateTemplateList = new ArrayList<>();
     }

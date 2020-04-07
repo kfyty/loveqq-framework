@@ -20,6 +20,7 @@ import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -109,7 +110,8 @@ public class ClassAnnotationParser {
     }
 
     private void parseAutoConfiguration() throws Exception {
-        for (Map.Entry<Class<?>, Object> entry : this.applicationConfigurable.getBeanResources().entrySet()) {
+        Map<Class<?>, Object> beanMap = new HashMap<>(this.applicationConfigurable.getBeanResources());
+        for (Map.Entry<Class<?>, Object> entry : beanMap.entrySet()) {
             if(entry.getKey().isAnnotationPresent(Configuration.class)) {
                 this.parseConfigurationAnnotation(entry.getKey(), entry.getValue());
                 continue;
