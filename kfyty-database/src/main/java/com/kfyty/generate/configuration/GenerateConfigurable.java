@@ -34,25 +34,25 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GenerateConfigurable extends Configuration {
 
-    private DataSource dataSource;
+    protected DataSource dataSource;
 
-    private Integer currentGenerateTemplateCursor;
+    protected Integer currentGenerateTemplateCursor;
 
-    private List<AbstractGenerateTemplate> generateTemplateList;
+    protected List<AbstractGenerateTemplate> generateTemplateList;
 
-    private Class<? extends AbstractDataBaseMapper> dataBaseMapper;
+    protected Class<? extends AbstractDataBaseMapper> dataBaseMapper;
 
-    private String dataBaseName;
+    protected String dataBaseName;
 
-    private Set<String> tables;
+    protected Set<String> tables;
 
-    private Pattern tablePattern;
+    protected Pattern tablePattern;
 
-    private String queryTableSql;
+    protected String queryTableSql;
 
-    private String basePackage;
+    protected String basePackage;
 
-    private String filePath;
+    protected String filePath;
 
     public GenerateConfigurable() {
         this(false);

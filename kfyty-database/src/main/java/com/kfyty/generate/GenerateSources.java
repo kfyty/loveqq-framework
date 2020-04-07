@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GenerateSources {
 
-    private SqlSession sqlSession;
+    protected SqlSession sqlSession;
 
-    private GenerateConfigurable configurable;
+    protected GenerateConfigurable configurable;
 
-    private List<? extends AbstractDataBaseInfo> dataBaseInfoList;
+    protected List<? extends AbstractDataBaseInfo> dataBaseInfoList;
 
     public GenerateSources() {
         this.sqlSession = new SqlSession();
@@ -45,7 +45,7 @@ public class GenerateSources {
         this.refreshGenerateConfiguration(generateConfiguration);
     }
 
-    private String initFilePath() {
+    protected String initFilePath() {
         String basePackage = CommonUtil.empty(configurable.getBasePackage()) ? "" : configurable.getBasePackage() + ".";
         String fileSuffix = configurable.getCurrentGenerateTemplate().fileSuffix().toLowerCase();
         String packageName = basePackage + (!fileSuffix.endsWith("impl") ? fileSuffix : fileSuffix.replace("impl", ".impl"));
@@ -55,7 +55,7 @@ public class GenerateSources {
                 parentPath + File.separator + packageName.replace(".", File.separator);
     }
 
-    private String initDirectory(AbstractDataBaseInfo info) {
+    protected String initDirectory(AbstractDataBaseInfo info) {
         String savePath = this.initFilePath();
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
         String fileSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileSuffix()).orElse("");
@@ -63,7 +63,7 @@ public class GenerateSources {
         return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + fileSuffix + fileTypeSuffix;
     }
 
-    private File initFile(AbstractDataBaseInfo info) throws IOException {
+    protected File initFile(AbstractDataBaseInfo info) throws IOException {
         File file = new File(this.initDirectory(info));
         if(file.exists() && !file.delete()) {
             log.error(": delete file failed !");
@@ -76,7 +76,7 @@ public class GenerateSources {
         return file;
     }
 
-    private void initDataBaseInfo() throws Exception {
+    protected void initDataBaseInfo() throws Exception {
         this.sqlSession.setDataSource(configurable.getDataSource());
         AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
 
