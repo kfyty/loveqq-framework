@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
@@ -108,7 +109,12 @@ public class BeanUtil {
                 Field field = fieldMap.get(fieldName);
                 if(field != null) {
                     field.setAccessible(true);
-                    field.set(o, resultSet.getObject(metaData.getColumnLabel(i)));
+                    Object object = resultSet.getObject(metaData.getColumnLabel(i));
+                    if(field.getType().equals(Long.class) && object.getClass().equals(BigDecimal.class)) {
+                        field.set(o, ((BigDecimal) object).longValue());
+                        continue;
+                    }
+                    field.set(o, object);
                     continue;
                 }
                 if(fieldName.contains(".")) {

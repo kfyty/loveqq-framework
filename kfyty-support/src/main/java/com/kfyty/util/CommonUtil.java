@@ -98,10 +98,10 @@ public class CommonUtil {
             case "varchar2":
             case "nvarchar2" :
                 return "String";
-            case "number":
-            case "decimal" :
+            case "decimal":
                 return "BigDecimal";
             case "bigint":
+            case "number":
                 return "Long";
             case "tinyint":
             case "int":
