@@ -59,9 +59,11 @@ public class GenerateConfigurable extends Configuration {
     }
 
     public GenerateConfigurable(boolean autoConfig) {
-        this.enableAutoConfiguration();
         this.currentGenerateTemplateCursor = -1;
         this.generateTemplateList = new ArrayList<>();
+        if(autoConfig) {
+            this.enableAutoConfiguration();
+        }
     }
 
     public GenerateConfigurable(GenerateConfiguration configuration) {
