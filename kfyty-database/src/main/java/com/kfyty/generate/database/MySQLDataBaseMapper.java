@@ -20,6 +20,6 @@ public interface MySQLDataBaseMapper extends AbstractDataBaseMapper {
     List<? extends AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);
 
     @Override
-    @Query("select table_name, column_name field, data_type fieldType, column_comment fieldComment from information_schema.COLUMNS where table_schema = #{dataBaseName} and table_name = #{tableName}")
+    @Query("select table_name, column_name field, data_type fieldType, if(column_key = 'PRI', 'true', 'false') primaryKey, if(is_nullable = 'YES', 'true', 'false') nullable, column_comment fieldComment from information_schema.COLUMNS where table_schema = #{dataBaseName} and table_name = #{tableName}")
     List<? extends AbstractTableInfo> findTableInfo(@Param("dataBaseName") String dataBaseName, @Param("tableName") String tableName);
 }

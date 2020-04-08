@@ -135,17 +135,29 @@ public class BeanUtil {
     }
 
     public static <T, K, V> Map<K, V> fillMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+        Map<K, V> map = new HashMap<>();
         if(CommonUtil.empty(returnType.getKey())) {
-            log.debug(": fill map error, key is null !");
-            return null;
+            if(!resultSet.next()) {
+                log.debug(": fill object error: result set is null !");
+                return null;
+            }
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            for(int i = 1; i <= metaData.getColumnCount(); i++) {
+                map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
+            }
+            if(resultSet.next()) {
+                log.error(": fill map error, more than one result found !");
+                return null;
+            }
+            return map;
         }
 
         List<V> values = fillListObject(resultSet, returnType.getSecondParameterizedType());
+
         if(CommonUtil.empty(values)) {
             return null;
         }
 
-        Map<K, V> map = new HashMap<>();
         for (V value : values) {
             Field field = CommonUtil.getField(value.getClass(), returnType.getKey());
             field.setAccessible(true);

@@ -14,5 +14,15 @@ public class AbstractTableInfo {
     protected String tableName;
     protected String field;
     protected String fieldType;
+    protected String primaryKey;
+    protected String nullable;
     protected String fieldComment;
+
+    public boolean primaryKey() {
+        return primaryKey != null && primaryKey.equals("true");
+    }
+
+    public boolean nullable() {
+        return nullable != null && nullable.equals("true");
+    }
 }

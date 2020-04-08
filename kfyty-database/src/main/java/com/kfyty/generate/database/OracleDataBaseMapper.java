@@ -4,6 +4,7 @@ import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.info.AbstractTableInfo;
 import com.kfyty.jdbc.annotation.Param;
 import com.kfyty.jdbc.annotation.Query;
+import com.kfyty.jdbc.annotation.SubQuery;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public interface OracleDataBaseMapper extends AbstractDataBaseMapper {
     List<? extends AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);
 
     @Override
-    @Query("SELECT t.table_name, t.column_name \"field\", t.data_type \"fieldType\", c.comments \"fieldComment\" from user_tab_columns t join user_col_comments c on t.table_name = c.table_name and t.column_name = c.column_name where t.table_name = upper(#{tableName})")
+    @Query(value = "SELECT t.table_name, t.column_name \"field\", t.data_type \"fieldType\", decode(nullable, 'N', 'false', 'Y', 'true') nullable, c.comments \"fieldComment\" from user_tab_columns t join user_col_comments c on t.table_name = c.table_name and t.column_name = c.column_name where t.table_name = upper(#{tableName})",
+    subQuery = @SubQuery(value = "select decode(count(a.constraint_name), 0, 'false', 1, 'true') primaryKey from user_cons_columns a join user_constraints b on a.constraint_name = b.constraint_name where b.constraint_type = 'P' and a.table_name = upper(#{tableName}) and a.column_name = upper(#{field})", paramField = {"tableName", "field"}, mapperField = {"tableName", "field"}, returnField = "primaryKey"))
     List<? extends AbstractTableInfo> findTableInfo(@Param("dataBaseName") String dataBaseName, @Param("tableName") String tableName);
 }
