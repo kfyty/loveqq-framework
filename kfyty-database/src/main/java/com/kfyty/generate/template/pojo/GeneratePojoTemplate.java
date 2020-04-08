@@ -37,18 +37,18 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
     }
 
     protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
-        this.packageName = initPackageName(basePackage, fileSuffix());
-        this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + fileSuffix();
-        this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + fileSuffix();
+        this.packageName = initPackageName(basePackage, classSuffix());
+        this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + classSuffix();
+        this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + classSuffix();
         this.classQualifiedName = CommonUtil.empty(packageName) ? className : packageName + "." + className;
         this.entityPackageName = initPackageName(basePackage, entityFileSuffix());
         this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
-        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + entityFileSuffix();
+        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + entityFileSuffix();
         this.entityClassQualifiedName = CommonUtil.empty(entityPackageName) ? entityClassName : entityPackageName + "." + entityClassName;
     }
 
     @Override
-    public String fileSuffix() {
+    public String classSuffix() {
         return "Pojo";
     }
 

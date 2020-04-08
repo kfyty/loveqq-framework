@@ -19,7 +19,7 @@ public interface AbstractGenerateTemplate {
         return Optional.ofNullable(CommonUtil.convert2JavaType(dataBaseType)).orElseThrow(() -> new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !"));
     }
 
-    default String fileSuffix() {
+    default String classSuffix() {
         return "";
     }
 

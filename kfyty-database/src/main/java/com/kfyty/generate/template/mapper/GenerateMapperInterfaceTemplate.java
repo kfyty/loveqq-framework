@@ -16,7 +16,7 @@ import java.io.IOException;
 public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
 
     @Override
-    public String fileSuffix() {
+    public String classSuffix() {
         return "Mapper";
     }
 

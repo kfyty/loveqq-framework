@@ -47,30 +47,28 @@ public class GenerateSources {
 
     protected String initFilePath() {
         String basePackage = CommonUtil.empty(configurable.getBasePackage()) ? "" : configurable.getBasePackage() + ".";
-        String fileSuffix = configurable.getCurrentGenerateTemplate().fileSuffix().toLowerCase();
-        String packageName = basePackage + (!fileSuffix.endsWith("impl") ? fileSuffix : fileSuffix.replace("impl", ".impl"));
+        String classSuffix = configurable.getCurrentGenerateTemplate().classSuffix().toLowerCase();
+        String packageName = basePackage + (!classSuffix.endsWith("impl") ? classSuffix : classSuffix.replace("impl", ".impl"));
         String parentPath = new File(configurable.getFilePath()).getAbsolutePath();
-        return parentPath.endsWith(File.separator) ?
-                parentPath + packageName.replace(".", File.separator) :
-                parentPath + File.separator + packageName.replace(".", File.separator);
+        return parentPath + File.separator + packageName.replace(".", File.separator);
     }
 
     protected String initDirectory(AbstractDataBaseInfo info) {
         String savePath = this.initFilePath();
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
-        String fileSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileSuffix()).orElse("");
+        String classSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().classSuffix()).orElse("");
         String fileTypeSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileTypeSuffix()).orElse(".java");
-        return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + fileSuffix + fileTypeSuffix;
+        return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + classSuffix + fileTypeSuffix;
     }
 
     protected File initFile(AbstractDataBaseInfo info) throws IOException {
         File file = new File(this.initDirectory(info));
         if(file.exists() && !file.delete()) {
-            log.error(": delete file failed !");
+            log.error(": delete file failed : {}", file.getAbsolutePath());
             return null;
         }
         if(!file.createNewFile()) {
-            log.error(": create file failed !");
+            log.error(": create file failed : {}", file.getAbsolutePath());
             return null;
         }
         return file;

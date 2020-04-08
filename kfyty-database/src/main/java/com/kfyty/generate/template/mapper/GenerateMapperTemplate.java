@@ -35,7 +35,7 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
     }
 
     @Override
-    public String fileSuffix() {
+    public String classSuffix() {
         return "Mapper";
     }
 

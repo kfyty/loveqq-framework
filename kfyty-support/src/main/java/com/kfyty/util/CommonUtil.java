@@ -74,11 +74,16 @@ public class CommonUtil {
                 }).orElseThrow(() -> new NullPointerException("throwable is null"));
     }
 
+    public static String convert2Hump(String s) {
+        return convert2Hump(s, false);
+    }
+
     public static String convert2Hump(String s, boolean isClass) {
         s = Optional.ofNullable(s).map(e -> e.contains("_") || Pattern.compile("[A-Z0-9]*").matcher(e).matches() ? e.toLowerCase() : e).orElseThrow(() -> new NullPointerException("column is null"));
         while(s.contains("_")) {
             int index = s.indexOf('_');
             if(index == s.length() - 1) {
+                s = s.substring(0, s.length() - 1);
                 break;
             }
             char ch = s.charAt(index + 1);
@@ -140,9 +145,11 @@ public class CommonUtil {
     public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
         InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
         Field field = invocationHandler.getClass().getDeclaredField("memberValues");
+        boolean accessible = field.isAccessible();
         field.setAccessible(true);
         Map memberValues = (Map) field.get(invocationHandler);
         memberValues.put(annotationField, value);
+        field.setAccessible(accessible);
     }
 
     public static List<Object> convert2List(Object value) {
