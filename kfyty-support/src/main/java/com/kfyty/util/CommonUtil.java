@@ -83,7 +83,6 @@ public class CommonUtil {
         while(s.contains("_")) {
             int index = s.indexOf('_');
             if(index == s.length() - 1) {
-                s = s.substring(0, s.length() - 1);
                 break;
             }
             char ch = s.charAt(index + 1);
