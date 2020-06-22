@@ -1,4 +1,4 @@
-package com.kfyty.generate.template.pojo;
+package com.kfyty.generate.template.entity;
 
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
@@ -9,13 +9,13 @@ import com.kfyty.util.CommonUtil;
 import java.io.IOException;
 
 /**
- * 功能描述: 生成 pojo 模板
+ * 功能描述: 生成 entity 模板
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/13 17:33:27
  * @since JDK 1.8
  */
-public class GeneratePojoTemplate implements AbstractGenerateTemplate {
+public class EntityTemplate implements AbstractGenerateTemplate {
     protected String packageName;
     protected String className;
     protected String classVariableName;
@@ -41,19 +41,19 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + classSuffix();
         this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + classSuffix();
         this.classQualifiedName = CommonUtil.empty(packageName) ? className : packageName + "." + className;
-        this.entityPackageName = initPackageName(basePackage, entityFileSuffix());
-        this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityFileSuffix();
-        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + entityFileSuffix();
+        this.entityPackageName = initPackageName(basePackage, entityClassSuffix());
+        this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityClassSuffix();
+        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + entityClassSuffix();
         this.entityClassQualifiedName = CommonUtil.empty(entityPackageName) ? entityClassName : entityPackageName + "." + entityClassName;
     }
 
     @Override
     public String classSuffix() {
-        return "Pojo";
+        return "";
     }
 
-    public String entityFileSuffix() {
-        return "Pojo";
+    public String entityClassSuffix() {
+        return "";
     }
 
     @Override
@@ -95,7 +95,8 @@ public class GeneratePojoTemplate implements AbstractGenerateTemplate {
         out.writeLine(" * TABLE_NAME: {}", dataBaseInfo.getTableName());
         out.writeLine(" * TABLE_COMMENT: {}", dataBaseInfo.getTableComment());
         out.writeLine(" *");
-        out.writeLine(" * By kfyty");
+        out.writeLine(" * @author kfyty");
+        out.writeLine(" * @email kfyty725@hotmail.com");
         out.writeLine(" */");
     }
 

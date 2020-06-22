@@ -3,7 +3,7 @@ package com.kfyty.generate.template.mapper;
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
 import com.kfyty.generate.info.AbstractTableInfo;
-import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
+import com.kfyty.generate.template.entity.EntityTemplate;
 import com.kfyty.util.CommonUtil;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.io.IOException;
  * @date 2019/9/3 18:19
  * @since JDK 1.8
  */
-public class GenerateMapperTemplate extends GeneratePojoTemplate {
+public class MapperTemplate extends EntityTemplate {
     protected String mapperPackageName;
     protected String mapperClassName;
     protected String mapperClassVariableName;
@@ -24,13 +24,13 @@ public class GenerateMapperTemplate extends GeneratePojoTemplate {
     @Override
     protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
         super.initGenerateData(dataBaseInfo, basePackage);
-        this.mapperPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + mapperFileSuffix().toLowerCase();
-        this.mapperClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + mapperFileSuffix();
-        this.mapperClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + mapperFileSuffix();
+        this.mapperPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + mapperInterfaceSuffix().toLowerCase();
+        this.mapperClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + mapperInterfaceSuffix();
+        this.mapperClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), false) + mapperInterfaceSuffix();
         this.mapperClassQualifiedName = this.mapperPackageName + "." + this.mapperClassName;
     }
 
-    public String mapperFileSuffix() {
+    public String mapperInterfaceSuffix() {
         return "Mapper";
     }
 

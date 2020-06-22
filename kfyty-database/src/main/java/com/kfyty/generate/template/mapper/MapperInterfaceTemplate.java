@@ -2,7 +2,7 @@ package com.kfyty.generate.template.mapper;
 
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.generate.info.AbstractDataBaseInfo;
-import com.kfyty.generate.template.pojo.GeneratePojoTemplate;
+import com.kfyty.generate.template.entity.EntityTemplate;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import java.io.IOException;
  * @date 2019/9/3 17:37
  * @since JDK 1.8
  */
-public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
+public class MapperInterfaceTemplate extends EntityTemplate {
 
     @Override
     public String classSuffix() {
@@ -35,7 +35,7 @@ public class GenerateMapperInterfaceTemplate extends GeneratePojoTemplate {
 
     @Override
     public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
-        out.writeLine("@Repository");
+        out.writeLine("@Mapper");
     }
 
     @Override

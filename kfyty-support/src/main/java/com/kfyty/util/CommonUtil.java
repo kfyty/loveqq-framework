@@ -92,6 +92,9 @@ public class CommonUtil {
     }
 
     public static String convert2JavaType(String dataBaseType) {
+        if(dataBaseType.toLowerCase().contains("timestamp")) {
+            return "Date";
+        }
         switch (dataBaseType.toLowerCase()) {
             case "char":
             case "text":

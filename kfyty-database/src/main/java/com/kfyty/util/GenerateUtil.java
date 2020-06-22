@@ -16,7 +16,7 @@ public class GenerateUtil {
         new GenerateSources(generateConfiguration).generate();
     }
 
-    public static void generateSources(Class<? extends GenerateConfiguration> generatePojoConfigurationClass) throws Exception {
-        generateSources(generatePojoConfigurationClass.newInstance());
+    public static void generateSources(Class<? extends GenerateConfiguration> generateConfigurationClass) throws Exception {
+        generateSources(generateConfigurationClass.newInstance());
     }
 }

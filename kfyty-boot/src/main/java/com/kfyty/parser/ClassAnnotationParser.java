@@ -10,6 +10,7 @@ import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
+import com.kfyty.generate.template.freemarker.FreemarkerTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.Mapper;
@@ -18,9 +19,11 @@ import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.Service;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.util.CommonUtil;
+import com.kfyty.util.LoadFreemarkerTemplateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,6 +73,7 @@ public class ClassAnnotationParser {
         this.fieldAnnotationParser.parseFieldAnnotation();
 
         this.parseAutoConfiguration();
+        this.parseBootConfiguration(clazz);
         this.applicationConfigurable.autoConfigurationAfterCheck();
 
         this.executeAutoConfiguration(clazz);
@@ -127,6 +131,12 @@ public class ClassAnnotationParser {
         }
     }
 
+    private void parseBootConfiguration(Class<?> bootClass) throws Exception {
+        if(bootClass.isAnnotationPresent(EnableAutoGenerateSources.class)) {
+            this.parseEnableAutoGenerateSources(bootClass.getAnnotation(EnableAutoGenerateSources.class));
+        }
+    }
+
     private void executeAutoConfiguration(Class<?> bootClass) throws Exception {
         if(bootClass == null || !bootClass.isAnnotationPresent(KfytyBootApplication.class)) {
             return;
@@ -156,5 +166,18 @@ public class ClassAnnotationParser {
         MVCAnnotationHandler mvcAnnotationHandler = KfytyApplication.getResources(MVCAnnotationHandler.class);
         mvcAnnotationHandler.setMappingController(value);
         mvcAnnotationHandler.buildURLMappingMap();
+    }
+
+    private void parseEnableAutoGenerateSources(EnableAutoGenerateSources annotation) throws Exception {
+        if(!annotation.loadTemplate()) {
+            return;
+        }
+        List<FreemarkerTemplate> templates = LoadFreemarkerTemplateUtil.loadTemplates(annotation.templatePrefix());
+        if(CommonUtil.empty(templates)) {
+            log.warn(": No freemarker template found for prefix: '" + annotation.templatePrefix() + "' !");
+            return;
+        }
+        GenerateSources generateSources = ((GenerateSources) this.applicationConfigurable.getBeanResources().get(GenerateSources.class));
+        generateSources.refreshGenerateTemplate(templates);
     }
 }

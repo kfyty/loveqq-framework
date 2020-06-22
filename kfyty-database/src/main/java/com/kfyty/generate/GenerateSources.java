@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -111,6 +112,11 @@ public class GenerateSources {
 
     public GenerateSources refreshGenerateTemplate(AbstractGenerateTemplate generateTemplate) {
         this.configurable.refreshGenerateTemplate(generateTemplate);
+        return this;
+    }
+
+    public GenerateSources refreshGenerateTemplate(Collection<? extends AbstractGenerateTemplate> generateTemplates) {
+        this.configurable.refreshGenerateTemplate(generateTemplates);
         return this;
     }
 
