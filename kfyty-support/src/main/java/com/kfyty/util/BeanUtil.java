@@ -27,6 +27,8 @@ import java.util.Set;
  */
 @Slf4j
 public class BeanUtil {
+    private static final Map<Class<?>, Constructor<?>> BASE_CONSTRUCTOR_MAP = new HashMap<>();
+
     public static <T, K, V> Object fillObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(returnType.isArray()) {
             return fillArrayObject(resultSet, returnType.getReturnType());
@@ -34,61 +36,65 @@ public class BeanUtil {
         if(!returnType.isParameterizedType()) {
             return fillSingleObject(resultSet, returnType.getReturnType());
         }
-        if(List.class.isAssignableFrom(returnType.getReturnType())) {
-            return fillListObject(resultSet, returnType.getFirstParameterizedType());
-        }
         if(Set.class.isAssignableFrom(returnType.getReturnType())) {
             return fillSetObject(resultSet, returnType.getFirstParameterizedType());
         }
-        return fillMapObject(resultSet, returnType);
-    }
-
-    public static <T> List<T> fillDateType(ResultSet resultSet, Class clazz) throws Exception {
-        if(resultSet == null || !resultSet.next()) {
-            log.debug(": fill date error: result set is null !");
-            return null;
+        if(returnType.getSecondParameterizedType() == null && List.class.isAssignableFrom(returnType.getReturnType())) {
+            return fillListObject(resultSet, returnType.getFirstParameterizedType());
         }
-        List<T> list = new ArrayList<>();
-        do {
-            T date = (T) resultSet.getObject(1);
-            if(date == null) {
-                continue;
-            }
-            list.add(date);
-        } while(resultSet.next());
-        return list;
+        if(Map.class.isAssignableFrom(returnType.getReturnType()) && !CommonUtil.empty(returnType.getKey())) {
+            return fillMapObject(resultSet, returnType);
+        }
+        return fillListMapObject(resultSet, returnType);
     }
 
     public static <T> List<T> fillBaseType(ResultSet resultSet, Class<T> clazz) throws Exception {
-        if(Date.class.isAssignableFrom(clazz)) {
-            return fillDateType(resultSet, clazz);
-        }
         if(resultSet == null || !resultSet.next()) {
             log.debug(": fill base data type error: result set is null !");
             return null;
         }
-        List<T> list = new ArrayList<>();
-        Constructor<T> constructor = CommonUtil.convert2Wrapper(clazz).getConstructor(String.class);
+        List<T> result = new ArrayList<>();
+        if(Date.class.isAssignableFrom(clazz)) {
+            do {
+                result.add((T) resultSet.getObject(1));
+            } while(resultSet.next());
+            return result;
+        }
+        if(!BASE_CONSTRUCTOR_MAP.containsKey(clazz)) {
+            BASE_CONSTRUCTOR_MAP.put(clazz, CommonUtil.convert2Wrapper(clazz).getConstructor(String.class));
+        }
+        Constructor<T> constructor = (Constructor<T>) BASE_CONSTRUCTOR_MAP.get(clazz);
         do {
-            list.add(constructor.newInstance(resultSet.getString(1)));
+            result.add(constructor.newInstance(resultSet.getString(1)));
         } while(resultSet.next());
-        return list;
+        return result;
     }
 
     public static <T> T fillSingleObject(ResultSet resultSet, Class<T> clazz) throws Exception {
-        return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(e -> e.get(0)).orElse(null);
+        List<T> result = fillListObject(resultSet, clazz);
+        if(CommonUtil.empty(result)) {
+            return null;
+        }
+        if(result.size() > 1) {
+            throw new RuntimeException(": too many result found !");
+        }
+        return result.get(0);
     }
 
     public static <T> Object fillArrayObject(ResultSet resultSet, Class<T> clazz) throws Exception {
-        List<T> list = Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).orElse(null);
-        if(CommonUtil.empty(list)) {
+        List<T> result = fillListObject(resultSet, clazz);
+        if(CommonUtil.empty(result)) {
             return null;
         }
-        Object o = Array.newInstance(clazz, list.size());
-        for (int i = 0; i < list.size(); i++) {
-            Array.set(o, i, list.get(i));
+        Object o = Array.newInstance(clazz, result.size());
+        for (int i = 0; i < result.size(); i++) {
+            Array.set(o, i, result.get(i));
         }
         return o;
+    }
+
+    public static <T> Set<T> fillSetObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+        return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(HashSet::new).orElse(null);
     }
 
     public static <T> List<T> fillListObject(ResultSet resultSet, Class<T> clazz) throws Exception {
@@ -105,7 +111,7 @@ public class BeanUtil {
             T o = clazz.newInstance();
             ResultSetMetaData metaData = resultSet.getMetaData();
             for(int i = 1; i <= metaData.getColumnCount(); i++) {
-                String fieldName = CommonUtil.convert2Hump(metaData.getColumnLabel(i), false);
+                String fieldName = CommonUtil.convert2Hump(metaData.getColumnLabel(i));
                 Field field = fieldMap.get(fieldName);
                 if(field != null) {
                     field.setAccessible(true);
@@ -130,40 +136,42 @@ public class BeanUtil {
         return list;
     }
 
-    public static <T> Set<T> fillSetObject(ResultSet resultSet, Class<T> clazz) throws Exception {
-        return Optional.ofNullable(fillListObject(resultSet, clazz)).filter(e -> !e.isEmpty()).map(HashSet::new).orElse(null);
-    }
-
     public static <T, K, V> Map<K, V> fillMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
-        Map<K, V> map = new HashMap<>();
-        if(CommonUtil.empty(returnType.getKey())) {
-            if(!resultSet.next()) {
-                log.debug(": fill object error: result set is null !");
-                return null;
-            }
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            for(int i = 1; i <= metaData.getColumnCount(); i++) {
-                map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
-            }
-            if(resultSet.next()) {
-                log.error(": fill map error, more than one result found !");
-                return null;
-            }
-            return map;
-        }
-
         List<V> values = fillListObject(resultSet, returnType.getSecondParameterizedType());
-
         if(CommonUtil.empty(values)) {
             return null;
         }
-
+        Map<K, V> result = new HashMap<>();
         for (V value : values) {
-            Field field = CommonUtil.getField(value.getClass(), returnType.getKey());
+            Field field = CommonUtil.getField(returnType.getSecondParameterizedType(), returnType.getKey());
             field.setAccessible(true);
-            map.put((K) field.get(value), value);
+            result.put((K) field.get(value), value);
         }
-        return map;
+        return result;
+    }
+
+    public static <T, K, V> Object fillListMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+        if(resultSet == null || !resultSet.next()) {
+            log.debug(": fill map error: result set is null !");
+            return null;
+        }
+        List<Map<K, V>> result = new ArrayList<>();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        do {
+            Map<K, V> map = new HashMap<>();
+            for(int i = 1; i <= metaData.getColumnCount(); i++) {
+                map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
+            }
+            result.add(map);
+        } while(resultSet.next());
+        if(Map.class.isAssignableFrom(returnType.getReturnType())) {
+            if(result.size() > 1) {
+                log.error(": fill map error, too many result found !");
+                return null;
+            }
+            return result.get(0);
+        }
+        return result;
     }
 
     public static <T> T copyBean(T source, T target) throws IllegalAccessException {

@@ -41,11 +41,11 @@ public class CommonUtil {
         return !Optional.ofNullable(t).filter(e -> e.length != 0).isPresent();
     }
 
-    public static boolean empty(Collection c) {
+    public static boolean empty(Collection<?> c) {
         return !Optional.ofNullable(c).filter(e -> !e.isEmpty()).isPresent();
     }
 
-    public static boolean empty(Map m) {
+    public static boolean empty(Map<?, ?> m) {
         return !Optional.ofNullable(m).filter(e -> !e.isEmpty()).isPresent();
     }
 
@@ -57,10 +57,10 @@ public class CommonUtil {
             return Array.getLength(obj);
         }
         if(obj instanceof Collection) {
-            return ((Collection) obj).size();
+            return ((Collection<?>) obj).size();
         }
         if(obj instanceof Map) {
-            return ((Map) obj).size();
+            return ((Map<?, ?>) obj).size();
         }
         return 1;
     }
@@ -122,7 +122,6 @@ public class CommonUtil {
             case "date":
             case "datetime":
             case "datetime2":
-            case "timestamp" :
                 return "Date";
             case "blob" :
             case "longblob" :
@@ -198,7 +197,7 @@ public class CommonUtil {
     }
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        if(clazz.getSimpleName().equals("Object")) {
+        if(Object.class.equals(clazz)) {
             log.error(": no field found:[{}] !", fieldName);
             return null;
         }
@@ -223,7 +222,7 @@ public class CommonUtil {
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
-        if(clazz == null || clazz.getSimpleName().equals("Object")) {
+        if(clazz == null || Object.class.equals(clazz)) {
             return new HashMap<>(0);
         }
         clazz = clazz.getSuperclass();

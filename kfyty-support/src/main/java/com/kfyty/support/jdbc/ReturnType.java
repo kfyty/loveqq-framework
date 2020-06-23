@@ -1,6 +1,5 @@
 package com.kfyty.support.jdbc;
 
-import com.kfyty.util.CommonUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,19 +76,25 @@ public class ReturnType<T, K, V> {
         ParameterizedType parameterizedType = (ParameterizedType) genericType;
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         if(Collection.class.isAssignableFrom(type)) {
-            if(CommonUtil.empty(actualTypeArguments)) {
-                log.error(": indeterminate of the parameterized type !");
-                return null;
+            if(actualTypeArguments[0] instanceof ParameterizedType) {
+                Type rawType = ((ParameterizedType) actualTypeArguments[0]).getRawType();
+                Type[] types = ((ParameterizedType) actualTypeArguments[0]).getActualTypeArguments();
+                if(!Map.class.isAssignableFrom((Class<?>) rawType)) {
+                    log.error(": nested parameterized type must be map !");
+                    return null;
+                }
+                return new ReturnType(false, true, type, types[0], types[1]);
             }
             return new ReturnType(false, true, type, actualTypeArguments[0], null);
         }
         if(Map.class.isAssignableFrom(type)) {
-            if(CommonUtil.empty(actualTypeArguments) || actualTypeArguments.length != 2) {
-                log.error(": indeterminate of the parameterized type !");
+            if(actualTypeArguments.length != 2) {
+                log.error(": parameterized type only support collection and map !");
                 return null;
             }
             return new ReturnType(false, true, type, actualTypeArguments[0], actualTypeArguments[1]);
         }
+        log.error(": parse return type failed !");
         return null;
     }
 }
