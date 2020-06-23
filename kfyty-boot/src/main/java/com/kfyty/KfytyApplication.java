@@ -29,7 +29,7 @@ public class KfytyApplication {
     }
 
     public static void run(Class<?> clazz, String basePackage, boolean ignoredBootAnnotation) throws Exception {
-        Set<Class<?>> classSet = PackageUtil.parseBasePackage(basePackage);
+        Set<Class<?>> classSet = PackageUtil.scanClass(basePackage);
         ClassAnnotationParser classAnnotationParser = new ClassAnnotationParser();
         applicationConfigurable = classAnnotationParser.initClassAnnotationParser();
         classAnnotationParser.parseClassAnnotation(clazz, classSet, ignoredBootAnnotation);

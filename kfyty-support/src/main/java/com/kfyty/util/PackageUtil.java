@@ -1,13 +1,16 @@
 package com.kfyty.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 /**
  * 功能描述: 解析 package 工具
@@ -16,60 +19,78 @@ import java.util.jar.JarFile;
  * @date 2019/8/22 14:17
  * @since JDK 1.8
  */
+@Slf4j
 public class PackageUtil {
-    public static Set<Class<?>> parseBasePackage(String packageName) throws IOException, ClassNotFoundException {
-        return parseBasePackage(packageName, true);
+    public static Set<String> scanClassName(Class<?> mainClass) throws IOException {
+        return scanClassName(mainClass.getPackage().getName());
     }
 
-    public static Set<Class<?>> parseBasePackage(String basePackage, boolean containChild) throws IOException, ClassNotFoundException {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(basePackage.replace(".", "/"));
-        return url == null ? null :
-                url.getProtocol().equalsIgnoreCase("jar") ?
-                parseBasePackageByJar(url.getPath(), containChild) :
-                parseBasePackageByFile(url.getPath(), containChild);
+    public static Set<Class<?>> scanClass(Class<?> mainClass) throws IOException {
+        return scanClass(mainClass.getPackage().getName());
     }
 
-    private static Set<Class<?>> parseBasePackageByJar(String jarURL, boolean containChild) throws IOException, ClassNotFoundException {
-        Set<Class<?>> set = new HashSet<>();
-        String[] jarInfo = jarURL.split("!");
-        String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
-        String packagePath = jarInfo[1].substring(1);
-        for(Enumeration<JarEntry> entries = new JarFile(jarFilePath).entries(); entries.hasMoreElements(); ) {
-            String entryName = entries.nextElement().getName();
-            if (containChild) {
-                if (entryName.startsWith(packagePath) && entryName.endsWith(".class")) {
-                    String className = entryName.replace("/", ".").substring(0, entryName.lastIndexOf("."));
-                    set.add(Class.forName(className));
-                }
+    public static Set<String> scanClassName(String basePackage) throws IOException {
+        Set<String> classes = new HashSet<>();
+        Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(basePackage.replace(".", "/"));
+        while(urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            if(url.getProtocol().equalsIgnoreCase("jar")) {
+                classes.addAll(scanClassNameByJar(url));
                 continue;
             }
-            int index = entryName.lastIndexOf("/");
-            String tempPath = index == -1 ? entryName : entryName.substring(0, index);
-            if (tempPath.equals(packagePath) && entryName.endsWith(".class")) {
-                String className = entryName.replace("/", ".").substring(0, entryName.lastIndexOf("."));
-                set.add(Class.forName(className));
-            }
+            classes.addAll(scanClassNameByFile(url));
         }
-        return set;
+        return classes;
     }
 
-    private static Set<Class<?>> parseBasePackageByFile(String directoryPath, boolean containChild) throws ClassNotFoundException {
-        Set<Class<?>> set = new HashSet<>();
-        File[] files = new File(directoryPath).listFiles();
+    public static Set<Class<?>> scanClass(String basePackage) throws IOException {
+        Set<Class<?>> result = new HashSet<>();
+        Set<String> classes = scanClassName(basePackage);
+        if(CommonUtil.empty(classes)) {
+            return result;
+        }
+        try {
+            for (String clazz : classes) {
+                result.add(Class.forName(clazz));
+            }
+        } catch (Exception e) {
+            log.error(": load class error !", e);
+        }
+        return result;
+    }
+
+    private static Set<String> scanClassNameByJar(URL url) throws IOException {
+        Set<String> classes = new HashSet<>();
+        String path = !url.getPath().contains("!") ? url.getPath() : url.getPath().split("!")[1];
+        Enumeration<JarEntry> entries = ((JarURLConnection) url.openConnection()).getJarFile().entries();
+        while(entries.hasMoreElements()) {
+            String classPath = entries.nextElement().getName();
+            if(!("/" + classPath).startsWith(path) || !classPath.endsWith(".class")) {
+                continue;
+            }
+            classes.add(classPath.replace("/", ".").replace(".class", ""));
+        }
+        return classes;
+    }
+
+    private static Set<String> scanClassNameByFile(URL url) throws MalformedURLException {
+        Set<String> classes = new HashSet<>();
+        File[] files = new File(url.getPath()).listFiles();
+        if(CommonUtil.empty(files)) {
+            return classes;
+        }
         for(File file : files) {
             if(file.isDirectory()) {
-                if(containChild) {
-                    set.addAll(parseBasePackageByFile(file.getPath(), true));
-                }
+                classes.addAll(scanClassNameByFile(file.toURI().toURL()));
+                continue;
+            }
+            if(!file.getPath().endsWith(".class")) {
                 continue;
             }
             String classPath = file.getPath();
-            if(classPath.endsWith(".class")) {
-                classPath = classPath.substring(classPath.indexOf(File.separator + "classes") + 9, classPath.lastIndexOf("."));
-                classPath = classPath.replace(File.separator, ".");
-                set.add(Class.forName(classPath));
-            }
+            classPath = classPath.substring(classPath.indexOf(File.separator + "classes") + 9, classPath.lastIndexOf("."));
+            classes.add(classPath.replace(File.separator, "."));
         }
-        return set;
+        return classes;
     }
 }
