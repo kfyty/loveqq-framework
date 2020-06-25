@@ -88,6 +88,9 @@ public class ClassAnnotationParser {
         if(clazz.isInterface() && clazz.isAnnotationPresent(Mapper.class)) {
             return KfytyApplication.getResources(SqlSession.class).getProxyObject(clazz);
         }
+        if(AbstractDataBaseMapper.class.isAssignableFrom(clazz)) {
+            return null;
+        }
         throw new InstantiationException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
     }
 
