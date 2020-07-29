@@ -1,14 +1,14 @@
 package com.kfyty.generate.configuration;
 
-import com.kfyty.support.configuration.Configuration;
+import com.kfyty.generate.configuration.annotation.BasePackage;
 import com.kfyty.generate.configuration.annotation.DataBase;
 import com.kfyty.generate.configuration.annotation.DataBaseMapper;
 import com.kfyty.generate.configuration.annotation.FilePath;
 import com.kfyty.generate.configuration.annotation.GenerateTemplate;
-import com.kfyty.generate.configuration.annotation.BasePackage;
 import com.kfyty.generate.configuration.annotation.Table;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
+import com.kfyty.support.configuration.Configuration;
 import com.kfyty.util.CommonUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -103,7 +103,7 @@ public class GenerateConfigurable extends Configuration {
     public void autoConfigurationAfterCheck() {
         Optional.ofNullable(this.dataSource).orElseThrow(() -> new NullPointerException("data source is null !"));
         Optional.ofNullable(this.dataBaseMapper).orElseThrow(() -> new NullPointerException("data base mapper is null !"));
-        this.generateTemplateList = Optional.ofNullable(generateTemplateList).filter(e -> !e.isEmpty()).map(e -> e.stream().distinct().collect(Collectors.toList())).orElseThrow(() -> new NullPointerException("generate template is null !"));
+        this.generateTemplateList = this.generateTemplateList.stream().distinct().collect(Collectors.toList());
     }
 
     private void initGenerateConfigurable(GenerateConfiguration configuration) {
@@ -124,8 +124,7 @@ public class GenerateConfigurable extends Configuration {
             try {
                 return (AbstractGenerateTemplate) clazz.newInstance();
             } catch (Exception ex) {
-                ex.printStackTrace();
-                return null;
+                throw new RuntimeException("Instantiate generate template failed !", ex);
             }
         }).collect(Collectors.toList())).orElse(null);
         if(!CommonUtil.empty(generateTemplateList)) {

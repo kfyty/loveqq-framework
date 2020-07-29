@@ -35,6 +35,7 @@ public abstract class FreemarkerUtil {
         Configuration configuration = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
         configuration.setDefaultEncoding("UTF-8");
         configuration.setOutputEncoding("UTF-8");
+        configuration.setClassicCompatible(true);
         configuration.setClassForTemplateLoading(FreemarkerUtil.class, templatePath);
         return configuration.getTemplate(template);
     }
