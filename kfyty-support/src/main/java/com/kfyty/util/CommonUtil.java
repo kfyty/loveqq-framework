@@ -91,11 +91,66 @@ public class CommonUtil {
         return !isClass ? s : s.length() == 1 ? Character.toUpperCase(s.charAt(0)) + "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
+    public static String convert2JdbcType(String dataBaseType) {
+        if(dataBaseType.toLowerCase().contains("timestamp")) {
+            return "TIMESTAMP";
+        }
+        switch (dataBaseType.toLowerCase()) {
+            case "bit":
+                return "BIT";
+            case "char":
+            case "text":
+            case "varchar":
+            case "varchar2":
+            case "nvarchar2":
+                return "VARCHAR";
+            case "clob":
+                return "CLOB";
+            case "nclob":
+                return "NCLOB";
+            case "longtext":
+            case "long varchar":
+                return "LONGVARCHAR";
+            case "decimal":
+                return "DECIMAL";
+            case "bigint":
+                return "BIGINT";
+            case "long":
+            case "number":
+                return "NUMERIC";
+            case "tinyint":
+                return "TINYINT";
+            case "int":
+            case "integer":
+                return "INTEGER";
+            case "float":
+                return "FLOAT";
+            case "double":
+                return "DOUBLE";
+            case "time":
+            case "date":
+                return "DATE";
+            case "datetime":
+            case "datetime2":
+                return "TIMESTAMP";
+            case "blob":
+                return "BLOB";
+            case "longblob":
+            case "binary":
+            case "varbinary":
+                return "BINARY";
+            default :
+                return "OTHER";
+        }
+    }
+
     public static String convert2JavaType(String dataBaseType) {
         if(dataBaseType.toLowerCase().contains("timestamp")) {
             return "Date";
         }
         switch (dataBaseType.toLowerCase()) {
+            case "bit":
+                return "byte";
             case "char":
             case "text":
             case "longtext":
@@ -103,10 +158,11 @@ public class CommonUtil {
             case "nclob":
             case "varchar":
             case "varchar2":
-            case "nvarchar2" :
+            case "nvarchar2":
                 return "String";
             case "decimal":
                 return "BigDecimal";
+            case "long":
             case "bigint":
             case "number":
                 return "Long";
@@ -123,8 +179,8 @@ public class CommonUtil {
             case "datetime":
             case "datetime2":
                 return "Date";
-            case "blob" :
-            case "longblob" :
+            case "blob":
+            case "longblob":
             case "binary":
             case "varbinary":
                 return "byte[]";

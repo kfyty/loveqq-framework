@@ -65,6 +65,7 @@ public class FreemarkerTemplate implements AbstractGenerateTemplate {
             info.setField(CommonUtil.convert2Hump(tableInfo.getField()));
             info.setFieldType(this.convert2JavaType(tableInfo.getFieldType()));
             info.setFieldComment(CommonUtil.empty(tableInfo.getFieldComment()) ? "" : tableInfo.getFieldComment());
+            tableInfo.setFieldType(CommonUtil.convert2JdbcType(tableInfo.getFieldType()));
             if(tableInfo.primaryKey()) {
                 variable.put("pkField", info);
                 variable.put("pkColumn", tableInfo);

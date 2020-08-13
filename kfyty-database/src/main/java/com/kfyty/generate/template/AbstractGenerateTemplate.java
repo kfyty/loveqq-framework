@@ -16,7 +16,9 @@ import java.util.Optional;
  */
 public interface AbstractGenerateTemplate {
     default String convert2JavaType(String dataBaseType) {
-        return Optional.ofNullable(CommonUtil.convert2JavaType(dataBaseType)).orElseThrow(() -> new IllegalArgumentException("no java data type matched for data base type: [" + dataBaseType + "], please override convert2JavaType method !"));
+        return Optional.ofNullable(CommonUtil.convert2JavaType(dataBaseType))
+                .orElseThrow(() -> new IllegalArgumentException("no java data type matched for data base type: [" +
+                        dataBaseType + "], please override convert2JavaType method !"));
     }
 
     default String classSuffix() {
