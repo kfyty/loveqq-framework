@@ -117,6 +117,7 @@ public class CommonUtil {
                 return "BIGINT";
             case "long":
             case "number":
+            case "numeric":
                 return "NUMERIC";
             case "tinyint":
                 return "TINYINT";
@@ -140,6 +141,7 @@ public class CommonUtil {
             case "varbinary":
                 return "BINARY";
             default :
+                log.warn("No jdbc type matched and instead of 'OTHER' !");
                 return "OTHER";
         }
     }
@@ -165,6 +167,7 @@ public class CommonUtil {
             case "long":
             case "bigint":
             case "number":
+            case "numeric":
                 return "Long";
             case "tinyint":
             case "int":
