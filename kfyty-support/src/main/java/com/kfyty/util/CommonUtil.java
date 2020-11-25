@@ -98,6 +98,8 @@ public class CommonUtil {
         switch (dataBaseType.toLowerCase()) {
             case "bit":
                 return "BIT";
+            case "smallint":
+                return "SMALLINT";
             case "char":
             case "text":
             case "varchar":
@@ -152,7 +154,7 @@ public class CommonUtil {
         }
         switch (dataBaseType.toLowerCase()) {
             case "bit":
-                return "byte";
+                return "Byte";
             case "char":
             case "text":
             case "longtext":
@@ -170,6 +172,7 @@ public class CommonUtil {
             case "numeric":
                 return "Long";
             case "tinyint":
+            case "smallint":
             case "int":
             case "integer":
                 return "Integer";
