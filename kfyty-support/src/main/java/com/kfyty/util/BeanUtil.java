@@ -116,8 +116,19 @@ public class BeanUtil {
                 if(field != null) {
                     field.setAccessible(true);
                     Object object = resultSet.getObject(metaData.getColumnLabel(i));
+                    if(object == null) {
+                        continue;
+                    }
                     if(field.getType().equals(Long.class) && object.getClass().equals(BigDecimal.class)) {
                         field.set(o, ((BigDecimal) object).longValue());
+                        continue;
+                    }
+                    if(field.getType().equals(Long.class) && object.getClass().equals(Integer.class)) {
+                        field.set(o, ((Integer) object).longValue());
+                        continue;
+                    }
+                    if(field.getType().equals(String.class) && object.getClass().equals(byte[].class)) {
+                        field.set(o, new String((byte[]) object));
                         continue;
                     }
                     field.set(o, object);
