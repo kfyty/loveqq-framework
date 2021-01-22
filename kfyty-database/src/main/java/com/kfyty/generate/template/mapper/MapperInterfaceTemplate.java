@@ -1,7 +1,7 @@
 package com.kfyty.generate.template.mapper;
 
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
-import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.generate.info.AbstractTableStructInfo;
 import com.kfyty.generate.template.entity.EntityTemplate;
 
 import java.io.IOException;
@@ -21,34 +21,34 @@ public class MapperInterfaceTemplate extends EntityTemplate {
     }
 
     @Override
-    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        super.importEntity(dataBaseInfo, basePackage, out);
+    public void generateImport(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        super.importEntity(tableInfo, basePackage, out);
         out.writeLine("import org.apache.ibatis.annotations.Param;");
         out.writeLine("import org.springframework.stereotype.Repository;\n");
         out.writeLine("import java.sql.SQLException;\n");
     }
 
     @Override
-    public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassDefinition(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.write("public interface {}", this.className);
     }
 
     @Override
-    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassAnnotation(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("@Mapper");
     }
 
     @Override
-    public void generateTableInfo(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateTableInfo(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 
     @Override
-    public void generateCustomCode(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        generateMapperInterfaces(dataBaseInfo, basePackage, out);
+    public void generateCustomCode(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        generateMapperInterfaces(tableInfo, basePackage, out);
     }
 
-    public void generateMapperInterfaces(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateMapperInterfaces(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("\n\t{} findById(@Param(\"id\") String id) throws SQLException;\n", this.entityClassName);
 
         out.writeLine("\tList<{}> findBy(@Param(\"field\") String field, @Param(\"value\") Object value) throws SQLException;\n", this.entityClassName);

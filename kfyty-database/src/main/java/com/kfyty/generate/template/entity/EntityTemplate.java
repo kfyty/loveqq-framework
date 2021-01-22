@@ -1,8 +1,8 @@
 package com.kfyty.generate.template.entity;
 
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
-import com.kfyty.generate.info.AbstractDataBaseInfo;
-import com.kfyty.generate.info.AbstractTableInfo;
+import com.kfyty.generate.info.AbstractTableStructInfo;
+import com.kfyty.generate.info.AbstractFieldStructInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.util.CommonUtil;
 
@@ -36,14 +36,14 @@ public class EntityTemplate implements AbstractGenerateTemplate {
         return !CommonUtil.empty(basePackage) ? basePackage : suffix.toLowerCase().replace("impl", ".impl");
     }
 
-    protected void initGenerateData(AbstractDataBaseInfo dataBaseInfo, String basePackage) {
+    protected void initGenerateData(AbstractTableStructInfo tableInfo, String basePackage) {
         this.packageName = initPackageName(basePackage, classSuffix());
-        this.className = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + classSuffix();
-        this.classVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + classSuffix();
+        this.className = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + classSuffix();
+        this.classVariableName = CommonUtil.convert2Hump(tableInfo.getTableName()) + classSuffix();
         this.classQualifiedName = CommonUtil.empty(packageName) ? className : packageName + "." + className;
         this.entityPackageName = initPackageName(basePackage, entityClassSuffix());
-        this.entityClassName = CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true) + entityClassSuffix();
-        this.entityClassVariableName = CommonUtil.convert2Hump(dataBaseInfo.getTableName()) + entityClassSuffix();
+        this.entityClassName = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + entityClassSuffix();
+        this.entityClassVariableName = CommonUtil.convert2Hump(tableInfo.getTableName()) + entityClassSuffix();
         this.entityClassQualifiedName = CommonUtil.empty(entityPackageName) ? entityClassName : entityPackageName + "." + entityClassName;
     }
 
@@ -57,84 +57,84 @@ public class EntityTemplate implements AbstractGenerateTemplate {
     }
 
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
-        initGenerateData(dataBaseInfo, basePackage);
-        generatePackage(dataBaseInfo, basePackage, out);
-        generateImport(dataBaseInfo, basePackage, out);
-        generateClassComment(dataBaseInfo, out);
-        generateClassAnnotation(dataBaseInfo, out);
-        generateClassDefinition(dataBaseInfo, out);
-        out.write(CommonUtil.empty(generateExtendsClass(dataBaseInfo)) ? "" : " extends " + generateExtendsClass(dataBaseInfo));
-        out.write(CommonUtil.empty(generateExtendsInterfaces(dataBaseInfo)) ? "" : " extends " + generateExtendsInterfaces(dataBaseInfo));
-        out.write(CommonUtil.empty(generateImplementsInterfaces(dataBaseInfo)) ? "" : " implements " + generateImplementsInterfaces(dataBaseInfo));
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+        initGenerateData(tableInfo, basePackage);
+        generatePackage(tableInfo, basePackage, out);
+        generateImport(tableInfo, basePackage, out);
+        generateClassComment(tableInfo, out);
+        generateClassAnnotation(tableInfo, out);
+        generateClassDefinition(tableInfo, out);
+        out.write(CommonUtil.empty(generateExtendsClass(tableInfo)) ? "" : " extends " + generateExtendsClass(tableInfo));
+        out.write(CommonUtil.empty(generateExtendsInterfaces(tableInfo)) ? "" : " extends " + generateExtendsInterfaces(tableInfo));
+        out.write(CommonUtil.empty(generateImplementsInterfaces(tableInfo)) ? "" : " implements " + generateImplementsInterfaces(tableInfo));
         out.writeLine(" {");
-        generateTableInfo(dataBaseInfo, out);
-        generateCustomCode(dataBaseInfo, basePackage, out);
+        generateTableInfo(tableInfo, out);
+        generateCustomCode(tableInfo, basePackage, out);
         out.writeLine("}");
     }
 
-    public void generatePackage(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generatePackage(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("package {};\n", this.packageName);
     }
 
-    public void importEntity(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void importEntity(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("import {};\n", this.entityClassQualifiedName);
     }
 
-    public void generateImport(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateImport(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("import java.util.Date;\n");
         out.writeLine("import lombok.Data;\n");
     }
 
-    public void generateClassDefinition(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassDefinition(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.write("public class {}", this.className);
     }
 
-    public void generateClassComment(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassComment(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("/**");
-        out.writeLine(" * TABLE_NAME: {}", dataBaseInfo.getTableName());
-        out.writeLine(" * TABLE_COMMENT: {}", dataBaseInfo.getTableComment());
+        out.writeLine(" * TABLE_NAME: {}", tableInfo.getTableName());
+        out.writeLine(" * TABLE_COMMENT: {}", tableInfo.getTableComment());
         out.writeLine(" *");
         out.writeLine(" * @author kfyty");
         out.writeLine(" * @email kfyty725@hotmail.com");
         out.writeLine(" */");
     }
 
-    public String generateExtendsClass(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+    public String generateExtendsClass(AbstractTableStructInfo tableInfo) throws IOException {
         return "";
     }
 
-    public String generateExtendsInterfaces(AbstractDataBaseInfo dataBaseInfo) {
+    public String generateExtendsInterfaces(AbstractTableStructInfo tableInfo) {
         return "";
     }
 
-    public String generateImplementsInterfaces(AbstractDataBaseInfo dataBaseInfo) throws IOException {
+    public String generateImplementsInterfaces(AbstractTableStructInfo tableInfo) throws IOException {
         return "";
     }
 
-    public void generateClassAnnotation(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassAnnotation(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("@Data");
     }
 
-    public void generateTableInfo(AbstractDataBaseInfo dataBaseInfo, GenerateSourcesBufferedWriter out) throws IOException {
-        for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
-            generateFieldComment(tableInfo, out);
-            generateFieldAnnotation(tableInfo, out);
-            out.writeLine("\tprivate {} {};\n", convert2JavaType(tableInfo.getFieldType()), CommonUtil.convert2Hump(tableInfo.getField(), false));
+    public void generateTableInfo(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+        for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
+            generateFieldComment(fieldInfo, out);
+            generateFieldAnnotation(fieldInfo, out);
+            out.writeLine("\tprivate {} {};\n", convert2JavaType(fieldInfo.getFieldType()), CommonUtil.convert2Hump(fieldInfo.getField(), false));
         }
     }
 
-    public void generateFieldComment(AbstractTableInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateFieldComment(AbstractFieldStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
         out.writeLine("\t/**");
         out.writeLine("\t * {}", tableInfo.getFieldComment());
         out.writeLine("\t */");
     }
 
-    public void generateFieldAnnotation(AbstractTableInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateFieldAnnotation(AbstractFieldStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 
-    public void generateCustomCode(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateCustomCode(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
 
     }
 }

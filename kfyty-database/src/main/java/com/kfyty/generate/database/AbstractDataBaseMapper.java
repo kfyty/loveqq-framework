@@ -1,7 +1,7 @@
 package com.kfyty.generate.database;
 
-import com.kfyty.generate.info.AbstractDataBaseInfo;
-import com.kfyty.generate.info.AbstractTableInfo;
+import com.kfyty.generate.info.AbstractTableStructInfo;
+import com.kfyty.generate.info.AbstractFieldStructInfo;
 import com.kfyty.jdbc.annotation.Param;
 import com.kfyty.jdbc.annotation.Query;
 
@@ -21,8 +21,8 @@ public interface AbstractDataBaseMapper {
     }
 
     @Query("")
-    List<? extends AbstractDataBaseInfo> findDataBaseInfo(@Param("dataBaseName") String dataBaseName);
+    List<? extends AbstractTableStructInfo> findTableInfos(@Param("dataBaseName") String dataBaseName);
 
     @Query("")
-    List<? extends AbstractTableInfo> findTableInfo(@Param("dataBaseName") String dataBaseName,@Param("tableName")  String tableName);
+    List<? extends AbstractFieldStructInfo> findFieldInfos(@Param("dataBaseName") String dataBaseName, @Param("tableName")  String tableName);
 }

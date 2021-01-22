@@ -1,8 +1,8 @@
 package com.kfyty.generate.template.freemarker;
 
 import com.kfyty.generate.GenerateSourcesBufferedWriter;
-import com.kfyty.generate.info.AbstractDataBaseInfo;
-import com.kfyty.generate.info.AbstractTableInfo;
+import com.kfyty.generate.info.AbstractTableStructInfo;
+import com.kfyty.generate.info.AbstractFieldStructInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.util.CommonUtil;
 import com.kfyty.util.FreemarkerUtil;
@@ -41,38 +41,38 @@ public class FreemarkerTemplate implements AbstractGenerateTemplate {
     }
 
     @Override
-    public void generate(AbstractDataBaseInfo dataBaseInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         try {
             variable.put("basePackage", basePackage);
-            loadVariables(dataBaseInfo);
+            loadVariables(tableInfo);
             FreemarkerUtil.loadTemplate(this.prefix, this.template).process(this.variable, out);
         } catch (TemplateException e) {
             log.error("generate source error: ", e);
         }
     }
 
-    private void loadVariables(AbstractDataBaseInfo dataBaseInfo) {
-        variable.put("database", dataBaseInfo.getDataBaseName());
-        variable.put("table", dataBaseInfo.getTableName());
-        variable.put("note", dataBaseInfo.getTableComment());
-        variable.put("className", CommonUtil.convert2Hump(dataBaseInfo.getTableName(), true));
-        variable.put("classVariable", CommonUtil.convert2Hump(dataBaseInfo.getTableName()));
-        List<AbstractTableInfo> fields = new ArrayList<>(dataBaseInfo.getTableInfos().size());
-        List<AbstractTableInfo> columns = new ArrayList<>(dataBaseInfo.getTableInfos().size());
-        for (AbstractTableInfo tableInfo : dataBaseInfo.getTableInfos()) {
-            AbstractTableInfo info = new AbstractTableInfo();
-            info.setTableName(tableInfo.getTableName());
-            info.setField(CommonUtil.convert2Hump(tableInfo.getField()));
-            info.setFieldType(this.convert2JavaType(tableInfo.getFieldType()));
-            info.setFieldComment(CommonUtil.empty(tableInfo.getFieldComment()) ? "" : tableInfo.getFieldComment());
-            tableInfo.setFieldType(CommonUtil.convert2JdbcType(tableInfo.getFieldType()));
-            if(tableInfo.primaryKey()) {
+    private void loadVariables(AbstractTableStructInfo tableInfo) {
+        variable.put("database", tableInfo.getDataBaseName());
+        variable.put("table", tableInfo.getTableName());
+        variable.put("note", tableInfo.getTableComment());
+        variable.put("className", CommonUtil.convert2Hump(tableInfo.getTableName(), true));
+        variable.put("classVariable", CommonUtil.convert2Hump(tableInfo.getTableName()));
+        List<AbstractFieldStructInfo> fields = new ArrayList<>(tableInfo.getFieldInfos().size());
+        List<AbstractFieldStructInfo> columns = new ArrayList<>(tableInfo.getFieldInfos().size());
+        for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
+            AbstractFieldStructInfo info = new AbstractFieldStructInfo();
+            info.setTableName(fieldInfo.getTableName());
+            info.setField(CommonUtil.convert2Hump(fieldInfo.getField()));
+            info.setFieldType(this.convert2JavaType(fieldInfo.getFieldType()));
+            info.setFieldComment(CommonUtil.empty(fieldInfo.getFieldComment()) ? "" : fieldInfo.getFieldComment());
+            fieldInfo.setFieldType(CommonUtil.convert2JdbcType(fieldInfo.getFieldType()));
+            if(fieldInfo.primaryKey()) {
                 variable.put("pkField", info);
-                variable.put("pkColumn", tableInfo);
+                variable.put("pkColumn", fieldInfo);
                 continue;
             }
             fields.add(info);
-            columns.add(tableInfo);
+            columns.add(fieldInfo);
         }
         variable.put("fields", fields);
         variable.put("columns", columns);

@@ -3,7 +3,7 @@ package com.kfyty.generate;
 import com.kfyty.generate.configuration.GenerateConfigurable;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
-import com.kfyty.generate.info.AbstractDataBaseInfo;
+import com.kfyty.generate.info.AbstractTableStructInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.jdbc.annotation.Query;
@@ -34,7 +34,7 @@ public class GenerateSources {
 
     protected GenerateConfigurable configurable;
 
-    protected List<? extends AbstractDataBaseInfo> dataBaseInfoList;
+    protected List<? extends AbstractTableStructInfo> tableInfos;
 
     public GenerateSources() {
         this.sqlSession = new SqlSession();
@@ -54,7 +54,7 @@ public class GenerateSources {
         return parentPath + File.separator + packageName.replace(".", File.separator);
     }
 
-    protected String initDirectory(AbstractDataBaseInfo info) {
+    protected String initDirectory(AbstractTableStructInfo info) {
         String savePath = this.initFilePath();
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
         String classSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().classSuffix()).orElse("");
@@ -62,7 +62,7 @@ public class GenerateSources {
         return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + classSuffix + fileTypeSuffix;
     }
 
-    protected File initFile(AbstractDataBaseInfo info) throws IOException {
+    protected File initFile(AbstractTableStructInfo info) throws IOException {
         File file = new File(this.initDirectory(info));
         if(file.exists() && !file.delete()) {
             log.error(": delete file failed : {}", file.getAbsolutePath());
@@ -75,7 +75,7 @@ public class GenerateSources {
         return file;
     }
 
-    protected void initDataBaseInfo() throws Exception {
+    protected void initTableInfos() throws Exception {
         this.sqlSession.setDataSource(configurable.getDataSource());
         AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
 
@@ -87,11 +87,11 @@ public class GenerateSources {
             tables.addAll(dataBaseMapper.findTableList());
         }
 
-        List<? extends AbstractDataBaseInfo> dataBaseInfos = dataBaseMapper.findDataBaseInfo(configurable.getDataBaseName());
-        List<? extends AbstractDataBaseInfo> filteredDataBaseInfo = Optional.of(tables).filter(e -> !e.isEmpty()).map(e -> dataBaseInfos.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
-        this.dataBaseInfoList = (CommonUtil.empty(filteredDataBaseInfo) ? dataBaseInfos : filteredDataBaseInfo).stream().filter(e -> configurable.getTablePattern().matcher(e.getTableName()).matches()).collect(Collectors.toList());
-        for (AbstractDataBaseInfo info : this.dataBaseInfoList) {
-            info.setTableInfos(dataBaseMapper.findTableInfo(info.getDataBaseName(), info.getTableName()));
+        List<? extends AbstractTableStructInfo> tableInfos = dataBaseMapper.findTableInfos(configurable.getDataBaseName());
+        List<? extends AbstractTableStructInfo> filteredTableInfo = Optional.of(tables).filter(e -> !e.isEmpty()).map(e -> tableInfos.stream().filter(info -> e.contains(info.getTableName())).collect(Collectors.toList())).orElse(null);
+        this.tableInfos = (CommonUtil.empty(filteredTableInfo) ? tableInfos : filteredTableInfo).stream().filter(e -> configurable.getTablePattern().matcher(e.getTableName()).matches()).collect(Collectors.toList());
+        for (AbstractTableStructInfo info : this.tableInfos) {
+            info.setFieldInfos(dataBaseMapper.findFieldInfos(info.getDataBaseName(), info.getTableName()));
         }
         if(log.isDebugEnabled()) {
             log.debug(": initialize data base info success !");
@@ -100,13 +100,13 @@ public class GenerateSources {
 
     public GenerateSources refreshGenerateConfiguration(GenerateConfiguration configuration) {
         this.configurable.refreshGenerateConfiguration(configuration);
-        this.dataBaseInfoList = null;
+        this.tableInfos = null;
         return this;
     }
 
     public GenerateSources refreshGenerateConfigurable(GenerateConfigurable configurable) {
         this.configurable = configurable;
-        this.dataBaseInfoList = null;
+        this.tableInfos = null;
         return this;
     }
 
@@ -121,19 +121,19 @@ public class GenerateSources {
     }
 
     public void generate() throws Exception {
-        if(this.dataBaseInfoList == null) {
-            this.initDataBaseInfo();
+        if(this.tableInfos == null) {
+            this.initTableInfos();
         }
         File file = null;
         GenerateSourcesBufferedWriter out = null;
         while(configurable.hasGenerateTemplate()) {
             AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
-            for (AbstractDataBaseInfo dataBaseInfo : this.dataBaseInfoList) {
+            for (AbstractTableStructInfo tableInfo : this.tableInfos) {
                 if(file == null || out == null || !nextGenerateTemplate.sameFile()) {
-                    file = this.initFile(dataBaseInfo);
+                    file = this.initFile(tableInfo);
                     out = new GenerateSourcesBufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
-                nextGenerateTemplate.generate(dataBaseInfo, configurable.getBasePackage(), out);
+                nextGenerateTemplate.generate(tableInfo, configurable.getBasePackage(), out);
                 out.flush();
                 log.debug(": generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
