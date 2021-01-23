@@ -10,7 +10,6 @@ import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
-import com.kfyty.generate.template.freemarker.FreemarkerTemplate;
 import com.kfyty.jdbc.SqlSession;
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.Mapper;
@@ -19,7 +18,6 @@ import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.Service;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.util.CommonUtil;
-import com.kfyty.util.LoadFreemarkerTemplateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -172,7 +170,7 @@ public class ClassAnnotationParser {
         if(!annotation.loadTemplate()) {
             return;
         }
-        List<FreemarkerTemplate> templates = LoadFreemarkerTemplateUtil.loadTemplates(annotation.templatePrefix());
+        List<? extends AbstractGenerateTemplate> templates = annotation.templateEngine().newInstance().loadTemplates(annotation.templatePrefix());
         if(CommonUtil.empty(templates)) {
             log.warn(": No freemarker template found for prefix: '" + annotation.templatePrefix() + "' !");
             return;
