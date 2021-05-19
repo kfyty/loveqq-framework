@@ -5,6 +5,7 @@ import com.kfyty.generate.info.AbstractTableStructInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
 import com.kfyty.generate.template.AbstractTemplateEngine;
 import com.kfyty.kjte.JstlRenderEngine;
+import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
 import com.kfyty.util.TemplateEngineUtil;
 import javassist.ClassPool;
@@ -31,41 +32,37 @@ import static com.kfyty.kjte.JstlTemplateEngine.CLASS_SUFFIX;
 @NoArgsConstructor
 public class JspTemplate extends AbstractTemplateEngine {
     /**
-     * jsp 模板 class 缓存
+     * 当前 jsp 模板编译生成的 class 文件路径
      */
-    private static final ThreadLocal<Map<File, String>> cache = new ThreadLocal<>();
-
-    /**
-     * 当前模板 jsp 文件
-     */
-    private File jsp;
+    private String classPath;
 
     /**
      * jsp 文件的 class 对象
      */
     private Class<?> jspClass;
 
-    private JstlTemplateEngineConfig config;
+    private JstlTemplateEngine templateEngine;
 
-    public JspTemplate(String prefix, String template, File jsp) {
-        super(prefix, template);
-        this.jsp = jsp;
-        this.config = new JstlTemplateEngineConfig(TemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
+    public JspTemplate(String prefix, File jsp, String classPath) {
+        super(prefix, jsp.getName());
+        this.classPath = classPath;
+        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(TemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
+        this.templateEngine = new JstlTemplateEngine(config);
     }
 
     @Override
     public List<? extends AbstractGenerateTemplate> loadTemplates(String prefix) throws Exception {
-        return TemplateEngineUtil.loadJspTemplates(prefix, cache);
+        return TemplateEngineUtil.loadJspTemplates(prefix);
     }
 
     @Override
     public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
         this.initClass();
         this.loadVariables(tableInfo, basePackage);
-        this.config.clearVar().putVar(variable);
-        this.config.setOut(out);
-        JstlRenderEngine render = new JstlRenderEngine(Collections.singletonList(jspClass), config);
-        render.doRenderHtml();
+        this.templateEngine.getConfig().clearVar().putVar(variable);
+        this.templateEngine.getConfig().setOut(out);
+        JstlRenderEngine render = new JstlRenderEngine(this.templateEngine, Collections.singletonList(jspClass));
+        render.doRenderTemplate();
     }
 
     private void initClass() {
@@ -73,7 +70,7 @@ public class JspTemplate extends AbstractTemplateEngine {
             return;
         }
         try {
-            String clazz = cache.get().get(this.jsp).replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
+            String clazz = this.classPath.replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
             this.jspClass = ClassPool.getDefault().makeClass(new FileInputStream(clazz)).toClass();
         } catch (Exception e) {
             throw new RuntimeException(e);

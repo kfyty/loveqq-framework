@@ -56,27 +56,21 @@ public abstract class TemplateEngineUtil {
         if(CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
-        return Arrays.stream(templateNames.split(","))
-                .map(e -> new FreemarkerTemplate(prefix, e)).collect(Collectors.toList());
+        return Arrays.stream(templateNames.split(",")).map(e -> new FreemarkerTemplate(prefix, e)).collect(Collectors.toList());
     }
 
-    public static List<JspTemplate> loadJspTemplates(String prefix, ThreadLocal<Map<File, String>> cache) throws Exception {
+    public static List<JspTemplate> loadJspTemplates(String prefix) throws Exception {
         String templateNames = getTemplateNames(prefix);
         if(CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
         String templatePath = getTemplatePath(prefix);
-        List<File> jspFiles = Arrays.stream(templateNames.split(","))
-                .flatMap(e -> new JstlTemplateEngineConfig(templatePath + "/" + e).getJspFiles().stream()).collect(Collectors.toList());
-        Map<File, String> classMap = new HashMap<>();
+        List<File> jspFiles = Arrays.stream(templateNames.split(",")).flatMap(e -> new JstlTemplateEngineConfig(templatePath + "/" + e).getJspFiles().stream()).collect(Collectors.toList());
         List<JspTemplate> jspTemplates = new ArrayList<>(jspFiles.size());
         List<String> classes = new JstlTemplateEngine(new JstlTemplateEngineConfig(getTemplatePath(prefix), jspFiles)).compile();
         for (int i = 0; i < classes.size(); i++) {
-            File file = jspFiles.get(i);
-            classMap.put(file, classes.get(i));
-            jspTemplates.add(new JspTemplate(prefix, file.getName(), file));
+            jspTemplates.add(new JspTemplate(prefix, jspFiles.get(i), classes.get(i)));
         }
-        cache.set(classMap);
         return jspTemplates;
     }
 
