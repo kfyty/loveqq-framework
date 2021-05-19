@@ -3,7 +3,7 @@ package com.kfyty.database.test;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.kfyty.database.test.entity.User;
 import com.kfyty.database.test.mapper.UserMapper;
-import com.kfyty.jdbc.SqlSession;
+import com.kfyty.jdbc.SqlSessionFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,8 +23,7 @@ public class QueryTest {
         Properties properties = new Properties();
         properties.load(QueryTest.class.getResourceAsStream(PATH));
         DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
-        SqlSession sqlSession = new SqlSession(dataSource);
-        this.userMapper = sqlSession.getProxyObject(UserMapper.class);
+        this.userMapper = SqlSessionFactory.createProxy(dataSource, UserMapper.class);
     }
 
     @Test

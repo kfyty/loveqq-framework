@@ -1,9 +1,9 @@
 package com.kfyty.util;
 
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,31 +19,51 @@ import java.util.Arrays;
  */
 @Slf4j
 public class JdbcUtil {
-    public static <T, K, V> Object query(DataSource dataSource, ReturnType<T, K, V> returnType, String sql, Object ... params) throws Exception {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+    public static <T, K, V> Object query(Transaction transaction, ReturnType<T, K, V> returnType, String sql, Object ... params) throws Exception {
+        Connection connection = transaction.getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = getPreparedStatement(connection, sql, params);
+            resultSet = preparedStatement.executeQuery();
             Object obj = BeanUtil.fillObject(resultSet, returnType);
             if(log.isDebugEnabled()) {
                 log.debug(":                <==      Total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
             }
             return obj;
         } catch(Exception e) {
+            transaction.rollback();
             log.error(": failed execute sql statement:[{}] --> parameters:{}", sql, params);
             throw e;
+        } finally {
+            close(resultSet);
+            close(preparedStatement);
+            if(transaction.isAutoCommit()) {
+                transaction.commit();
+                transaction.close();
+            }
         }
     }
 
-    public static void execute(DataSource dataSource, String sql, Object ... params) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params)) {
+    public static void execute(Transaction transaction, String sql, Object ... params) throws Exception {
+        Connection connection = transaction.getConnection();
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = getPreparedStatement(connection, sql, params);
             preparedStatement.execute();
             if(log.isDebugEnabled()) {
                 log.debug(": executed sql statement:[{}] --> parameters:{}", sql, params);
             }
         } catch(SQLException e) {
+            transaction.rollback();
             log.error(": failed execute sql statement:[{}] --> parameters:{}", sql, params);
             throw e;
+        } finally {
+            close(preparedStatement);
+            if(transaction.isAutoCommit()) {
+                transaction.commit();
+                transaction.close();
+            }
         }
     }
 
@@ -59,11 +79,17 @@ public class JdbcUtil {
         return preparedStatement;
     }
 
-    private static <T, K, V> Object subQuery(DataSource dataSource, ReturnType<T, K, V> returnType, String sql, Object ... params) throws Exception {
-        return query(dataSource, returnType, sql, params);
+    private static <T, K, V> Object subQuery(Transaction transaction, ReturnType<T, K, V> returnType, String sql, Object ... params) throws Exception {
+        return query(transaction, returnType, sql, params);
     }
 
-    private static void execute(DataSource dataSource, ReturnType non, String sql, Object ... params) throws SQLException {
-        execute(dataSource, sql, params);
+    private static void execute(Transaction transaction, ReturnType non, String sql, Object ... params) throws Exception {
+        execute(transaction, sql, params);
+    }
+
+    private static void close(Object obj) throws Exception {
+        if(obj instanceof AutoCloseable) {
+            ((AutoCloseable) obj).close();
+        }
     }
 }

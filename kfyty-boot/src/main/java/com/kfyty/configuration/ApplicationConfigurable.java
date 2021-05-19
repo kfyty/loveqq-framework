@@ -2,7 +2,6 @@ package com.kfyty.configuration;
 
 import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfigurable;
-import com.kfyty.jdbc.SqlSession;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.support.configuration.Configuration;
 import lombok.Getter;
@@ -33,7 +32,6 @@ public class ApplicationConfigurable {
     public static ApplicationConfigurable initApplicationConfigurable() throws Exception {
         ApplicationConfigurable applicationConfigurable = new ApplicationConfigurable();
         applicationConfigurable.beanResources = new HashMap<>();
-        applicationConfigurable.beanResources.put(SqlSession.class, new SqlSession());
         applicationConfigurable.beanResources.put(GenerateSources.class, new GenerateSources());
         applicationConfigurable.beanResources.put(MVCAnnotationHandler.class, new MVCAnnotationHandler());
         return applicationConfigurable;

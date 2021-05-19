@@ -10,7 +10,7 @@ import com.kfyty.generate.GenerateSources;
 import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
-import com.kfyty.jdbc.SqlSession;
+import com.kfyty.jdbc.SqlSessionFactory;
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.Mapper;
 import com.kfyty.mvc.annotation.Repository;
@@ -84,7 +84,7 @@ public class ClassAnnotationParser {
             return clazz.newInstance();
         }
         if(clazz.isInterface() && clazz.isAnnotationPresent(Mapper.class) || AbstractDataBaseMapper.class.isAssignableFrom(clazz)) {
-            return KfytyApplication.getResources(SqlSession.class).getProxyObject(clazz);
+            return SqlSessionFactory.createProxy(clazz);
         }
         throw new InstantiationException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
     }

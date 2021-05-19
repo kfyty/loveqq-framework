@@ -4,10 +4,12 @@ import com.kfyty.jdbc.annotation.ForEach;
 import com.kfyty.jdbc.annotation.Param;
 import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.jdbc.annotation.SubQuery;
+import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.transaction.Transaction;
 import com.kfyty.util.CommonUtil;
 import com.kfyty.util.JdbcUtil;
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,13 +36,26 @@ import java.util.Map;
  */
 @Slf4j
 @NoArgsConstructor
-@AllArgsConstructor
 public class SqlSession implements InvocationHandler {
     /**
      * 数据源
      */
-    @Setter
+    @Setter @Getter
     private DataSource dataSource;
+
+    /**
+     * 事务
+     */
+    private Transaction transaction;
+
+    public SqlSession(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public SqlSession(DataSource dataSource, Transaction transaction) {
+        this.dataSource = dataSource;
+        this.transaction = transaction;
+    }
 
     /**
      * 根据注解类名调用相应的方法
@@ -57,11 +71,22 @@ public class SqlSession implements InvocationHandler {
         String methodName = Character.toLowerCase(annotationName.charAt(0)) + annotationName.substring(1);
         String sql = this.parseForEach(annotation, params);
         Map<String, Object> map = this.parseSQL(sql, params);
-        Method method = JdbcUtil.class.getDeclaredMethod(methodName, DataSource.class, ReturnType.class, String.class, Object[].class);
+        Method method = JdbcUtil.class.getDeclaredMethod(methodName, Transaction.class, ReturnType.class, String.class, Object[].class);
         method.setAccessible(true);
-        Object obj = method.invoke(null, dataSource, returnType, map.get("sql"), map.get("args"));
+        Object obj = method.invoke(null, this.getTransaction(), returnType, map.get("sql"), map.get("args"));
         this.handleSubQuery(annotation, obj);
         return obj;
+    }
+
+    /**
+     * 获取事务，如果没有则开启一个新的
+     * @return Transaction
+     */
+    public Transaction getTransaction() {
+        if(transaction == null) {
+            this.transaction = new JdbcTransaction(this.dataSource);
+        }
+        return this.transaction;
     }
 
     /**
@@ -184,16 +209,6 @@ public class SqlSession implements InvocationHandler {
             returnField.setAccessible(true);
             returnField.set(obj, this.requestQuery(subQuery, returnType, params));
         }
-    }
-
-    /**
-     * 获取接口代理对象
-     * @param interfaces    接口 Class 对象
-     * @param <T>           泛型
-     * @return              代理对象
-     */
-    public <T> T getProxyObject(Class<T> interfaces) {
-        return (T) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {interfaces}, this);
     }
 
     /**

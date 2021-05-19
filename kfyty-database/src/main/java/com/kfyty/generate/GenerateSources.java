@@ -5,7 +5,7 @@ import com.kfyty.generate.configuration.GenerateConfiguration;
 import com.kfyty.generate.database.AbstractDataBaseMapper;
 import com.kfyty.generate.info.AbstractTableStructInfo;
 import com.kfyty.generate.template.AbstractGenerateTemplate;
-import com.kfyty.jdbc.SqlSession;
+import com.kfyty.jdbc.SqlSessionFactory;
 import com.kfyty.jdbc.annotation.Query;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +30,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GenerateSources {
 
-    protected SqlSession sqlSession;
-
     protected GenerateConfigurable configurable;
 
     protected List<? extends AbstractTableStructInfo> tableInfos;
 
     public GenerateSources() {
-        this.sqlSession = new SqlSession();
         this.configurable = new GenerateConfigurable();
     }
 
@@ -76,8 +73,7 @@ public class GenerateSources {
     }
 
     protected void initTableInfos() throws Exception {
-        this.sqlSession.setDataSource(configurable.getDataSource());
-        AbstractDataBaseMapper dataBaseMapper = sqlSession.getProxyObject(configurable.getDataBaseMapper());
+        AbstractDataBaseMapper dataBaseMapper = SqlSessionFactory.createProxy(configurable.getDataSource(), configurable.getDataBaseMapper());
 
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
 

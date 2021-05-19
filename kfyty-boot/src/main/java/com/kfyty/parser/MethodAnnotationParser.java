@@ -6,6 +6,8 @@ import com.kfyty.configuration.annotation.Bean;
 import com.kfyty.configuration.annotation.Component;
 import com.kfyty.configuration.annotation.Configuration;
 import com.kfyty.jdbc.SqlSession;
+import com.kfyty.jdbc.SqlSessionFactory;
+import com.kfyty.mvc.annotation.Mapper;
 import com.kfyty.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,10 +62,28 @@ public class MethodAnnotationParser {
         Object obj = method.invoke(o);
         this.beanMap.put(returnType, obj);
         if(DataSource.class.isAssignableFrom(returnType)) {
-            KfytyApplication.getResources(SqlSession.class).setDataSource((DataSource) obj);
+            this.processDataSourceBean((DataSource) obj);
         }
         if(log.isDebugEnabled()) {
             log.debug(": found bean resource: [{}] !", method.getReturnType());
+        }
+    }
+
+    private void processDataSourceBean(DataSource dataSource) {
+        for (Map.Entry<Class<?>, Object> entry : KfytyApplication.getResources().entrySet()) {
+            if(SqlSession.class.isAssignableFrom(entry.getValue().getClass())) {
+                SqlSession session = (SqlSession) entry.getValue();
+                if(session.getDataSource() == null) {
+                    session.setDataSource(dataSource);
+                    continue;
+                }
+            }
+            if(entry.getKey().isAnnotationPresent(Mapper.class)) {
+                SqlSession session = SqlSessionFactory.getSqlSession(entry.getValue());
+                if(session.getDataSource() == null) {
+                    session.setDataSource(dataSource);
+                }
+            }
         }
     }
 }

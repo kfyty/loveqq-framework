@@ -4,6 +4,7 @@ import com.kfyty.configuration.ApplicationConfigurable;
 import com.kfyty.parser.ClassAnnotationParser;
 import com.kfyty.util.PackageUtil;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -16,8 +17,12 @@ import java.util.Set;
 public class KfytyApplication {
     private static ApplicationConfigurable applicationConfigurable;
 
+    public static Map<Class<?>, Object> getResources() {
+        return applicationConfigurable.getBeanResources();
+    }
+
     public static <T> T getResources(Class<T> clazz) {
-        return (T) applicationConfigurable.getBeanResources().get(clazz);
+        return (T) getResources().get(clazz);
     }
 
     public static void run(Class<?> clazz) throws Exception {
