@@ -5,6 +5,7 @@ import com.kfyty.util.CommonUtil;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,14 +32,14 @@ public class ServletUtil {
         }
         int contentLength = request.getContentLength();
         if(contentLength < 0) {
-            return null;
+            return "";
         }
         byte[] buffer = new byte[contentLength];
         ServletInputStream inputStream = request.getInputStream();
         for (int n = 0, i = 0; n != -1 && i < contentLength; i += n) {
             n = inputStream.read(buffer, i, contentLength - i);
         }
-        return new String(buffer, "UTF-8");
+        return new String(buffer, StandardCharsets.UTF_8);
     }
 
     public static String getParameter(HttpServletRequest request, String paramName) {
@@ -51,7 +52,7 @@ public class ServletUtil {
             return null;
         }
         Map<String, Object> map = new HashMap<>();
-        Enumeration parameterNames = request.getParameterNames();
+        Enumeration<?> parameterNames = request.getParameterNames();
         while(parameterNames.hasMoreElements()) {
             String paramName = (String) parameterNames.nextElement();
             map.put(paramName, request.getParameter(paramName));
@@ -68,7 +69,7 @@ public class ServletUtil {
         }
         prefix += ".";
         Map<String, Object> map = new HashMap<>();
-        Enumeration parameterNames = request.getParameterNames();
+        Enumeration<?> parameterNames = request.getParameterNames();
         while(parameterNames.hasMoreElements()) {
             String paramName = (String) parameterNames.nextElement();
             if(paramName.startsWith(prefix)) {

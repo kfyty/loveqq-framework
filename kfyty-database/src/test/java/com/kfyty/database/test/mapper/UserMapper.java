@@ -1,8 +1,8 @@
 package com.kfyty.database.test.mapper;
 
 import com.kfyty.database.test.entity.User;
-import com.kfyty.jdbc.annotation.Param;
-import com.kfyty.jdbc.annotation.Query;
+import com.kfyty.database.jdbc.annotation.Param;
+import com.kfyty.database.jdbc.annotation.Query;
 
 import java.util.List;
 import java.util.Map;

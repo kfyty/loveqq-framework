@@ -1,0 +1,3 @@
+com.kfyty.boot.auto.config=\
+    com.kfyty.database.generate.configuration.GenerateAutoConfig,\
+    com.kfyty.database.jdbc.autoconfig.MapperAutoConfig

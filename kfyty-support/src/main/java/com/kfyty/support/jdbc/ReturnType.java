@@ -66,6 +66,7 @@ public class ReturnType<T, K, V> {
         this.secondParameterizedType = (Class<V>) ((WildcardType) secondParameterizedType).getUpperBounds()[0];
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
             return new ReturnType(true, false, type.getComponentType(), null, null);
@@ -75,7 +76,7 @@ public class ReturnType<T, K, V> {
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericType;
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-        if(Collection.class.isAssignableFrom(type)) {
+        if(Collection.class.isAssignableFrom(type) || Class.class.isAssignableFrom(type)) {
             if(actualTypeArguments[0] instanceof ParameterizedType) {
                 Type rawType = ((ParameterizedType) actualTypeArguments[0]).getRawType();
                 Type[] types = ((ParameterizedType) actualTypeArguments[0]).getActualTypeArguments();

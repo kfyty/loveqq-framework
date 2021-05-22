@@ -1,15 +1,14 @@
-package com.kfyty.mvc.annotation;
+package com.kfyty.database.jdbc.annotation.container;
 
-import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.database.jdbc.annotation.Execute;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Component
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RestController {
-    String value() default "";
+public @interface Executes {
+    Execute[] value();
 }

@@ -74,6 +74,13 @@ public class CommonUtil {
                 }).orElseThrow(() -> new NullPointerException("throwable is null"));
     }
 
+    public static String convert2BeanName(String name) {
+        if(name.length() < 2) {
+            return name.toLowerCase();
+        }
+        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+    }
+
     public static String convert2Hump(String s) {
         return convert2Hump(s, false);
     }
@@ -205,6 +212,7 @@ public class CommonUtil {
         return sb.toString();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
         InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
         Field field = invocationHandler.getClass().getDeclaredField("memberValues");
@@ -218,7 +226,7 @@ public class CommonUtil {
     public static List<Object> convert2List(Object value) {
         List<Object> list = new ArrayList<>();
         if(value instanceof Collection) {
-            list.addAll((Collection) value);
+            list.addAll((Collection<?>) value);
         } else if(value.getClass().isArray()) {
             list.addAll(Arrays.asList((Object[]) value));
         } else {
@@ -228,13 +236,14 @@ public class CommonUtil {
         return list;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> Class<T> convert2Wrapper(Class<T> clazz) throws Exception {
         String type = clazz.getSimpleName();
         return Character.isUpperCase(type.charAt(0)) ? clazz :
-                type.equals("int") ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
+                "int".equals(type) ? (Class<T>) Integer.class : (Class<T>) Class.forName("java.lang." + Character.toUpperCase(type.charAt(0)) + type.substring(1));
     }
 
-    public static boolean isBaseDataType(Class clazz) {
+    public static boolean isBaseDataType(Class<?> clazz) {
         return byte.class.isAssignableFrom(clazz)           ||
                 short.class.isAssignableFrom(clazz)         ||
                 int.class.isAssignableFrom(clazz)           ||
@@ -244,6 +253,20 @@ public class CommonUtil {
                 Number.class.isAssignableFrom(clazz)        ||
                 CharSequence.class.isAssignableFrom(clazz)  ||
                 Date.class.isAssignableFrom(clazz);
+    }
+
+    /**
+     * 简单的实例化
+     */
+    public static Object newInstance(Class<?> clazz) {
+        try {
+            if(!CommonUtil.isAbstract(clazz)) {
+                return clazz.newInstance();
+            }
+            throw new RuntimeException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
@@ -343,7 +366,7 @@ public class CommonUtil {
                 break;
             }
             if(field.get(obj) == null) {
-                Object fieldValue = field.getType().newInstance();
+                Object fieldValue = newInstance(field.getType());
                 field.set(obj, fieldValue);
                 obj = fieldValue;
             }

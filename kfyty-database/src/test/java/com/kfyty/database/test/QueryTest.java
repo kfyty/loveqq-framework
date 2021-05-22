@@ -3,7 +3,7 @@ package com.kfyty.database.test;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.kfyty.database.test.entity.User;
 import com.kfyty.database.test.mapper.UserMapper;
-import com.kfyty.jdbc.SqlSessionFactory;
+import com.kfyty.database.jdbc.SqlSessionFactory;
 import org.junit.Before;
 import org.junit.Test;
 
