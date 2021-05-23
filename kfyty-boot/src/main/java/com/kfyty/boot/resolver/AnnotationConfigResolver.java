@@ -6,9 +6,11 @@ import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiateBean;
+import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,8 @@ public class AnnotationConfigResolver {
     }
 
     public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines) {
+        this.processExcludeBeanName(scanClasses);
+
         this.processImportBeanDefine(scanClasses, beanDefines);
 
         this.instantiateBeanDefine(beanDefines);
@@ -61,6 +65,15 @@ public class AnnotationConfigResolver {
             Class<?> clazz = beanDefine.getBeanType();
             if(!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
                 this.applicationContext.registerBean(beanDefine);
+            }
+        }
+    }
+
+    private void processExcludeBeanName(Set<Class<?>> scanClasses) {
+        for (Class<?> scanClass : scanClasses) {
+            EnableAutoConfiguration autoConfiguration = scanClass.getAnnotation(EnableAutoConfiguration.class);
+            if(autoConfiguration != null) {
+                applicationContext.getExcludeNames().addAll(Arrays.asList(autoConfiguration.excludeNames()));
             }
         }
     }

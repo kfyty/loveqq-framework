@@ -11,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,9 +27,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ApplicationContext implements ConfigurableContext {
     @Getter
+    private Set<String> excludeNames;
+
+    @Getter
     private final Map<Class<?>, BeanResources> beanResources;
 
     private ApplicationContext() {
+        this.excludeNames = new HashSet<>();
         this.beanResources = new ConcurrentHashMap<>();
     }
 
@@ -99,7 +105,9 @@ public class ApplicationContext implements ConfigurableContext {
 
     @Override
     public void registerBean(String name, Class<?> clazz, Object bean) {
-        registerBean(this.beanResources, name, clazz, bean);
+        if(!this.excludeNames.contains(name)) {
+            registerBean(this.beanResources, name, clazz, bean);
+        }
     }
 
     public static ApplicationContext create() {

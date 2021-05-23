@@ -9,6 +9,7 @@ import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
 import com.kfyty.support.autoconfig.annotation.Repository;
 import com.kfyty.support.autoconfig.annotation.Service;
@@ -108,10 +109,18 @@ public class K {
     }
 
     private void excludeScanBean() {
+        Set<Class<?>> excludeClasses = new HashSet<>();
         BootApplication bootApplication = this.primarySource.getAnnotation(BootApplication.class);
         if(bootApplication != null) {
-            this.scanBeans.removeAll(Arrays.asList(bootApplication.exclude()));
+            excludeClasses.addAll(Arrays.asList(bootApplication.exclude()));
         }
+        for (Class<?> scanBean : this.scanBeans) {
+            EnableAutoConfiguration autoConfiguration = scanBean.getAnnotation(EnableAutoConfiguration.class);
+            if(autoConfiguration != null) {
+                excludeClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
+            }
+        }
+        this.scanBeans.removeAll(excludeClasses);
     }
 
     private void prepareBeanDefines() {
