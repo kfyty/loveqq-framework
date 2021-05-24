@@ -164,6 +164,8 @@ public class CommonUtil {
                 return "Byte";
             case "char":
             case "text":
+            case "json":
+            case "other":
             case "longtext":
             case "clob":
             case "nclob":

@@ -50,15 +50,15 @@ public abstract class TemplateEngineUtil {
         return configuration.getTemplate(template);
     }
 
-    public static List<FreemarkerTemplate> loadFreemarkerTemplates(String prefix) throws Exception {
+    public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) throws Exception {
         String templateNames = getTemplateNames(prefix);
         if(CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
-        return Arrays.stream(templateNames.split(",")).map(e -> new FreemarkerTemplate(prefix, e)).collect(Collectors.toList());
+        return Arrays.stream(templateNames.split(",")).map(e -> template.create(prefix, e)).collect(Collectors.toList());
     }
 
-    public static List<JspTemplate> loadJspTemplates(String prefix) throws Exception {
+    public static List<? extends JspTemplate> loadJspTemplates(JspTemplate template, String prefix) throws Exception {
         String templateNames = getTemplateNames(prefix);
         if(CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
@@ -68,7 +68,7 @@ public abstract class TemplateEngineUtil {
         List<JspTemplate> jspTemplates = new ArrayList<>(jspFiles.size());
         List<String> classes = new JstlTemplateEngine(new JstlTemplateEngineConfig(getTemplatePath(prefix), jspFiles)).compile();
         for (int i = 0; i < classes.size(); i++) {
-            jspTemplates.add(new JspTemplate(prefix, jspFiles.get(i), classes.get(i)));
+            jspTemplates.add(template.create(prefix, jspFiles.get(i), classes.get(i)));
         }
         return jspTemplates;
     }

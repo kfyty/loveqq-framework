@@ -27,9 +27,13 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
         super(prefix, template);
     }
 
+    public FreemarkerTemplate create(String prefix, String template) {
+        return new FreemarkerTemplate(prefix, template);
+    }
+
     @Override
     public List<? extends AbstractGenerateTemplate> loadTemplates(String prefix) throws Exception {
-        return TemplateEngineUtil.loadFreemarkerTemplates(prefix);
+        return TemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
     }
 
     @Override

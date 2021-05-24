@@ -49,9 +49,13 @@ public class JspTemplate extends AbstractTemplateEngine {
         this.templateEngine = new JstlTemplateEngine(config);
     }
 
+    public JspTemplate create(String prefix, File jsp, String classPath) {
+        return new JspTemplate(prefix, jsp, classPath);
+    }
+
     @Override
     public List<? extends AbstractGenerateTemplate> loadTemplates(String prefix) throws Exception {
-        return TemplateEngineUtil.loadJspTemplates(prefix);
+        return TemplateEngineUtil.loadJspTemplates(this, prefix);
     }
 
     @Override
