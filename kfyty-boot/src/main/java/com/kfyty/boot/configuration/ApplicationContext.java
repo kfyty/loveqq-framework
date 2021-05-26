@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ApplicationContext implements ConfigurableContext {
     @Getter
-    private Set<String> excludeNames;
+    private final Set<String> excludeNames;
 
     @Getter
     private final Map<Class<?>, BeanResources> beanResources;
@@ -83,8 +83,7 @@ public class ApplicationContext implements ConfigurableContext {
     @SneakyThrows
     public Object registerBean(BeanDefine beanDefine) {
         for (Annotation annotation : beanDefine.getBeanType().getAnnotations()) {
-            Component component = annotation.getClass().getAnnotation(Component.class);
-            if (component != null) {
+            if (annotation.annotationType().isAnnotationPresent(Component.class)) {
                 String beanName = (String) annotation.getClass().getMethod("value").invoke(annotation);
                 if (!CommonUtil.empty(beanName)) {
                     Object instance = beanDefine.createInstance();

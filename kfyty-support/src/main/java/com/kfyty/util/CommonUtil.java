@@ -217,12 +217,8 @@ public class CommonUtil {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
         InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
-        Field field = invocationHandler.getClass().getDeclaredField("memberValues");
-        boolean accessible = field.isAccessible();
-        field.setAccessible(true);
-        Map memberValues = (Map) field.get(invocationHandler);
+        Map memberValues = (Map) getFieldValue(invocationHandler, "memberValues");
         memberValues.put(annotationField, value);
-        field.setAccessible(accessible);
     }
 
     public static List<Object> convert2List(Object value) {
@@ -269,6 +265,18 @@ public class CommonUtil {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Object getFieldValue(Object obj, String fieldName) throws Exception {
+        return getFieldValue(obj, getField(obj.getClass(), fieldName));
+    }
+
+    public static Object getFieldValue(Object obj, Field field) throws Exception {
+        boolean accessible = field.isAccessible();
+        field.setAccessible(true);
+        Object ret = field.get(obj);
+        field.setAccessible(accessible);
+        return ret;
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
