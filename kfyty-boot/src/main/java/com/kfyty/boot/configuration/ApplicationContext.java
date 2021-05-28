@@ -1,5 +1,6 @@
 package com.kfyty.boot.configuration;
 
+import com.kfyty.boot.K;
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.ConfigurableContext;
@@ -11,10 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,13 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ApplicationContext implements ConfigurableContext {
     @Getter
-    private final Set<String> excludeNames;
-
-    @Getter
     private final Map<Class<?>, BeanResources> beanResources;
 
     private ApplicationContext() {
-        this.excludeNames = new HashSet<>();
         this.beanResources = new ConcurrentHashMap<>();
     }
 
@@ -104,9 +99,7 @@ public class ApplicationContext implements ConfigurableContext {
 
     @Override
     public void registerBean(String name, Class<?> clazz, Object bean) {
-        if(!this.excludeNames.contains(name)) {
-            registerBean(this.beanResources, name, clazz, bean);
-        }
+        registerBean(this.beanResources, name, clazz, bean);
     }
 
     public static ApplicationContext create() {
@@ -120,6 +113,10 @@ public class ApplicationContext implements ConfigurableContext {
     }
 
     public static void registerBean(Map<Class<?>, BeanResources> beanResourcesMap, String name, Class<?> clazz, Object bean) {
+        if(K.isExclude(name) || K.isExclude(clazz)) {
+            log.info("exclude bean: {} -> {}", name, bean);
+            return;
+        }
         BeanResources beanResources = getBeanResources(beanResourcesMap, clazz);
         if(beanResources == null) {
             beanResourcesMap.put(clazz, new BeanResources(name, bean));

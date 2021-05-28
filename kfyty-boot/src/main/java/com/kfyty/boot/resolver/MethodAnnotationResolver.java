@@ -1,5 +1,6 @@
 package com.kfyty.boot.resolver;
 
+import com.kfyty.boot.K;
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
@@ -56,6 +57,10 @@ public class MethodAnnotationResolver {
 
     @SneakyThrows
     private void processBeanAnnotation(Object o, Method method, Bean bean) {
+        if(K.isExclude(method.getReturnType())) {
+            log.info("exclude bean class: {}", method.getReturnType());
+            return;
+        }
         Object obj = method.invoke(o);
         if(CommonUtil.empty(bean.value())) {
             ApplicationContext.registerBean(this.beanMap, method.getReturnType(), obj);

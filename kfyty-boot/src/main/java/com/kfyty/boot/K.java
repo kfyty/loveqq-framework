@@ -17,6 +17,7 @@ import com.kfyty.util.CommonUtil;
 import com.kfyty.util.PackageUtil;
 import lombok.SneakyThrows;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
@@ -39,6 +40,8 @@ import java.util.stream.Collectors;
 public class K {
     private static final String META_FACTORIES = "META-INF/k.factories";
     private static final String META_FACTORIES_CONFIG = "com.kfyty.boot.auto.config";
+    private static final Set<String> excludeBeanNames = new HashSet<>(4);
+    private static final Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
 
     private final Set<Class<?>> scanBeans;
     private final Set<BeanDefine> beanDefines;
@@ -58,6 +61,14 @@ public class K {
         this.excludeScanBean();
         this.prepareBeanDefines();
         return AnnotationConfigResolver.create().doResolver(primarySource, scanBeans, beanDefines);
+    }
+
+    public static boolean isExclude(String beanName) {
+        return excludeBeanNames.contains(beanName);
+    }
+
+    public static boolean isExclude(Class<?> beanClass) {
+        return excludeBeanClasses.contains(beanClass);
     }
 
     public static ApplicationContext run(Class<?> clazz, String ... args) {
@@ -88,6 +99,13 @@ public class K {
                 this.processScanBean(importClazz);
             }
         }
+        for (Annotation annotation : clazz.getAnnotations()) {
+            if(annotation.annotationType().isAnnotationPresent(Import.class)) {
+                for (Class<?> importClazz : annotation.annotationType().getAnnotation(Import.class).config()) {
+                    this.processScanBean(importClazz);
+                }
+            }
+        }
     }
 
     @SneakyThrows
@@ -109,18 +127,19 @@ public class K {
     }
 
     private void excludeScanBean() {
-        Set<Class<?>> excludeClasses = new HashSet<>();
         BootApplication bootApplication = this.primarySource.getAnnotation(BootApplication.class);
         if(bootApplication != null) {
-            excludeClasses.addAll(Arrays.asList(bootApplication.exclude()));
+            excludeBeanNames.addAll(Arrays.asList(bootApplication.excludeNames()));
+            excludeBeanClasses.addAll(Arrays.asList(bootApplication.exclude()));
         }
         for (Class<?> scanBean : this.scanBeans) {
             EnableAutoConfiguration autoConfiguration = scanBean.getAnnotation(EnableAutoConfiguration.class);
             if(autoConfiguration != null) {
-                excludeClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
+                excludeBeanNames.addAll(Arrays.asList(autoConfiguration.excludeNames()));
+                excludeBeanClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
             }
         }
-        this.scanBeans.removeAll(excludeClasses);
+        this.scanBeans.removeAll(excludeBeanClasses);
     }
 
     private void prepareBeanDefines() {

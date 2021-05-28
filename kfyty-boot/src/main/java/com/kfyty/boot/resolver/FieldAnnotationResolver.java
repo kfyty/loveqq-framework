@@ -84,7 +84,7 @@ public class FieldAnnotationResolver {
             if(beans.size() == 1) {
                 field.set(o, beans.values().iterator().next());
             } else {
-                if(CommonUtil.empty(autowired.value())) {
+                if(!beans.containsKey(autowired.value())) {
                     throw new IllegalArgumentException("autowired failed for bean [" + o.getClass() + "], more than one bean found of type: " + fieldType);
                 }
                 field.set(o, beans.get(autowired.value()));
@@ -92,7 +92,7 @@ public class FieldAnnotationResolver {
         }
         field.setAccessible(isAccessible);
         if(log.isDebugEnabled()) {
-            log.debug(": autowired bean: [{}] !", fieldType);
+            log.debug(": autowired bean: [{}] to [{}] !", fieldType, o);
         }
     }
 }

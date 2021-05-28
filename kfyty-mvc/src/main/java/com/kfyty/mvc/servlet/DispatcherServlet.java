@@ -9,6 +9,8 @@ import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.util.CommonUtil;
 import com.kfyty.util.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletConfig;
@@ -40,16 +42,19 @@ public class DispatcherServlet extends HttpServlet {
     private static final String PREFIX_PARAM_NAME = "prefix";
     private static final String SUFFIX_PARAM_NAME = "suffix";
 
-    private static String prefix;
-    private static String suffix;
+    @Setter @Getter
+    private String prefix = "";
+
+    @Setter @Getter
+    private String suffix = ".jsp";
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
             super.init();
             log.info("initialize DispatcherServlet...");
-            prefix = Optional.ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse("");
-            suffix = Optional.ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse("");
+            prefix = Optional.ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse(prefix);
+            suffix = Optional.ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse(suffix);
             log.info("initialize DispatcherServlet success !");
         } catch (Exception e) {
             e.printStackTrace();
