@@ -1,6 +1,7 @@
 package com.kfyty.boot.beans;
 
 import com.kfyty.util.CommonUtil;
+import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,15 +15,22 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BeanResources {
     /**
+     * bean 类型
+     */
+    @Getter
+    private final Class<?> beanType;
+
+    /**
      * bean 实例，key -> bean name
      */
     private final Map<String, Object> beans;
 
-    public BeanResources(Object bean) {
-        this(CommonUtil.convert2BeanName(bean.getClass().getSimpleName()), bean);
+    public BeanResources(Class<?> clazz, Object bean) {
+        this(CommonUtil.convert2BeanName(clazz.getSimpleName()), clazz, bean);
     }
 
-    public BeanResources(String name, Object bean) {
+    public BeanResources(String name, Class<?> clazz, Object bean) {
+        this.beanType = clazz;
         this.beans = new ConcurrentHashMap<>(2);
         this.beans.put(name, bean);
     }

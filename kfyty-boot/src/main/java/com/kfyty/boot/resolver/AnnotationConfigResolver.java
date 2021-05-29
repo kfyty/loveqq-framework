@@ -1,7 +1,9 @@
 package com.kfyty.boot.resolver;
 
+import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanDefine;
+import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
@@ -11,6 +13,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,8 +33,8 @@ public class AnnotationConfigResolver {
     private MethodAnnotationResolver methodAnnotationResolver;
     private FieldAnnotationResolver fieldAnnotationResolver;
 
-    public static AnnotationConfigResolver create() {
-        ApplicationContext applicationContext = ApplicationContext.create();
+    public static AnnotationConfigResolver create(Class<?> primarySource) {
+        ApplicationContext applicationContext = ApplicationContext.create(primarySource);
         AnnotationConfigResolver annotationConfigResolver = new AnnotationConfigResolver();
         annotationConfigResolver.applicationContext = applicationContext;
         annotationConfigResolver.fieldAnnotationResolver = new FieldAnnotationResolver(annotationConfigResolver);
@@ -94,6 +97,16 @@ public class AnnotationConfigResolver {
         }
 
         applicationContext.getBeanOfType(InitializingBean.class).values().forEach(InitializingBean::afterPropertiesSet);
+
+        for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
+            for (BeanResources beanResources : applicationContext.getBeanResources().values()) {
+                for (Map.Entry<String, Object> entry : beanResources.getBeans().entrySet()) {
+                    if(bean.canProcess(entry.getValue())) {
+                        applicationContext.replaceBean(entry.getKey(), beanResources.getBeanType(), bean.postProcess(entry.getValue()));
+                    }
+                }
+            }
+        }
     }
 
     private void processRefreshComplete(Class<?> clazz) {

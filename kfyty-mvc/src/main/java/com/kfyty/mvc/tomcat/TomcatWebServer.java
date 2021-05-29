@@ -5,14 +5,23 @@ import com.kfyty.mvc.servlet.DispatcherServlet;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.Host;
+import org.apache.catalina.WebResourceRoot;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.webresources.DirResourceSet;
+import org.apache.catalina.webresources.EmptyResourceSet;
+import org.apache.catalina.webresources.JarResourceSet;
+import org.apache.catalina.webresources.StandardRoot;
 import org.apache.jasper.servlet.JasperInitializer;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * 描述: 嵌入式 tomcat
@@ -79,36 +88,83 @@ public class TomcatWebServer implements WebServer {
 
     private void configTomcat() {
         try {
-            this.prepareContext(tomcat.getHost());
-            Connector connector = new Connector(this.config.getProtocol());
-            connector.setPort(getPort());
-            connector.setURIEncoding("UTF-8");
             tomcat.setPort(getPort());
             tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
-            tomcat.getService().addConnector(connector);
-            tomcat.setConnector(connector);
-            startDaemonAwaitThread();
+            tomcat.getHost().setAutoDeploy(false);
+            this.prepareConnector();
+            this.prepareContext();
+            this.startDaemonAwaitThread();
+            log.info("tomcat started on port(" + getPort() + ")");
         } catch (Exception e) {
             log.error("config tomcat error !");
             throw new RuntimeException(e);
         }
     }
 
-    private void prepareContext(Host host) throws IOException {
+    private void prepareConnector() {
+        Connector connector = new Connector(this.config.getProtocol());
+        connector.setPort(getPort());
+        connector.setURIEncoding("UTF-8");
+        tomcat.getService().addConnector(connector);
+        tomcat.setConnector(connector);
+    }
+
+    private void prepareContext() throws Exception {
         StandardContext context = new StandardContext();
         context.setPath("");
         context.setDocBase(createTempDir("tomcat-docbase").getAbsolutePath());
-        context.addServletContainerInitializer(new JasperInitializer(), null);
+        context.setCreateUploadTargets(true);
         context.addLifecycleListener(new Tomcat.FixContextListener());
-        host.addChild(context);
+        this.prepareResources(context);
+        this.prepareDefaultServlet(context);
+        this.prepareJspServlet(context);
         this.prepareDispatcherServlet(context);
+        this.tomcat.getHost().addChild(context);
+    }
+
+    private void prepareResources(StandardContext context) throws URISyntaxException {
+        WebResourceRoot resources = new StandardRoot(context);
+        URL pathURL = config.getPrimarySource().getProtectionDomain().getCodeSource().getLocation();
+        if(Files.isDirectory(Paths.get(pathURL.toURI()))) {
+            resources.addPreResources(new DirResourceSet(resources, "/", pathURL.getPath(), "/"));
+        } else if(pathURL.getPath().endsWith(".jar")) {
+            resources.addJarResources(new JarResourceSet(resources, "/", pathURL.getPath(), "/"));
+        } else {
+            resources.addPreResources(new EmptyResourceSet(resources));
+            log.warn("add empty source set !");
+        }
+        context.setResources(resources);
+    }
+
+    private void prepareDefaultServlet(StandardContext context) {
+        Wrapper defaultServlet = context.createWrapper();
+        defaultServlet.setName("default");
+        defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");
+        defaultServlet.addInitParameter("debug", "0");
+        defaultServlet.addInitParameter("listings", "false");
+        defaultServlet.setLoadOnStartup(1);
+        defaultServlet.setOverridable(true);
+        context.addChild(defaultServlet);
+        context.addServletMappingDecoded("/", "default");
+    }
+
+    private void prepareJspServlet(StandardContext context) {
+        Wrapper jspServlet = context.createWrapper();
+        jspServlet.setName("jsp");
+        jspServlet.setServletClass("org.apache.jasper.servlet.JspServlet");
+        jspServlet.addInitParameter("fork", "false");
+        jspServlet.setLoadOnStartup(3);
+        context.addChild(jspServlet);
+        context.addServletMappingDecoded("*.jsp", "jsp");
+        context.addServletMappingDecoded("*.jspx", "jsp");
+        context.addServletContainerInitializer(new JasperInitializer(), null);
     }
 
     private void prepareDispatcherServlet(StandardContext context) {
         if(this.dispatcherServlet == null) {
             return;
         }
-        Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet).setAsyncSupported(true);
+        Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
         context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
     }
 

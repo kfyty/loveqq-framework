@@ -25,7 +25,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Bean
     public TomcatConfig tomcatConfig() {
-        return new TomcatConfig();
+        return new TomcatConfig(configurableContext.getPrimarySource());
     }
 
     @Bean

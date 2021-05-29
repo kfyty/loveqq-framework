@@ -60,7 +60,7 @@ public class K {
         this.prepareMetaInfFactories();
         this.excludeScanBean();
         this.prepareBeanDefines();
-        return AnnotationConfigResolver.create().doResolver(primarySource, scanBeans, beanDefines);
+        return AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines);
     }
 
     public static boolean isExclude(String beanName) {

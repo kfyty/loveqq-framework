@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public interface ConfigurableContext {
 
+    Class<?> getPrimarySource();
+
     <T> T getBean(Class<T> clazz);
 
     <T> T getBean(String name);
@@ -24,5 +26,9 @@ public interface ConfigurableContext {
 
     void registerBean(Class<?> clazz, Object bean);
 
+    void replaceBean(Class<?> clazz, Object bean);
+
     void registerBean(String name, Class<?> clazz, Object bean);
+
+    void replaceBean(String name, Class<?> clazz, Object bean);
 }

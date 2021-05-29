@@ -26,16 +26,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ApplicationContext implements ConfigurableContext {
     @Getter
+    private final Class<?> primarySource;
+
+    @Getter
     private final Map<Class<?>, BeanResources> beanResources;
 
-    private ApplicationContext() {
+    private ApplicationContext(Class<?> primarySource) {
+        this.primarySource = primarySource;
         this.beanResources = new ConcurrentHashMap<>();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getBean(Class<T> clazz) {
-        return (T) Optional.ofNullable(getBeanResources(beanResources, clazz)).map(e -> e.getBean(clazz)).orElse(null);
+        return (T) Optional.ofNullable(this.getBeanResources(clazz)).map(e -> e.getBean(clazz)).orElse(null);
     }
 
     @Override
@@ -98,41 +102,46 @@ public class ApplicationContext implements ConfigurableContext {
     }
 
     @Override
+    public void replaceBean(Class<?> clazz, Object bean) {
+        this.replaceBean(CommonUtil.convert2BeanName(clazz.getSimpleName()), clazz, bean);
+    }
+
+    @Override
     public void registerBean(String name, Class<?> clazz, Object bean) {
-        registerBean(this.beanResources, name, clazz, bean);
-    }
-
-    public static ApplicationContext create() {
-        ApplicationContext applicationContext = new ApplicationContext();
-        applicationContext.registerBean(ApplicationContext.class, applicationContext);
-        return applicationContext;
-    }
-
-    public static void registerBean(Map<Class<?>, BeanResources> beanResourcesMap, Class<?> clazz, Object bean) {
-        registerBean(beanResourcesMap, CommonUtil.convert2BeanName(bean.getClass().getSimpleName()), clazz, bean);
-    }
-
-    public static void registerBean(Map<Class<?>, BeanResources> beanResourcesMap, String name, Class<?> clazz, Object bean) {
         if(K.isExclude(name) || K.isExclude(clazz)) {
             log.info("exclude bean: {} -> {}", name, bean);
             return;
         }
-        BeanResources beanResources = getBeanResources(beanResourcesMap, clazz);
+        BeanResources beanResources = this.getBeanResources(clazz);
         if(beanResources == null) {
-            beanResourcesMap.put(clazz, new BeanResources(name, bean));
+            this.beanResources.put(clazz, new BeanResources(name, clazz, bean));
             return;
         }
         beanResources.addBean(name, bean);
     }
 
-    private static BeanResources getBeanResources(Map<Class<?>, BeanResources> beanResourcesMap, Class<?> clazz) {
-        BeanResources beanResources = beanResourcesMap.get(clazz);
+    @Override
+    public void replaceBean(String name, Class<?> clazz, Object bean) {
+        BeanResources beanResources = this.getBeanResources(clazz);
+        if(beanResources != null) {
+            beanResources.getBeans().put(name, bean);
+        }
+    }
+
+    public static ApplicationContext create(Class<?> primarySource) {
+        ApplicationContext applicationContext = new ApplicationContext(primarySource);
+        applicationContext.registerBean(ApplicationContext.class, applicationContext);
+        return applicationContext;
+    }
+
+    public BeanResources getBeanResources(Class<?> clazz) {
+        BeanResources beanResources = this.beanResources.get(clazz);
         if(beanResources != null) {
             return beanResources;
         }
-        for (Class<?> keyClazz : beanResourcesMap.keySet()) {
+        for (Class<?> keyClazz : this.beanResources.keySet()) {
             if(clazz.isAssignableFrom(keyClazz)) {
-                BeanResources br = beanResourcesMap.get(keyClazz);
+                BeanResources br = this.beanResources.get(keyClazz);
                 if(beanResources != null) {
                     throw new IllegalArgumentException("more than one instance of type: " + clazz.getName());
                 }
