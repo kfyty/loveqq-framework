@@ -7,6 +7,7 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiateBean;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Modifier;
@@ -21,33 +22,36 @@ import java.util.stream.Collectors;
  * @since JDK 1.8
  */
 @Slf4j
+@Getter
 public class AnnotationConfigResolver {
-
+    private Set<Class<?>> scanClasses;
+    private Set<BeanDefine> beanDefines;
     private ApplicationContext applicationContext;
-
     private MethodAnnotationResolver methodAnnotationResolver;
-
     private FieldAnnotationResolver fieldAnnotationResolver;
 
     public static AnnotationConfigResolver create() {
         ApplicationContext applicationContext = ApplicationContext.create();
         AnnotationConfigResolver annotationConfigResolver = new AnnotationConfigResolver();
         annotationConfigResolver.applicationContext = applicationContext;
-        annotationConfigResolver.methodAnnotationResolver = new MethodAnnotationResolver(applicationContext);
-        annotationConfigResolver.fieldAnnotationResolver = new FieldAnnotationResolver(applicationContext);
+        annotationConfigResolver.fieldAnnotationResolver = new FieldAnnotationResolver(annotationConfigResolver);
+        annotationConfigResolver.methodAnnotationResolver = new MethodAnnotationResolver(annotationConfigResolver);
         return annotationConfigResolver;
     }
 
     public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines) {
-        this.processImportBeanDefine(scanClasses, beanDefines);
+        this.scanClasses = scanClasses;
+        this.beanDefines = beanDefines;
 
-        this.instantiateBeanDefine(beanDefines);
+        this.processImportBeanDefine();
+
+        this.instantiateBeanDefine();
 
         this.fieldAnnotationResolver.doResolver(true);
         this.methodAnnotationResolver.doResolver();
         this.fieldAnnotationResolver.doResolver(false);
 
-        this.processInstantiateBean(beanDefines);
+        this.processInstantiateBean();
 
         this.processRefreshComplete(clazz);
 
@@ -56,7 +60,7 @@ public class AnnotationConfigResolver {
         return applicationContext;
     }
 
-    private void instantiateBeanDefine(Set<BeanDefine> beanDefines) {
+    private void instantiateBeanDefine() {
         for (BeanDefine beanDefine : beanDefines) {
             if(beanDefine.isInstance()) {
                 continue;
@@ -68,7 +72,7 @@ public class AnnotationConfigResolver {
         }
     }
 
-    private void processImportBeanDefine(Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines) {
+    private void processImportBeanDefine() {
         Set<BeanDefine> importBeanDefines = beanDefines.stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).collect(Collectors.toSet());
         for (BeanDefine importBeanDefine : importBeanDefines) {
             ImportBeanDefine bean = (ImportBeanDefine) this.applicationContext.registerBean(importBeanDefine);
@@ -76,7 +80,7 @@ public class AnnotationConfigResolver {
         }
     }
 
-    private void processInstantiateBean(Set<BeanDefine> beanDefines) {
+    private void processInstantiateBean() {
         for (InstantiateBean bean : applicationContext.getBeanOfType(InstantiateBean.class).values()) {
             for (BeanDefine beanDefine : beanDefines) {
                 if (bean.canInstantiate(beanDefine.getBeanType())) {

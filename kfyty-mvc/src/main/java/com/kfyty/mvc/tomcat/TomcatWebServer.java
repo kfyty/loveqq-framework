@@ -2,7 +2,6 @@ package com.kfyty.mvc.tomcat;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.support.autoconfig.annotation.Autowired;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,14 +28,24 @@ public class TomcatWebServer implements WebServer {
 
     private boolean started;
 
-    @Autowired @Setter
+    @Setter
     private TomcatConfig config;
 
-    @Autowired(required = false) @Setter
+    @Setter
     private DispatcherServlet dispatcherServlet;
 
     public TomcatWebServer() {
+        this(new TomcatConfig());
+    }
+
+    public TomcatWebServer(TomcatConfig config) {
+        this(config, null);
+    }
+
+    public TomcatWebServer(TomcatConfig config, DispatcherServlet dispatcherServlet) {
         this.tomcat = new Tomcat();
+        this.config = config;
+        this.dispatcherServlet = dispatcherServlet;
     }
 
     @Override

@@ -34,8 +34,8 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     }
 
     @Bean
-    public TomcatWebServer tomcatWebServer() {
-        return new TomcatWebServer();
+    public TomcatWebServer tomcatWebServer(TomcatConfig config, DispatcherServlet dispatcherServlet) {
+        return new TomcatWebServer(config, dispatcherServlet);
     }
 
     @Override

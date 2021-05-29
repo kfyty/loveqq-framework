@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -259,7 +260,7 @@ public class CommonUtil {
     public static Object newInstance(Class<?> clazz) {
         try {
             if(!CommonUtil.isAbstract(clazz)) {
-                return clazz.newInstance();
+                return newInstance(clazz.getDeclaredConstructor());
             }
             throw new RuntimeException(CommonUtil.fillString("cannot instance for abstract class: [{}]", clazz));
         } catch (Exception e) {
@@ -267,8 +268,27 @@ public class CommonUtil {
         }
     }
 
+    public static Object newInstance(Constructor<?> constructor) {
+        try {
+            boolean accessible = constructor.isAccessible();
+            constructor.setAccessible(true);
+            Object value = constructor.newInstance();
+            constructor.setAccessible(accessible);
+            return value;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static Object getFieldValue(Object obj, String fieldName) throws Exception {
         return getFieldValue(obj, getField(obj.getClass(), fieldName));
+    }
+
+    public static void setFieldValue(Object obj, Field field, Object value) throws Exception {
+        boolean accessible = field.isAccessible();
+        field.setAccessible(true);
+        field.set(obj, value);
+        field.setAccessible(accessible);
     }
 
     public static Object getFieldValue(Object obj, Field field) throws Exception {

@@ -5,7 +5,6 @@ import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.util.CommonUtil;
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,10 +23,14 @@ import java.util.Set;
  * @since JDK 1.8
  */
 @Slf4j
-@AllArgsConstructor
 public class FieldAnnotationResolver {
-
+    private final AnnotationConfigResolver configResolver;
     private final ApplicationContext applicationContext;
+
+    public FieldAnnotationResolver(AnnotationConfigResolver configResolver) {
+        this.configResolver = configResolver;
+        this.applicationContext = configResolver.getApplicationContext();
+    }
 
     public void doResolver(boolean init) {
         for (Map.Entry<Class<?>, BeanResources> entry : this.applicationContext.getBeanResources().entrySet()) {
@@ -37,12 +40,8 @@ public class FieldAnnotationResolver {
         }
     }
 
-    @SneakyThrows
-    private void doResolver(Class<?> clazz, Object value, boolean init) {
+    public void doResolver(Class<?> clazz, Object value, boolean init) {
         Field[] fields = clazz.getDeclaredFields();
-        if(CommonUtil.empty(fields)) {
-            return;
-        }
         for (Field field : fields) {
             if(field.isAnnotationPresent(Autowired.class)) {
                 this.processAutowiredAnnotation(value, field, field.getAnnotation(Autowired.class), init);
@@ -50,18 +49,23 @@ public class FieldAnnotationResolver {
         }
     }
 
+    @SneakyThrows
     @SuppressWarnings({"rawtypes", "ConstantConditions"})
-    private void processAutowiredAnnotation(Object o, Field field, Autowired autowired, boolean init) throws Exception {
+    private void processAutowiredAnnotation(Object o, Field field, Autowired autowired, boolean init) {
         ReturnType fieldType = ReturnType.getReturnType(field.getGenericType(), field.getType());
         if(List.class.isAssignableFrom(field.getType()) || Set.class.isAssignableFrom(field.getType())) {
             this.processAutowiredAnnotation(o, field, fieldType.getFirstParameterizedType(), autowired, init);
-        } else if(Map.class.isAssignableFrom(field.getType())) {
-            this.processAutowiredAnnotation(o, field, fieldType.getSecondParameterizedType(), autowired, init);
-        } else if(Class.class.isAssignableFrom(field.getType())) {
-            this.processAutowiredAnnotation(o, field, fieldType.getFirstParameterizedType(), autowired, init);
-        } else  {
-            this.processAutowiredAnnotation(o, field, fieldType.getReturnType(), autowired, init);
+            return;
         }
+        if(Map.class.isAssignableFrom(field.getType())) {
+            this.processAutowiredAnnotation(o, field, fieldType.getSecondParameterizedType(), autowired, init);
+            return;
+        }
+        if(Class.class.isAssignableFrom(field.getType())) {
+            this.processAutowiredAnnotation(o, field, fieldType.getFirstParameterizedType(), autowired, init);
+            return;
+        }
+        this.processAutowiredAnnotation(o, field, fieldType.getReturnType(), autowired, init);
     }
 
     private void processAutowiredAnnotation(Object o, Field field, Class<?> fieldType, Autowired autowired, boolean init) throws Exception {
@@ -72,25 +76,27 @@ public class FieldAnnotationResolver {
             }
             return;
         }
-        boolean isAccessible = field.isAccessible();
-        field.setAccessible(true);
+        Object value = null;
         if(List.class.isAssignableFrom(field.getType())) {
-            field.set(o, new ArrayList<>(beans.values()));
-        } else if(Set.class.isAssignableFrom(field.getType())) {
-            field.set(o, new HashSet<>(beans.values()));
-        } else if(Map.class.isAssignableFrom(field.getType())) {
-            field.set(o, beans);
-        } else {
+            value = new ArrayList<>(beans.values());
+        }
+        if(Set.class.isAssignableFrom(field.getType())) {
+            value = new HashSet<>(beans.values());
+        }
+        if(Map.class.isAssignableFrom(field.getType())) {
+            value = beans;
+        }
+        if(value == null) {
             if(beans.size() == 1) {
-                field.set(o, beans.values().iterator().next());
+                value = beans.values().iterator().next();
             } else {
-                if(!beans.containsKey(autowired.value())) {
+                value = beans.get(autowired.value());
+                if(value == null) {
                     throw new IllegalArgumentException("autowired failed for bean [" + o.getClass() + "], more than one bean found of type: " + fieldType);
                 }
-                field.set(o, beans.get(autowired.value()));
             }
         }
-        field.setAccessible(isAccessible);
+        CommonUtil.setFieldValue(o, field, value);
         if(log.isDebugEnabled()) {
             log.debug(": autowired bean: [{}] to [{}] !", fieldType, o);
         }
