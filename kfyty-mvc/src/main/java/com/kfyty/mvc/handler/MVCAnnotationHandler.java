@@ -56,7 +56,7 @@ public class MVCAnnotationHandler {
     /**
      * 当前控制器所包含的 url 映射关系方法
      */
-    private List<URLMapping> urlMappingList = new ArrayList<>();
+    private final List<URLMapping> urlMappingList = new ArrayList<>();
 
     public MVCAnnotationHandler(Object mappingController) {
         this.setMappingController(mappingController);
@@ -94,10 +94,7 @@ public class MVCAnnotationHandler {
     }
 
     private void handleMethodAnnotation() {
-        Method[] methods = this.mappingController.getClass().getDeclaredMethods();
-        if(CommonUtil.empty(methods)) {
-            return ;
-        }
+        Method[] methods = this.mappingController.getClass().getMethods();
         for (Method method : methods) {
             if(!method.isAnnotationPresent(RequestMapping.class)) {
                 continue;

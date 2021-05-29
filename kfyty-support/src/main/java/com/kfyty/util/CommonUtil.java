@@ -299,6 +299,14 @@ public class CommonUtil {
         return ret;
     }
 
+    public static Object invokeMethod(Object obj, Method method, Object ... args) throws Exception {
+        boolean accessible = method.isAccessible();
+        method.setAccessible(true);
+        Object ret = method.invoke(obj, args);
+        method.setAccessible(accessible);
+        return ret;
+    }
+
     public static Field getField(Class<?> clazz, String fieldName) {
         return getField(clazz, fieldName, false);
     }
@@ -370,16 +378,14 @@ public class CommonUtil {
      */
     public static Object parseValue(String param, Object obj) throws Exception {
         String[] fields = param.split("\\.");
-        for(int i = 0; i < fields.length; i++) {
-            Field field = obj.getClass().getDeclaredField(fields[i]);
-            field.setAccessible(true);
-            obj = field.get(obj);
+        for (String field : fields) {
+            obj = getFieldValue(obj, field);
         }
         return obj;
     }
 
     /**
-     * 根据属性参数，将 value 设置到 obj 中，与 @see parseValue() 过程相反
+     * 根据属性参数，将 value 设置到 obj 中，与 parseValue() 过程相反
      * @param param     属性参数 eg: obj.field
      * @param obj       包含 obj 属性的对象
      * @param value     属性对象 obj 中的 field 属性的值
@@ -389,16 +395,13 @@ public class CommonUtil {
         Class<?> clazz = obj.getClass();
         String[] fields = param.split("\\.");
         for(int i = 0; i < fields.length; i++) {
-            Field field = clazz.getDeclaredField(fields[i]);
-            field.setAccessible(true);
+            Field field = getField(clazz, fields[i]);
             if(i == fields.length - 1) {
-                field.set(obj, value);
+                setFieldValue(obj, field, value);
                 break;
             }
             if(field.get(obj) == null) {
-                Object fieldValue = newInstance(field.getType());
-                field.set(obj, fieldValue);
-                obj = fieldValue;
+                setFieldValue(obj, field, (obj = newInstance(field.getType())));
             }
             clazz = field.getType();
         }

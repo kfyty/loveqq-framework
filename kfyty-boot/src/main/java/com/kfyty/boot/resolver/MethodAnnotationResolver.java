@@ -3,7 +3,6 @@ package com.kfyty.boot.resolver;
 import com.kfyty.boot.K;
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
-import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.util.CommonUtil;
@@ -68,7 +67,7 @@ public class MethodAnnotationResolver {
         if(obj != null) {
             return obj;
         }
-        obj = method.invoke(o, this.resolveAutowiredBean(resolving, o, method));
+        obj = CommonUtil.invokeMethod(o, method, this.resolveAutowiredBean(resolving, o, method));
         if(CommonUtil.empty(bean.value())) {
             applicationContext.registerBean(method.getReturnType(), obj);
         } else {
@@ -95,17 +94,12 @@ public class MethodAnnotationResolver {
     }
 
     private Object resolveAutowiredBean(Set<Class<?>> resolving, Object source, Parameter parameter) {
-        Class<?> target = parameter.getType();
         Object bean = this.resolveBean(parameter);
         if(bean != null) {
             return bean;
         }
+        Class<?> target = parameter.getType();
         resolving.add(target);
-        for (BeanDefine beanDefine : configResolver.getBeanDefines()) {
-            if(!beanDefine.isInstance() && beanDefine.getBeanType().equals(target)) {
-                return this.applicationContext.registerBean(beanDefine);
-            }
-        }
         for (Map.Entry<Class<?>, BeanResources> entry : this.applicationContext.getBeanResources().entrySet()) {
             for (Map.Entry<String, Object> beanEntry : entry.getValue().getBeans().entrySet()) {
                 for (Method method : beanEntry.getValue().getClass().getMethods()) {

@@ -30,8 +30,8 @@ public class AnnotationConfigResolver {
     private Set<Class<?>> scanClasses;
     private Set<BeanDefine> beanDefines;
     private ApplicationContext applicationContext;
-    private MethodAnnotationResolver methodAnnotationResolver;
     private FieldAnnotationResolver fieldAnnotationResolver;
+    private MethodAnnotationResolver methodAnnotationResolver;
 
     public static AnnotationConfigResolver create(Class<?> primarySource) {
         ApplicationContext applicationContext = ApplicationContext.create(primarySource);
@@ -49,6 +49,7 @@ public class AnnotationConfigResolver {
         this.processImportBeanDefine();
 
         this.instantiateBeanDefine();
+        this.processCustomizeInstantiate();
 
         this.fieldAnnotationResolver.doResolver(true);
         this.methodAnnotationResolver.doResolver();
@@ -75,6 +76,20 @@ public class AnnotationConfigResolver {
         }
     }
 
+    private void processCustomizeInstantiate() {
+        for (InstantiateBean bean : applicationContext.getBeanOfType(InstantiateBean.class).values()) {
+            for (BeanDefine beanDefine : beanDefines) {
+                if (bean.canInstantiate(beanDefine.getBeanType())) {
+                    Object instance = bean.doInstantiate(beanDefine.getBeanType());
+                    applicationContext.registerBean(bean.getBeanName(beanDefine.getBeanType()), beanDefine.getBeanType(), instance);
+                    if(log.isDebugEnabled()) {
+                        log.debug(": customize instantiate bean: [{}] !", instance);
+                    }
+                }
+            }
+        }
+    }
+
     private void processImportBeanDefine() {
         Set<BeanDefine> importBeanDefines = beanDefines.stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).collect(Collectors.toSet());
         for (BeanDefine importBeanDefine : importBeanDefines) {
@@ -84,18 +99,6 @@ public class AnnotationConfigResolver {
     }
 
     private void processInstantiateBean() {
-        for (InstantiateBean bean : applicationContext.getBeanOfType(InstantiateBean.class).values()) {
-            for (BeanDefine beanDefine : beanDefines) {
-                if (bean.canInstantiate(beanDefine.getBeanType())) {
-                    Object instance = bean.doInstantiate(beanDefine.getBeanType());
-                    applicationContext.registerBean(bean.getBeanName(beanDefine.getBeanType()), beanDefine.getBeanType(), instance);
-                    if(log.isDebugEnabled()) {
-                        log.debug(": instantiate bean: [{}] !", instance);
-                    }
-                }
-            }
-        }
-
         applicationContext.getBeanOfType(InitializingBean.class).values().forEach(InitializingBean::afterPropertiesSet);
 
         for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {

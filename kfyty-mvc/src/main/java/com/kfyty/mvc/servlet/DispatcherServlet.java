@@ -1,8 +1,10 @@
 package com.kfyty.mvc.servlet;
 
 import com.kfyty.mvc.annotation.PathVariable;
+import com.kfyty.mvc.annotation.RequestAttribute;
 import com.kfyty.mvc.annotation.RequestBody;
 import com.kfyty.mvc.annotation.RequestParam;
+import com.kfyty.mvc.annotation.SessionAttribute;
 import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
@@ -57,8 +59,8 @@ public class DispatcherServlet extends HttpServlet {
             suffix = Optional.ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(e -> !CommonUtil.empty(e)).orElse(suffix);
             log.info("initialize DispatcherServlet success !");
         } catch (Exception e) {
-            e.printStackTrace();
-            log.info("initialize DispatcherServlet failed !", e);
+            log.info("initialize DispatcherServlet failed !");
+            throw e;
         }
     }
 
@@ -74,29 +76,27 @@ public class DispatcherServlet extends HttpServlet {
             if (urlMapping == null) {
                 this.forward2Jsp(request, response, "redirect:/404");
                 log.error(": cannot found url mapping: [{}] !", request.getRequestURI());
-                return ;
+                return;
             }
-
             if(log.isDebugEnabled()) {
                 log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), request.getRequestURI());
             }
 
             Object[] params = this.preparedMethodParams(request, response, urlMapping);
             Object o = urlMapping.getMappingMethod().invoke(urlMapping.getMappingController(), params);
-
+            if(o == null) {
+                return;
+            }
             if (urlMapping.isReturnJson()) {
                 out.write(JsonUtil.convert2Json(o));
                 out.flush();
                 return;
             }
-
             if (String.class.isAssignableFrom(o.getClass())) {
                 this.forward2Jsp(request, response, o.toString().trim());
-                return ;
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
-            log.error(": server error !");
-            e.printStackTrace();
+            log.error(": server error !", e);
         }
     }
 
@@ -109,10 +109,10 @@ public class DispatcherServlet extends HttpServlet {
 
     private Object[] preparedMethodParams(HttpServletRequest request, HttpServletResponse response, URLMapping urlMapping) throws IOException, ServletException {
         Parameter[] parameters = urlMapping.getMappingMethod().getParameters();
-        if(CommonUtil.empty(parameters)) {
-            return null;
-        }
         Object[] paramValues = new Object[parameters.length];
+        if(CommonUtil.empty(parameters)) {
+            return paramValues;
+        }
         Map<String, Integer> restfulURLMappingIndex = urlMapping.getRestfulURLMappingIndex();
         List<String> paths = Arrays.stream(request.getRequestURI().split("[/]")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toList());
         for (int i = 0; i < parameters.length; i++) {
@@ -124,16 +124,32 @@ public class DispatcherServlet extends HttpServlet {
                 paramValues[i] = response;
                 continue;
             }
+            if(parameters[i].isAnnotationPresent(RequestAttribute.class)) {
+                paramValues[i] = request.getAttribute(parameters[i].getAnnotation(RequestAttribute.class).value());
+                continue;
+            }
+            if(parameters[i].isAnnotationPresent(SessionAttribute.class)) {
+                paramValues[i] = request.getSession().getAttribute(parameters[i].getAnnotation(SessionAttribute.class).value());
+                continue;
+            }
             if(parameters[i].isAnnotationPresent(RequestBody.class)) {
                 paramValues[i] = JsonUtil.convert2Object(ServletUtil.getRequestJson(request), parameters[i].getType());
                 continue;
             }
             if(parameters[i].isAnnotationPresent(RequestParam.class)) {
                 paramValues[i] = this.parseRequestParamAnnotation(request, response, parameters[i]);
+                if(paramValues[i] == null) {
+                    paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(parameters[i].getAnnotation(RequestParam.class).defaultValue()), parameters[i].getType());
+                }
                 continue;
             }
             if(parameters[i].isAnnotationPresent(PathVariable.class)) {
-                paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value()))), parameters[i].getType());
+                Integer paramIndex = restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value());
+                paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(paramIndex)), parameters[i].getType());
+                continue;
+            }
+            if(Map.class.isAssignableFrom(parameters[i].getType())) {
+                paramValues[i] = ServletUtil.getRequestParametersMap(request);
                 continue;
             }
             paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request)), parameters[i].getType());
@@ -141,7 +157,7 @@ public class DispatcherServlet extends HttpServlet {
         return paramValues;
     }
 
-    private Object parseRequestParamAnnotation(HttpServletRequest request, HttpServletResponse response, Parameter parameter) throws ServletException, IOException {
+    private Object parseRequestParamAnnotation(HttpServletRequest request, HttpServletResponse response, Parameter parameter) throws IOException {
         Class<?> type = parameter.getType();
         String value = parameter.getAnnotation(RequestParam.class).value();
         return CommonUtil.isBaseDataType(type) ?
@@ -157,7 +173,7 @@ public class DispatcherServlet extends HttpServlet {
         request.getRequestDispatcher(prefix + jsp.replace("forward:", "") + suffix).forward(request, response);
     }
 
-    private URLMapping getURLMappingMap(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private URLMapping getURLMappingMap(HttpServletRequest request, HttpServletResponse response) {
         Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> allURLMappingMap = URLMapping.getUrlMappingMap();
         Map<Integer, Map<String, URLMapping>> urlLengthMapMap = allURLMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
         if(CommonUtil.empty(urlLengthMapMap)) {
@@ -192,10 +208,10 @@ public class DispatcherServlet extends HttpServlet {
                 urlMappings.add(urlMapping);
             }
         }
-        return marchBestMarch(request, urlMappings);
+        return matchBestMatch(request, urlMappings);
     }
 
-    private URLMapping marchBestMarch(HttpServletRequest request, List<URLMapping> urlMappings) {
+    private URLMapping matchBestMatch(HttpServletRequest request, List<URLMapping> urlMappings) {
         if(CommonUtil.empty(urlMappings)) {
             return null;
         }
@@ -204,7 +220,6 @@ public class DispatcherServlet extends HttpServlet {
         }
         urlMappings = urlMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
         if(urlMappings.get(0).getRestfulURLMappingIndex().size() == urlMappings.get(1).getRestfulURLMappingIndex().size()) {
-            log.error(": mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod());
             throw new IllegalArgumentException(CommonUtil.fillString("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
         }
         return urlMappings.get(0);

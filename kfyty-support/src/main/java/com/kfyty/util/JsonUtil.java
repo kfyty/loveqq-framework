@@ -2,10 +2,11 @@ package com.kfyty.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS;
 
 /**
  * 功能描述: json 工具类
@@ -22,7 +23,7 @@ public class JsonUtil {
 
     static {
         OBJECT_WRITE_MAPPER.configure(WRITE_DATE_KEYS_AS_TIMESTAMPS, false);
-        OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"));
+        OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
     public static String convert2Json(Object o) throws JsonProcessingException {

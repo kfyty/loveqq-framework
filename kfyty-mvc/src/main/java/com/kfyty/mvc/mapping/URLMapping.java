@@ -106,7 +106,6 @@ public class URLMapping {
         }
         Map<String, URLMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
         if(urlMappingMap.containsKey(this.url)) {
-            log.error(": mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod);
             throw new IllegalArgumentException(CommonUtil.fillString("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }
         innerMap.put(this.url, this);
