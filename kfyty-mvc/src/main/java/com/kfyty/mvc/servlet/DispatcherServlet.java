@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +49,9 @@ public class DispatcherServlet extends HttpServlet {
     @Setter @Getter
     private String suffix = ".jsp";
 
+    @Setter @Getter
+    private List<HandlerInterceptor> interceptorChains = new ArrayList<>(4);
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
@@ -70,9 +72,15 @@ public class DispatcherServlet extends HttpServlet {
         this.processRequest(req, resp);
     }
 
-    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public DispatcherServlet addInterceptor(HandlerInterceptor interceptor) {
+        this.interceptorChains.add(interceptor);
+        return this;
+    }
+
+    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+        Exception exception = null;
+        URLMapping urlMapping = this.getURLMappingMap(request, response);
         try (PrintWriter out = response.getWriter()) {
-            URLMapping urlMapping = this.getURLMappingMap(request, response);
             if (urlMapping == null) {
                 this.forward2Jsp(request, response, "redirect:/404");
                 log.error(": cannot found url mapping: [{}] !", request.getRequestURI());
@@ -81,22 +89,62 @@ public class DispatcherServlet extends HttpServlet {
             if(log.isDebugEnabled()) {
                 log.debug(": found url mapping [{}] to match request URI [{}] !", urlMapping.getUrl(), request.getRequestURI());
             }
-
+            if(!this.processPreInterceptor(request, response, urlMapping.getMappingController())) {
+                return;
+            }
             Object[] params = this.preparedMethodParams(request, response, urlMapping);
             Object o = urlMapping.getMappingMethod().invoke(urlMapping.getMappingController(), params);
-            if(o == null) {
-                return;
+            this.processPostInterceptor(request, response, urlMapping.getMappingController(), o);
+            if(o != null) {
+                if (urlMapping.isReturnJson()) {
+                    out.write(JsonUtil.convert2Json(o));
+                    out.flush();
+                } else if (String.class.isAssignableFrom(o.getClass())) {
+                    this.forward2Jsp(request, response, o.toString().trim());
+                }
             }
-            if (urlMapping.isReturnJson()) {
-                out.write(JsonUtil.convert2Json(o));
-                out.flush();
-                return;
+        } catch (Exception e) {
+            log.error(": process request error !");
+            exception = e;
+            throw new ServletException(e);
+        } finally {
+            if(urlMapping != null) {
+                this.processCompletionInterceptor(request, response, urlMapping.getMappingController(), exception);
             }
-            if (String.class.isAssignableFrom(o.getClass())) {
-                this.forward2Jsp(request, response, o.toString().trim());
+        }
+    }
+
+    private boolean processPreInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if(this.interceptorChains == null) {
+            return true;
+        }
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            if(!interceptor.preHandle(request, response, handler)) {
+                return false;
             }
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            log.error(": server error !", e);
+        }
+        return true;
+    }
+
+    private void processPostInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Object value) throws Exception {
+        if(this.interceptorChains == null) {
+            return;
+        }
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            interceptor.postHandle(request, response, handler, value);
+        }
+    }
+
+    private void processCompletionInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) throws ServletException {
+        if(this.interceptorChains == null) {
+            return;
+        }
+        try {
+            for (HandlerInterceptor interceptor : this.interceptorChains) {
+                interceptor.afterCompletion(request, response, handler, e);
+            }
+        } catch (Exception ex) {
+            throw new ServletException(ex);
         }
     }
 

@@ -2,6 +2,7 @@ package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
 import com.kfyty.mvc.tomcat.TomcatWebServer;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
@@ -10,6 +11,8 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+
+import java.util.List;
 
 /**
  * 描述:
@@ -23,6 +26,9 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     @Autowired
     private ConfigurableContext configurableContext;
 
+    @Autowired(required = false)
+    private List<HandlerInterceptor> interceptorChain;
+
     @Bean
     public TomcatConfig tomcatConfig() {
         return new TomcatConfig(configurableContext.getPrimarySource());
@@ -30,7 +36,11 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Bean
     public DispatcherServlet dispatcherServlet() {
-        return new DispatcherServlet();
+        DispatcherServlet dispatcherServlet = new DispatcherServlet();
+        if(this.interceptorChain != null) {
+            dispatcherServlet.getInterceptorChains().addAll(this.interceptorChain);
+        }
+        return dispatcherServlet;
     }
 
     @Bean
