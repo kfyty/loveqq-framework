@@ -2,6 +2,9 @@ package com.kfyty.mvc.tomcat;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 描述:
  *
@@ -16,6 +19,7 @@ public class TomcatConfig {
 
     private int port;
     private String protocol;
+    private List<String> staticPattern;
     private String dispatcherMapping;
     private Class<?> primarySource;
 
@@ -27,6 +31,23 @@ public class TomcatConfig {
         this.port = 8080;
         this.protocol = DEFAULT_PROTOCOL;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
+        this.staticPattern = new ArrayList<>();
         this.primarySource = primarySource;
+        this.addDefaultStaticPattern();
+    }
+
+    public void addStaticPattern(String pattern) {
+        this.staticPattern.add(pattern);
+    }
+
+    private void addDefaultStaticPattern() {
+        this.addStaticPattern("/static/*");
+        this.addStaticPattern("*.js");
+        this.addStaticPattern("*.css");
+        this.addStaticPattern("*.html");
+        this.addStaticPattern("*.png");
+        this.addStaticPattern("*.jpg");
+        this.addStaticPattern("*.jpeg");
+        this.addStaticPattern("*.ico");
     }
 }

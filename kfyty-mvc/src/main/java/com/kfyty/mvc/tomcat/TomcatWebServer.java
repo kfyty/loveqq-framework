@@ -63,7 +63,8 @@ public class TomcatWebServer implements WebServer {
             this.configTomcat();
             this.tomcat.start();
             this.started = true;
-        } catch (Exception e) {
+            log.info("tomcat started on port(" + getPort() + ")");
+        } catch (Throwable e) {
             log.error("start tomcat error !");
             throw new RuntimeException(e);
         }
@@ -72,13 +73,18 @@ public class TomcatWebServer implements WebServer {
     @Override
     public void stop() {
         try {
-            if(this.started) {
-                this.tomcat.stop();
-            }
-        } catch (Exception e) {
-            log.error("stop tomcat error !");
-            throw new RuntimeException(e);
+            this.started = false;
+            this.stopTomcat();
+            this.tomcat.destroy();
+        } catch (Throwable throwable) {
+            log.error("destroy tomcat error !");
+            throw new RuntimeException(throwable);
         }
+    }
+
+    @Override
+    public boolean isStart() {
+        return this.started;
     }
 
     @Override
@@ -86,25 +92,19 @@ public class TomcatWebServer implements WebServer {
         return this.config.getPort();
     }
 
-    private void configTomcat() {
-        try {
-            tomcat.setPort(getPort());
-            tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
-            tomcat.getHost().setAutoDeploy(false);
-            this.prepareConnector();
-            this.prepareContext();
-            this.startDaemonAwaitThread();
-            log.info("tomcat started on port(" + getPort() + ")");
-        } catch (Exception e) {
-            log.error("config tomcat error !");
-            throw new RuntimeException(e);
-        }
+    private void configTomcat() throws Throwable {
+        tomcat.setPort(getPort());
+        tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
+        tomcat.getHost().setAutoDeploy(false);
+        this.prepareConnector();
+        this.prepareContext();
     }
 
     private void prepareConnector() {
         Connector connector = new Connector(this.config.getProtocol());
         connector.setPort(getPort());
         connector.setURIEncoding("UTF-8");
+        connector.setThrowOnFailure(true);
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
     }
@@ -145,7 +145,9 @@ public class TomcatWebServer implements WebServer {
         defaultServlet.setLoadOnStartup(1);
         defaultServlet.setOverridable(true);
         context.addChild(defaultServlet);
-        context.addServletMappingDecoded("/", "default");
+        for (String pattern : this.config.getStaticPattern()) {
+            context.addServletMappingDecoded(pattern, "default");
+        }
     }
 
     private void prepareJspServlet(StandardContext context) {
@@ -168,11 +170,12 @@ public class TomcatWebServer implements WebServer {
         context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
     }
 
-    private void startDaemonAwaitThread() {
-        Thread awaitThread = new Thread(() -> TomcatWebServer.this.tomcat.getServer().await());
-        awaitThread.setContextClassLoader(getClass().getClassLoader());
-        awaitThread.setDaemon(false);
-        awaitThread.start();
+    private void stopTomcat() {
+        try {
+            this.tomcat.stop();
+        } catch (Throwable e) {
+            log.error("stop tomcat error: {}", e.getMessage());
+        }
     }
 
     private File createTempDir(String prefix) throws IOException {

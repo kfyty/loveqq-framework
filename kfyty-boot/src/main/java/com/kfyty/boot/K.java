@@ -16,6 +16,7 @@ import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.util.CommonUtil;
 import com.kfyty.util.PackageUtil;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
  * @date 2019/8/23 16:46
  * @since JDK 1.8
  */
+@Slf4j
 public class K {
     private static final String META_FACTORIES = "META-INF/k.factories";
     private static final String META_FACTORIES_CONFIG = "com.kfyty.boot.auto.config";
@@ -55,12 +57,15 @@ public class K {
     }
 
     public ApplicationContext run() {
+        long start = System.currentTimeMillis();
         HashSet<String> primaryPackage = new HashSet<>(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareScanBean(primaryPackage);
         this.prepareMetaInfFactories();
         this.excludeScanBean();
         this.prepareBeanDefines();
-        return AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines);
+        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines);
+        log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
+        return applicationContext;
     }
 
     public static boolean isExclude(String beanName) {

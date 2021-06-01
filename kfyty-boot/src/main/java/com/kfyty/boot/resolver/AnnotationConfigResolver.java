@@ -46,22 +46,28 @@ public class AnnotationConfigResolver {
         this.scanClasses = scanClasses;
         this.beanDefines = beanDefines;
 
-        this.processImportBeanDefine();
+        try {
+            this.processImportBeanDefine();
 
-        this.instantiateBeanDefine();
-        this.processCustomizeInstantiate();
+            this.instantiateBeanDefine();
+            this.processCustomizeInstantiate();
 
-        this.fieldAnnotationResolver.doResolver(true);
-        this.methodAnnotationResolver.doResolver();
-        this.fieldAnnotationResolver.doResolver(false);
+            this.fieldAnnotationResolver.doResolver(true);
+            this.methodAnnotationResolver.doResolver();
+            this.fieldAnnotationResolver.doResolver(false);
 
-        this.processInstantiateBean();
+            this.processInstantiateBean();
 
-        this.processRefreshComplete(clazz);
+            this.processRefreshComplete(clazz);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy)));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::processDestroy));
 
-        return applicationContext;
+            return applicationContext;
+        } catch (Throwable throwable) {
+            log.error("k-boot started failed !");
+            this.processDestroy();
+            throw throwable;
+        }
     }
 
     private void instantiateBeanDefine() {
@@ -116,5 +122,10 @@ public class AnnotationConfigResolver {
         for (BeanRefreshComplete bean : applicationContext.getBeanOfType(BeanRefreshComplete.class).values()) {
             bean.onComplete(clazz);
         }
+    }
+
+    private void processDestroy() {
+        log.info("destroy bean...");
+        applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy);
     }
 }

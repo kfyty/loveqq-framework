@@ -13,5 +13,7 @@ public interface WebServer {
 
     void stop();
 
+    boolean isStart();
+
     int getPort();
 }
