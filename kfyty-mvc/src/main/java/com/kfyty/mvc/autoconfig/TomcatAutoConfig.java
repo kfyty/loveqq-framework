@@ -49,7 +49,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     }
 
     @Override
-    public void onComplete(Class<?> primarySource) {
+    public void onComplete(Class<?> primarySource, String ... args) {
         WebServer server = configurableContext.getBean(WebServer.class);
         if(server != null) {
             server.start();

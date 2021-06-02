@@ -8,5 +8,5 @@ package com.kfyty.support.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface BeanRefreshComplete {
-    void onComplete(Class<?> primarySource);
+    void onComplete(Class<?> primarySource, String ... args);
 }

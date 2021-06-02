@@ -4,13 +4,13 @@ import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
+import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.util.CommonUtil;
 import com.kfyty.util.JdbcUtil;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,8 +35,12 @@ import java.util.Map;
  * @since JDK 1.8
  */
 @Slf4j
-@NoArgsConstructor
 public class SqlSession implements InvocationHandler {
+    /**
+     * mapper class
+     */
+    private final Class<?> mapperClass;
+
     /**
      * 数据源
      */
@@ -48,11 +52,13 @@ public class SqlSession implements InvocationHandler {
      */
     private Transaction transaction;
 
-    public SqlSession(DataSource dataSource) {
+    public SqlSession(Class<?> mapperClass, DataSource dataSource) {
+        this.mapperClass = mapperClass;
         this.dataSource = dataSource;
     }
 
-    public SqlSession(DataSource dataSource, Transaction transaction) {
+    public SqlSession(Class<?> mapperClass, DataSource dataSource, Transaction transaction) {
+        this.mapperClass = mapperClass;
         this.dataSource = dataSource;
         this.transaction = transaction;
     }
@@ -65,16 +71,16 @@ public class SqlSession implements InvocationHandler {
      * @return              返回值
      * @throws Exception
      */
-    private Object requestQuery(Annotation annotation, ReturnType returnType, Map<String, Object> params) throws Exception {
+    @SuppressWarnings("rawtypes")
+    private Object requestQuery(Method sourceMethod, Annotation annotation, ReturnType returnType, Map<String, Object> params) throws Exception {
         checkMapKey(annotation, returnType);
         String annotationName = annotation.annotationType().getSimpleName();
         String methodName = Character.toLowerCase(annotationName.charAt(0)) + annotationName.substring(1);
-        String sql = this.parseForEach(annotation, params);
+        String sql = this.parseForEach(sourceMethod, annotation, params);
         Map<String, Object> map = this.parseSQL(sql, params);
         Method method = JdbcUtil.class.getDeclaredMethod(methodName, Transaction.class, ReturnType.class, String.class, Object[].class);
-        method.setAccessible(true);
-        Object obj = method.invoke(null, this.getTransaction(), returnType, map.get("sql"), map.get("args"));
-        this.handleSubQuery(annotation, obj);
+        Object obj = CommonUtil.invokeMethod(null, method, this.getTransaction(), returnType, map.get("sql"), map.get("args"));
+        this.handleSubQuery(sourceMethod, annotation, obj);
         return obj;
     }
 
@@ -99,7 +105,26 @@ public class SqlSession implements InvocationHandler {
         if(!(annotation instanceof Query || annotation instanceof SubQuery)) {
             return;
         }
-        returnType.setKey((String) annotation.getClass().getDeclaredMethod("key").invoke(annotation));
+        returnType.setKey((String) CommonUtil.invokeSimpleMethod(annotation, "key"));
+    }
+
+    /**
+     * 从注解上获取 SQL
+     * @param sourceMethod mapper 方法
+     * @param annotation 注解
+     * @return SQL
+     */
+    @SuppressWarnings("unchecked")
+    private String getSQL(Method sourceMethod, Annotation annotation) throws Exception {
+        Class<? extends Provider> provider = (Class<? extends Provider>) CommonUtil.invokeSimpleMethod(annotation, "provider");
+        if(!provider.equals(Provider.class)) {
+            return CommonUtil.newInstance(provider).doProvide(this.mapperClass, sourceMethod, annotation);
+        }
+        String sql = (String) CommonUtil.invokeSimpleMethod(annotation, "value");
+        if(CommonUtil.empty(sql)) {
+            throw new NullPointerException("sql statement is null !");
+        }
+        return sql;
     }
 
     /**
@@ -109,17 +134,12 @@ public class SqlSession implements InvocationHandler {
      * @return              拼接完毕的 sql
      * @throws Exception
      */
-    private String parseForEach(Annotation annotation, Map<String, Object> params) throws Exception {
-        String sql = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
-        if(CommonUtil.empty(sql)) {
-            throw new NullPointerException("sql statement is null !");
-        }
-
-        ForEach[] forEachList = (ForEach[]) annotation.getClass().getDeclaredMethod("forEach").invoke(annotation);
+    private String parseForEach(Method sourceMethod, Annotation annotation, Map<String, Object> params) throws Exception {
+        String sql = getSQL(sourceMethod, annotation);
+        ForEach[] forEachList = (ForEach[]) CommonUtil.invokeSimpleMethod(annotation, "forEach");
         if(CommonUtil.empty(forEachList)) {
             return sql;
         }
-
         StringBuilder builder = new StringBuilder();
         for (ForEach each : forEachList) {
             List<Object> list = CommonUtil.convert2List(params.get(each.collection()));
@@ -135,7 +155,7 @@ public class SqlSession implements InvocationHandler {
             }
             builder.append(each.close());
         }
-        return sql + builder.toString();
+        return sql + builder;
     }
 
     /**
@@ -154,13 +174,9 @@ public class SqlSession implements InvocationHandler {
             log.error(": parameters number and mapper field number can't match !");
             return null;
         }
-
         Map<String, Object> param = new HashMap<>();
-        Class<?> objClass = obj.getClass();
         for (int i = 0; i < paramField.length; i++) {
-            Field field = CommonUtil.getField(objClass, paramField[i]);
-            field.setAccessible(true);
-            param.put(mapperField[i], field.get(obj));
+            param.put(mapperField[i], CommonUtil.getFieldValue(obj, paramField[i]));
         }
         return param;
     }
@@ -171,25 +187,25 @@ public class SqlSession implements InvocationHandler {
      * @param obj           父查询的结果集
      * @throws Exception
      */
-    private void handleSubQuery(Annotation annotation, Object obj) throws Exception {
+    private void handleSubQuery(Method sourceMethod, Annotation annotation, Object obj) throws Exception {
         if(!(annotation instanceof Query && obj != null)) {
             return ;
         }
-        SubQuery[] subQueries = (SubQuery[]) annotation.getClass().getMethod("subQuery").invoke(annotation);
+        SubQuery[] subQueries = (SubQuery[]) CommonUtil.invokeSimpleMethod(annotation, "subQuery");
         if(obj instanceof Collection) {
-            for (Object o : (Collection) obj) {
-                this.handleSubQuery(subQueries, o);
+            for (Object o : (Collection<?>) obj) {
+                this.handleSubQuery(sourceMethod, subQueries, o);
             }
             return ;
         }
         if(obj instanceof Map) {
-            Map<Object, Object> map = (Map<Object, Object>) obj;
-            for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                this.handleSubQuery(subQueries, entry.getValue());
+            Map<?, ?> map = (Map<?, ?>) obj;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                this.handleSubQuery(sourceMethod, subQueries, entry.getValue());
             }
             return ;
         }
-        this.handleSubQuery(subQueries, obj);
+        this.handleSubQuery(sourceMethod, subQueries, obj);
     }
 
     /**
@@ -198,7 +214,8 @@ public class SqlSession implements InvocationHandler {
      * @param obj           父查询映射的结果对象，若是集合，则为其中的每一个对象
      * @throws Exception
      */
-    private void handleSubQuery(SubQuery[] subQueries, Object obj) throws Exception {
+    @SuppressWarnings("rawtypes")
+    private void handleSubQuery(Method sourceMethod, SubQuery[] subQueries, Object obj) throws Exception {
         if(CommonUtil.empty(subQueries) || obj == null) {
             return ;
         }
@@ -206,8 +223,7 @@ public class SqlSession implements InvocationHandler {
             Field returnField = CommonUtil.getField(obj.getClass(), subQuery.returnField());
             Map<String, Object> params = this.getParamFromAnnotation(subQuery.paramField(), subQuery.mapperField(), obj);
             ReturnType returnType = ReturnType.getReturnType(returnField.getGenericType(), returnField.getType());
-            returnField.setAccessible(true);
-            returnField.set(obj, this.requestQuery(subQuery, returnType, params));
+            CommonUtil.setFieldValue(obj, returnField, this.requestQuery(sourceMethod, subQuery, returnType, params));
         }
     }
 
@@ -220,7 +236,7 @@ public class SqlSession implements InvocationHandler {
     public Annotation[] getAnnotationFromMethod(Method method) throws Exception {
         List<Annotation> annotations = new ArrayList<>();
         for(Annotation annotation : method.getAnnotations()) {
-            Object o = annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
+            Object o = CommonUtil.invokeSimpleMethod(annotation, "value");
             if(o.getClass().isArray()) {
                 annotations.addAll(Arrays.asList((Annotation[]) o));
                 continue;
@@ -239,15 +255,19 @@ public class SqlSession implements InvocationHandler {
      * @throws Throwable
      */
     @Override
+    @SuppressWarnings("rawtypes")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Annotation[] annotations = this.getAnnotationFromMethod(method);
         ReturnType returnType = ReturnType.getReturnType(method.getGenericReturnType(), method.getReturnType());
+        if(method.getDeclaringClass().equals(BaseMapper.class) && method.getReturnType().equals(Object.class)) {
+            returnType.setReturnType(CommonUtil.getSuperGeneric(this.mapperClass, 1));
+        }
         if(annotations.length == 1) {
-            return this.requestQuery(annotations[0], returnType, this.getParamFromMethod(method.getParameters(), args));
+            return this.requestQuery(method, annotations[0], returnType, this.getParamFromMethod(method.getParameters(), args));
         }
         List<Object> os = new ArrayList<>();
         for(Annotation annotation : annotations) {
-            os.add(this.requestQuery(annotation, returnType, this.getParamFromMethod(method.getParameters(), args)));
+            os.add(this.requestQuery(method, annotation, returnType, this.getParamFromMethod(method.getParameters(), args)));
         }
         return os;
     }

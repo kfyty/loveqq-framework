@@ -32,7 +32,7 @@ public class MvcAutoConfig implements BeanRefreshComplete {
     }
 
     @Override
-    public void onComplete(Class<?> primarySource) {
+    public void onComplete(Class<?> primarySource, String ... args) {
         Map<String, Object> controllers = configurableContext.getBeanWithAnnotation(Controller.class);
         controllers.putAll(configurableContext.getBeanWithAnnotation(RestController.class));
         for (Object value : controllers.values()) {

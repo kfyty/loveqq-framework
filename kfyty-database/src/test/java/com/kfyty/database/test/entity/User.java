@@ -3,10 +3,19 @@ package com.kfyty.database.test.entity;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Random;
 
 @Data
 public class User {
     private Integer id;
     private String username;
     private Date createTime;
+
+    public static User create() {
+        User user = new User();
+        user.setId(new Random().nextInt(9999));
+        user.setUsername("test");
+        user.setCreateTime(new Date());
+        return user;
+    }
 }

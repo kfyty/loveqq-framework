@@ -56,14 +56,14 @@ public class K {
         this.primarySource = clazz;
     }
 
-    public ApplicationContext run() {
+    public ApplicationContext run(String ... args) {
         long start = System.currentTimeMillis();
         HashSet<String> primaryPackage = new HashSet<>(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareScanBean(primaryPackage);
         this.prepareMetaInfFactories();
         this.excludeScanBean();
         this.prepareBeanDefines();
-        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines);
+        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines, args);
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         return applicationContext;
     }
@@ -77,7 +77,7 @@ public class K {
     }
 
     public static ApplicationContext run(Class<?> clazz, String ... args) {
-        return new K(clazz).run();
+        return new K(clazz).run(args);
     }
 
     @SneakyThrows

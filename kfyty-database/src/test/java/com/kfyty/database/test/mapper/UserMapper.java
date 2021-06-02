@@ -1,5 +1,6 @@
 package com.kfyty.database.test.mapper;
 
+import com.kfyty.database.jdbc.BaseMapper;
 import com.kfyty.database.test.entity.User;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
@@ -7,7 +8,7 @@ import com.kfyty.database.jdbc.annotation.Query;
 import java.util.List;
 import java.util.Map;
 
-public interface UserMapper {
+public interface UserMapper extends BaseMapper<Integer, User> {
     @Query("select * from user where id = #{id}")
     User findById(@Param("id") Integer id);
 

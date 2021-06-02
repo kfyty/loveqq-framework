@@ -54,7 +54,7 @@ public class GenerateAutoConfig implements ImportBeanDefine, InstantiateBean, Be
 
     @Override
     @SneakyThrows
-    public void onComplete(Class<?> primarySource) {
+    public void onComplete(Class<?> primarySource, String ... args) {
         if(!primarySource.isAnnotationPresent(EnableAutoGenerate.class)) {
             return;
         }

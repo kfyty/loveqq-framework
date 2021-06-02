@@ -22,7 +22,7 @@ public class SqlSessionFactory {
      */
     @SuppressWarnings("unchecked")
     public static  <T> T createProxy(DataSource dataSource, Class<T> interfaces) {
-        return (T) Proxy.newProxyInstance(SqlSessionFactory.class.getClassLoader(), new Class[] {interfaces}, new SqlSession(dataSource));
+        return (T) Proxy.newProxyInstance(SqlSessionFactory.class.getClassLoader(), new Class[] {interfaces}, new SqlSession(interfaces, dataSource));
     }
 
     /**

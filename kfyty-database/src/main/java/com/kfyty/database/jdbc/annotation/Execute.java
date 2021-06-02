@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.annotation;
 
 import com.kfyty.database.jdbc.annotation.container.Executes;
+import com.kfyty.database.jdbc.sql.Provider;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -12,7 +13,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(Executes.class)
 public @interface Execute {
+
     String value();
 
     ForEach[] forEach() default {};
+
+    Class<? extends Provider> provider() default Provider.class;
 }

@@ -28,14 +28,21 @@ public class QueryTest {
 
     @Test
     public void test() {
-        User user = this.userMapper.findById(1);
-        String name = this.userMapper.findNameById(1);
+        User newUser = User.create();
+        this.userMapper.insert(newUser);
+        User one = this.userMapper.selectByPk(newUser.getId());
+        one.setUsername("update");
+        this.userMapper.updateByPk(one);
+        User user = this.userMapper.findById(one.getId());
+        String name = this.userMapper.findNameById(one.getId());
         List<User> users = this.userMapper.findAll();
         int[] ids = this.userMapper.findAllIds();
-        Map<String, Object> map = this.userMapper.findMapById(1);
+        Map<String, Object> map = this.userMapper.findMapById(newUser.getId());
         Map<String, User> userMap = this.userMapper.findUserMap();
         List<Map<String, Object>> maps = this.userMapper.findAllMap();
+        this.userMapper.deleteByPk(newUser.getId());
 
+        System.out.println(newUser);
         System.out.println(user);
         System.out.println(name);
         System.out.println(users);

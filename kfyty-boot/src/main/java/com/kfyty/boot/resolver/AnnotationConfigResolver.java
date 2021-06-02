@@ -42,7 +42,7 @@ public class AnnotationConfigResolver {
         return annotationConfigResolver;
     }
 
-    public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines) {
+    public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines, String ... args) {
         this.scanClasses = scanClasses;
         this.beanDefines = beanDefines;
 
@@ -58,7 +58,7 @@ public class AnnotationConfigResolver {
 
             this.processInstantiateBean();
 
-            this.processRefreshComplete(clazz);
+            this.processRefreshComplete(clazz, args);
 
             Runtime.getRuntime().addShutdownHook(new Thread(this::processDestroy));
 
@@ -118,9 +118,9 @@ public class AnnotationConfigResolver {
         }
     }
 
-    private void processRefreshComplete(Class<?> clazz) {
+    private void processRefreshComplete(Class<?> clazz, String ... args) {
         for (BeanRefreshComplete bean : applicationContext.getBeanOfType(BeanRefreshComplete.class).values()) {
-            bean.onComplete(clazz);
+            bean.onComplete(clazz, args);
         }
     }
 

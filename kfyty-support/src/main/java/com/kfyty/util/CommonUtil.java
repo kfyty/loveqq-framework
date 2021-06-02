@@ -13,7 +13,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,6 +37,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class CommonUtil {
+    private static final Pattern UPPER_CASE_PATTERN = Pattern.compile("[A-Z0-9]*");
+
     public static boolean empty(String s) {
         return !Optional.ofNullable(s).filter(e -> e.trim().length() != 0).isPresent();
     }
@@ -75,11 +80,15 @@ public class CommonUtil {
                 }).orElseThrow(() -> new NullPointerException("throwable is null"));
     }
 
-    public static String convert2BeanName(String name) {
-        if(name.length() < 2) {
-            return name.toLowerCase();
+    public static String convert2BeanName(Class<?> clazz) {
+        return convert2BeanName(clazz.getSimpleName());
+    }
+
+    public static String convert2BeanName(String className) {
+        if(className.length() > 1 && Character.isUpperCase(className.charAt(1))) {
+            return className;
         }
-        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
     public static String convert2Hump(String s) {
@@ -87,7 +96,10 @@ public class CommonUtil {
     }
 
     public static String convert2Hump(String s, boolean isClass) {
-        s = Optional.ofNullable(s).map(e -> e.contains("_") || Pattern.compile("[A-Z0-9]*").matcher(e).matches() ? e.toLowerCase() : e).orElseThrow(() -> new NullPointerException("column is null"));
+        if(empty(s)) {
+            throw new NullPointerException("column is null");
+        }
+        s = s.contains("_") || UPPER_CASE_PATTERN.matcher(s).matches() ? s.toLowerCase() : s;
         while(s.contains("_")) {
             int index = s.indexOf('_');
             if(index == s.length() - 1) {
@@ -96,7 +108,32 @@ public class CommonUtil {
             char ch = s.charAt(index + 1);
             s = s.replace("_" + ch, "" + Character.toUpperCase(ch));
         }
-        return !isClass ? s : s.length() == 1 ? Character.toUpperCase(s.charAt(0)) + "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+        return !isClass ? s : s.length() == 1 ? s.toUpperCase() : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    public static String convert2Underline(String s) {
+        return convert2Underline(s, true);
+    }
+
+    public static String convert2Underline(String s, boolean lower) {
+        if(empty(s)) {
+            throw new NullPointerException("field is null");
+        }
+        if(UPPER_CASE_PATTERN.matcher(s).matches()) {
+            return lower ? s.toLowerCase() : s.toUpperCase();
+        }
+        char c = s.charAt(0);
+        StringBuilder builder = new StringBuilder();
+        builder.append(Character.isUpperCase(c) ? Character.toLowerCase(c) : c);
+        for(int i = 1; i < s.length(); i++) {
+            c = s.charAt(i);
+            if(Character.isUpperCase(c)) {
+                builder.append("_").append(Character.toLowerCase(c));
+                continue;
+            }
+            builder.append(c);
+        }
+        return lower ? builder.toString() : builder.toString().toUpperCase();
     }
 
     public static String convert2JdbcType(String dataBaseType) {
@@ -257,7 +294,7 @@ public class CommonUtil {
     /**
      * 简单的实例化
      */
-    public static Object newInstance(Class<?> clazz) {
+    public static <T> T newInstance(Class<T> clazz) {
         try {
             if(!CommonUtil.isAbstract(clazz)) {
                 return newInstance(clazz.getDeclaredConstructor());
@@ -268,16 +305,43 @@ public class CommonUtil {
         }
     }
 
-    public static Object newInstance(Constructor<?> constructor) {
+    public static <T> T newInstance(Constructor<T> constructor) {
         try {
             boolean accessible = constructor.isAccessible();
             constructor.setAccessible(true);
             Object value = constructor.newInstance();
             constructor.setAccessible(accessible);
-            return value;
+            return (T) value;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Class<?> getSuperGeneric(Class<?> clazz) {
+        return getSuperGeneric(clazz, 0);
+    }
+
+    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex) {
+        return getSuperGeneric(clazz, genericIndex, 0);
+    }
+
+    /**
+     * 获取父类或父接口的泛型类型
+     * @param clazz 子类
+     * @param genericIndex 泛型索引
+     * @param interfaceIndex 实现的接口索引
+     */
+    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, int interfaceIndex) {
+        Objects.requireNonNull(clazz);
+        Type genericSuperclass = clazz.getGenericSuperclass();
+        if(genericSuperclass == null) {
+            genericSuperclass = clazz.getGenericInterfaces()[interfaceIndex];
+        }
+        if(!(genericSuperclass instanceof ParameterizedType)) {
+            throw new IllegalArgumentException(clazz.getName() + "does not contain generic types !");
+        }
+        Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
+        return (Class<?>) actualTypeArguments[genericIndex];
     }
 
     public static Object getFieldValue(Object obj, String fieldName) throws Exception {
@@ -297,6 +361,11 @@ public class CommonUtil {
         Object ret = field.get(obj);
         field.setAccessible(accessible);
         return ret;
+    }
+
+    public static Object invokeSimpleMethod(Object obj, String methodName, Object ... args) throws Exception {
+        Method method = obj.getClass().getDeclaredMethod(methodName);
+        return invokeMethod(obj, method, args);
     }
 
     public static Object invokeMethod(Object obj, Method method, Object ... args) throws Exception {
@@ -345,10 +414,9 @@ public class CommonUtil {
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
-        if(clazz == null || Object.class.equals(clazz)) {
+        if(clazz == null || Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
             return new HashMap<>(0);
         }
-        clazz = clazz.getSuperclass();
         Map<String, Field> map = new HashMap<>();
         map.putAll(Arrays.stream(clazz.getDeclaredFields()).filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e)));
         map.putAll(getSuperFieldMap(clazz, containPrivate));
