@@ -1,7 +1,7 @@
 package com.kfyty.mvc.mapping;
 
 import com.kfyty.mvc.request.RequestMethod;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,7 +106,7 @@ public class URLMapping {
         }
         Map<String, URLMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
         if(urlMappingMap.containsKey(this.url)) {
-            throw new IllegalArgumentException(CommonUtil.fillString("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
+            throw new IllegalArgumentException(CommonUtil.format("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }
         innerMap.put(this.url, this);
         urlMappingMap.putAll(innerMap);

@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.sql;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -21,9 +22,9 @@ public class UpdateByPrimaryKeyProvider implements Provider {
     }
 
     public String buildUpdateSQL(Class<?> mapperClass) {
-        Class<?> entityClass = CommonUtil.getSuperGeneric(mapperClass, 1);
+        Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
         StringBuilder sql = new StringBuilder("update " + CommonUtil.convert2Underline(entityClass.getSimpleName()) + " set ");
-        for (Field field : CommonUtil.getFieldMap(entityClass).values()) {
+        for (Field field : ReflectUtil.getFieldMap(entityClass).values()) {
             String name = field.getName();
             if("serialVersionUID".equals(name)) {
                 continue;

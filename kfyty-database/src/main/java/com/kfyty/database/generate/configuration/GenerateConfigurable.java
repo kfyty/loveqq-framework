@@ -8,7 +8,8 @@ import com.kfyty.database.generate.configuration.annotation.GenerateTemplate;
 import com.kfyty.database.generate.configuration.annotation.Table;
 import com.kfyty.database.generate.database.AbstractDataBaseMapper;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -105,7 +106,7 @@ public class GenerateConfigurable {
         this.queryTableSql = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
         this.basePackage = Optional.ofNullable(configurationClass.getAnnotation(BasePackage.class)).map(BasePackage::value).orElse(null);
         this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
-        List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (AbstractGenerateTemplate) CommonUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(null);
+        List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (AbstractGenerateTemplate) ReflectUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(null);
         if(!CommonUtil.empty(generateTemplateList)) {
             this.generateTemplateList.addAll(generateTemplateList);
         }

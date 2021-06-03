@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.sql;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -17,7 +18,7 @@ public class DeleteByPrimaryKeyProvider implements Provider {
     @Override
     public String doProvide(Class<?> mapperClass, Method sourceMethod, Annotation annotation) {
         String sql = "delete from %s where %s = #{%s}";
-        Class<?> entityClass = CommonUtil.getSuperGeneric(mapperClass, 1);
+        Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
         return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()), getPkField(mapperClass), PROVIDER_PARAM_PK);
     }
 }

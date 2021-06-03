@@ -4,7 +4,8 @@ import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.info.AbstractFieldStructInfo;
 import com.kfyty.database.generate.template.entity.EntityTemplate;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.JdbcTypeUtil;
 
 import java.io.IOException;
 
@@ -96,10 +97,10 @@ public class MapperTemplate extends EntityTemplate {
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             String field = fieldInfo.getField();
             String classField = CommonUtil.convert2Hump(field, false);
-            if(field.equals("id")) {
+            if("id".equals(field)) {
                 continue;
             }
-            if(!CommonUtil.convert2JavaType(fieldInfo.getFieldType()).equals("String")) {
+            if(!"String".equals(JdbcTypeUtil.convert2JavaType(fieldInfo.getFieldType()))) {
                 out.writeLine("\t\t\t<if test=\"{}.{} != null\">", this.entityClassVariableName, classField);
             } else {
                 out.writeLine("\t\t\t<if test=\"{}.{} != null and {}.{} != ''\">", this.entityClassVariableName, classField, this.entityClassVariableName, classField);

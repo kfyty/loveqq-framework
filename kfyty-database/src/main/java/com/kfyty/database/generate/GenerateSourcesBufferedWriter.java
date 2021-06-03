@@ -1,6 +1,6 @@
 package com.kfyty.database.generate;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class GenerateSourcesBufferedWriter extends BufferedWriter {
     }
 
     public void write(String str, Object ... params) throws IOException {
-        super.write(CommonUtil.fillString(str, params));
+        super.write(CommonUtil.format(str, params));
     }
 
     public void writeLine(String str) throws IOException {

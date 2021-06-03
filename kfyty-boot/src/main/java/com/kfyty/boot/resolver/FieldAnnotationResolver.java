@@ -4,7 +4,7 @@ import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.jdbc.ReturnType;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,7 +96,7 @@ public class FieldAnnotationResolver {
                 }
             }
         }
-        CommonUtil.setFieldValue(o, field, value);
+        ReflectUtil.setFieldValue(o, field, value);
         if(log.isDebugEnabled()) {
             log.debug(": autowired bean: [{}] to [{}] !", fieldType, o);
         }

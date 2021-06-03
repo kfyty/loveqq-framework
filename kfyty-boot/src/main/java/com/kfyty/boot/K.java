@@ -13,8 +13,8 @@ import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
 import com.kfyty.support.autoconfig.annotation.Repository;
 import com.kfyty.support.autoconfig.annotation.Service;
-import com.kfyty.util.CommonUtil;
-import com.kfyty.util.PackageUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.PackageUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 

@@ -9,8 +9,9 @@ import com.kfyty.mvc.handler.MVCAnnotationHandler;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.util.CommonUtil;
-import com.kfyty.util.JsonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.JsonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +98,7 @@ public class DispatcherServlet extends HttpServlet {
             this.processPostInterceptor(request, response, urlMapping.getMappingController(), o);
             if(o != null) {
                 if (urlMapping.isReturnJson()) {
-                    out.write(JsonUtil.convert2Json(o));
+                    out.write(JsonUtil.toJson(o));
                     out.flush();
                 } else if (String.class.isAssignableFrom(o.getClass())) {
                     this.forward2Jsp(request, response, o.toString().trim());
@@ -181,26 +182,26 @@ public class DispatcherServlet extends HttpServlet {
                 continue;
             }
             if(parameters[i].isAnnotationPresent(RequestBody.class)) {
-                paramValues[i] = JsonUtil.convert2Object(ServletUtil.getRequestJson(request), parameters[i].getType());
+                paramValues[i] = JsonUtil.toObject(ServletUtil.getRequestJson(request), parameters[i].getType());
                 continue;
             }
             if(parameters[i].isAnnotationPresent(RequestParam.class)) {
                 paramValues[i] = this.parseRequestParamAnnotation(request, response, parameters[i]);
                 if(paramValues[i] == null) {
-                    paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(parameters[i].getAnnotation(RequestParam.class).defaultValue()), parameters[i].getType());
+                    paramValues[i] = JsonUtil.toObject(JsonUtil.toJson(parameters[i].getAnnotation(RequestParam.class).defaultValue()), parameters[i].getType());
                 }
                 continue;
             }
             if(parameters[i].isAnnotationPresent(PathVariable.class)) {
                 Integer paramIndex = restfulURLMappingIndex.get(parameters[i].getAnnotation(PathVariable.class).value());
-                paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(paths.get(paramIndex)), parameters[i].getType());
+                paramValues[i] = JsonUtil.toObject(JsonUtil.toJson(paths.get(paramIndex)), parameters[i].getType());
                 continue;
             }
             if(Map.class.isAssignableFrom(parameters[i].getType())) {
                 paramValues[i] = ServletUtil.getRequestParametersMap(request);
                 continue;
             }
-            paramValues[i] = JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request)), parameters[i].getType());
+            paramValues[i] = JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request)), parameters[i].getType());
         }
         return paramValues;
     }
@@ -208,9 +209,9 @@ public class DispatcherServlet extends HttpServlet {
     private Object parseRequestParamAnnotation(HttpServletRequest request, HttpServletResponse response, Parameter parameter) throws IOException {
         Class<?> type = parameter.getType();
         String value = parameter.getAnnotation(RequestParam.class).value();
-        return CommonUtil.isBaseDataType(type) ?
-                JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getParameter(request, value)), type) :
-                JsonUtil.convert2Object(JsonUtil.convert2Json(ServletUtil.getRequestParametersMap(request, value)), type);
+        return ReflectUtil.isBaseDataType(type) ?
+                JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getParameter(request, value)), type) :
+                JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request, value)), type);
     }
 
     private void forward2Jsp(HttpServletRequest request, HttpServletResponse response, String jsp) throws ServletException, IOException {
@@ -268,7 +269,7 @@ public class DispatcherServlet extends HttpServlet {
         }
         urlMappings = urlMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
         if(urlMappings.get(0).getRestfulURLMappingIndex().size() == urlMappings.get(1).getRestfulURLMappingIndex().size()) {
-            throw new IllegalArgumentException(CommonUtil.fillString("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
+            throw new IllegalArgumentException(CommonUtil.format("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
         }
         return urlMappings.get(0);
     }

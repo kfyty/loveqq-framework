@@ -5,7 +5,7 @@ import com.kfyty.mvc.annotation.ResponseBody;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

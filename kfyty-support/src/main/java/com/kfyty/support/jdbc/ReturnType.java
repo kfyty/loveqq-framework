@@ -1,5 +1,6 @@
 package com.kfyty.support.jdbc;
 
+import com.kfyty.support.exception.SupportException;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ public class ReturnType<T, K, V> {
         return this.parameterizedType;
     }
 
+    @SuppressWarnings("unchecked")
     public void setFirstParameterizedType(Type firstParameterizedType) {
         if(firstParameterizedType == null) {
             return ;
@@ -55,6 +57,7 @@ public class ReturnType<T, K, V> {
         this.firstParameterizedType = (Class<K>) ((WildcardType) firstParameterizedType).getUpperBounds()[0];
     }
 
+    @SuppressWarnings("unchecked")
     public void setSecondParameterizedType(Type secondParameterizedType) {
         if(secondParameterizedType == null) {
             return ;
@@ -66,13 +69,13 @@ public class ReturnType<T, K, V> {
         this.secondParameterizedType = (Class<V>) ((WildcardType) secondParameterizedType).getUpperBounds()[0];
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
             return new ReturnType(true, false, type.getComponentType(), null, null);
         }
         if(!(genericType instanceof ParameterizedType)) {
-            return new ReturnType(false, false, type, null, null);
+            return new ReturnType<>(false, false, type, null, null);
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericType;
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
@@ -81,21 +84,18 @@ public class ReturnType<T, K, V> {
                 Type rawType = ((ParameterizedType) actualTypeArguments[0]).getRawType();
                 Type[] types = ((ParameterizedType) actualTypeArguments[0]).getActualTypeArguments();
                 if(!Map.class.isAssignableFrom((Class<?>) rawType)) {
-                    log.error(": nested parameterized type must be map !");
-                    return null;
+                    throw new SupportException("nested parameterized type must be map !");
                 }
-                return new ReturnType(false, true, type, types[0], types[1]);
+                return new ReturnType<>(false, true, type, types[0], types[1]);
             }
-            return new ReturnType(false, true, type, actualTypeArguments[0], null);
+            return new ReturnType<>(false, true, type, actualTypeArguments[0], null);
         }
         if(Map.class.isAssignableFrom(type)) {
             if(actualTypeArguments.length != 2) {
-                log.error(": parameterized type only support collection and map !");
-                return null;
+                throw new SupportException("parameterized type only support collection and map !");
             }
-            return new ReturnType(false, true, type, actualTypeArguments[0], actualTypeArguments[1]);
+            return new ReturnType<>(false, true, type, actualTypeArguments[0], actualTypeArguments[1]);
         }
-        log.error(": parse return type failed !");
-        return null;
+        throw new SupportException("parse return type failed !");
     }
 }

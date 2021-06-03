@@ -1,6 +1,6 @@
 package com.kfyty.mvc.util;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ public class ServletUtil {
 
     public static String getRequestJson(HttpServletRequest request) throws IOException {
         String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
-        if(!CommonUtil.empty(currentRequestParam)) {
+        if(CommonUtil.notEmpty(currentRequestParam)) {
             return currentRequestParam;
         }
         int contentLength = request.getContentLength();
@@ -44,12 +44,12 @@ public class ServletUtil {
 
     public static String getParameter(HttpServletRequest request, String paramName) {
         String param = request.getParameter(paramName);
-        return !CommonUtil.empty(param) ? param : tryGetParameter(request, paramName);
+        return CommonUtil.notEmpty(param) ? param : tryGetParameter(request, paramName);
     }
 
     public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) {
         if(request == null) {
-            return null;
+            return new HashMap<>(2);
         }
         Map<String, Object> map = new HashMap<>();
         Enumeration<?> parameterNames = request.getParameterNames();
@@ -57,12 +57,12 @@ public class ServletUtil {
             String paramName = (String) parameterNames.nextElement();
             map.put(paramName, request.getParameter(paramName));
         }
-        return !CommonUtil.empty(map) ? map : tryGetRequestParametersMap(request);
+        return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request);
     }
 
     public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) {
         if(request == null) {
-            return null;
+            return new HashMap<>(2);
         }
         if(CommonUtil.empty(prefix)) {
             return getRequestParametersMap(request);
@@ -76,7 +76,7 @@ public class ServletUtil {
                 map.put(paramName.replace(prefix, ""), request.getParameter(paramName));
             }
         }
-        return !CommonUtil.empty(map) ? map : tryGetRequestParametersMap(request, prefix);
+        return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request, prefix);
     }
 
     private static String tryGetParameter(HttpServletRequest request, String paramName) {
@@ -98,12 +98,12 @@ public class ServletUtil {
     }
 
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) {
+        Map<String, Object> map = new HashMap<>();
         String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         String[] split = currentRequestParam.split("&");
         if(CommonUtil.empty(split)) {
-            return null;
+            return map;
         }
-        Map<String, Object> map = new HashMap<>();
         for (String s : split) {
             String[] paramMap = s.split("=");
             if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
@@ -111,16 +111,16 @@ public class ServletUtil {
             }
             map.put(paramMap[0], paramMap[1]);
         }
-        return CommonUtil.empty(map) ? null : map;
+        return map;
     }
 
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) {
+        Map<String, Object> map = new HashMap<>();
         String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         String[] split = currentRequestParam.split("&");
         if(CommonUtil.empty(split)) {
-            return null;
+            return map;
         }
-        Map<String, Object> map = new HashMap<>();
         for (String s : split) {
             String[] paramMap = s.split("=");
             if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
@@ -130,6 +130,6 @@ public class ServletUtil {
                 map.put(paramMap[0].replace(prefix, ""), paramMap[1]);
             }
         }
-        return CommonUtil.empty(map) ? null : map;
+        return map;
     }
 }

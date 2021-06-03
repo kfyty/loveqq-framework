@@ -1,5 +1,7 @@
 package com.kfyty.database.jdbc.annotation;
 
+import com.kfyty.database.jdbc.sql.Provider;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -17,4 +19,6 @@ public @interface SubQuery {
     String[] mapperField();
 
     ForEach[] forEach() default {};
+
+    Class<? extends Provider> provider() default Provider.class;
 }

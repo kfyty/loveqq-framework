@@ -4,7 +4,7 @@ import com.kfyty.database.generate.template.freemarker.FreemarkerTemplate;
 import com.kfyty.database.generate.template.jsp.JspTemplate;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;

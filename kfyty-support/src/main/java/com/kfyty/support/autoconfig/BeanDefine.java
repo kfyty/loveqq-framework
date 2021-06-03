@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +24,7 @@ public class BeanDefine {
     }
 
     public Object createInstance() {
-        Object instance = CommonUtil.newInstance(this.beanType);
+        Object instance = ReflectUtil.newInstance(this.beanType);
         this.isInstance = true;
         if(log.isDebugEnabled()) {
             log.debug(": instantiate bean: [{}] !", instance);

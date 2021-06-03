@@ -1,6 +1,6 @@
 package com.kfyty.boot.beans;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.BeanUtil;
 import lombok.Getter;
 
 import java.util.Map;
@@ -26,7 +26,7 @@ public class BeanResources {
     private final Map<String, Object> beans;
 
     public BeanResources(Class<?> clazz, Object bean) {
-        this(CommonUtil.convert2BeanName(clazz.getSimpleName()), clazz, bean);
+        this(BeanUtil.convert2BeanName(clazz), clazz, bean);
     }
 
     public BeanResources(String name, Class<?> clazz, Object bean) {

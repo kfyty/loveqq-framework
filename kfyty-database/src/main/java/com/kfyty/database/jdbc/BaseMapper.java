@@ -3,10 +3,14 @@ package com.kfyty.database.jdbc;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
+import com.kfyty.database.jdbc.sql.DeleteAllProvider;
 import com.kfyty.database.jdbc.sql.DeleteByPrimaryKeyProvider;
 import com.kfyty.database.jdbc.sql.InsertProvider;
+import com.kfyty.database.jdbc.sql.SelectAllProvider;
 import com.kfyty.database.jdbc.sql.SelectByPrimaryKeyProvider;
 import com.kfyty.database.jdbc.sql.UpdateByPrimaryKeyProvider;
+
+import java.util.List;
 
 import static com.kfyty.database.jdbc.sql.Provider.PROVIDER_PARAM_ENTITY;
 import static com.kfyty.database.jdbc.sql.Provider.PROVIDER_PARAM_PK;
@@ -37,6 +41,13 @@ public interface BaseMapper<PrimaryKey, T> {
     T selectByPk(@Param(PROVIDER_PARAM_PK) PrimaryKey pk);
 
     /**
+     * 查询所有数据
+     * @return 数据
+     */
+    @Query(provider = SelectAllProvider.class, value = BASE_MAPPER_SQL)
+    List<T> selectAll();
+
+    /**
      * 根据主键更新数据
      * @param entity 数据
      */
@@ -49,4 +60,10 @@ public interface BaseMapper<PrimaryKey, T> {
      */
     @Execute(provider = DeleteByPrimaryKeyProvider.class, value = BASE_MAPPER_SQL)
     void deleteByPk(@Param(PROVIDER_PARAM_PK) PrimaryKey pk);
+
+    /**
+     * 删除所有数据
+     */
+    @Execute(provider = DeleteAllProvider.class, value = BASE_MAPPER_SQL)
+    void deleteAll();
 }

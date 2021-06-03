@@ -1,7 +1,8 @@
 package com.kfyty.database.jdbc.sql;
 
 import com.kfyty.database.jdbc.annotation.TableId;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -28,7 +29,7 @@ public interface Provider {
     String doProvide(Class<?> mapperClass, Method sourceMethod, Annotation annotation);
 
     default String getPkField(Class<?> mapperClass) {
-        for (Field value : CommonUtil.getFieldMap(mapperClass).values()) {
+        for (Field value : ReflectUtil.getFieldMap(mapperClass).values()) {
             if(value.isAnnotationPresent(TableId.class)) {
                 return CommonUtil.convert2Underline(value.getName());
             }

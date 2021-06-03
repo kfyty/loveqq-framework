@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.sql;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -23,8 +24,8 @@ public class InsertProvider implements Provider {
     public String buildInsertSQL(Class<?> mapperClass) {
         StringBuilder fields = new StringBuilder();
         StringBuilder values = new StringBuilder();
-        Class<?> entityClass = CommonUtil.getSuperGeneric(mapperClass, 1);
-        for (Field field : CommonUtil.getFieldMap(entityClass).values()) {
+        Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
+        for (Field field : ReflectUtil.getFieldMap(entityClass).values()) {
             String name = field.getName();
             if("serialVersionUID".equals(name)) {
                 continue;

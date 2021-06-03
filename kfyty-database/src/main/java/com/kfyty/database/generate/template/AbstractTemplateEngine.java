@@ -3,7 +3,8 @@ package com.kfyty.database.generate.template;
 import com.kfyty.database.generate.info.AbstractFieldStructInfo;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.util.TemplateEngineUtil;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.JdbcTypeUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,7 +68,7 @@ public abstract class AbstractTemplateEngine implements AbstractGenerateTemplate
             info.setField(CommonUtil.convert2Hump(fieldInfo.getField()));
             info.setFieldType(this.convert2JavaType(fieldInfo.getFieldType()));
             info.setFieldComment(CommonUtil.empty(fieldInfo.getFieldComment()) ? "" : fieldInfo.getFieldComment());
-            fieldInfo.setFieldType(CommonUtil.convert2JdbcType(fieldInfo.getFieldType()));
+            fieldInfo.setFieldType(JdbcTypeUtil.convert2JdbcType(fieldInfo.getFieldType()));
             if(fieldInfo.primaryKey()) {
                 variable.put("pkField", info);
                 variable.put("pkColumn", fieldInfo);

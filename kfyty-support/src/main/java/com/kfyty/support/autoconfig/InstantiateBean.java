@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig;
 
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.BeanUtil;
 
 /**
  * 描述: 初始化自定义 bean
@@ -14,7 +14,7 @@ public interface InstantiateBean {
     boolean canInstantiate(Class<?> clazz);
 
     default String getBeanName(Class<?> clazz) {
-        return CommonUtil.convert2BeanName(clazz.getSimpleName());
+        return BeanUtil.convert2BeanName(clazz.getSimpleName());
     }
 
     Object doInstantiate(Class<?> clazz);

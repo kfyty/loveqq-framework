@@ -2,7 +2,7 @@ package com.kfyty.database.generate.template;
 
 import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.JdbcTypeUtil;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -16,7 +16,7 @@ import java.util.Optional;
  */
 public interface AbstractGenerateTemplate {
     default String convert2JavaType(String dataBaseType) {
-        return Optional.ofNullable(CommonUtil.convert2JavaType(dataBaseType))
+        return Optional.ofNullable(JdbcTypeUtil.convert2JavaType(dataBaseType))
                 .orElseThrow(() -> new IllegalArgumentException("no java data type matched for data base type: [" +
                         dataBaseType + "], please override convert2JavaType method !"));
     }

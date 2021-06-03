@@ -5,7 +5,8 @@ import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.ConfigurableContext;
 import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.support.utils.CommonUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -98,12 +99,12 @@ public class ApplicationContext implements ConfigurableContext {
 
     @Override
     public void registerBean(Class<?> clazz, Object bean) {
-        this.registerBean(CommonUtil.convert2BeanName(bean.getClass().getSimpleName()), clazz, bean);
+        this.registerBean(BeanUtil.convert2BeanName(bean.getClass()), clazz, bean);
     }
 
     @Override
     public void replaceBean(Class<?> clazz, Object bean) {
-        this.replaceBean(CommonUtil.convert2BeanName(clazz.getSimpleName()), clazz, bean);
+        this.replaceBean(BeanUtil.convert2BeanName(clazz), clazz, bean);
     }
 
     @Override

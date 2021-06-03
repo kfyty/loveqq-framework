@@ -1,4 +1,4 @@
-package com.kfyty.util;
+package com.kfyty.support.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +20,7 @@ import java.util.jar.JarEntry;
  * @since JDK 1.8
  */
 @Slf4j
-public class PackageUtil {
+public abstract class PackageUtil {
     public static Set<String> scanClassName(Class<?> mainClass) throws IOException {
         return scanClassName(mainClass.getPackage().getName());
     }
@@ -34,7 +34,7 @@ public class PackageUtil {
         Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(basePackage.replace(".", "/"));
         while(urls.hasMoreElements()) {
             URL url = urls.nextElement();
-            if(url.getProtocol().equalsIgnoreCase("jar")) {
+            if("jar".equalsIgnoreCase(url.getProtocol())) {
                 classes.addAll(scanClassNameByJar(url));
                 continue;
             }
@@ -49,12 +49,12 @@ public class PackageUtil {
         if(CommonUtil.empty(classes)) {
             return result;
         }
-        try {
-            for (String clazz : classes) {
+        for (String clazz : classes) {
+            try {
                 result.add(Class.forName(clazz));
+            } catch (Throwable e) {
+                log.error("load class error !", e);
             }
-        } catch (Exception e) {
-            log.error(": load class error !", e);
         }
         return result;
     }

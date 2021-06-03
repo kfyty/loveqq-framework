@@ -1,4 +1,4 @@
-package com.kfyty.util;
+package com.kfyty.support.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEY
  * @date 2019/9/11 15:26
  * @since JDK 1.8
  */
-public class JsonUtil {
+public abstract class JsonUtil {
 
     private static final ObjectMapper OBJECT_READ_MAPPER = new ObjectMapper();
 
@@ -26,16 +26,16 @@ public class JsonUtil {
         OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
-    public static String convert2Json(Object o) throws JsonProcessingException {
+    public static String toJson(Object o) throws JsonProcessingException {
         return OBJECT_WRITE_MAPPER.writeValueAsString(o);
     }
 
-    public static String convert2Json(Object o, String dateFormat) throws JsonProcessingException {
+    public static String toJson(Object o, String dateFormat) throws JsonProcessingException {
         OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat(dateFormat));
         return OBJECT_WRITE_MAPPER.writeValueAsString(o);
     }
 
-    public static <T> T convert2Object(String json, Class<T> clazz) throws IOException {
+    public static <T> T toObject(String json, Class<T> clazz) throws IOException {
         return OBJECT_READ_MAPPER.readValue(json, clazz);
     }
 }

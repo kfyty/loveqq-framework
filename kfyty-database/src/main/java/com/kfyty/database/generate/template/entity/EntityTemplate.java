@@ -4,7 +4,7 @@ import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.info.AbstractFieldStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.CommonUtil;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ public class EntityTemplate implements AbstractGenerateTemplate {
             return "";
         }
         if(!CommonUtil.empty(basePackage) && !CommonUtil.empty(suffix)) {
-            return CommonUtil.fillString("{}.{}", basePackage, suffix.toLowerCase().replace("impl", ".impl"));
+            return CommonUtil.format("{}.{}", basePackage, suffix.toLowerCase().replace("impl", ".impl"));
         }
         return !CommonUtil.empty(basePackage) ? basePackage : suffix.toLowerCase().replace("impl", ".impl");
     }

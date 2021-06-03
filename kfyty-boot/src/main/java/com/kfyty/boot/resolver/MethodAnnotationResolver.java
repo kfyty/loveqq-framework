@@ -5,7 +5,9 @@ import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
-import com.kfyty.util.CommonUtil;
+import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,7 +69,7 @@ public class MethodAnnotationResolver {
         if(obj != null) {
             return obj;
         }
-        obj = CommonUtil.invokeMethod(o, method, this.resolveAutowiredBean(resolving, o, method));
+        obj = ReflectUtil.invokeMethod(o, method, this.resolveAutowiredBean(resolving, o, method));
         if(CommonUtil.empty(bean.value())) {
             applicationContext.registerBean(method.getReturnType(), obj);
         } else {
@@ -116,7 +118,7 @@ public class MethodAnnotationResolver {
         if(!CommonUtil.empty(bean.value())) {
             return applicationContext.getBean(bean.value());
         }
-        return applicationContext.getBean(CommonUtil.convert2BeanName(method.getReturnType().getSimpleName()));
+        return applicationContext.getBean(BeanUtil.convert2BeanName(method.getReturnType()));
     }
 
     private Object resolveBean(Parameter parameter) {
