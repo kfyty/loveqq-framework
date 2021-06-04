@@ -7,10 +7,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface RequestMapping {
+    /**
+     * 请求映射路径
+     */
     String value();
 
+    /**
+     * 请求方法
+     * @return 默认 GET 方法
+     */
     RequestMethod requestMethod() default RequestMethod.GET;
 }

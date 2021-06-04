@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS;
 
@@ -22,6 +23,8 @@ public abstract class JsonUtil {
     private static final ObjectMapper OBJECT_WRITE_MAPPER = new ObjectMapper();
 
     static {
+        OBJECT_READ_MAPPER.setTimeZone(TimeZone.getDefault());
+        OBJECT_WRITE_MAPPER.setTimeZone(TimeZone.getDefault());
         OBJECT_WRITE_MAPPER.configure(WRITE_DATE_KEYS_AS_TIMESTAMPS, false);
         OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }

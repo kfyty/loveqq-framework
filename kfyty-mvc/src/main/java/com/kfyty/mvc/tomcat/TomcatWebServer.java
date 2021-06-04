@@ -2,9 +2,11 @@ package com.kfyty.mvc.tomcat;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.Context;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
@@ -15,7 +17,9 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.JarResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.tomcat.websocket.server.WsContextListener;
 
+import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,6 +41,9 @@ public class TomcatWebServer implements WebServer {
 
     private boolean started;
 
+    @Getter
+    private ServletContext servletContext;
+
     @Setter
     private TomcatConfig config;
 
@@ -55,19 +62,14 @@ public class TomcatWebServer implements WebServer {
         this.tomcat = new Tomcat();
         this.config = config;
         this.dispatcherServlet = dispatcherServlet;
+        this.configTomcat();
     }
 
     @Override
     public void start() {
-        try {
-            this.configTomcat();
-            this.tomcat.start();
-            this.started = true;
-            log.info("tomcat started on port(" + getPort() + ")");
-        } catch (Throwable e) {
-            log.error("start tomcat error !");
-            throw new RuntimeException(e);
-        }
+        this.prepareConnector();
+        this.started = true;
+        log.info("tomcat started on port({})", getPort());
     }
 
     @Override
@@ -92,12 +94,16 @@ public class TomcatWebServer implements WebServer {
         return this.config.getPort();
     }
 
-    private void configTomcat() throws Throwable {
-        tomcat.setPort(getPort());
-        tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
-        tomcat.getHost().setAutoDeploy(false);
-        this.prepareConnector();
-        this.prepareContext();
+    private void configTomcat() {
+        try {
+            tomcat.setPort(getPort());
+            tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
+            tomcat.getHost().setAutoDeploy(false);
+            this.prepareContext();
+            this.tomcat.start();                // 提前启动 tomcat 使监听器生效
+        } catch (Throwable e) {
+            throw new RuntimeException("config tomcat failed !", e);
+        }
     }
 
     private void prepareConnector() {
@@ -114,15 +120,18 @@ public class TomcatWebServer implements WebServer {
         context.setPath("");
         context.setDocBase(createTempDir("tomcat-docbase").getAbsolutePath());
         context.setCreateUploadTargets(true);
+        context.setFailCtxIfServletStartFails(true);
+        context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
         this.prepareResources(context);
         this.prepareDefaultServlet(context);
         this.prepareJspServlet(context);
         this.prepareDispatcherServlet(context);
         this.tomcat.getHost().addChild(context);
+        this.servletContext = context.getServletContext();
     }
 
-    private void prepareResources(StandardContext context) throws URISyntaxException {
+    private void prepareResources(Context context) throws URISyntaxException {
         WebResourceRoot resources = new StandardRoot(context);
         URL pathURL = config.getPrimarySource().getProtectionDomain().getCodeSource().getLocation();
         if(Files.isDirectory(Paths.get(pathURL.toURI()))) {
@@ -136,7 +145,7 @@ public class TomcatWebServer implements WebServer {
         context.setResources(resources);
     }
 
-    private void prepareDefaultServlet(StandardContext context) {
+    private void prepareDefaultServlet(Context context) {
         Wrapper defaultServlet = context.createWrapper();
         defaultServlet.setName("default");
         defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");
@@ -150,7 +159,7 @@ public class TomcatWebServer implements WebServer {
         }
     }
 
-    private void prepareJspServlet(StandardContext context) {
+    private void prepareJspServlet(Context context) {
         Wrapper jspServlet = context.createWrapper();
         jspServlet.setName("jsp");
         jspServlet.setServletClass("org.apache.jasper.servlet.JspServlet");
@@ -162,12 +171,11 @@ public class TomcatWebServer implements WebServer {
         context.addServletContainerInitializer(new JasperInitializer(), null);
     }
 
-    private void prepareDispatcherServlet(StandardContext context) {
-        if(this.dispatcherServlet == null) {
-            return;
+    private void prepareDispatcherServlet(Context context) {
+        if(this.dispatcherServlet != null) {
+            Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
+            context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
         }
-        Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
-        context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
     }
 
     private void stopTomcat() {

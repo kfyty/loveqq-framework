@@ -99,7 +99,7 @@ public class ApplicationContext implements ConfigurableContext {
 
     @Override
     public void registerBean(Class<?> clazz, Object bean) {
-        this.registerBean(BeanUtil.convert2BeanName(bean.getClass()), clazz, bean);
+        this.registerBean(BeanUtil.convert2BeanName(clazz), clazz, bean);
     }
 
     @Override

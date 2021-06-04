@@ -5,11 +5,16 @@ import com.kfyty.support.utils.CommonUtil;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: servlet 工具
@@ -21,14 +26,30 @@ import java.util.UUID;
 public class ServletUtil {
     private static final String CURRENT_REQUEST_PARAM = "__CURRENT__REQUEST__PARAM__" + UUID.randomUUID();
 
+    /**
+     * 将请求参数备份一下，以支持 PUT/DELETE 方法
+     */
     public static void preparedRequestParam(HttpServletRequest request) throws IOException {
-        request.setAttribute(CURRENT_REQUEST_PARAM, getRequestJson(request));
+        request.setAttribute(CURRENT_REQUEST_PARAM, getRequestBody(request));
     }
 
-    public static String getRequestJson(HttpServletRequest request) throws IOException {
+    /**
+     * 获取请求的数据
+     * 如果是上传文件，则只获取 ParameterMap 的数据
+     */
+    public static String getRequestBody(HttpServletRequest request) throws IOException {
         String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
         if(CommonUtil.notEmpty(currentRequestParam)) {
             return currentRequestParam;
+        }
+        if(request.getHeader("content-type").startsWith("multipart/form-data")) {
+            StringBuilder builder = new StringBuilder();
+            for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+                for (String s : entry.getValue()) {
+                    builder.append(entry.getKey()).append("=").append(s).append("&");
+                }
+            }
+            return builder.length() < 1 ? "" : builder.deleteCharAt(builder.length() - 1).toString();
         }
         int contentLength = request.getContentLength();
         if(contentLength < 0) {
@@ -42,15 +63,31 @@ public class ServletUtil {
         return new String(buffer, StandardCharsets.UTF_8);
     }
 
-    public static String getParameter(HttpServletRequest request, String paramName) {
+    /**
+     * 根据参数名获取单一的参数值
+     * 如果获取不到则尝试从备份数据中获取
+     */
+    public static String getParameter(HttpServletRequest request, String paramName) throws IOException {
         String param = request.getParameter(paramName);
         return CommonUtil.notEmpty(param) ? param : tryGetParameter(request, paramName);
     }
 
-    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) {
-        if(request == null) {
-            return new HashMap<>(2);
+    /**
+     * 根据参数名获取重复的参数值
+     * 如果获取不到则尝试从备份数据中获取
+     */
+    public static List<String> getParameters(HttpServletRequest request, String paramName) throws IOException {
+        String[] params = request.getParameterMap().get(paramName);
+        if(params != null && params.length > 0) {
+            return Arrays.stream(params).collect(Collectors.toList());
         }
+        return tryGetParameters(request, paramName);
+    }
+
+    /**
+     * 获取 ParametersMap，如果获取不到则尝试从备份数据中获取
+     */
+    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) {
         Map<String, Object> map = new HashMap<>();
         Enumeration<?> parameterNames = request.getParameterNames();
         while(parameterNames.hasMoreElements()) {
@@ -60,10 +97,10 @@ public class ServletUtil {
         return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request);
     }
 
+    /**
+     * 根据参数名前缀获取 ParametersMap，如果获取不到则尝试从备份数据中获取
+     */
     public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) {
-        if(request == null) {
-            return new HashMap<>(2);
-        }
         if(CommonUtil.empty(prefix)) {
             return getRequestParametersMap(request);
         }
@@ -79,9 +116,8 @@ public class ServletUtil {
         return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request, prefix);
     }
 
-    private static String tryGetParameter(HttpServletRequest request, String paramName) {
-        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
-        String[] split = currentRequestParam.split("&");
+    private static String tryGetParameter(HttpServletRequest request, String paramName) throws IOException {
+        String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
         if(CommonUtil.empty(split)) {
             return null;
         }
@@ -91,16 +127,33 @@ public class ServletUtil {
                 continue;
             }
             if(paramMap[0].equals(paramName)) {
-                return paramMap[1];
+                return URLDecoder.decode(paramMap[1], "UTF-8");
             }
         }
         return null;
     }
 
+    public static List<String> tryGetParameters(HttpServletRequest request, String paramName) throws IOException {
+        List<String> values = new ArrayList<>();
+        String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
+        if(CommonUtil.empty(split)) {
+            return values;
+        }
+        for (String s : split) {
+            String[] paramMap = s.split("=");
+            if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
+                continue;
+            }
+            if(paramMap[0].equals(paramName)) {
+                values.add(URLDecoder.decode(paramMap[1], "UTF-8"));
+            }
+        }
+        return values;
+    }
+
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) {
         Map<String, Object> map = new HashMap<>();
-        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
-        String[] split = currentRequestParam.split("&");
+        String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
         if(CommonUtil.empty(split)) {
             return map;
         }
@@ -116,8 +169,7 @@ public class ServletUtil {
 
     private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) {
         Map<String, Object> map = new HashMap<>();
-        String currentRequestParam = (String) request.getAttribute(CURRENT_REQUEST_PARAM);
-        String[] split = currentRequestParam.split("&");
+        String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
         if(CommonUtil.empty(split)) {
             return map;
         }

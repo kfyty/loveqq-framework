@@ -2,7 +2,7 @@ package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.RestController;
-import com.kfyty.mvc.handler.MVCAnnotationHandler;
+import com.kfyty.mvc.handler.MvcAnnotationHandler;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.ConfigurableContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -24,11 +24,11 @@ public class MvcAutoConfig implements BeanRefreshComplete {
     private ConfigurableContext configurableContext;
 
     @Autowired
-    private MVCAnnotationHandler mvcAnnotationHandler;
+    private MvcAnnotationHandler mvcAnnotationHandler;
 
     @Bean
-    public MVCAnnotationHandler mvcAnnotationHandler() {
-        return new MVCAnnotationHandler();
+    public MvcAnnotationHandler mvcAnnotationHandler() {
+        return new MvcAnnotationHandler();
     }
 
     @Override

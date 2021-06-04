@@ -6,9 +6,11 @@ import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @NoArgsConstructor
-public class MVCAnnotationHandler {
+public class MvcAnnotationHandler {
     /**
      * 验证是否是 restful 风格 url 的正则表达式
      */
@@ -58,7 +60,7 @@ public class MVCAnnotationHandler {
      */
     private final List<URLMapping> urlMappingList = new ArrayList<>();
 
-    public MVCAnnotationHandler(Object mappingController) {
+    public MvcAnnotationHandler(Object mappingController) {
         this.setMappingController(mappingController);
     }
 
@@ -70,7 +72,7 @@ public class MVCAnnotationHandler {
 
     public void buildURLMappingMap() {
         if(CommonUtil.empty(urlMappingList)) {
-            return ;
+            return;
         }
         Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> urlMappingMap = URLMapping.getUrlMappingMap();
         for(URLMapping urlMapping : urlMappingList) {
@@ -96,7 +98,7 @@ public class MVCAnnotationHandler {
     private void handleMethodAnnotation() {
         Method[] methods = this.mappingController.getClass().getMethods();
         for (Method method : methods) {
-            if(!method.isAnnotationPresent(RequestMapping.class)) {
+            if(!this.existsRequestMapping(method)) {
                 continue;
             }
             URLMapping urlMapping = URLMapping.newURLMapping(mappingController, method, superReturnJson);
@@ -114,8 +116,40 @@ public class MVCAnnotationHandler {
         return !url.endsWith("/") ? url : url.substring(0, url.length() - 1);
     }
 
+    private boolean existsRequestMapping(Method method) {
+        return findRequestMapping(method) != null;
+    }
+
+    private RequestMapping findRequestMapping(Method method) {
+        if(method.isAnnotationPresent(RequestMapping.class)) {
+            return method.getAnnotation(RequestMapping.class);
+        }
+        for (Annotation annotation : method.getAnnotations()) {
+            if(annotation.annotationType().isAnnotationPresent(RequestMapping.class)) {
+                return new RequestMapping() {
+
+                    @Override
+                    public String value() {
+                        return (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
+                    }
+
+                    @Override
+                    public RequestMethod requestMethod() {
+                        return annotation.annotationType().getAnnotation(RequestMapping.class).requestMethod();
+                    }
+
+                    @Override
+                    public Class<? extends Annotation> annotationType() {
+                        return RequestMapping.class;
+                    }
+                };
+            }
+        }
+        return null;
+    }
+
     private void parseRequestMappingAnnotation(URLMapping urlMapping) {
-        RequestMapping annotation = urlMapping.getMappingMethod().getAnnotation(RequestMapping.class);
+        RequestMapping annotation = this.findRequestMapping(urlMapping.getMappingMethod());
         String mappingPath = formatURL(annotation.value());
         urlMapping.setUrl(superUrl + mappingPath);
         urlMapping.setRequestMethod(annotation.requestMethod());

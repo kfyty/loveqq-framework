@@ -48,5 +48,12 @@
             <artifactId>kfyty-support</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <!-- jsp 模板引擎：https://github.com/kfyty/k-jte.git -->
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>k-jte</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
