@@ -2,7 +2,9 @@ package com.kfyty.mvc.tomcat;
 
 import lombok.Data;
 
-import java.util.ArrayList;
+import javax.servlet.Filter;
+import java.util.EventListener;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -22,6 +24,8 @@ public class TomcatConfig {
     private List<String> staticPattern;
     private String dispatcherMapping;
     private Class<?> primarySource;
+    private List<Filter> webFilters;
+    private List<EventListener> webListeners;
 
     public TomcatConfig() {
         this(TomcatConfig.class);
@@ -31,13 +35,22 @@ public class TomcatConfig {
         this.port = 8080;
         this.protocol = DEFAULT_PROTOCOL;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
-        this.staticPattern = new ArrayList<>();
+        this.staticPattern = new LinkedList<>();
         this.primarySource = primarySource;
+        this.webFilters = new LinkedList<>();
+        this.webListeners = new LinkedList<>();
         this.addDefaultStaticPattern();
     }
 
     public void addStaticPattern(String pattern) {
         this.staticPattern.add(pattern);
+    }
+
+    public void addWebFilter(Filter filter) {
+        this.webFilters.add(filter);
+    }
+    public void addWebListener(EventListener listener) {
+        this.webListeners.add(listener);
     }
 
     private void addDefaultStaticPattern() {

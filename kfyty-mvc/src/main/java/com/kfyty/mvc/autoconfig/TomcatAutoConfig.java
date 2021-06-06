@@ -14,7 +14,11 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
 
+import javax.servlet.Filter;
 import javax.servlet.ServletContext;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.annotation.WebListener;
+import java.util.EventListener;
 import java.util.List;
 
 /**
@@ -38,7 +42,10 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Bean
     public TomcatConfig tomcatConfig() {
-        return new TomcatConfig(configurableContext.getPrimarySource());
+        TomcatConfig config = new TomcatConfig(configurableContext.getPrimarySource());
+        configurableContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
+        configurableContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
+        return config;
     }
 
     @Bean

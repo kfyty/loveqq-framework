@@ -2,6 +2,7 @@ package com.kfyty.mvc.tomcat;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.support.utils.CommonUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,15 +18,22 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.JarResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
+import javax.servlet.Filter;
 import javax.servlet.ServletContext;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.annotation.WebInitParam;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.EventListener;
 
 /**
  * 描述: 嵌入式 tomcat
@@ -127,6 +135,8 @@ public class TomcatWebServer implements WebServer {
         this.prepareDefaultServlet(context);
         this.prepareJspServlet(context);
         this.prepareDispatcherServlet(context);
+        this.prepareWebFilter(context);
+        this.prepareWebListener(context);
         this.tomcat.getHost().addChild(context);
         this.servletContext = context.getServletContext();
     }
@@ -175,6 +185,47 @@ public class TomcatWebServer implements WebServer {
         if(this.dispatcherServlet != null) {
             Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
             context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
+        }
+    }
+
+    private void prepareWebFilter(Context context) {
+        for (Filter webFilter : this.config.getWebFilters()) {
+            FilterDef filterDef = new FilterDef();
+            WebFilter annotation = webFilter.getClass().getAnnotation(WebFilter.class);
+            filterDef.setFilter(webFilter);
+            filterDef.setFilterClass(webFilter.getClass().getName());
+            filterDef.setFilterName(webFilter.getClass().getSimpleName());
+            filterDef.setAsyncSupported(Boolean.toString(annotation.asyncSupported()));
+            filterDef.setDisplayName(annotation.displayName());
+            filterDef.setDescription(annotation.description());
+            filterDef.setSmallIcon(annotation.smallIcon());
+            filterDef.setLargeIcon(annotation.largeIcon());
+            if(CommonUtil.notEmpty(annotation.filterName())) {
+                filterDef.setFilterName(annotation.filterName());
+            }
+            for (WebInitParam webInitParam : annotation.initParams()) {
+                filterDef.addInitParameter(webInitParam.name(), webInitParam.value());
+            }
+            context.addFilterDef(filterDef);
+            this.prepareWebFilterMapping(context, filterDef, annotation);
+        }
+    }
+
+    private void prepareWebFilterMapping(Context context, FilterDef filterDef, WebFilter annotation) {
+        String[] patterns = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : annotation.urlPatterns();
+        patterns = CommonUtil.empty(patterns) ? new String[] {"/*"} : patterns;
+        for (String pattern : patterns) {
+            FilterMap filterMap = new FilterMap();
+            filterMap.setCharset(StandardCharsets.UTF_8);
+            filterMap.setFilterName(filterDef.getFilterName());
+            filterMap.addURLPattern(pattern);
+            context.addFilterMap(filterMap);
+        }
+    }
+
+    private void prepareWebListener(Context context) {
+        for (EventListener webListener : this.config.getWebListeners()) {
+            context.addApplicationListener(webListener.getClass().getName());
         }
     }
 
