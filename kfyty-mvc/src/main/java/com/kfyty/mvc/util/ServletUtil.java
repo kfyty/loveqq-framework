@@ -42,7 +42,8 @@ public class ServletUtil {
         if(CommonUtil.notEmpty(currentRequestParam)) {
             return currentRequestParam;
         }
-        if(request.getHeader("content-type").startsWith("multipart/form-data")) {
+        String contentType = request.getHeader("content-type");
+        if(contentType != null && contentType.startsWith("multipart/form-data")) {
             StringBuilder builder = new StringBuilder();
             for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
                 for (String s : entry.getValue()) {

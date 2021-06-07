@@ -7,8 +7,8 @@ import com.kfyty.support.autoconfig.ConfigurableContext;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -80,19 +80,17 @@ public class ApplicationContext implements ConfigurableContext {
     }
 
     @Override
-    @SneakyThrows
     public Object registerBean(BeanDefine beanDefine) {
+        Object instance = beanDefine.createInstance();
         for (Annotation annotation : beanDefine.getBeanType().getAnnotations()) {
             if (annotation.annotationType().isAnnotationPresent(Component.class)) {
-                String beanName = (String) annotation.getClass().getMethod("value").invoke(annotation);
+                String beanName = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
                 if (!CommonUtil.empty(beanName)) {
-                    Object instance = beanDefine.createInstance();
                     this.registerBean(beanName, beanDefine.getBeanType(), instance);
                     return instance;
                 }
             }
         }
-        Object instance = beanDefine.createInstance();
         this.registerBean(beanDefine.getBeanType(), instance);
         return instance;
     }

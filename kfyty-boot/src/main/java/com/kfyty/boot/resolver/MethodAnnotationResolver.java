@@ -3,6 +3,7 @@ package com.kfyty.boot.resolver;
 import com.kfyty.boot.K;
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
+import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.utils.BeanUtil;
@@ -70,6 +71,7 @@ public class MethodAnnotationResolver {
             return obj;
         }
         obj = ReflectUtil.invokeMethod(o, method, this.resolveAutowiredBean(resolving, o, method));
+        this.configResolver.addBeanDefine(BeanDefine.from(method.getReturnType(), obj, bean));
         if(CommonUtil.empty(bean.value())) {
             applicationContext.registerBean(method.getReturnType(), obj);
         } else {

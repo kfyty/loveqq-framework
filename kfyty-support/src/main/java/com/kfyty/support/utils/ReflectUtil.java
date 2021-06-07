@@ -38,14 +38,12 @@ public abstract class ReflectUtil {
         return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
     }
 
+    public static boolean isJdkProxy(Object instance) {
+        return Proxy.isProxyClass(instance.getClass());
+    }
+
     public static boolean isBaseDataType(Class<?> clazz) {
-        return char.class.isAssignableFrom(clazz)           ||
-                byte.class.isAssignableFrom(clazz)          ||
-                short.class.isAssignableFrom(clazz)         ||
-                int.class.isAssignableFrom(clazz)           ||
-                long.class.isAssignableFrom(clazz)          ||
-                float.class.isAssignableFrom(clazz)         ||
-                double.class.isAssignableFrom(clazz)        ||
+        return clazz.isPrimitive()                          ||
                 Number.class.isAssignableFrom(clazz)        ||
                 CharSequence.class.isAssignableFrom(clazz)  ||
                 Character.class.isAssignableFrom(clazz)     ||

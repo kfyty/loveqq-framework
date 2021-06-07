@@ -2,6 +2,8 @@ package com.kfyty.boot.resolver;
 
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
+import com.kfyty.mvc.annotation.Controller;
+import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
@@ -9,10 +11,17 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiateBean;
+import com.kfyty.support.autoconfig.annotation.BootApplication;
+import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Repository;
+import com.kfyty.support.autoconfig.annotation.Service;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,17 +45,22 @@ public class AnnotationConfigResolver {
     public static AnnotationConfigResolver create(Class<?> primarySource) {
         ApplicationContext applicationContext = ApplicationContext.create(primarySource);
         AnnotationConfigResolver annotationConfigResolver = new AnnotationConfigResolver();
+        annotationConfigResolver.beanDefines = new HashSet<>();
         annotationConfigResolver.applicationContext = applicationContext;
         annotationConfigResolver.fieldAnnotationResolver = new FieldAnnotationResolver(annotationConfigResolver);
         annotationConfigResolver.methodAnnotationResolver = new MethodAnnotationResolver(annotationConfigResolver);
         return annotationConfigResolver;
     }
 
-    public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, Set<BeanDefine> beanDefines, String ... args) {
+    public void addBeanDefine(BeanDefine beanDefine) {
+        this.beanDefines.add(beanDefine);
+    }
+
+    public ApplicationContext doResolver(Class<?> clazz, Set<Class<?>> scanClasses, String ... args) {
         this.scanClasses = scanClasses;
-        this.beanDefines = beanDefines;
 
         try {
+            this.prepareBeanDefines();
             this.processImportBeanDefine();
 
             this.instantiateBeanDefine();
@@ -70,6 +84,21 @@ public class AnnotationConfigResolver {
         }
     }
 
+    private void prepareBeanDefines() {
+        this.scanClasses.stream()
+                .filter(e -> !ReflectUtil.isAbstract(e))
+                .filter(e ->
+                        e.isAnnotationPresent(BootApplication.class) ||
+                                e.isAnnotationPresent(Configuration.class) ||
+                                e.isAnnotationPresent(Component.class) ||
+                                e.isAnnotationPresent(Controller.class) ||
+                                e.isAnnotationPresent(RestController.class) ||
+                                e.isAnnotationPresent(Service.class) ||
+                                e.isAnnotationPresent(Repository.class))
+                .map(BeanDefine::new)
+                .forEach(this::addBeanDefine);
+    }
+
     private void instantiateBeanDefine() {
         for (BeanDefine beanDefine : beanDefines) {
             if(beanDefine.isInstance()) {
@@ -89,7 +118,7 @@ public class AnnotationConfigResolver {
                     Object instance = bean.doInstantiate(beanDefine.getBeanType());
                     applicationContext.registerBean(bean.getBeanName(beanDefine.getBeanType()), beanDefine.getBeanType(), instance);
                     if(log.isDebugEnabled()) {
-                        log.debug(": customize instantiate bean: [{}] !", instance);
+                        log.debug(": customize instantiate bean: [{}] !", ReflectUtil.isJdkProxy(instance) ? beanDefine.getBeanType() : instance);
                     }
                 }
             }
@@ -105,13 +134,33 @@ public class AnnotationConfigResolver {
     }
 
     private void processInstantiateBean() {
+        for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
+            for (BeanResources beanResources : applicationContext.getBeanResources().values()) {
+                for (Map.Entry<String, Object> entry : beanResources.getBeans().entrySet()) {
+                    Object newBean = bean.postProcessBeforeInitialization(entry.getValue(), entry.getKey());
+                    if(newBean != null && newBean != entry.getValue()) {
+                        applicationContext.replaceBean(entry.getKey(), beanResources.getBeanType(), newBean);
+                    }
+                }
+            }
+        }
+
         applicationContext.getBeanOfType(InitializingBean.class).values().forEach(InitializingBean::afterPropertiesSet);
+
+        for (BeanDefine beanDefine : this.beanDefines) {
+            if(beanDefine.getInitMethod() != null) {
+                for (Object value : applicationContext.getBeanOfType(beanDefine.getBeanType()).values()) {
+                    ReflectUtil.invokeMethod(value, beanDefine.getInitMethod());
+                }
+            }
+        }
 
         for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
             for (BeanResources beanResources : applicationContext.getBeanResources().values()) {
                 for (Map.Entry<String, Object> entry : beanResources.getBeans().entrySet()) {
-                    if(bean.canProcess(entry.getValue())) {
-                        applicationContext.replaceBean(entry.getKey(), beanResources.getBeanType(), bean.postProcess(entry.getValue()));
+                    Object newBean = bean.postProcessAfterInitialization(entry.getValue(), entry.getKey());
+                    if(newBean != null && newBean != entry.getValue()) {
+                        applicationContext.replaceBean(entry.getKey(), beanResources.getBeanType(), newBean);
                     }
                 }
             }
@@ -126,6 +175,23 @@ public class AnnotationConfigResolver {
 
     private void processDestroy() {
         log.info("destroy bean...");
+
+        for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
+            for (BeanResources beanResources : applicationContext.getBeanResources().values()) {
+                for (Map.Entry<String, Object> entry : beanResources.getBeans().entrySet()) {
+                    bean.postProcessBeforeDestroy(entry.getValue(), entry.getKey());
+                }
+            }
+        }
+
         applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy);
+
+        for (BeanDefine beanDefine : this.beanDefines) {
+            if(beanDefine.getDestroyMethod() != null) {
+                for (Object value : applicationContext.getBeanOfType(beanDefine.getBeanType()).values()) {
+                    ReflectUtil.invokeMethod(value, beanDefine.getDestroyMethod());
+                }
+            }
+        }
     }
 }

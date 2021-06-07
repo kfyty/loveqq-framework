@@ -9,7 +9,15 @@ package com.kfyty.support.autoconfig;
  */
 public interface BeanPostProcessor {
 
-    boolean canProcess(Object bean);
+    default Object postProcessBeforeInitialization(Object bean, String beanName) {
+        return bean;
+    }
 
-    Object postProcess(Object source);
+    default Object postProcessAfterInitialization(Object bean, String beanName) {
+        return bean;
+    }
+
+    default void postProcessBeforeDestroy(Object bean, String beanName) {
+
+    }
 }

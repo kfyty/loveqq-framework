@@ -2,24 +2,16 @@ package com.kfyty.boot;
 
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.boot.resolver.AnnotationConfigResolver;
-import com.kfyty.mvc.annotation.Controller;
-import com.kfyty.mvc.annotation.RestController;
-import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
-import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
-import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
-import com.kfyty.support.autoconfig.annotation.Repository;
-import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,13 +38,11 @@ public class K {
     private static final Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
 
     private final Set<Class<?>> scanBeans;
-    private final Set<BeanDefine> beanDefines;
     private final Class<?> primarySource;
 
     public K(Class<?> clazz) {
         Objects.requireNonNull(clazz);
         this.scanBeans = new HashSet<>();
-        this.beanDefines = new HashSet<>();
         this.primarySource = clazz;
     }
 
@@ -62,8 +52,7 @@ public class K {
         this.prepareScanBean(primaryPackage);
         this.prepareMetaInfFactories();
         this.excludeScanBean();
-        this.prepareBeanDefines();
-        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, beanDefines, args);
+        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, args);
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         return applicationContext;
     }
@@ -145,21 +134,5 @@ public class K {
             }
         }
         this.scanBeans.removeAll(excludeBeanClasses);
-    }
-
-    private void prepareBeanDefines() {
-        Set<BeanDefine> defines = this.scanBeans.stream()
-                .filter(e -> !e.isInterface() && !Modifier.isAbstract(e.getModifiers()))
-                .filter(e ->
-                        e.isAnnotationPresent(BootApplication.class) ||
-                                e.isAnnotationPresent(Configuration.class) ||
-                                e.isAnnotationPresent(Component.class) ||
-                                e.isAnnotationPresent(Controller.class) ||
-                                e.isAnnotationPresent(RestController.class) ||
-                                e.isAnnotationPresent(Service.class) ||
-                                e.isAnnotationPresent(Repository.class))
-                .map(BeanDefine::new)
-                .collect(Collectors.toSet());
-        this.beanDefines.addAll(defines);
     }
 }
