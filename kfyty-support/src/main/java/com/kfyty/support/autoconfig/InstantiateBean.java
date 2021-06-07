@@ -11,11 +11,11 @@ import com.kfyty.support.utils.BeanUtil;
  */
 public interface InstantiateBean {
 
-    boolean canInstantiate(Class<?> clazz);
+    boolean canInstantiate(BeanDefine beanDefine);
 
-    default String getBeanName(Class<?> clazz) {
-        return BeanUtil.convert2BeanName(clazz.getSimpleName());
+    default String getBeanName(BeanDefine beanDefine) {
+        return BeanUtil.convert2BeanName(beanDefine.getBeanType().getSimpleName());
     }
 
-    Object doInstantiate(Class<?> clazz);
+    Object doInstantiate(BeanDefine beanDefine);
 }

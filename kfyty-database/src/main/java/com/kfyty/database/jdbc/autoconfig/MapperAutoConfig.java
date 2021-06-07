@@ -29,12 +29,12 @@ public class MapperAutoConfig implements ImportBeanDefine, InstantiateBean {
     }
 
     @Override
-    public boolean canInstantiate(Class<?> clazz) {
-        return clazz.isAnnotationPresent(Mapper.class);
+    public boolean canInstantiate(BeanDefine beanDefine) {
+        return beanDefine.getBeanType().isAnnotationPresent(Mapper.class);
     }
 
     @Override
-    public Object doInstantiate(Class<?> clazz) {
-        return SqlSessionFactory.createProxy(this.dataSource, clazz);
+    public Object doInstantiate(BeanDefine beanDefine) {
+        return SqlSessionFactory.createProxy(this.dataSource, beanDefine.getBeanType());
     }
 }

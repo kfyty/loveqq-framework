@@ -97,7 +97,7 @@ public class FieldAnnotationResolver {
             }
         }
         ReflectUtil.setFieldValue(o, field, value);
-        if(log.isDebugEnabled()) {
+        if(!init && log.isDebugEnabled()) {
             log.debug(": autowired bean: [{}] to [{}] !", fieldType, o);
         }
     }

@@ -88,7 +88,7 @@ public abstract class PackageUtil {
                 continue;
             }
             String classPath = file.getPath();
-            classPath = classPath.substring(classPath.indexOf(File.separator + "classes") + 9, classPath.lastIndexOf("."));
+            classPath = classPath.substring(classPath.indexOf("classes" + File.separator) + 8, classPath.lastIndexOf("."));
             classes.add(classPath.replace(File.separator, "."));
         }
         return classes;

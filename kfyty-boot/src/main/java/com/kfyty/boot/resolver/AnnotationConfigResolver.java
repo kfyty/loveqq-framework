@@ -64,10 +64,10 @@ public class AnnotationConfigResolver {
             this.processImportBeanDefine();
 
             this.instantiateBeanDefine();
-            this.processCustomizeInstantiate();
 
             this.fieldAnnotationResolver.doResolver(true);
             this.methodAnnotationResolver.doResolver();
+            this.processCustomizeInstantiate();
             this.fieldAnnotationResolver.doResolver(false);
 
             this.processInstantiateBean();
@@ -113,10 +113,11 @@ public class AnnotationConfigResolver {
 
     private void processCustomizeInstantiate() {
         for (InstantiateBean bean : applicationContext.getBeanOfType(InstantiateBean.class).values()) {
+            this.fieldAnnotationResolver.doResolver(bean.getClass(), bean, true);
             for (BeanDefine beanDefine : beanDefines) {
-                if (bean.canInstantiate(beanDefine.getBeanType())) {
-                    Object instance = bean.doInstantiate(beanDefine.getBeanType());
-                    applicationContext.registerBean(bean.getBeanName(beanDefine.getBeanType()), beanDefine.getBeanType(), instance);
+                if (bean.canInstantiate(beanDefine)) {
+                    Object instance = bean.doInstantiate(beanDefine);
+                    applicationContext.registerBean(bean.getBeanName(beanDefine), beanDefine.getBeanType(), instance);
                     if(log.isDebugEnabled()) {
                         log.debug(": customize instantiate bean: [{}] !", ReflectUtil.isJdkProxy(instance) ? beanDefine.getBeanType() : instance);
                     }

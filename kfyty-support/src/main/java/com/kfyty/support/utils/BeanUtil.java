@@ -36,7 +36,7 @@ public abstract class BeanUtil {
                 continue;
             }
             Field field = targetFieldMap.get(fieldEntry.getKey());
-            ReflectUtil.setFieldValue(target, field, fieldEntry.getValue());
+            ReflectUtil.setFieldValue(target, field, ReflectUtil.getFieldValue(source, fieldEntry.getValue()));
         }
         return target;
     }

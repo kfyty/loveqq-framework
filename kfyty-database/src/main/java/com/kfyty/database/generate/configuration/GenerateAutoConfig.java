@@ -43,13 +43,13 @@ public class GenerateAutoConfig implements ImportBeanDefine, InstantiateBean, Be
     }
 
     @Override
-    public boolean canInstantiate(Class<?> clazz) {
-        return AbstractDataBaseMapper.class.isAssignableFrom(clazz);
+    public boolean canInstantiate(BeanDefine beanDefine) {
+        return AbstractDataBaseMapper.class.isAssignableFrom(beanDefine.getBeanType());
     }
 
     @Override
-    public Object doInstantiate(Class<?> clazz) {
-        return clazz;
+    public Object doInstantiate(BeanDefine beanDefine) {
+        return beanDefine.getBeanType();
     }
 
     @Override
