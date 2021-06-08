@@ -5,6 +5,7 @@ import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.sql.Provider;
+import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.jdbc.MethodParameter;
 import com.kfyty.support.jdbc.ReturnType;
@@ -44,6 +45,11 @@ public class SqlSession implements InvocationHandler {
     private final Class<?> mapperClass;
 
     /**
+     * sql 提供适配器
+     */
+    private final ProviderAdapter providerAdapter;
+
+    /**
      * 数据源
      */
     @Setter @Getter
@@ -55,14 +61,14 @@ public class SqlSession implements InvocationHandler {
     private Transaction transaction;
 
     public SqlSession(Class<?> mapperClass, DataSource dataSource) {
-        this.mapperClass = mapperClass;
-        this.dataSource = dataSource;
+        this(mapperClass, dataSource, null);
     }
 
     public SqlSession(Class<?> mapperClass, DataSource dataSource, Transaction transaction) {
         this.mapperClass = mapperClass;
         this.dataSource = dataSource;
         this.transaction = transaction;
+        this.providerAdapter = new ProviderAdapter();
     }
 
     /**
@@ -121,7 +127,7 @@ public class SqlSession implements InvocationHandler {
     private String getSQL(Method sourceMethod, Annotation annotation) {
         Class<? extends Provider> provider = (Class<? extends Provider>) ReflectUtil.invokeSimpleMethod(annotation, "provider");
         if(!provider.equals(Provider.class)) {
-            return ReflectUtil.newInstance(provider).doProvide(this.mapperClass, sourceMethod, annotation);
+            return this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation);
         }
         String sql = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
         if(CommonUtil.empty(sql)) {

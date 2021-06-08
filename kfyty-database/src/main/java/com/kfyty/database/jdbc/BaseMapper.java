@@ -5,9 +5,11 @@ import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.sql.DeleteAllProvider;
 import com.kfyty.database.jdbc.sql.DeleteByPrimaryKeyProvider;
+import com.kfyty.database.jdbc.sql.InsertAllProvider;
 import com.kfyty.database.jdbc.sql.InsertProvider;
 import com.kfyty.database.jdbc.sql.SelectAllProvider;
 import com.kfyty.database.jdbc.sql.SelectByPrimaryKeyProvider;
+import com.kfyty.database.jdbc.sql.UpdateAllProvider;
 import com.kfyty.database.jdbc.sql.UpdateByPrimaryKeyProvider;
 
 import java.util.List;
@@ -33,6 +35,13 @@ public interface BaseMapper<PrimaryKey, T> {
     void insert(@Param(PROVIDER_PARAM_ENTITY) T entity);
 
     /**
+     * 批量插入数据
+     * @param entity 数据
+     */
+    @Execute(provider = InsertAllProvider.class, value = BASE_MAPPER_SQL)
+    void insertAll(@Param(PROVIDER_PARAM_ENTITY) List<T> entity);
+
+    /**
      * 根据主键查询数据
      * @param pk 主键
      * @return 数据
@@ -53,6 +62,13 @@ public interface BaseMapper<PrimaryKey, T> {
      */
     @Execute(provider = UpdateByPrimaryKeyProvider.class, value = BASE_MAPPER_SQL)
     void updateByPk(@Param(PROVIDER_PARAM_ENTITY) T entity);
+
+    /**
+     * 根据主键批量更新数据
+     * @param entity 数据
+     */
+    @Execute(provider = UpdateAllProvider.class, value = BASE_MAPPER_SQL)
+    void updateAll(@Param(PROVIDER_PARAM_ENTITY) List<T> entity);
 
     /**
      * 根据主键删除数据

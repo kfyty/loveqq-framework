@@ -1,9 +1,7 @@
 package com.kfyty.database.jdbc.sql;
 
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.database.jdbc.annotation.Query;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
@@ -13,12 +11,6 @@ import java.lang.reflect.Method;
  * @date 2021/6/2 16:30
  * @email kfyty725@hotmail.com
  */
-public class SelectAllProvider implements Provider {
-
-    @Override
-    public String doProvide(Class<?> mapperClass, Method sourceMethod, Annotation annotation) {
-        String sql = "select * from %s";
-        Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()));
-    }
+public interface SelectAllProvider extends Provider {
+    String doProviderSelectAll(Class<?> mapperClass, Method sourceMethod, Query annotation);
 }

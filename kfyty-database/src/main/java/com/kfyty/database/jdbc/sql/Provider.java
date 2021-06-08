@@ -1,11 +1,6 @@
 package com.kfyty.database.jdbc.sql;
 
-import com.kfyty.database.jdbc.annotation.TableId;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
-
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -27,13 +22,4 @@ public interface Provider {
      * @return SQL
      */
     String doProvide(Class<?> mapperClass, Method sourceMethod, Annotation annotation);
-
-    default String getPkField(Class<?> mapperClass) {
-        for (Field value : ReflectUtil.getFieldMap(mapperClass).values()) {
-            if(value.isAnnotationPresent(TableId.class)) {
-                return CommonUtil.convert2Underline(value.getName());
-            }
-        }
-        return "id";
-    }
 }

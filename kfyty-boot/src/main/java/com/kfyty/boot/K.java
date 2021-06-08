@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 功能描述: 启动类
@@ -111,7 +110,7 @@ public class K {
             properties.load(url.openStream());
             for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                 if (entry.getKey().toString().equals(META_FACTORIES_CONFIG)) {
-                    Set<String> classes = Arrays.stream(entry.getValue().toString().split(",")).filter(e -> !CommonUtil.empty(e)).collect(Collectors.toSet());
+                    Set<String> classes = CommonUtil.split(entry.getValue().toString(), ",", true);
                     for (String clazz : classes) {
                         this.processScanBean(Class.forName(clazz));
                     }

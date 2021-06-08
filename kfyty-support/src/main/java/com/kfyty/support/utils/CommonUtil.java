@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,10 @@ public abstract class CommonUtil {
         return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toList());
     }
 
+    public static Set<String> split(String source, String pattern, boolean distinct) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
+    }
+
     public static List<Object> convert2List(Object value) {
         List<Object> list = new ArrayList<>();
         if(value instanceof Collection) {
@@ -107,9 +112,10 @@ public abstract class CommonUtil {
         if(empty(target)) {
             throw new SupportException("convert to hump failed, target can't empty !");
         }
+        int index = 0;
         target = UPPER_CASE_PATTERN.matcher(target).matches() || target.contains("_") ? target.toLowerCase() : target;
         while(target.contains("_")) {
-            int index = target.indexOf('_');
+            index = target.indexOf('_', index);
             if(index == target.length() - 1) {
                 break;
             }

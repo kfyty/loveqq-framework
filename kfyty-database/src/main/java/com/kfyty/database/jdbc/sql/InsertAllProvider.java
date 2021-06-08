@@ -11,6 +11,6 @@ import java.lang.reflect.Method;
  * @date 2021/6/2 16:30
  * @email kfyty725@hotmail.com
  */
-public interface UpdateByPrimaryKeyProvider extends Provider {
-    String doProviderUpdateByPrimaryKey(Class<?> mapperClass, Method sourceMethod, Execute annotation);
+public interface InsertAllProvider extends Provider {
+    String doProviderInsertAll(Class<?> mapperClass, Method sourceMethod, Execute annotation);
 }

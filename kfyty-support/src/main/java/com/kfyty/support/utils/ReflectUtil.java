@@ -220,7 +220,7 @@ public abstract class ReflectUtil {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) throws Exception {
+    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) {
         InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotation);
         Map memberValues = (Map) ReflectUtil.getFieldValue(invocationHandler, "memberValues");
         memberValues.put(annotationField, value);

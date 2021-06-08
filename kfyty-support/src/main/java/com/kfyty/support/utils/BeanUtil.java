@@ -27,7 +27,7 @@ public abstract class BeanUtil {
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
-    public static <T> T copyBean(T source, T target) {
+    public static <S, T> T copyBean(S source, T target) {
         Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
         Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
         for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
