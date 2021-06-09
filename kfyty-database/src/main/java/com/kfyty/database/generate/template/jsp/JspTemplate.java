@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.template.jsp;
 
-import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
 import com.kfyty.database.generate.template.AbstractTemplateEngine;
@@ -59,7 +59,7 @@ public class JspTemplate extends AbstractTemplateEngine {
     }
 
     @Override
-    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         this.initClass();
         this.loadVariables(tableInfo, basePackage);
         this.templateEngine.getConfig().clearVar().putVar(variable);

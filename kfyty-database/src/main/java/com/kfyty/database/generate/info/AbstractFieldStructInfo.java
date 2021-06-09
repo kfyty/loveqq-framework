@@ -19,10 +19,10 @@ public class AbstractFieldStructInfo {
     protected String fieldComment;
 
     public boolean primaryKey() {
-        return primaryKey != null && primaryKey.equals("true");
+        return Boolean.parseBoolean(primaryKey);
     }
 
     public boolean nullable() {
-        return nullable != null && nullable.equals("true");
+        return Boolean.parseBoolean(nullable);
     }
 }

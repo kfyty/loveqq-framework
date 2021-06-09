@@ -1,6 +1,6 @@
 package com.kfyty.support.utils;
 
-import com.kfyty.support.exception.SupportException;
+import com.kfyty.support.exception.TooManyResultException;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.jdbc.type.TypeHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public abstract class ResultSetUtil {
             return null;
         }
         if(result.size() > 1) {
-            throw new RuntimeException("too many result found !");
+            throw new TooManyResultException("too many result found !");
         }
         return result.get(0);
     }
@@ -101,8 +101,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <T> List<T> processListBaseType(ResultSet resultSet, Class<T> clazz) throws Exception {
         if(resultSet == null || !resultSet.next()) {
-            log.debug("process base type failed: result set is empty !");
-            return new LinkedList<>();
+            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process base type failed: result set is empty !"));
         }
         List<T> list = new ArrayList<>();
         do {
@@ -116,8 +115,7 @@ public abstract class ResultSetUtil {
             return processListBaseType(resultSet, clazz);
         }
         if(resultSet == null || !resultSet.next()) {
-            log.debug("process object failed: result set is empty !");
-            return new LinkedList<>();
+            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process object failed: result set is empty !"));
         }
         List<T> list = new ArrayList<>();
         do {
@@ -137,9 +135,7 @@ public abstract class ResultSetUtil {
                     ReflectUtil.setNestedFieldValue(fieldName, o, value);
                     continue;
                 }
-                if(log.isDebugEnabled()) {
-                    log.warn("found column: [{}], but class:[{}] not field found !", metaData.getColumnName(i), clazz);
-                }
+                LogUtil.logIfWarnEnabled((logger, param) -> logger.warn("discovery column: [{}], but class:[{}] no field matching !", param), metaData.getColumnName(i), clazz);
             }
             list.add(o);
         } while(resultSet.next());
@@ -163,8 +159,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(resultSet == null || !resultSet.next()) {
-            log.debug("process map failed: result set is empty !");
-            return new HashMap<>(2);
+            return LogUtil.logIfDebugEnabled(new HashMap<>(2), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
         Map<K, V> map = new HashMap<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
@@ -172,7 +167,7 @@ public abstract class ResultSetUtil {
             map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
         }
         if(resultSet.next()) {
-            throw new SupportException("too many result found !");
+            throw new TooManyResultException("too many result found !");
         }
         return map;
     }
@@ -180,8 +175,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <T, K, V> Object processListMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(resultSet == null || !resultSet.next()) {
-            log.debug("process map failed: result set is empty !");
-            return new ArrayList<>(0);
+            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
         List<Map<K, V>> result = new ArrayList<>();
         ResultSetMetaData metaData = resultSet.getMetaData();

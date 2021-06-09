@@ -7,6 +7,7 @@ import com.kfyty.database.generate.database.AbstractDataBaseMapper;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
 import com.kfyty.database.jdbc.annotation.Query;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
@@ -64,12 +65,10 @@ public class GenerateSources {
     protected File initFile(AbstractTableStructInfo info) throws IOException {
         File file = new File(this.initDirectory(info));
         if(file.exists() && !file.delete()) {
-            log.error(": delete file failed : {}", file.getAbsolutePath());
-            return null;
+            throw new IllegalStateException("delete file failed: " + file.getAbsolutePath());
         }
         if(!file.createNewFile()) {
-            log.error(": create file failed : {}", file.getAbsolutePath());
-            return null;
+            throw new IllegalStateException("create file failed: " + file.getAbsolutePath());
         }
         return file;
     }
@@ -92,7 +91,7 @@ public class GenerateSources {
             info.setFieldInfos(dataBaseMapper.findFieldInfos(info.getDataBaseName(), info.getTableName()));
         }
         if(log.isDebugEnabled()) {
-            log.debug(": initialize data base info success !");
+            log.debug("initialize data base info success !");
         }
     }
 
@@ -123,17 +122,17 @@ public class GenerateSources {
             this.initTableInfos();
         }
         File file = null;
-        GenerateSourcesBufferedWriter out = null;
+        SimpleBufferedWriter out = null;
         while(configurable.hasGenerateTemplate()) {
             AbstractGenerateTemplate nextGenerateTemplate = configurable.getNextGenerateTemplate();
             for (AbstractTableStructInfo tableInfo : this.tableInfos) {
                 if(file == null || out == null || !nextGenerateTemplate.sameFile()) {
                     file = this.initFile(tableInfo);
-                    out = new GenerateSourcesBufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
+                    out = new SimpleBufferedWriter(new FileWriter(file, nextGenerateTemplate.sameFile()));
                 }
                 nextGenerateTemplate.generate(tableInfo, configurable.getBasePackage(), out);
                 out.flush();
-                log.debug(": generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
+                log.debug("generate resource:[{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
             if(out != null && !nextGenerateTemplate.sameFile()) {
                 out.close();

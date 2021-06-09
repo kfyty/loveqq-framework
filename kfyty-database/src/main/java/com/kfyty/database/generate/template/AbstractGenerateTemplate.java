@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.template;
 
-import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.support.utils.JdbcTypeUtil;
 
@@ -33,7 +33,7 @@ public interface AbstractGenerateTemplate {
         return false;
     }
 
-    default void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    default void generate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
 
     }
 }

@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.template.mapper;
 
-import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.info.AbstractFieldStructInfo;
 import com.kfyty.database.generate.template.entity.EntityTemplate;
@@ -21,6 +21,7 @@ public class MapperTemplate extends EntityTemplate {
     protected String mapperClassName;
     protected String mapperClassVariableName;
     protected String mapperClassQualifiedName;
+    protected AbstractFieldStructInfo pkInfo;
 
     @Override
     protected void initGenerateData(AbstractTableStructInfo tableInfo, String basePackage) {
@@ -29,6 +30,7 @@ public class MapperTemplate extends EntityTemplate {
         this.mapperClassName = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + mapperInterfaceSuffix();
         this.mapperClassVariableName = CommonUtil.convert2Hump(tableInfo.getTableName(), false) + mapperInterfaceSuffix();
         this.mapperClassQualifiedName = this.mapperPackageName + "." + this.mapperClassName;
+        this.pkInfo = tableInfo.getFieldInfos().stream().filter(AbstractFieldStructInfo::primaryKey).findFirst().orElse(null);
     }
 
     public String mapperInterfaceSuffix() {
@@ -46,7 +48,7 @@ public class MapperTemplate extends EntityTemplate {
     }
 
     @Override
-    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         initGenerateData(tableInfo, basePackage);
         out.writeLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         out.writeLine("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0 //EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">");
@@ -55,9 +57,9 @@ public class MapperTemplate extends EntityTemplate {
         out.writeLine("</mapper>");
     }
 
-    public void generateMapper(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateMapper(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         out.writeLine("\t<select id=\"findById\" resultType=\"{}\">", this.entityClassQualifiedName);
-        out.writeLine("\t\tselect * from {} where id = #{id}", tableInfo.getTableName());
+        out.writeLine("\t\tselect * from {} where {} = #{id}", tableInfo.getTableName(), pkInfo == null ? "id" : pkInfo.getField());
         out.writeLine("\t</select>\n");
 
         out.writeLine("\t<select id=\"findBy\" resultType=\"{}\">", this.entityClassQualifiedName);
@@ -72,7 +74,7 @@ public class MapperTemplate extends EntityTemplate {
         out.writeLine("\t\tselect * from {}", tableInfo.getTableName());
         out.writeLine("\t</select>\n");
 
-        out.writeLine("\t<insert id=\"insertById\" parameterType=\"{}\">", this.entityClassQualifiedName);
+        out.writeLine("\t<insert id=\"insert\" parameterType=\"{}\">", this.entityClassQualifiedName);
         out.write("\t\tinsert into {} (", tableInfo.getTableName());
         for (int i = 0; i < tableInfo.getFieldInfos().size(); i++) {
             out.write(tableInfo.getFieldInfos().get(i).getField());
@@ -97,7 +99,7 @@ public class MapperTemplate extends EntityTemplate {
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             String field = fieldInfo.getField();
             String classField = CommonUtil.convert2Hump(field, false);
-            if("id".equals(field)) {
+            if(fieldInfo.primaryKey()) {
                 continue;
             }
             if(!"String".equals(JdbcTypeUtil.convert2JavaType(fieldInfo.getFieldType()))) {
@@ -109,11 +111,11 @@ public class MapperTemplate extends EntityTemplate {
             out.writeLine("\t\t\t</if>");
         }
         out.writeLine("\t\t</set>");
-        out.writeLine("\t\twhere id = #{id}");
+        out.writeLine("\t\twhere {} = #{id}", pkInfo == null ? "id" : pkInfo.getField());
         out.writeLine("\t</update>\n");
 
         out.writeLine("\t<delete id=\"deleteById\">");
-        out.writeLine("\t\tdelete from {} where id = #{id}", tableInfo.getTableName());
+        out.writeLine("\t\tdelete from {} where {} = #{id}", tableInfo.getTableName(), pkInfo == null ? "id" : pkInfo.getField());
         out.writeLine("\t</delete>\n");
     }
 }

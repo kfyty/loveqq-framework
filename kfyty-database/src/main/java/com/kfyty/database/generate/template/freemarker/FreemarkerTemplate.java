@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.template.freemarker;
 
-import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
 import com.kfyty.database.generate.template.AbstractTemplateEngine;
@@ -37,7 +37,7 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
     }
 
     @Override
-    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         try {
             loadVariables(tableInfo, basePackage);
             TemplateEngineUtil.loadFreemarkerTemplate(this.prefix, this.template).process(this.variable, out);

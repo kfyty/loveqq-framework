@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.template.entity;
 
-import com.kfyty.database.generate.GenerateSourcesBufferedWriter;
+import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.info.AbstractFieldStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
@@ -57,7 +57,7 @@ public class EntityTemplate implements AbstractGenerateTemplate {
     }
 
     @Override
-    public void generate(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         initGenerateData(tableInfo, basePackage);
         generatePackage(tableInfo, basePackage, out);
         generateImport(tableInfo, basePackage, out);
@@ -73,24 +73,24 @@ public class EntityTemplate implements AbstractGenerateTemplate {
         out.writeLine("}");
     }
 
-    public void generatePackage(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generatePackage(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         out.writeLine("package {};\n", this.packageName);
     }
 
-    public void importEntity(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void importEntity(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         out.writeLine("import {};\n", this.entityClassQualifiedName);
     }
 
-    public void generateImport(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateImport(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         out.writeLine("import java.util.Date;\n");
         out.writeLine("import lombok.Data;\n");
     }
 
-    public void generateClassDefinition(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassDefinition(AbstractTableStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
         out.write("public class {}", this.className);
     }
 
-    public void generateClassComment(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassComment(AbstractTableStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
         out.writeLine("/**");
         out.writeLine(" * TABLE_NAME: {}", tableInfo.getTableName());
         out.writeLine(" * TABLE_COMMENT: {}", tableInfo.getTableComment());
@@ -112,11 +112,11 @@ public class EntityTemplate implements AbstractGenerateTemplate {
         return "";
     }
 
-    public void generateClassAnnotation(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateClassAnnotation(AbstractTableStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
         out.writeLine("@Data");
     }
 
-    public void generateTableInfo(AbstractTableStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateTableInfo(AbstractTableStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             generateFieldComment(fieldInfo, out);
             generateFieldAnnotation(fieldInfo, out);
@@ -124,17 +124,17 @@ public class EntityTemplate implements AbstractGenerateTemplate {
         }
     }
 
-    public void generateFieldComment(AbstractFieldStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateFieldComment(AbstractFieldStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
         out.writeLine("\t/**");
         out.writeLine("\t * {}", tableInfo.getFieldComment());
         out.writeLine("\t */");
     }
 
-    public void generateFieldAnnotation(AbstractFieldStructInfo tableInfo, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateFieldAnnotation(AbstractFieldStructInfo tableInfo, SimpleBufferedWriter out) throws IOException {
 
     }
 
-    public void generateCustomCode(AbstractTableStructInfo tableInfo, String basePackage, GenerateSourcesBufferedWriter out) throws IOException {
+    public void generateCustomCode(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
 
     }
 }

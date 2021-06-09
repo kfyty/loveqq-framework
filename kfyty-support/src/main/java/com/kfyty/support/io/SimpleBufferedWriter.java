@@ -1,4 +1,4 @@
-package com.kfyty.database.generate;
+package com.kfyty.support.io;
 
 import com.kfyty.support.utils.CommonUtil;
 
@@ -7,15 +7,15 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * 功能描述: 生成资源的缓冲输出流
+ * 功能描述: 简单的缓冲输出流
  *
  * @author kfyty725@hotmail.com
  * @date 2019/9/4 9:36
  * @since JDK 1.8
  */
-public class GenerateSourcesBufferedWriter extends BufferedWriter {
+public class SimpleBufferedWriter extends BufferedWriter {
 
-    public GenerateSourcesBufferedWriter(Writer out) {
+    public SimpleBufferedWriter(Writer out) {
         super(out);
     }
 
