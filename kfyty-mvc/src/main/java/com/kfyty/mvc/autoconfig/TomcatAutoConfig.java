@@ -2,6 +2,7 @@ package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
+import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
@@ -40,6 +41,9 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     @Autowired(required = false)
     private List<HandlerMethodArgumentResolver> argumentResolvers;
 
+    @Autowired(required = false)
+    private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
+
     @Bean
     public TomcatConfig tomcatConfig() {
         TomcatConfig config = new TomcatConfig(configurableContext.getPrimarySource());
@@ -56,6 +60,9 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
         }
         if(this.argumentResolvers != null) {
             dispatcherServlet.getArgumentResolvers().addAll(this.argumentResolvers);
+        }
+        if(this.returnValueProcessors != null) {
+            dispatcherServlet.getReturnValueProcessors().addAll(this.returnValueProcessors);
         }
         return dispatcherServlet;
     }

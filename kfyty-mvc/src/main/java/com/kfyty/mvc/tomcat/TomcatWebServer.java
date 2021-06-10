@@ -20,6 +20,7 @@ import org.apache.catalina.webresources.StandardRoot;
 import org.apache.jasper.servlet.JasperInitializer;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
+import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
 import javax.servlet.Filter;
@@ -131,6 +132,7 @@ public class TomcatWebServer implements WebServer {
         context.setFailCtxIfServletStartFails(true);
         context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
+        this.skipTldScanning(context);
         this.prepareResources(context);
         this.prepareDefaultServlet(context);
         this.prepareJspServlet(context);
@@ -139,6 +141,12 @@ public class TomcatWebServer implements WebServer {
         this.prepareWebListener(context);
         this.tomcat.getHost().addChild(context);
         this.servletContext = context.getServletContext();
+    }
+
+    private void skipTldScanning(Context context) {
+        StandardJarScanFilter filter = new StandardJarScanFilter();
+        filter.setTldSkip("*.jar");
+        context.getJarScanner().setJarScanFilter(filter);
     }
 
     private void prepareResources(Context context) throws URISyntaxException {

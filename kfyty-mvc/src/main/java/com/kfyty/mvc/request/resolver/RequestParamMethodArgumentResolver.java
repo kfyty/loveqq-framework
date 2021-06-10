@@ -55,7 +55,7 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
     }
 
     private Object resolveCollectionArgument(MethodParameter parameter, RequestParam annotation, HttpServletRequest request) throws IOException {
-        Type actualTypeArgument = ((ParameterizedType) parameter.getGeneric()).getActualTypeArguments()[0];
+        Type actualTypeArgument = ((ParameterizedType) parameter.getParameterGeneric()).getActualTypeArguments()[0];
         Object value = this.resolveArrayArgument((Class<?>) actualTypeArgument, annotation, request);
         if(Set.class.isAssignableFrom((Class<?>) actualTypeArgument)) {
             return new HashSet<>(Arrays.asList((Object[]) value));

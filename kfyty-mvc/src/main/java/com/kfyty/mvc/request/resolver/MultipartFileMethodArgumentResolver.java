@@ -31,10 +31,10 @@ public class MultipartFileMethodArgumentResolver implements HandlerMethodArgumen
         if(parameter.getParamType().isArray()) {
             return MultipartFile.class.isAssignableFrom(parameter.getParamType().getComponentType());
         }
-        if(!(parameter.getGeneric() instanceof ParameterizedType) || Collection.class.isAssignableFrom(parameter.getParamType())) {
+        if(!(parameter.getParameterGeneric() instanceof ParameterizedType) || Collection.class.isAssignableFrom(parameter.getParamType())) {
             return false;
         }
-        Type actualTypeArgument = ((ParameterizedType) parameter.getGeneric()).getActualTypeArguments()[0];
+        Type actualTypeArgument = ((ParameterizedType) parameter.getParameterGeneric()).getActualTypeArguments()[0];
         return MultipartFile.class.isAssignableFrom((Class<?>) actualTypeArgument);
     }
 

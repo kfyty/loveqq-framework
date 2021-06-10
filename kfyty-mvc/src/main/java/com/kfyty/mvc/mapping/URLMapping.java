@@ -29,11 +29,6 @@ public class URLMapping {
     private static Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> urlMappingMap;
 
     /**
-     * 是否以 json 格式返回对象
-     */
-    private boolean returnJson;
-
-    /**
      * 是否是 restful 风格 url
      */
     private boolean restfulUrl;
@@ -78,16 +73,14 @@ public class URLMapping {
     }
 
     public URLMapping() {
-        this.returnJson = false;
         this.restfulUrl = false;
         this.restfulURLMappingIndex = new HashMap<>();
     }
 
-    public static URLMapping newURLMapping(Object mappingController, Method mappingMethod, boolean returnJson) {
+    public static URLMapping newURLMapping(Object mappingController, Method mappingMethod) {
         URLMapping urlMapping = new URLMapping();
         urlMapping.setMappingController(mappingController);
         urlMapping.setMappingMethod(mappingMethod);
-        urlMapping.setReturnJson(returnJson);
         return urlMapping;
     }
 

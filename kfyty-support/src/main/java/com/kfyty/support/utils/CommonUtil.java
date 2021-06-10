@@ -160,6 +160,12 @@ public abstract class CommonUtil {
         return sb.toString();
     }
 
+    public static String formatURI(String uri) {
+        uri = uri.trim();
+        uri = uri.startsWith("/") ? uri : "/" + uri;
+        return !uri.endsWith("/") ? uri : uri.substring(0, uri.length() - 1);
+    }
+
     public static void saveJdkProxyClass(String savePath, Object object, Object proxy) {
         try {
             Class<?> clazz = Class.forName("sun.misc.ProxyGenerator");

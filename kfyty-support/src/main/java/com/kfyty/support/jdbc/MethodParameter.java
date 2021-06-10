@@ -33,20 +33,36 @@ public class MethodParameter {
     private Class<?> paramType;
 
     /**
+     * 返回值类型
+     */
+    private Class<?> returnType;
+
+    /**
      * 参数泛型
      */
-    private Type generic;
+    private Type parameterGeneric;
+
+    /**
+     * 返回值泛型
+     */
+    private Type returnGeneric;
 
     /**
      * 参数值
      */
     private Object value;
 
-    public MethodParameter(Method method, Parameter parameter) {
+    public MethodParameter(Method method) {
         this.method = method;
+        this.returnType = method.getReturnType();
+        this.returnGeneric = method.getGenericReturnType();
+    }
+
+    public MethodParameter(Method method, Parameter parameter) {
+        this(method);
         this.parameter = parameter;
         this.paramType = parameter.getType();
-        this.generic = parameter.getParameterizedType();
+        this.parameterGeneric = parameter.getParameterizedType();
     }
 
     /**
