@@ -4,12 +4,12 @@ import com.kfyty.database.generate.GenerateSources;
 import com.kfyty.database.generate.configuration.annotation.EnableAutoGenerate;
 import com.kfyty.database.generate.database.AbstractDataBaseMapper;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
-import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
-import com.kfyty.support.autoconfig.InstantiateBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Configuration
-public class GenerateAutoConfig implements ImportBeanDefine, InstantiateBean, BeanRefreshComplete {
+public class GenerateAutoConfig implements ImportBeanDefine, BeanRefreshComplete {
     @Autowired(required = false)
     private GenerateConfiguration generateConfiguration;
 
@@ -38,18 +38,12 @@ public class GenerateAutoConfig implements ImportBeanDefine, InstantiateBean, Be
     private List<AbstractGenerateTemplate> templates;
 
     @Override
-    public Set<BeanDefine> doImport(Set<Class<?>> scanClasses) {
-        return scanClasses.stream().filter(AbstractDataBaseMapper.class::isAssignableFrom).map(BeanDefine::new).collect(Collectors.toSet());
-    }
-
-    @Override
-    public boolean canInstantiate(BeanDefine beanDefine) {
-        return AbstractDataBaseMapper.class.isAssignableFrom(beanDefine.getBeanType());
-    }
-
-    @Override
-    public Object doInstantiate(BeanDefine beanDefine) {
-        return beanDefine.getBeanType();
+    public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
+        return scanClasses
+                .stream()
+                .filter(AbstractDataBaseMapper.class::isAssignableFrom)
+                .map(e -> GenericBeanDefinition.from(DataBaseMapperFactory.class).addConstructorArgs(Class.class, e))
+                .collect(Collectors.toSet());
     }
 
     @Override

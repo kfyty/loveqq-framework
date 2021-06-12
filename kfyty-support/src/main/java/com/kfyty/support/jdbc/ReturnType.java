@@ -23,52 +23,72 @@ import java.util.Map;
 @NoArgsConstructor
 public class ReturnType<T, K, V> {
     private String key;
-    private Boolean array;
-    private Boolean parameterizedType;
+    private boolean array;
+    private boolean parameterizedType;
     private Class<T> returnType;
-    private Class<K> firstParameterizedType;
-    private Class<V> secondParameterizedType;
+    private Class<K> keyParameterizedType;
+    private Class<V> valueParameterizedType;
 
-    public ReturnType(Boolean array, Boolean parameterizedType, Class<T> returnType, Type firstParameterizedType, Type secondParameterizedType) {
+    public ReturnType(Boolean array, Boolean parameterizedType, Class<T> returnType, Type keyParameterizedType, Type valueParameterizedType) {
         this.array = array;
         this.parameterizedType = parameterizedType;
         this.returnType = returnType;
-        this.setFirstParameterizedType(firstParameterizedType);
-        this.setSecondParameterizedType(secondParameterizedType);
+        this.setKeyParameterizedType(keyParameterizedType);
+        this.setValueParameterizedType(valueParameterizedType);
     }
 
-    public boolean isArray() {
-        return this.array;
-    }
-
-    public boolean isParameterizedType() {
-        return this.parameterizedType;
+    public Class<?> getActualType() {
+        if(!isParameterizedType()) {
+            return this.returnType;
+        }
+        if(Map.class.isAssignableFrom(this.returnType)) {
+            return valueParameterizedType;
+        }
+        return keyParameterizedType;
     }
 
     @SuppressWarnings("unchecked")
-    public void setFirstParameterizedType(Type firstParameterizedType) {
-        if(firstParameterizedType == null) {
-            return ;
+    public void setKeyParameterizedType(Type keyParameterizedType) {
+        if(keyParameterizedType == null) {
+            return;
         }
-        if(firstParameterizedType instanceof Class) {
-            this.firstParameterizedType = (Class<K>) firstParameterizedType;
-            return ;
+        if(keyParameterizedType instanceof Class) {
+            this.keyParameterizedType = (Class<K>) keyParameterizedType;
+            return;
         }
-        this.firstParameterizedType = (Class<K>) ((WildcardType) firstParameterizedType).getUpperBounds()[0];
+        WildcardType wildcardType = (WildcardType) keyParameterizedType;
+        if(wildcardType.getTypeName().contains("super")) {
+            this.keyParameterizedType = (Class<K>) wildcardType.getLowerBounds()[0];
+            return;
+        }
+        this.keyParameterizedType = (Class<K>) wildcardType.getUpperBounds()[0];
     }
 
     @SuppressWarnings("unchecked")
-    public void setSecondParameterizedType(Type secondParameterizedType) {
-        if(secondParameterizedType == null) {
-            return ;
+    public void setValueParameterizedType(Type valueParameterizedType) {
+        if(valueParameterizedType == null) {
+            return;
         }
-        if(secondParameterizedType instanceof Class) {
-            this.secondParameterizedType = (Class<V>) secondParameterizedType;
-            return ;
+        if(valueParameterizedType instanceof Class) {
+            this.valueParameterizedType = (Class<V>) valueParameterizedType;
+            return;
         }
-        this.secondParameterizedType = (Class<V>) ((WildcardType) secondParameterizedType).getUpperBounds()[0];
+        WildcardType wildcardType = (WildcardType) valueParameterizedType;
+        if(wildcardType.getTypeName().contains("super")) {
+            this.valueParameterizedType = (Class<V>) wildcardType.getLowerBounds()[0];
+            return;
+        }
+        this.valueParameterizedType = (Class<V>) wildcardType.getUpperBounds()[0];
     }
 
+    /**
+     * 解析返回值的泛型信息
+     *  仅支持一下类型及其泛型的上下限：
+     *      Collection<T>
+     *      Class<T>
+     *      Collection<Map<K, V>>
+     *      Map<K, V>
+     */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
@@ -91,9 +111,6 @@ public class ReturnType<T, K, V> {
             return new ReturnType<>(false, true, type, actualTypeArguments[0], null);
         }
         if(Map.class.isAssignableFrom(type)) {
-            if(actualTypeArguments.length != 2) {
-                throw new SupportException("parameterized type only support collection and map !");
-            }
             return new ReturnType<>(false, true, type, actualTypeArguments[0], actualTypeArguments[1]);
         }
         throw new SupportException("parse return type failed !");

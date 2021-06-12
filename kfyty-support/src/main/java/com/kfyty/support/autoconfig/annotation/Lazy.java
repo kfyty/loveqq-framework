@@ -6,19 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 标记该方法为一个 bean 定义
+ * 描述: 延迟注入属性，将在所有 bean 定义实例化之后执行注入
  *
  * @author kfyty725
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Bean {
-
-    String value() default "";
-
-    String initMethod() default "";
-
-    String destroyMethod() default "";
+public @interface Lazy {
 }

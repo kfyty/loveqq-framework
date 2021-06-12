@@ -31,7 +31,7 @@ public class BeanResources {
 
     public BeanResources(String name, Class<?> clazz, Object bean) {
         this.beanType = clazz;
-        this.beans = new ConcurrentHashMap<>(2);
+        this.beans = new ConcurrentHashMap<>(4);
         this.beans.put(name, bean);
     }
 

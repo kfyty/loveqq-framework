@@ -3,17 +3,19 @@ package com.kfyty.boot.resolver;
 import com.kfyty.boot.beans.BeanResources;
 import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Lazy;
+import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 功能描述: 属性注解解析器
@@ -24,81 +26,59 @@ import java.util.Set;
  */
 @Slf4j
 public class FieldAnnotationResolver {
-    private final AnnotationConfigResolver configResolver;
     private final ApplicationContext applicationContext;
+    private final AutowiredProcessor autowiredProcessor;
 
     public FieldAnnotationResolver(AnnotationConfigResolver configResolver) {
-        this.configResolver = configResolver;
         this.applicationContext = configResolver.getApplicationContext();
+        this.autowiredProcessor = configResolver.getAutowiredProcessor();
     }
 
-    public void doResolver(boolean init) {
+    public void doResolver() {
         for (Map.Entry<Class<?>, BeanResources> entry : this.applicationContext.getBeanResources().entrySet()) {
             for (Map.Entry<String, Object> beanEntry : entry.getValue().getBeans().entrySet()) {
-                this.doResolver(entry.getKey(), beanEntry.getValue(), init);
+                this.doResolver(entry.getKey(), beanEntry.getValue());
             }
         }
     }
 
-    public void doResolver(Class<?> clazz, Object value, boolean init) {
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
+    public void doResolver(Class<?> clazz, Object bean) {
+        this.doResolver(clazz, bean, false);
+    }
+
+    public void doResolver(Class<?> clazz, Object bean, boolean refreshing) {
+        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(clazz).entrySet()) {
+            Field field = entry.getValue();
+            if(refreshing && field.isAnnotationPresent(Lazy.class)) {
+                continue;
+            }
+            if(refreshing) {
+                this.refreshSelfAutowired(clazz, bean, field);
+            }
             if(field.isAnnotationPresent(Autowired.class)) {
-                this.processAutowiredAnnotation(value, field, field.getAnnotation(Autowired.class), init);
+                this.autowiredProcessor.doAutowired(bean, field);
             }
         }
     }
 
-    @SneakyThrows
-    @SuppressWarnings({"rawtypes", "ConstantConditions"})
-    private void processAutowiredAnnotation(Object o, Field field, Autowired autowired, boolean init) {
-        ReturnType fieldType = ReturnType.getReturnType(field.getGenericType(), field.getType());
-        if(List.class.isAssignableFrom(field.getType()) || Set.class.isAssignableFrom(field.getType())) {
-            this.processAutowiredAnnotation(o, field, fieldType.getFirstParameterizedType(), autowired, init);
+    private void refreshSelfAutowired(Class<?> clazz, Object bean, Field field) {
+        if(ReflectUtil.getFieldValue(bean, field) != null) {
             return;
         }
-        if(Map.class.isAssignableFrom(field.getType())) {
-            this.processAutowiredAnnotation(o, field, fieldType.getSecondParameterizedType(), autowired, init);
-            return;
-        }
-        if(Class.class.isAssignableFrom(field.getType())) {
-            this.processAutowiredAnnotation(o, field, fieldType.getFirstParameterizedType(), autowired, init);
-            return;
-        }
-        this.processAutowiredAnnotation(o, field, fieldType.getReturnType(), autowired, init);
-    }
-
-    private void processAutowiredAnnotation(Object o, Field field, Class<?> fieldType, Autowired autowired, boolean init) throws Exception {
-        Map<String, ?> beans = this.applicationContext.getBeanOfType(fieldType);
-        if(beans.isEmpty()) {
-            if(!init && autowired.required()) {
-                throw new IllegalArgumentException("autowired failed for bean [" + o.getClass() + "], no bean found of type: " + fieldType);
-            }
-            return;
-        }
-        Object value = null;
-        if(List.class.isAssignableFrom(field.getType())) {
-            value = new ArrayList<>(beans.values());
-        }
-        if(Set.class.isAssignableFrom(field.getType())) {
-            value = new HashSet<>(beans.values());
-        }
-        if(Map.class.isAssignableFrom(field.getType())) {
-            value = beans;
-        }
-        if(value == null) {
-            if(beans.size() == 1) {
-                value = beans.values().iterator().next();
-            } else {
-                value = beans.get(autowired.value());
-                if(value == null) {
-                    throw new IllegalArgumentException("autowired failed for bean [" + o.getClass() + "], more than one bean found of type: " + fieldType);
+        ReturnType<?, ?, ?> type = ReturnType.getReturnType(field.getGenericType(), field.getType());
+        for (Method method : clazz.getMethods()) {
+            if(method.isAnnotationPresent(Bean.class) && type.getActualType().isAssignableFrom(method.getReturnType())) {
+                Bean annotation = method.getAnnotation(Bean.class);
+                String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.convert2BeanName(method.getReturnType());
+                BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, method.getReturnType());
+                if(beanDefinition != null) {
+                    Object targetBean = this.applicationContext.registerBean(beanDefinition, false);
+                    if(targetBean == null) {
+                        throw new IllegalStateException("the return value of the bean annotation method can't be null !");
+                    }
+                    ReflectUtil.setFieldValue(bean, field, targetBean);
                 }
             }
-        }
-        ReflectUtil.setFieldValue(o, field, value);
-        if(!init && log.isDebugEnabled()) {
-            log.debug(": autowired bean: [{}] to [{}] !", fieldType, o);
         }
     }
 }

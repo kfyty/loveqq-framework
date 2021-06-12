@@ -3,7 +3,7 @@ package com.kfyty.mvc.request.resolver;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.multipart.DefaultMultipartFile;
 import com.kfyty.mvc.multipart.MultipartFile;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 
 import javax.servlet.http.HttpServletRequest;

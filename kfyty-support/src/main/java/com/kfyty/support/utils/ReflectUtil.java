@@ -66,13 +66,25 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static <T> T newInstance(Constructor<T> constructor) {
+    public static <T> T newInstance(Constructor<T> constructor, Object ... args) {
         try {
             boolean accessible = constructor.isAccessible();
             constructor.setAccessible(true);
-            Object value = constructor.newInstance();
+            Object value = constructor.newInstance(args);
             constructor.setAccessible(accessible);
             return (T) value;
+        } catch (Exception e) {
+            throw new SupportException(e);
+        }
+    }
+
+    public static <T> T newInstance(Class<T> clazz, Map<Class<?>, Object> constructorArgs) {
+        if(CommonUtil.empty(constructorArgs)) {
+            return newInstance(clazz);
+        }
+        try {
+            Constructor<T> constructor = clazz.getConstructor(constructorArgs.keySet().toArray(new Class[0]));
+            return newInstance(constructor, constructorArgs.values().toArray());
         } catch (Exception e) {
             throw new SupportException(e);
         }

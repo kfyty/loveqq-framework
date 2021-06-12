@@ -2,7 +2,7 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.PathVariable;
 import com.kfyty.mvc.mapping.URLMapping;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JsonUtil;
 

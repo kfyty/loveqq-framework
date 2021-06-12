@@ -8,7 +8,7 @@ import com.kfyty.mvc.request.resolver.StringValueHandlerMethodReturnValueProcess
 import com.kfyty.mvc.request.support.Model;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
 import com.kfyty.support.utils.ReflectUtil;

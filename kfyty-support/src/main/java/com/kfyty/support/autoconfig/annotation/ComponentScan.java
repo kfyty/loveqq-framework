@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述:
+ * 描述: 用于添加需要扫描的基础包名
  *
  * @author kfyty725
  * @date 2021/5/21 16:46

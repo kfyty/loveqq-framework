@@ -8,6 +8,7 @@ import com.kfyty.support.autoconfig.ConfigurableContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Lazy;
 
 import java.util.Map;
 
@@ -23,7 +24,7 @@ public class MvcAutoConfig implements BeanRefreshComplete {
     @Autowired
     private ConfigurableContext configurableContext;
 
-    @Autowired
+    @Autowired @Lazy
     private MvcAnnotationHandler mvcAnnotationHandler;
 
     @Bean

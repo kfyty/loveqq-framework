@@ -1,6 +1,6 @@
 package com.kfyty.support.utils;
 
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.SessionAttribute;
 import com.kfyty.mvc.mapping.URLMapping;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;

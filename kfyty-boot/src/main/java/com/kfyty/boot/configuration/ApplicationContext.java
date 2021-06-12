@@ -2,12 +2,13 @@ package com.kfyty.boot.configuration;
 
 import com.kfyty.boot.K;
 import com.kfyty.boot.beans.BeanResources;
-import com.kfyty.support.autoconfig.BeanDefine;
+import com.kfyty.boot.resolver.AnnotationConfigResolver;
+import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.ConfigurableContext;
-import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
+import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: 应用配置
@@ -30,11 +32,37 @@ public class ApplicationContext implements ConfigurableContext {
     private final Class<?> primarySource;
 
     @Getter
+    private final AnnotationConfigResolver configResolver;
+
+    @Getter
     private final Map<Class<?>, BeanResources> beanResources;
 
-    private ApplicationContext(Class<?> primarySource) {
+    public ApplicationContext(Class<?> primarySource, AnnotationConfigResolver configResolver) {
         this.primarySource = primarySource;
+        this.configResolver = configResolver;
         this.beanResources = new ConcurrentHashMap<>();
+        this.registerBean(ApplicationContext.class, this);
+    }
+
+    @Override
+    public Map<String, BeanDefinition> getBeanDefinitions() {
+        return this.configResolver.getBeanDefinitions();
+    }
+
+    @Override
+    public BeanDefinition getBeanDefinition(String beanName) {
+        return this.getBeanDefinitions().get(beanName);
+    }
+
+    @Override
+    public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
+        return getBeanDefinitions().entrySet().stream().filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public BeanDefinition getBeanDefinition(String beanName, Class<?> beanType) {
+        Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(beanType);
+        return beanDefinitions.size() == 1 ? beanDefinitions.values().iterator().next() : beanDefinitions.get(beanName);
     }
 
     @Override
@@ -80,19 +108,34 @@ public class ApplicationContext implements ConfigurableContext {
     }
 
     @Override
-    public Object registerBean(BeanDefine beanDefine) {
-        Object instance = beanDefine.createInstance();
-        for (Annotation annotation : beanDefine.getBeanType().getAnnotations()) {
-            if (annotation.annotationType().isAnnotationPresent(Component.class)) {
-                String beanName = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
-                if (!CommonUtil.empty(beanName)) {
-                    this.registerBean(beanName, beanDefine.getBeanType(), instance);
-                    return instance;
-                }
-            }
+    public Object registerBean(BeanDefinition beanDefinition) {
+        return this.registerBean(beanDefinition, true);
+    }
+
+    @Override
+    public Object registerBean(BeanDefinition beanDefinition, boolean beforeAutowired) {
+        Object bean = this.getBean(beanDefinition.getBeanName());
+        if(bean != null) {
+            return bean;
         }
-        this.registerBean(beanDefine.getBeanType(), instance);
-        return instance;
+        if(beforeAutowired && beanDefinition instanceof MethodBeanDefinition) {
+            BeanDefinition sourceDefinition = ((MethodBeanDefinition) beanDefinition).getSourceDefinition();
+            this.configResolver.getFieldAnnotationResolver().doResolver(sourceDefinition.getBeanType(), registerBean(sourceDefinition), true);
+        }
+        if(beforeAutowired && beanDefinition instanceof FactoryBeanDefinition) {
+            BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
+            this.configResolver.getFieldAnnotationResolver().doResolver(factoryBeanDefinition.getBeanType(), registerBean(factoryBeanDefinition), true);
+        }
+        bean = this.getBean(beanDefinition.getBeanName());
+        if(bean != null) {
+            return bean;
+        }
+        bean = beanDefinition.createInstance(this);
+        if(bean instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) bean).setApplicationContext(this);
+        }
+        this.registerBean(beanDefinition.getBeanName(), beanDefinition.getBeanType(), bean);
+        return bean;
     }
 
     @Override
@@ -111,12 +154,14 @@ public class ApplicationContext implements ConfigurableContext {
             log.info("exclude bean: {} -> {}", name, bean);
             return;
         }
-        BeanResources beanResources = this.getBeanResources(clazz);
-        if(beanResources == null) {
-            this.beanResources.put(clazz, new BeanResources(name, clazz, bean));
-            return;
+        synchronized (this) {
+            BeanResources beanResources = this.getBeanResources(clazz);
+            if(beanResources == null) {
+                this.beanResources.put(clazz, new BeanResources(name, clazz, bean));
+                return;
+            }
+            beanResources.addBean(name, bean);
         }
-        beanResources.addBean(name, bean);
     }
 
     @Override
@@ -125,12 +170,6 @@ public class ApplicationContext implements ConfigurableContext {
         if(beanResources != null) {
             beanResources.getBeans().put(name, bean);
         }
-    }
-
-    public static ApplicationContext create(Class<?> primarySource) {
-        ApplicationContext applicationContext = new ApplicationContext(primarySource);
-        applicationContext.registerBean(ApplicationContext.class, applicationContext);
-        return applicationContext;
     }
 
     public BeanResources getBeanResources(Class<?> clazz) {

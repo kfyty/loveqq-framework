@@ -1,5 +1,7 @@
 package com.kfyty.support.autoconfig;
 
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+
 import java.util.Set;
 
 /**
@@ -14,5 +16,5 @@ public interface ImportBeanDefine {
      * 导入自定义的 bean 类型参与后续实例化
      * @param scanClasses 根据配置扫描到的 Class
      */
-    Set<BeanDefine> doImport(Set<Class<?>> scanClasses);
+    Set<BeanDefinition> doImport(Set<Class<?>> scanClasses);
 }

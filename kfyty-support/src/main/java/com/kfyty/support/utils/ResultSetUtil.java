@@ -57,10 +57,10 @@ public abstract class ResultSetUtil {
             return processSingleObject(resultSet, returnType.getReturnType());
         }
         if(Set.class.isAssignableFrom(returnType.getReturnType())) {
-            return processSetObject(resultSet, returnType.getFirstParameterizedType());
+            return processSetObject(resultSet, returnType.getKeyParameterizedType());
         }
-        if(returnType.getSecondParameterizedType() == null && List.class.isAssignableFrom(returnType.getReturnType())) {
-            return processListObject(resultSet, returnType.getFirstParameterizedType());
+        if(returnType.getValueParameterizedType() == null && List.class.isAssignableFrom(returnType.getReturnType())) {
+            return processListObject(resultSet, returnType.getKeyParameterizedType());
         }
         if(Map.class.isAssignableFrom(returnType.getReturnType()) && !CommonUtil.empty(returnType.getKey())) {
             return processMapObject(resultSet, returnType);
@@ -144,13 +144,13 @@ public abstract class ResultSetUtil {
 
     @SuppressWarnings("unchecked")
     public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
-        List<V> values = processListObject(resultSet, returnType.getSecondParameterizedType());
+        List<V> values = processListObject(resultSet, returnType.getValueParameterizedType());
         if(CommonUtil.empty(values)) {
             return new HashMap<>(2);
         }
         Map<K, V> result = new HashMap<>();
         for (V value : values) {
-            Field field = ReflectUtil.getField(returnType.getSecondParameterizedType(), returnType.getKey());
+            Field field = ReflectUtil.getField(returnType.getValueParameterizedType(), returnType.getKey());
             result.put((K) ReflectUtil.getFieldValue(value, field), value);
         }
         return result;

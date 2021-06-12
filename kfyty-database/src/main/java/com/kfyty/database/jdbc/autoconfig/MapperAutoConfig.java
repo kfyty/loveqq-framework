@@ -1,13 +1,10 @@
 package com.kfyty.database.jdbc.autoconfig;
 
-import com.kfyty.database.jdbc.SqlSessionFactory;
-import com.kfyty.support.autoconfig.BeanDefine;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
-import com.kfyty.support.autoconfig.InstantiateBean;
-import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 
-import javax.sql.DataSource;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,22 +16,14 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-public class MapperAutoConfig implements ImportBeanDefine, InstantiateBean {
-    @Autowired("mapperDataSource")
-    private DataSource dataSource;
+public class MapperAutoConfig implements ImportBeanDefine {
 
     @Override
-    public Set<BeanDefine> doImport(Set<Class<?>> scanClasses) {
-        return scanClasses.stream().filter(e -> e.isAnnotationPresent(Mapper.class)).map(BeanDefine::new).collect(Collectors.toSet());
-    }
-
-    @Override
-    public boolean canInstantiate(BeanDefine beanDefine) {
-        return beanDefine.getBeanType().isAnnotationPresent(Mapper.class);
-    }
-
-    @Override
-    public Object doInstantiate(BeanDefine beanDefine) {
-        return SqlSessionFactory.createProxy(this.dataSource, beanDefine.getBeanType());
+    public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
+        return scanClasses
+                .stream()
+                .filter(e -> e.isAnnotationPresent(Mapper.class))
+                .map(e -> GenericBeanDefinition.from(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e))
+                .collect(Collectors.toSet());
     }
 }

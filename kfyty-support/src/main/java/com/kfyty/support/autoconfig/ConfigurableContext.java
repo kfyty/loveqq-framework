@@ -1,5 +1,7 @@
 package com.kfyty.support.autoconfig;
 
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
@@ -14,6 +16,14 @@ public interface ConfigurableContext {
 
     Class<?> getPrimarySource();
 
+    Map<String, BeanDefinition> getBeanDefinitions();
+
+    BeanDefinition getBeanDefinition(String beanName);
+
+    Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);
+
+    BeanDefinition getBeanDefinition(String beanName, Class<?> beanType);
+
     <T> T getBean(Class<T> clazz);
 
     <T> T getBean(String name);
@@ -22,7 +32,9 @@ public interface ConfigurableContext {
 
     <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass);
 
-    Object registerBean(BeanDefine beanDefine);
+    Object registerBean(BeanDefinition beanDefinition);
+
+    Object registerBean(BeanDefinition beanDefinition, boolean beforeAutowired);
 
     void registerBean(Class<?> clazz, Object bean);
 

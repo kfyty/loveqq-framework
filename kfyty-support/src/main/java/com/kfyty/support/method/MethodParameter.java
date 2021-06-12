@@ -1,4 +1,4 @@
-package com.kfyty.support.jdbc;
+package com.kfyty.support.method;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

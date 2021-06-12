@@ -7,7 +7,7 @@ import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.support.jdbc.JdbcTransaction;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.support.utils.CommonUtil;

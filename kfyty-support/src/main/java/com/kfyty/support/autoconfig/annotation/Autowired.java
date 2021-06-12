@@ -5,8 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD)
+/**
+ * 描述: 属性、方法自动注入
+ *
+ * @author kfyty725
+ * @date 2021/6/12 11:28
+ * @email kfyty725@hotmail.com
+ */
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD})
 public @interface Autowired {
 
     boolean required() default true;

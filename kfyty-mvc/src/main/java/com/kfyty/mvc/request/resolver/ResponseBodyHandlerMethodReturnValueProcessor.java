@@ -3,7 +3,7 @@ package com.kfyty.mvc.request.resolver;
 import com.kfyty.mvc.annotation.ResponseBody;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.request.support.ModelViewContainer;
-import com.kfyty.support.jdbc.MethodParameter;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.JsonUtil;
 
 import java.io.Writer;
