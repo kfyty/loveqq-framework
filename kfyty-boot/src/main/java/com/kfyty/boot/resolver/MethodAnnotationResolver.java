@@ -32,6 +32,10 @@ public class MethodAnnotationResolver {
         this.autowiredProcessor =  configResolver.getAutowiredProcessor();
     }
 
+    /**
+     * 解析该 BeanDefinition 中可能存在的其他 BeanDefinition
+     * @param beanDefinition BeanDefinition
+     */
     public void prepareBeanDefines(BeanDefinition beanDefinition) {
         Method[] methods = beanDefinition.getBeanType().getMethods();
         for (Method method : methods) {
@@ -42,6 +46,9 @@ public class MethodAnnotationResolver {
         }
     }
 
+    /**
+     * 对容器内的所有 bean 执行方法注入
+     */
     public void doResolver() {
         HashMap<Class<?>, BeanResources> beanResources = new HashMap<>(applicationContext.getBeanResources());
         for (Map.Entry<Class<?>, BeanResources> entry : beanResources.entrySet()) {
@@ -51,6 +58,10 @@ public class MethodAnnotationResolver {
         }
     }
 
+    /**
+     * 对特定的 bean 执行方法注入
+     * @param bean bean 实例
+     */
     public void doResolver(Object bean) {
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {

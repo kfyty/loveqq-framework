@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -79,6 +82,21 @@ public class ReturnType<T, K, V> {
             return;
         }
         this.valueParameterizedType = (Class<V>) wildcardType.getUpperBounds()[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, K, V> ReturnType<T, K, V> getReturnType(Field field) {
+        return (ReturnType<T, K, V>) getReturnType(field.getGenericType(), field.getType());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, K, V> ReturnType<T, K, V> getReturnType(Method method) {
+        return (ReturnType<T, K, V>) getReturnType(method.getGenericReturnType(), method.getReturnType());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, K, V> ReturnType<T, K, V> getReturnType(Parameter parameter) {
+        return (ReturnType<T, K, V>) getReturnType(parameter.getParameterizedType(), parameter.getType());
     }
 
     /**

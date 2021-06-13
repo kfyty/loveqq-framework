@@ -20,16 +20,19 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +82,7 @@ public class AnnotationConfigResolver {
             this.prepareBeanDefines();
             this.processImportBeanDefinition();
             this.excludeBeanDefinition();
+            this.sortBeanDefinition();
 
             this.instantiateBeanDefinition();
 
@@ -141,6 +145,15 @@ public class AnnotationConfigResolver {
                 log.info("exclude bean definition: {}", beanDefinition);
             }
         }
+    }
+
+    private void sortBeanDefinition() {
+        this.beanDefinitions = this.beanDefinitions.values()
+                .stream()
+                .sorted(Comparator.comparing(BeanUtil::getBeanOrder))
+                .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
+                    throw new IllegalStateException("Duplicate key " + k2);
+                }, LinkedHashMap::new));
     }
 
     private void instantiateBeanDefinition() {

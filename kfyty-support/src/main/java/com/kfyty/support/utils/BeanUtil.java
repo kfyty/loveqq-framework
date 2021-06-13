@@ -1,5 +1,11 @@
 package com.kfyty.support.utils;
 
+import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.annotation.Order;
+import com.kfyty.support.autoconfig.annotation.Qualifier;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -25,6 +31,26 @@ public abstract class BeanUtil {
             return className;
         }
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
+    }
+
+    public static String getBeanName(Class<?> clazz, Qualifier qualifier) {
+        return qualifier != null ? qualifier.value() : convert2BeanName(clazz);
+    }
+
+    public static String getBeanName(Class<?> clazz, Autowired autowired) {
+        return autowired != null && CommonUtil.notEmpty(autowired.value()) ? autowired.value() : convert2BeanName(clazz);
+    }
+
+    public static int getBeanOrder(BeanDefinition beanDefinition) {
+        if(beanDefinition instanceof MethodBeanDefinition) {
+            Order order = ((MethodBeanDefinition) beanDefinition).getBeanMethod().getAnnotation(Order.class);
+            return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
+        }
+        if(beanDefinition instanceof GenericBeanDefinition) {
+            Order order = beanDefinition.getBeanType().getAnnotation(Order.class);
+            return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
+        }
+        return Order.LOWEST_PRECEDENCE;
     }
 
     public static <S, T> T copyBean(S source, T target) {

@@ -233,7 +233,7 @@ public class SqlSession implements InvocationHandler {
         for (SubQuery subQuery : subQueries) {
             Field returnField = ReflectUtil.getField(obj.getClass(), subQuery.returnField());
             Map<String, MethodParameter> params = this.getParamFromAnnotation(subQuery.paramField(), subQuery.mapperField(), obj);
-            ReturnType returnType = ReturnType.getReturnType(returnField.getGenericType(), returnField.getType());
+            ReturnType returnType = ReturnType.getReturnType(returnField);
             ReflectUtil.setFieldValue(obj, returnField, this.requestQuery(sourceMethod, subQuery, returnType, params));
         }
     }
@@ -246,7 +246,7 @@ public class SqlSession implements InvocationHandler {
     @SuppressWarnings("rawtypes")
     private ReturnType parseReturnType(Method method) {
         if(!method.getDeclaringClass().equals(BaseMapper.class) || method.getReturnType().equals(void.class)) {
-            return ReturnType.getReturnType(method.getGenericReturnType(), method.getReturnType());
+            return ReturnType.getReturnType(method);
         }
         Class<?> entityClass = ReflectUtil.getSuperGeneric(this.mapperClass, 1);
         if(method.getReturnType().equals(Object.class)) {

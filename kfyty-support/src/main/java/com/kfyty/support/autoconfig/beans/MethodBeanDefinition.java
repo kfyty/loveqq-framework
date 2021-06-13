@@ -64,8 +64,8 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         AutowiredProcessor processor = new AutowiredProcessor(context);
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
-            String beanName = parameter.isAnnotationPresent(Qualifier.class) ? parameter.getAnnotation(Qualifier.class).value() : BeanUtil.convert2BeanName(parameter.getType());
-            parameters[index++] = processor.doResolveBean(beanName, ReturnType.getReturnType(parameter.getParameterizedType(), parameter.getType()), parameter.getAnnotation(Autowired.class));
+            String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
+            parameters[index++] = processor.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
         }
         bean = ReflectUtil.invokeMethod(this.sourceDefinition.createInstance(context), this.beanMethod, parameters);
         if(log.isDebugEnabled()) {

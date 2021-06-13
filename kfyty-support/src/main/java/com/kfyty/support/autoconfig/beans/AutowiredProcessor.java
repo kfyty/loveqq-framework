@@ -5,7 +5,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,8 +40,8 @@ public class AutowiredProcessor {
             return;
         }
         Autowired annotation = field.getAnnotation(Autowired.class);
-        String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.convert2BeanName(field.getType());
-        Object targetBean = this.doResolveBean(beanName, ReturnType.getReturnType(field.getGenericType(), field.getType()), annotation);
+        String beanName = BeanUtil.getBeanName(field.getType(), annotation);
+        Object targetBean = this.doResolveBean(beanName, ReturnType.getReturnType(field), annotation);
         ReflectUtil.setFieldValue(bean, field, targetBean);
         if(log.isDebugEnabled()) {
             log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
@@ -53,8 +52,8 @@ public class AutowiredProcessor {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
-            String beanName = parameter.isAnnotationPresent(Qualifier.class) ? parameter.getAnnotation(Qualifier.class).value() : BeanUtil.convert2BeanName(parameter.getType());
-            parameters[index++] = this.doResolveBean(beanName, ReturnType.getReturnType(parameter.getParameterizedType(), parameter.getType()), parameter.getAnnotation(Autowired.class));
+            String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
+            parameters[index++] = this.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if(log.isDebugEnabled()) {
