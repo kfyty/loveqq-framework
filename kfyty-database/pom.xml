@@ -13,6 +13,11 @@
     <artifactId>kfyty-database</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
+        <k-jte.version>1.0-SNAPSHOT</k-jte.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -46,14 +51,14 @@
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-support</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${kfyty.utils.version}</version>
         </dependency>
 
         <!-- jsp 模板引擎：https://github.com/kfyty/k-jte.git -->
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>k-jte</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${k-jte.version}</version>
         </dependency>
     </dependencies>
 </project>

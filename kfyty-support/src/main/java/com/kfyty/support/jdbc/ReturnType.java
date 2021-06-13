@@ -101,7 +101,7 @@ public class ReturnType<T, K, V> {
 
     /**
      * 解析返回值的泛型信息
-     *  仅支持一下类型及其泛型的上下限：
+     *  仅支持以下类型及其泛型的上下限：
      *      Collection<T>
      *      Class<T>
      *      Collection<Map<K, V>>

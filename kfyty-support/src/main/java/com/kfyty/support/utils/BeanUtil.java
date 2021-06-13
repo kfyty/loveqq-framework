@@ -1,6 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -31,6 +32,10 @@ public abstract class BeanUtil {
             return className;
         }
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
+    }
+
+    public static String getBeanName(Class<?> clazz, Bean bean) {
+        return CommonUtil.notEmpty(bean.value()) ? bean.value() : convert2BeanName(clazz);
     }
 
     public static String getBeanName(Class<?> clazz, Qualifier qualifier) {

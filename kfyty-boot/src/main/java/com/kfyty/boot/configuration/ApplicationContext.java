@@ -7,16 +7,18 @@ import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.ConfigurableContext;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
+import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.utils.BeanUtil;
+import javafx.util.Pair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +43,6 @@ public class ApplicationContext implements ConfigurableContext {
         this.primarySource = primarySource;
         this.configResolver = configResolver;
         this.beanResources = new ConcurrentHashMap<>();
-        this.registerBean(ApplicationContext.class, this);
     }
 
     @Override
@@ -66,9 +67,12 @@ public class ApplicationContext implements ConfigurableContext {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T getBean(Class<T> clazz) {
-        return (T) Optional.ofNullable(this.getBeanResources(clazz)).map(e -> e.getBean(clazz)).orElse(null);
+        Map<String, T> beanOfType = this.getBeanOfType(clazz);
+        if(beanOfType.size() > 1) {
+            throw new IllegalArgumentException("more than one instance of type: " + clazz.getName());
+        }
+        return beanOfType.isEmpty() ? null : beanOfType.values().iterator().next();
     }
 
     @Override
@@ -87,9 +91,9 @@ public class ApplicationContext implements ConfigurableContext {
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanOfType(Class<T> clazz) {
         Map<String, Object> beans = new HashMap<>(2);
-        for (Class<?> keyClazz : this.beanResources.keySet()) {
-            if(clazz.isAssignableFrom(keyClazz)) {
-                beans.putAll(this.beanResources.get(keyClazz).getBeans());
+        for (BeanDefinition beanDefinition : this.configResolver.getBeanDefinitions().values()) {
+            if(clazz.isAssignableFrom(beanDefinition.getBeanType())) {
+                beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
             }
         }
         return (Map<String, T>) beans;
@@ -99,9 +103,9 @@ public class ApplicationContext implements ConfigurableContext {
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
         Map<String, Object> beans = new HashMap<>(2);
-        for (Class<?> clazz : beanResources.keySet()) {
-            if(clazz.isAnnotationPresent(annotationClass)) {
-                beans.putAll(beanResources.get(clazz).getBeans());
+        for (BeanDefinition beanDefinition : this.configResolver.getBeanDefinitions().values()) {
+            if(beanDefinition.getBeanType().isAnnotationPresent(annotationClass)) {
+                beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
             }
         }
         return (Map<String, T>) beans;
@@ -112,6 +116,15 @@ public class ApplicationContext implements ConfigurableContext {
         return this.registerBean(beanDefinition, true);
     }
 
+    /**
+     * 根据 BeanDefinition 注册一个 bean
+     * 如果该 BeanDefinition 是由 Bean 注解生成的，则注册前会尝试先注入属性
+     * 由于注入属性可能会级联注册该 BeanDefinition，因此需要做二次判断
+     * 由于 Configuration 注解的 bean 被代理，因此该 BeanDefinition 可能在代理中已被注册，所以注册时需做三次判断
+     * @param beanDefinition BeanDefinition
+     * @param beforeAutowired 注册前是否先注入属性
+     * @return bean
+     */
     @Override
     public Object registerBean(BeanDefinition beanDefinition, boolean beforeAutowired) {
         Object bean = this.getBean(beanDefinition.getBeanName());
@@ -131,10 +144,9 @@ public class ApplicationContext implements ConfigurableContext {
             return bean;
         }
         bean = beanDefinition.createInstance(this);
-        if(bean instanceof ApplicationContextAware) {
-            ((ApplicationContextAware) bean).setApplicationContext(this);
+        if(this.getBean(beanDefinition.getBeanName()) == null) {
+            this.registerBean(beanDefinition.getBeanName(), beanDefinition.getBeanType(), bean);
         }
-        this.registerBean(beanDefinition.getBeanName(), beanDefinition.getBeanType(), bean);
         return bean;
     }
 
@@ -158,9 +170,13 @@ public class ApplicationContext implements ConfigurableContext {
             BeanResources beanResources = this.getBeanResources(clazz);
             if(beanResources == null) {
                 this.beanResources.put(clazz, new BeanResources(name, clazz, bean));
-                return;
+            } else {
+                beanResources.addBean(name, bean);
             }
-            beanResources.addBean(name, bean);
+            if(bean instanceof ApplicationContextAware) {
+                ((ApplicationContextAware) bean).setApplicationContext(this);
+            }
+            this.configResolver.doBeanPostProcessBeforeInitialization(name, clazz, bean);
         }
     }
 
@@ -169,6 +185,14 @@ public class ApplicationContext implements ConfigurableContext {
         BeanResources beanResources = this.getBeanResources(clazz);
         if(beanResources != null) {
             beanResources.getBeans().put(name, bean);
+        }
+    }
+
+    public void doInBeans(BiConsumer<String, Pair<Class<?>, Object>> bean) {
+        for (BeanResources beanResources : this.beanResources.values()) {
+            for (Map.Entry<String, Object> entry : beanResources.getBeans().entrySet()) {
+                bean.accept(entry.getKey(), new Pair<>(beanResources.getBeanType(), entry.getValue()));
+            }
         }
     }
 
@@ -187,5 +211,12 @@ public class ApplicationContext implements ConfigurableContext {
             }
         }
         return beanResources;
+    }
+
+    public static BeanDefinition create(Class<?> primarySource, AnnotationConfigResolver configResolver) {
+        BeanDefinition beanDefinition = GenericBeanDefinition.from(ApplicationContext.class);
+        beanDefinition.addConstructorArgs(Class.class, primarySource);
+        beanDefinition.addConstructorArgs(AnnotationConfigResolver.class, configResolver);
+        return beanDefinition;
     }
 }

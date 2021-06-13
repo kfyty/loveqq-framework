@@ -6,7 +6,6 @@ import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Lazy;
 
 import javax.servlet.ServletContext;
 import javax.websocket.server.ServerEndpoint;
@@ -23,7 +22,7 @@ public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
     private ConfigurableContext configurableContext;
 
-    @Autowired @Lazy
+    @Autowired
     private ServerEndpointExporter serverEndpointExporter;
 
     @Bean

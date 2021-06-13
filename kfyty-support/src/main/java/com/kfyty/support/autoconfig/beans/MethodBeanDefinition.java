@@ -9,6 +9,7 @@ import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -22,6 +23,7 @@ import java.lang.reflect.Parameter;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@ToString
 @Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 public class MethodBeanDefinition extends GenericBeanDefinition {
@@ -68,6 +70,9 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
             parameters[index++] = processor.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
         }
         bean = ReflectUtil.invokeMethod(this.sourceDefinition.createInstance(context), this.beanMethod, parameters);
+        if(context.getBean(this.getBeanName()) != null) {
+            return bean;
+        }
         if(log.isDebugEnabled()) {
             log.debug("instantiate bean from bean method: [{}] !", bean);
         }

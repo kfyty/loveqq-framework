@@ -51,7 +51,7 @@ public class K {
         this.prepareScanBean(primaryPackage);
         this.prepareMetaInfFactories();
         this.excludeScanBean();
-        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(primarySource, scanBeans, args);
+        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(scanBeans, args);
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         return applicationContext;
     }
