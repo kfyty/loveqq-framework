@@ -6,6 +6,7 @@ import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -20,19 +21,20 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@ToString
 @EqualsAndHashCode
 public class GenericBeanDefinition implements BeanDefinition {
     /**
      * 该 bean 注册的名称
      */
-    private final String beanName;
+    protected final String beanName;
 
     /**
      * 该 bean 注册的类型
      */
-    private final Class<?> beanType;
+    protected final Class<?> beanType;
 
-    private Map<Class<?>, Object> constructorArgs;
+    protected Map<Class<?>, Object> constructorArgs;
 
     public GenericBeanDefinition(Class<?> beanType) {
         this(BeanUtil.convert2BeanName(beanType), beanType);
@@ -97,12 +99,7 @@ public class GenericBeanDefinition implements BeanDefinition {
      * 从 Bean 注解的方法生成一个 Bean 定义
      */
     public static BeanDefinition from(BeanDefinition source, Method beanMethod, Bean bean) {
-        MethodBeanDefinition beanDefinition = null;
-        if(CommonUtil.empty(bean.value())) {
-            beanDefinition = new MethodBeanDefinition(beanMethod.getReturnType(), source, beanMethod);
-        } else {
-            beanDefinition = new MethodBeanDefinition(bean.value(), beanMethod.getReturnType(), source, beanMethod);
-        }
+        MethodBeanDefinition beanDefinition = new MethodBeanDefinition(BeanUtil.getBeanName(beanMethod.getReturnType(), bean), beanMethod.getReturnType(), source, beanMethod);
         if(CommonUtil.notEmpty(bean.initMethod())) {
             beanDefinition.setInitMethod(ReflectUtil.getMethod(beanDefinition.getBeanType(), bean.initMethod()));
         }

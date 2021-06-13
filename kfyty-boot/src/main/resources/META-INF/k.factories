@@ -1,3 +1,4 @@
 com.kfyty.boot.auto.config=\
     com.kfyty.boot.processor.PostConstructProcessor,\
-    com.kfyty.boot.processor.PreDestroyProcessor
+    com.kfyty.boot.processor.PreDestroyProcessor,\
+    com.kfyty.boot.processor.ConfigurationBeanProcessor
