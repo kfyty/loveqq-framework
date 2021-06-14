@@ -70,7 +70,7 @@ public class FieldAnnotationResolver {
                 this.refreshSelfAutowired(clazz, bean, field);
             }
             if(field.isAnnotationPresent(Autowired.class)) {
-                this.autowiredProcessor.doAutowired(bean, field);
+                this.autowiredProcessor.doAutowired(clazz, bean, field);
             }
         }
     }
@@ -82,7 +82,7 @@ public class FieldAnnotationResolver {
         if(ReflectUtil.getFieldValue(bean, field) != null) {
             return;
         }
-        ReturnType<?, ?, ?> type = ReturnType.getReturnType(field);
+        ReturnType<?, ?, ?> type = ReturnType.getReturnType(clazz, field);
         for (Method method : clazz.getMethods()) {
             if(!method.isAnnotationPresent(Bean.class) || !type.getActualType().isAssignableFrom(method.getReturnType())) {
                 continue;

@@ -36,13 +36,13 @@ public class AutowiredProcessor {
         this.context = context;
     }
 
-    public void doAutowired(Object bean, Field field) {
+    public void doAutowired(Class<?> clazz, Object bean, Field field) {
         if (ReflectUtil.getFieldValue(bean, field) != null) {
             return;
         }
         Autowired annotation = field.getAnnotation(Autowired.class);
         String beanName = BeanUtil.getBeanName(field.getType(), annotation);
-        Object targetBean = this.doResolveBean(beanName, ReturnType.getReturnType(field), annotation);
+        Object targetBean = this.doResolveBean(beanName, ReturnType.getReturnType(clazz, field), annotation);
         ReflectUtil.setFieldValue(bean, field, targetBean);
         if(log.isDebugEnabled()) {
             log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);

@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -115,6 +116,25 @@ public abstract class ReflectUtil {
         }
         Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
         return (Class<?>) actualTypeArguments[genericIndex];
+    }
+
+    public static Class<?> getActualFieldType(Class<?> clazz, Field field) {
+        String genericSignature = (String) invokeSimpleMethod(field, "getGenericSignature");
+        if(genericSignature == null) {
+            return field.getType();
+        }
+        Type genericSuperclass = clazz.getGenericSuperclass();
+        if(!(genericSuperclass instanceof ParameterizedType)) {
+            return field.getType();
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
+        TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
+        for (int i = 0; i < typeParameters.length; i++) {
+            if(genericSignature.contains(typeParameters[i].getName())) {
+                return (Class<?>) parameterizedType.getActualTypeArguments()[i];
+            }
+        }
+        return field.getType();
     }
 
     public static Object getFieldValue(Object obj, String fieldName) {

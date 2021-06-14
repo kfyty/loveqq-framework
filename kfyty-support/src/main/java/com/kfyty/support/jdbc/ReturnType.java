@@ -1,6 +1,7 @@
 package com.kfyty.support.jdbc;
 
 import com.kfyty.support.exception.SupportException;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class ReturnType<T, K, V> {
     private Class<K> keyParameterizedType;
     private Class<V> valueParameterizedType;
 
-    public ReturnType(Boolean array, Boolean parameterizedType, Class<T> returnType, Type keyParameterizedType, Type valueParameterizedType) {
+    public ReturnType(boolean array, boolean parameterizedType, Class<T> returnType, Type keyParameterizedType, Type valueParameterizedType) {
         this.array = array;
         this.parameterizedType = parameterizedType;
         this.returnType = returnType;
@@ -84,9 +85,17 @@ public class ReturnType<T, K, V> {
         this.valueParameterizedType = (Class<V>) wildcardType.getUpperBounds()[0];
     }
 
-    @SuppressWarnings("unchecked")
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Field field) {
-        return (ReturnType<T, K, V>) getReturnType(field.getGenericType(), field.getType());
+        return getReturnType(field.getDeclaringClass(), field);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, K, V> ReturnType<T, K, V> getReturnType(Class<?> clazz, Field field) {
+        ReturnType<T, K, V> returnType = (ReturnType<T, K, V>) getReturnType(field.getGenericType(), field.getType());
+        if(!returnType.isParameterizedType()) {
+            returnType.setReturnType((Class<T>) ReflectUtil.getActualFieldType(clazz, field));
+        }
+        return returnType;
     }
 
     @SuppressWarnings("unchecked")
