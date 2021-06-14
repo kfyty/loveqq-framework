@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
@@ -57,7 +57,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         this.beanMethod = beanMethod;
     }
 
-    public Object createInstance(ConfigurableContext context) {
+    public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {
             return bean;

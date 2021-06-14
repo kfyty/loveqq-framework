@@ -1,7 +1,7 @@
 package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.tomcat.ServerEndpointExporter;
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
@@ -20,7 +20,7 @@ import javax.websocket.server.ServerEndpoint;
 @Configuration
 public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
-    private ConfigurableContext configurableContext;
+    private ApplicationContext applicationContext;
 
     @Autowired
     private ServerEndpointExporter serverEndpointExporter;
@@ -32,7 +32,7 @@ public class WebSocketAutoConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        for (Object value : configurableContext.getBeanWithAnnotation(ServerEndpoint.class).values()) {
+        for (Object value : applicationContext.getBeanWithAnnotation(ServerEndpoint.class).values()) {
             this.serverEndpointExporter.addEndpointClass(value.getClass());
         }
         this.serverEndpointExporter.registerEndpoints();

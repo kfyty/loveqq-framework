@@ -3,7 +3,7 @@ package com.kfyty.boot.processor;
 import com.kfyty.boot.proxy.ConfigurationAnnotationEnhancerProxy;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
@@ -22,10 +22,10 @@ import net.sf.cglib.proxy.Enhancer;
 @Component
 public class ConfigurationBeanProcessor implements ApplicationContextAware, BeanPostProcessor {
     @Getter
-    private ConfigurableContext context;
+    private ApplicationContext context;
 
     @Override
-    public void setApplicationContext(ConfigurableContext context) {
+    public void setApplicationContext(ApplicationContext context) {
         this.context = context;
     }
 

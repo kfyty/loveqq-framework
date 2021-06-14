@@ -1,7 +1,7 @@
 package com.kfyty.boot;
 
-import com.kfyty.boot.configuration.ApplicationContext;
 import com.kfyty.boot.resolver.AnnotationConfigResolver;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;

@@ -4,7 +4,7 @@ import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.handler.MvcAnnotationHandler;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Configuration
 public class MvcAutoConfig implements BeanRefreshComplete {
     @Autowired
-    private ConfigurableContext configurableContext;
+    private ApplicationContext applicationContext;
 
     @Autowired
     private MvcAnnotationHandler mvcAnnotationHandler;
@@ -33,8 +33,8 @@ public class MvcAutoConfig implements BeanRefreshComplete {
 
     @Override
     public void onComplete(Class<?> primarySource, String ... args) {
-        Map<String, Object> controllers = configurableContext.getBeanWithAnnotation(Controller.class);
-        controllers.putAll(configurableContext.getBeanWithAnnotation(RestController.class));
+        Map<String, Object> controllers = applicationContext.getBeanWithAnnotation(Controller.class);
+        controllers.putAll(applicationContext.getBeanWithAnnotation(RestController.class));
         for (Object value : controllers.values()) {
             mvcAnnotationHandler.setMappingController(value);
             mvcAnnotationHandler.buildURLMappingMap();

@@ -1,7 +1,6 @@
 package com.kfyty.boot.resolver;
 
-import com.kfyty.boot.beans.BeanResources;
-import com.kfyty.boot.configuration.ApplicationContext;
+import com.kfyty.boot.configuration.DefaultApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
@@ -10,8 +9,6 @@ import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 功能描述: 方法注解解析器
@@ -23,7 +20,7 @@ import java.util.Map;
 @Slf4j
 public class MethodAnnotationResolver {
     private final AnnotationConfigResolver configResolver;
-    private final ApplicationContext applicationContext;
+    private final DefaultApplicationContext applicationContext;
     private final AutowiredProcessor autowiredProcessor;
 
     public MethodAnnotationResolver(AnnotationConfigResolver configResolver) {
@@ -41,7 +38,7 @@ public class MethodAnnotationResolver {
         for (Method method : methods) {
             if(method.isAnnotationPresent(Bean.class)) {
                 BeanDefinition methodBeanDefinition = GenericBeanDefinition.from(beanDefinition, method, method.getAnnotation(Bean.class));
-                this.configResolver.addBeanDefinition(methodBeanDefinition);
+                this.configResolver.registerBeanDefinition(methodBeanDefinition);
             }
         }
     }
@@ -50,12 +47,7 @@ public class MethodAnnotationResolver {
      * 对容器内的所有 bean 执行方法注入
      */
     public void doResolver() {
-        HashMap<Class<?>, BeanResources> beanResources = new HashMap<>(applicationContext.getBeanResources());
-        for (Map.Entry<Class<?>, BeanResources> entry : beanResources.entrySet()) {
-            for (Map.Entry<String, Object> beanEntry : entry.getValue().getBeans().entrySet()) {
-                this.doResolver(beanEntry.getValue());
-            }
-        }
+        this.applicationContext.doInBeans((beanName, bean) -> this.doResolver(bean));
     }
 
     /**

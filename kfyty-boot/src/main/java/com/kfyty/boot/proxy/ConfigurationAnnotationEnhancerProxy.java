@@ -1,6 +1,6 @@
 package com.kfyty.boot.proxy;
 
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.utils.BeanUtil;
@@ -19,10 +19,10 @@ import java.util.Set;
  * @email kfyty725@hotmail.com
  */
 public class ConfigurationAnnotationEnhancerProxy implements MethodInterceptor {
-    private final ConfigurableContext context;
+    private final ApplicationContext context;
     private final Set<String> proxying;
 
-    public ConfigurationAnnotationEnhancerProxy(ConfigurableContext context) {
+    public ConfigurationAnnotationEnhancerProxy(ApplicationContext context) {
         this.context = context;
         this.proxying = new HashSet<>();
     }

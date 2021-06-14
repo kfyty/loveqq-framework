@@ -1,9 +1,10 @@
 package com.kfyty.boot.resolver;
 
 import com.kfyty.boot.K;
-import com.kfyty.boot.configuration.ApplicationContext;
+import com.kfyty.boot.configuration.DefaultApplicationContext;
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.RestController;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.DestroyBean;
@@ -47,9 +48,7 @@ import java.util.stream.Collectors;
 @Getter
 public class AnnotationConfigResolver {
     private Class<?> primarySource;
-    private Set<Class<?>> scanClasses;
-    private Map<String, BeanDefinition> beanDefinitions;
-    private ApplicationContext applicationContext;
+    private DefaultApplicationContext applicationContext;
     private AutowiredProcessor autowiredProcessor;
     private FieldAnnotationResolver fieldAnnotationResolver;
     private MethodAnnotationResolver methodAnnotationResolver;
@@ -57,34 +56,28 @@ public class AnnotationConfigResolver {
     public static AnnotationConfigResolver create(Class<?> primarySource) {
         AnnotationConfigResolver configResolver = new AnnotationConfigResolver();
         configResolver.primarySource = primarySource;
-        configResolver.beanDefinitions = new LinkedHashMap<>();
-        configResolver.applicationContext = new ApplicationContext(primarySource, configResolver);
+        configResolver.applicationContext = new DefaultApplicationContext(configResolver);
         configResolver.autowiredProcessor = new AutowiredProcessor(configResolver.applicationContext);
         configResolver.fieldAnnotationResolver = new FieldAnnotationResolver(configResolver);
         configResolver.methodAnnotationResolver = new MethodAnnotationResolver(configResolver);
-        configResolver.registerDefaultBeanDefinition();
+        configResolver.registerDefaultBean();
         return configResolver;
     }
 
-    public void addBeanDefinition(BeanDefinition beanDefinition) {
-        if(beanDefinitions.containsKey(beanDefinition.getBeanName())) {
-            throw new IllegalArgumentException("conflicting bean definition: " + beanDefinition);
-        }
-        this.beanDefinitions.put(beanDefinition.getBeanName(), beanDefinition);
+    public void registerBeanDefinition(BeanDefinition beanDefinition) {
+        this.applicationContext.registerBeanDefinition(beanDefinition);
         if(FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
             BeanDefinition factoryBeanDefinition = GenericBeanDefinition.from(beanDefinition);
-            this.beanDefinitions.put(factoryBeanDefinition.getBeanName(), factoryBeanDefinition);
+            this.applicationContext.registerBeanDefinition(factoryBeanDefinition);
             this.methodAnnotationResolver.prepareBeanDefines(factoryBeanDefinition);
         }
         this.methodAnnotationResolver.prepareBeanDefines(beanDefinition);
     }
 
     public ApplicationContext doResolver(Set<Class<?>> scanClasses, String ... args) {
-        this.scanClasses = scanClasses;
-
         try {
-            this.prepareBeanDefines();
-            this.processImportBeanDefinition();
+            this.prepareBeanDefines(scanClasses);
+            this.processImportBeanDefinition(scanClasses);
             this.excludeBeanDefinition();
             this.sortBeanDefinition();
 
@@ -107,23 +100,21 @@ public class AnnotationConfigResolver {
         }
     }
 
-    public void doBeanPostProcessBeforeInitialization(String beanName, Class<?> beanType, Object bean) {
+    public void doBeanPostProcessBeforeInitialization(String beanName, Object bean) {
         for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
             Object newBean = beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
             if(newBean != null && newBean != bean) {
-                applicationContext.replaceBean(beanName, beanType, newBean);
+                applicationContext.replaceBean(beanName, newBean);
             }
         }
     }
 
-    private void registerDefaultBeanDefinition() {
-        BeanDefinition contextBeanDefinition = ApplicationContext.create(this.primarySource, this);
-        this.beanDefinitions.put(contextBeanDefinition.getBeanName(), contextBeanDefinition);
-        this.applicationContext.registerBean(contextBeanDefinition.getBeanName(), contextBeanDefinition.getBeanType(), this.applicationContext);
+    private void registerDefaultBean() {
+        this.applicationContext.registerBean(ApplicationContext.class, this.applicationContext);
     }
 
-    private void prepareBeanDefines() {
-        this.scanClasses.stream()
+    private void prepareBeanDefines(Set<Class<?>> scanClasses) {
+        scanClasses.stream()
                 .filter(e -> !ReflectUtil.isAbstract(e))
                 .filter(e ->
                         e.isAnnotationPresent(BootApplication.class) ||
@@ -144,19 +135,19 @@ public class AnnotationConfigResolver {
                     }
                     return GenericBeanDefinition.from(e);
                 })
-                .forEach(this::addBeanDefinition);
+                .forEach(this::registerBeanDefinition);
     }
 
-    private void processImportBeanDefinition() {
-        Set<BeanDefinition> importBeanDefines = beanDefinitions.values().stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).collect(Collectors.toSet());
+    private void processImportBeanDefinition(Set<Class<?>> scanClasses) {
+        Set<BeanDefinition> importBeanDefines = this.applicationContext.getBeanDefinitions().values().stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).collect(Collectors.toSet());
         for (BeanDefinition importBeanDefine : importBeanDefines) {
             ImportBeanDefine bean = (ImportBeanDefine) this.applicationContext.registerBean(importBeanDefine);
-            bean.doImport(scanClasses).forEach(this::addBeanDefinition);
+            bean.doImport(scanClasses).forEach(this::registerBeanDefinition);
         }
     }
 
     private void excludeBeanDefinition() {
-        Iterator<BeanDefinition> iterator = this.beanDefinitions.values().iterator();
+        Iterator<BeanDefinition> iterator = this.applicationContext.getBeanDefinitions().values().iterator();
         while (iterator.hasNext()) {
             BeanDefinition beanDefinition = iterator.next();
             if(K.isExclude(beanDefinition.getBeanName()) || K.isExclude(beanDefinition.getBeanType())) {
@@ -167,7 +158,8 @@ public class AnnotationConfigResolver {
     }
 
     private void sortBeanDefinition() {
-        this.beanDefinitions = this.beanDefinitions.values()
+        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions();
+        Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
                 .stream()
                 .sorted((define1, define2) -> {
                     if(BeanPostProcessor.class.isAssignableFrom(define1.getBeanType()) && !BeanPostProcessor.class.isAssignableFrom(define2.getBeanType())) {
@@ -176,12 +168,16 @@ public class AnnotationConfigResolver {
                     return BeanUtil.getBeanOrder(define1) - BeanUtil.getBeanOrder(define2);
                 })
                 .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
-                    throw new IllegalStateException("Duplicate key " + k2);
+                    throw new IllegalStateException("duplicate key " + k2);
                 }, LinkedHashMap::new));
+        synchronized (this.applicationContext.getBeanDefinitions()) {
+            beanDefinitions.clear();
+            beanDefinitions.putAll(sortBeanDefinition);
+        }
     }
 
     private void instantiateBeanDefinition() {
-        for (BeanDefinition beanDefinition : beanDefinitions.values()) {
+        for (BeanDefinition beanDefinition : this.applicationContext.getBeanDefinitions().values()) {
             this.applicationContext.registerBean(beanDefinition);
         }
     }
@@ -192,10 +188,10 @@ public class AnnotationConfigResolver {
         this.processBeanMethod(e -> e.getInitMethod() != null, MethodBeanDefinition::getInitMethod);
 
         for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
-            this.applicationContext.doInBeans((beanName, pair) -> {
-                Object newBean = beanPostProcessor.postProcessAfterInitialization(pair.getValue(), beanName);
-                if(newBean != null && newBean != pair.getValue()) {
-                    applicationContext.replaceBean(beanName, pair.getKey(), newBean);
+            this.applicationContext.doInBeans((beanName, bean) -> {
+                Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);
+                if(newBean != null && newBean != bean) {
+                    applicationContext.replaceBean(beanName, newBean);
                 }
             });
         }
@@ -210,8 +206,8 @@ public class AnnotationConfigResolver {
     private void processDestroy() {
         log.info("destroy bean...");
 
-        for (BeanPostProcessor bean : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
-            this.applicationContext.doInBeans((beanName, pair) -> bean.postProcessBeforeDestroy(pair.getValue(), beanName));
+        for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
+            this.applicationContext.doInBeans((beanName, bean) -> beanPostProcessor.postProcessBeforeDestroy(bean, beanName));
         }
 
         applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy);
@@ -220,7 +216,7 @@ public class AnnotationConfigResolver {
     }
 
     private void processBeanMethod(Predicate<MethodBeanDefinition> methodPredicate, Function<MethodBeanDefinition, Method> methodMapping) {
-        Iterator<BeanDefinition> iterator = this.beanDefinitions.values().stream().filter(e -> e instanceof MethodBeanDefinition).iterator();
+        Iterator<BeanDefinition> iterator = this.applicationContext.getBeanDefinitions().values().stream().filter(e -> e instanceof MethodBeanDefinition).iterator();
         while (iterator.hasNext()) {
             MethodBeanDefinition beanDefinition = (MethodBeanDefinition) iterator.next();
             if(methodPredicate.test(beanDefinition)) {

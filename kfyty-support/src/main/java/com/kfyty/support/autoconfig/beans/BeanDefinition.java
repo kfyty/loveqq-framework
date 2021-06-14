@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 
 import java.util.Map;
 
@@ -35,5 +35,5 @@ public interface BeanDefinition {
     /**
      * 生成 bean 实例
      */
-    Object createInstance(ConfigurableContext context);
+    Object createInstance(ApplicationContext context);
 }

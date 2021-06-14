@@ -1,7 +1,6 @@
 package com.kfyty.boot.resolver;
 
-import com.kfyty.boot.beans.BeanResources;
-import com.kfyty.boot.configuration.ApplicationContext;
+import com.kfyty.boot.configuration.DefaultApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Lazy;
@@ -9,6 +8,7 @@ import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Slf4j
 public class FieldAnnotationResolver {
-    private final ApplicationContext applicationContext;
+    private final DefaultApplicationContext applicationContext;
     private final AutowiredProcessor autowiredProcessor;
 
     public FieldAnnotationResolver(AnnotationConfigResolver configResolver) {
@@ -41,11 +41,7 @@ public class FieldAnnotationResolver {
      * 对容器内的所有的 bean 执行属性注入
      */
     public void doResolver() {
-        for (Map.Entry<Class<?>, BeanResources> entry : this.applicationContext.getBeanResources().entrySet()) {
-            for (Map.Entry<String, Object> beanEntry : entry.getValue().getBeans().entrySet()) {
-                this.doResolver(entry.getKey(), beanEntry.getValue());
-            }
-        }
+        this.applicationContext.doInBeans((beanName, bean) -> this.doResolver(this.applicationContext.getBeanDefinition(beanName).getBeanType(), bean));
     }
 
     /**
@@ -100,7 +96,7 @@ public class FieldAnnotationResolver {
                     if(sourceDefinition.getBeanType().equals(clazz)) {
                         for (Parameter nestedParam : ((MethodBeanDefinition) beanDefinition).getBeanMethod().getParameters()) {
                             if(ReturnType.getReturnType(nestedParam).getActualType().isAssignableFrom(field.getType())) {
-                                throw new IllegalStateException("bean circular dependency: " + nestedParam);
+                                throw new BeansException("bean circular dependency: " + nestedParam);
                             }
                         }
                         this.applicationContext.registerBean(beanDefinition, false);
@@ -113,7 +109,7 @@ public class FieldAnnotationResolver {
             if(beanDefinition != null) {
                 Object targetBean = this.applicationContext.registerBean(beanDefinition, false);
                 if(targetBean == null) {
-                    throw new IllegalStateException("the return value of the bean annotation method can't be null !");
+                    throw new BeansException("the return value of the bean annotation method can't be null !");
                 }
                 ReflectUtil.setFieldValue(bean, field, targetBean);
             }

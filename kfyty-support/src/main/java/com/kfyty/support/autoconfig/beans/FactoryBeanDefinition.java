@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +30,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 
-    public Object createInstance(ConfigurableContext context) {
+    public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {
             return bean;

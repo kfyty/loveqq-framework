@@ -8,5 +8,5 @@ package com.kfyty.support.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface ApplicationContextAware {
-    void setApplicationContext(ConfigurableContext context);
+    void setApplicationContext(ApplicationContext context);
 }

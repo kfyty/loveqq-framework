@@ -1,8 +1,9 @@
 package com.kfyty.support.autoconfig.beans;
 
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
+import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -29,9 +30,9 @@ import java.util.Set;
 public class AutowiredProcessor {
     private final Set<String> resolving = new HashSet<>();
 
-    private final ConfigurableContext context;
+    private final ApplicationContext context;
 
-    public AutowiredProcessor(ConfigurableContext context) {
+    public AutowiredProcessor(ApplicationContext context) {
         this.context = context;
     }
 
@@ -70,7 +71,7 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, ReturnType<?, ?, ?> returnType, Autowired autowired) {
         if (resolving.contains(targetBeanName)) {
-            throw new IllegalArgumentException("bean circular dependency: " + targetBeanName);
+            throw new BeansException("bean circular dependency: " + targetBeanName);
         }
         this.prepareResolving(targetBeanName, returnType.getActualType(), returnType.isParameterizedType());
         Map<String, ?> beans = this.doGetBean(targetBeanName, returnType.getActualType(), returnType.isParameterizedType(), autowired);
@@ -95,7 +96,7 @@ public class AutowiredProcessor {
     }
 
     private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
-        if(isGeneric) {
+        if(!isGeneric) {
             resolving.add(targetBeanName);
         } else {
             this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.add(e.getBeanName()));
@@ -103,7 +104,7 @@ public class AutowiredProcessor {
     }
 
     private void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
-        if(isGeneric) {
+        if(!isGeneric) {
             resolving.remove(targetBeanName);
         } else {
             this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.remove(e.getBeanName()));
@@ -119,14 +120,14 @@ public class AutowiredProcessor {
             } else {
                 BeanDefinition beanDefinition = this.context.getBeanDefinition(targetBeanName, targetType);
                 if(beanDefinition == null) {
-                    throw new IllegalArgumentException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
+                    throw new BeansException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
                 }
                 this.context.registerBean(beanDefinition);
             }
         }
         beanOfType = this.context.getBeanOfType(targetType);
         if(autowiredRequired(autowired) && beanOfType.isEmpty() || autowiredRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            throw new IllegalArgumentException("resolve target bean failed, no bean found of name: " + targetBeanName);
+            throw new BeansException("resolve target bean failed, no bean found of name: " + targetBeanName);
         }
         return beanOfType;
     }

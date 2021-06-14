@@ -8,7 +8,7 @@ import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
 import com.kfyty.mvc.tomcat.TomcatWebServer;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
-import com.kfyty.support.autoconfig.ConfigurableContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
@@ -33,7 +33,7 @@ import java.util.List;
 @Import(config = WebSocketAutoConfig.class)
 public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     @Autowired
-    private ConfigurableContext configurableContext;
+    private ApplicationContext applicationContext;
 
     @Autowired(required = false)
     private List<HandlerInterceptor> interceptorChain;
@@ -46,9 +46,9 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Bean
     public TomcatConfig tomcatConfig() {
-        TomcatConfig config = new TomcatConfig(configurableContext.getPrimarySource());
-        configurableContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
-        configurableContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
+        TomcatConfig config = new TomcatConfig(applicationContext.getPrimarySource());
+        applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
+        applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
         return config;
     }
 
@@ -79,7 +79,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Override
     public void onComplete(Class<?> primarySource, String ... args) {
-        WebServer server = configurableContext.getBean(WebServer.class);
+        WebServer server = applicationContext.getBean(WebServer.class);
         if(server != null) {
             server.start();
         }
@@ -87,7 +87,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Override
     public void onDestroy() {
-        WebServer server = configurableContext.getBean(WebServer.class);
+        WebServer server = applicationContext.getBean(WebServer.class);
         if(server != null) {
             server.stop();
         }
