@@ -41,6 +41,10 @@ public class ReturnType<T, K, V> {
         this.setValueParameterizedType(valueParameterizedType);
     }
 
+    public boolean isParameterizedType() {
+        return parameterizedType || isArray();
+    }
+
     public Class<?> getActualType() {
         if(!isParameterizedType()) {
             return this.returnType;
@@ -119,7 +123,7 @@ public class ReturnType<T, K, V> {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static <T, K, V> ReturnType<T, K, V> getReturnType(Type genericType, Class<T> type) {
         if(type.isArray()) {
-            return new ReturnType(true, false, type.getComponentType(), null, null);
+            return new ReturnType(true, false, type, type.getComponentType(), null);
         }
         if(!(genericType instanceof ParameterizedType)) {
             return new ReturnType<>(false, false, type, null, null);

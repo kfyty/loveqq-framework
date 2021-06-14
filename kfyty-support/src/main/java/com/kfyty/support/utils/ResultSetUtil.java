@@ -51,7 +51,7 @@ public abstract class ResultSetUtil {
 
     public static <T, K, V> Object processObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
         if(returnType.isArray()) {
-            return processArrayObject(resultSet, returnType.getReturnType());
+            return processArrayObject(resultSet, returnType.getKeyParameterizedType());
         }
         if(!returnType.isParameterizedType()) {
             return processSingleObject(resultSet, returnType.getReturnType());
