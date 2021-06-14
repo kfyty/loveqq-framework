@@ -101,10 +101,10 @@ public class GenericBeanDefinition implements BeanDefinition {
     public static BeanDefinition from(BeanDefinition source, Method beanMethod, Bean bean) {
         MethodBeanDefinition beanDefinition = new MethodBeanDefinition(BeanUtil.getBeanName(beanMethod.getReturnType(), bean), beanMethod.getReturnType(), source, beanMethod);
         if(CommonUtil.notEmpty(bean.initMethod())) {
-            beanDefinition.setInitMethod(ReflectUtil.getMethod(beanDefinition.getBeanType(), bean.initMethod()));
+            beanDefinition.setInitMethodName(bean.initMethod());
         }
         if(CommonUtil.notEmpty(bean.destroyMethod())) {
-            beanDefinition.setDestroyMethod(ReflectUtil.getMethod(beanDefinition.getBeanType(), bean.destroyMethod()));
+            beanDefinition.setDestroyMethodName(bean.destroyMethod());
         }
         return beanDefinition;
     }

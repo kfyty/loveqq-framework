@@ -4,7 +4,6 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,12 +16,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @ToString
-@Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 public class FactoryBeanDefinition extends GenericBeanDefinition {
     /**
      * FactoryBean 的 bean 定义
      */
+    @Getter
     private final BeanDefinition factoryBeanDefinition;
 
     public FactoryBeanDefinition(BeanDefinition factoryBeanDefinition) {

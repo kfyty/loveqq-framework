@@ -5,6 +5,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,27 +25,42 @@ import java.lang.reflect.Parameter;
  */
 @Slf4j
 @ToString
-@Getter @Setter
 @EqualsAndHashCode(callSuper = true)
 public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
      * 该方法所在的 bean 定义
      */
-    private BeanDefinition sourceDefinition;
+    @Getter
+    private final BeanDefinition sourceDefinition;
 
     /**
      * Bean 注解的方法
      */
-    private Method beanMethod;
+    @Getter
+    private final Method beanMethod;
+
+    /**
+     * bean 的初始化方法名称
+     */
+    @Getter @Setter
+    private String initMethodName;
 
     /**
      * bean 的初始化方法
      */
+    @Getter
     private Method initMethod;
+
+    /**
+     * bean 的销毁方法名称
+     */
+    @Getter @Setter
+    private String destroyMethodName;
 
     /**
      * bean 的销毁方法
      */
+    @Getter
     private Method destroyMethod;
 
     public MethodBeanDefinition(Class<?> beanType, BeanDefinition sourceDefinition, Method beanMethod) {
@@ -55,6 +71,28 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         super(beanName, beanType);
         this.sourceDefinition = sourceDefinition;
         this.beanMethod = beanMethod;
+    }
+
+    public Method getInitMethod(ApplicationContext applicationContext) {
+        if(CommonUtil.empty(this.initMethodName)) {
+            return null;
+        }
+        if(this.initMethod == null) {
+            Object bean = applicationContext.getBean(this.getBeanName());
+            this.initMethod = ReflectUtil.getMethod(bean.getClass(), this.initMethodName);
+        }
+        return initMethod;
+    }
+
+    public Method getDestroyMethod(ApplicationContext applicationContext) {
+        if(CommonUtil.empty(this.destroyMethodName)) {
+            return null;
+        }
+        if(this.destroyMethod == null) {
+            Object bean = applicationContext.getBean(this.getBeanName());
+            this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
+        }
+        return destroyMethod;
     }
 
     public Object createInstance(ApplicationContext context) {

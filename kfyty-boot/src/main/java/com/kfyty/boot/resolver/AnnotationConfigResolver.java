@@ -185,7 +185,7 @@ public class AnnotationConfigResolver {
     private void processInstantiateBean() {
         applicationContext.getBeanOfType(InitializingBean.class).values().forEach(InitializingBean::afterPropertiesSet);
 
-        this.processBeanMethod(e -> e.getInitMethod() != null, MethodBeanDefinition::getInitMethod);
+        this.processBeanMethod(e -> e.getInitMethod(this.applicationContext) != null, MethodBeanDefinition::getInitMethod);
 
         for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
             this.applicationContext.doInBeans((beanName, bean) -> {
@@ -212,7 +212,7 @@ public class AnnotationConfigResolver {
 
         applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy);
 
-        this.processBeanMethod(e -> e.getDestroyMethod() != null, MethodBeanDefinition::getDestroyMethod);
+        this.processBeanMethod(e -> e.getDestroyMethod(this.applicationContext) != null, MethodBeanDefinition::getDestroyMethod);
     }
 
     private void processBeanMethod(Predicate<MethodBeanDefinition> methodPredicate, Function<MethodBeanDefinition, Method> methodMapping) {
