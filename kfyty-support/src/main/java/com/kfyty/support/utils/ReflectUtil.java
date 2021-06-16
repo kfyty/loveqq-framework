@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +60,7 @@ public abstract class ReflectUtil {
     public static <T> T newInstance(Class<T> clazz) {
         try {
             if(!isAbstract(clazz)) {
-                return newInstance(clazz.getDeclaredConstructor());
+                return newInstance(searchSuitableConstructor(clazz));
             }
             throw new SupportException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
         } catch (Exception e) {
@@ -80,15 +81,39 @@ public abstract class ReflectUtil {
     }
 
     public static <T> T newInstance(Class<T> clazz, Map<Class<?>, Object> constructorArgs) {
-        if(CommonUtil.empty(constructorArgs)) {
-            return newInstance(clazz);
-        }
         try {
-            Constructor<T> constructor = clazz.getConstructor(constructorArgs.keySet().toArray(new Class[0]));
-            return newInstance(constructor, constructorArgs.values().toArray());
+            Object[] parameterClasses = CommonUtil.empty(constructorArgs) ? null : constructorArgs.keySet().toArray(new Class[0]);
+            Object[] parameterValues = parameterClasses == null ? new Object[0] : constructorArgs.values().toArray();
+            Predicate<Constructor<T>> constructorPredicate = parameterClasses == null ? null : c -> Arrays.equals(parameterClasses, c.getParameterTypes());
+            return newInstance(searchSuitableConstructor(clazz, constructorPredicate), parameterValues);
         } catch (Exception e) {
             throw new SupportException(e);
         }
+    }
+
+    public static <T> Constructor<T> searchSuitableConstructor(Class<T> clazz) {
+        return searchSuitableConstructor(clazz, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<T> searchSuitableConstructor(Class<T> clazz, Predicate<Constructor<T>> constructorPredicate) {
+        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+        if(CommonUtil.size(constructors) == 1) {
+            return (Constructor<T>) constructors[0];
+        }
+        Constructor<?> noParameterConstructor = null;
+        for (Constructor<?> constructor : constructors) {
+            if(constructor.getParameterCount() == 0) {
+                noParameterConstructor = constructor;
+            }
+            if(constructorPredicate != null && constructorPredicate.test((Constructor<T>) constructor)) {
+                return (Constructor<T>) constructor;
+            }
+        }
+        if(noParameterConstructor != null) {
+            return (Constructor<T>) noParameterConstructor;
+        }
+        throw new SupportException("can't find a suitable constructor !");
     }
 
     public static Class<?> getSuperGeneric(Class<?> clazz) {

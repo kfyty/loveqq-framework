@@ -25,6 +25,7 @@ public class InstantiatedBeanDefinition extends GenericBeanDefinition {
         super(beanName, beanType);
     }
 
+    @Override
     public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {

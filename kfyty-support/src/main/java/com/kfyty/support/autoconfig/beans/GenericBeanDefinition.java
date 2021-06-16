@@ -1,7 +1,10 @@
 package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Qualifier;
+import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -9,7 +12,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -35,6 +40,8 @@ public class GenericBeanDefinition implements BeanDefinition {
     protected final Class<?> beanType;
 
     protected Map<Class<?>, Object> constructorArgs;
+
+    protected AutowiredProcessor autowiredProcessor = null;
 
     public GenericBeanDefinition(Class<?> beanType) {
         this(BeanUtil.convert2BeanName(beanType), beanType);
@@ -69,16 +76,40 @@ public class GenericBeanDefinition implements BeanDefinition {
         return this.constructorArgs;
     }
 
+    @Override
     public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {
             return bean;
         }
+        this.ensureAutowiredProcessor(context);
+        this.prepareConstructorArgs();
         bean = ReflectUtil.newInstance(this.beanType, this.constructorArgs);
         if(log.isDebugEnabled()) {
             log.debug("instantiate bean: [{}] !", bean);
         }
         return bean;
+    }
+
+    protected void ensureAutowiredProcessor(ApplicationContext context) {
+        if(this.autowiredProcessor == null) {
+            this.autowiredProcessor = new AutowiredProcessor(context);
+        }
+    }
+
+    protected void prepareConstructorArgs() {
+        Constructor<?> constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> e.isAnnotationPresent(Autowired.class));
+        if(constructor.getParameterCount() == 0 || CommonUtil.size(this.constructorArgs) == constructor.getParameterCount()) {
+            return;
+        }
+        for (Parameter parameter : constructor.getParameters()) {
+            if(this.constructorArgs != null && this.constructorArgs.containsKey(parameter.getType())) {
+                continue;
+            }
+            String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
+            Object resolveBean = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
+            this.addConstructorArgs(parameter.getType(), resolveBean);
+        }
     }
 
     /**

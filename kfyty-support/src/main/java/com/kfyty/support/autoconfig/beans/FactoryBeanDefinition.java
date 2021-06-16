@@ -29,6 +29,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 
+    @Override
     public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {

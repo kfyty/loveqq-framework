@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
 public @interface Autowired {
 
     boolean required() default true;
