@@ -10,6 +10,7 @@ import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
+import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
@@ -21,6 +22,7 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -100,9 +103,9 @@ public class AnnotationConfigResolver {
         }
     }
 
-    public void doBeanPostProcessBeforeInitialization(String beanName, Object bean) {
-        for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
-            Object newBean = beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
+    public void doBeanPostProcessAfterInstantiation(String beanName, Object bean) {
+        for (InstantiationAwareBeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(InstantiationAwareBeanPostProcessor.class).values()) {
+            Object newBean = beanPostProcessor.postProcessAfterInstantiation(bean, beanName);
             if(newBean != null && newBean != bean) {
                 applicationContext.replaceBean(beanName, newBean);
             }
@@ -116,17 +119,10 @@ public class AnnotationConfigResolver {
     private void prepareBeanDefines(Set<Class<?>> scanClasses) {
         scanClasses.stream()
                 .filter(e -> !ReflectUtil.isAbstract(e))
-                .filter(e ->
-                        e.isAnnotationPresent(BootApplication.class) ||
-                                e.isAnnotationPresent(Configuration.class) ||
-                                e.isAnnotationPresent(Component.class) ||
-                                e.isAnnotationPresent(Controller.class) ||
-                                e.isAnnotationPresent(RestController.class) ||
-                                e.isAnnotationPresent(Service.class) ||
-                                e.isAnnotationPresent(Repository.class))
+                .filter(e -> AnnotationUtil.hasAnyAnnotation(e, BootApplication.class, Configuration.class, Component.class, Controller.class, RestController.class, Service.class, Repository.class))
                 .map(e -> {
-                    for (Annotation annotation : e.getAnnotations()) {
-                        if (annotation.annotationType().isAnnotationPresent(Component.class)) {
+                    for (Annotation annotation : AnnotationUtil.findAnnotations(e)) {
+                        if (AnnotationUtil.hasAnnotation(annotation.annotationType(), Component.class)) {
                             String beanName = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
                             if (CommonUtil.notEmpty(beanName)) {
                                 return GenericBeanDefinition.from(beanName, e);
@@ -162,7 +158,7 @@ public class AnnotationConfigResolver {
         Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
                 .stream()
                 .sorted((define1, define2) -> {
-                    if(BeanPostProcessor.class.isAssignableFrom(define1.getBeanType()) && !BeanPostProcessor.class.isAssignableFrom(define2.getBeanType())) {
+                    if(InstantiationAwareBeanPostProcessor.class.isAssignableFrom(define1.getBeanType()) && !InstantiationAwareBeanPostProcessor.class.isAssignableFrom(define2.getBeanType())) {
                         return Order.HIGHEST_PRECEDENCE;
                     }
                     return BeanUtil.getBeanOrder(define1) - BeanUtil.getBeanOrder(define2);
@@ -183,11 +179,22 @@ public class AnnotationConfigResolver {
     }
 
     private void processInstantiateBean() {
+        Collection<BeanPostProcessor> beanPostProcessors = applicationContext.getBeanOfType(BeanPostProcessor.class).values();
+
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
+            this.applicationContext.doInBeans((beanName, bean) -> {
+                Object newBean = beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
+                if(newBean != null && newBean != bean) {
+                    applicationContext.replaceBean(beanName, newBean);
+                }
+            });
+        }
+
         applicationContext.getBeanOfType(InitializingBean.class).values().forEach(InitializingBean::afterPropertiesSet);
 
         this.processBeanMethod(e -> e.getInitMethod(this.applicationContext) != null, MethodBeanDefinition::getInitMethod);
 
-        for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
+        for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
             this.applicationContext.doInBeans((beanName, bean) -> {
                 Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);
                 if(newBean != null && newBean != bean) {

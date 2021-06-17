@@ -10,6 +10,7 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -63,13 +64,13 @@ public class FieldAnnotationResolver {
     public void doResolver(Class<?> clazz, Object bean, boolean refreshing) {
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(clazz).entrySet()) {
             Field field = entry.getValue();
-            if(refreshing && field.isAnnotationPresent(Lazy.class)) {
+            if(refreshing && AnnotationUtil.hasAnnotation(field, Lazy.class)) {
                 continue;
             }
             if(refreshing) {
                 this.refreshSelfAutowired(clazz, bean, field);
             }
-            if(field.isAnnotationPresent(Autowired.class)) {
+            if(AnnotationUtil.hasAnnotation(field, Autowired.class)) {
                 this.autowiredProcessor.doAutowired(clazz, bean, field);
             }
         }
@@ -84,11 +85,11 @@ public class FieldAnnotationResolver {
         }
         ReturnType<?, ?, ?> type = ReturnType.getReturnType(clazz, field);
         for (Method method : clazz.getMethods()) {
-            if(!method.isAnnotationPresent(Bean.class) || !type.getActualType().isAssignableFrom(method.getReturnType())) {
+            if(!AnnotationUtil.hasAnnotation(method, Bean.class) || !type.getActualType().isAssignableFrom(method.getReturnType())) {
                 continue;
             }
             for (Parameter parameter : method.getParameters()) {
-                String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
+                String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
                 ReturnType<?, ?, ?> paramType = ReturnType.getReturnType(parameter);
                 BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, paramType.getActualType());
                 if(beanDefinition instanceof MethodBeanDefinition) {
@@ -103,7 +104,7 @@ public class FieldAnnotationResolver {
                     }
                 }
             }
-            Bean annotation = method.getAnnotation(Bean.class);
+            Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
             String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.convert2BeanName(method.getReturnType());
             BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, method.getReturnType());
             if(beanDefinition != null) {

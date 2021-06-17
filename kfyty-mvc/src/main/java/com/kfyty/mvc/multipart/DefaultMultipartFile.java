@@ -29,6 +29,11 @@ public class DefaultMultipartFile implements MultipartFile {
     }
 
     @Override
+    public boolean isFile() {
+        return !this.fileItem.isFormField();
+    }
+
+    @Override
     public String getName() {
         return fileItem.getFieldName();
     }

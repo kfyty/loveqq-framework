@@ -3,6 +3,7 @@ package com.kfyty.boot.web;
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.SneakyThrows;
 
@@ -29,7 +30,7 @@ public class MvcAutoConfigListener implements ServletContextListener {
             synchronized (this) {
                 if(this.applicationContext == null) {
                     String basePackage = sce.getServletContext().getInitParameter(BASE_PACKAGE_PARAM_NAME);
-                    ComponentScan annotation = this.getClass().getAnnotation(ComponentScan.class);
+                    ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
                     ReflectUtil.setAnnotationValue(annotation, "value", new String[] {basePackage});
                     this.applicationContext = K.run(MvcAutoConfigListener.class);
                 }

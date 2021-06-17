@@ -6,6 +6,7 @@ import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
 import lombok.SneakyThrows;
@@ -83,18 +84,18 @@ public class K {
             return;
         }
         this.scanBeans.add(clazz);
-        ComponentScan componentScan = clazz.getAnnotation(ComponentScan.class);
+        ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
         if (componentScan != null) {
             this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
         }
-        if(clazz.isAnnotationPresent(Import.class)) {
-            for (Class<?> importClazz : clazz.getAnnotation(Import.class).config()) {
+        if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
+            for (Class<?> importClazz : AnnotationUtil.findAnnotation(clazz, Import.class).config()) {
                 this.processScanBean(importClazz);
             }
         }
-        for (Annotation annotation : clazz.getAnnotations()) {
-            if(annotation.annotationType().isAnnotationPresent(Import.class)) {
-                for (Class<?> importClazz : annotation.annotationType().getAnnotation(Import.class).config()) {
+        for (Annotation annotation : AnnotationUtil.findAnnotations(clazz)) {
+            if(AnnotationUtil.hasAnnotation(annotation.annotationType(), Import.class)) {
+                for (Class<?> importClazz : AnnotationUtil.findAnnotation(annotation.annotationType(), Import.class).config()) {
                     this.processScanBean(importClazz);
                 }
             }
@@ -120,13 +121,13 @@ public class K {
     }
 
     private void excludeScanBean() {
-        BootApplication bootApplication = this.primarySource.getAnnotation(BootApplication.class);
+        BootApplication bootApplication = AnnotationUtil.findAnnotation(this.primarySource, BootApplication.class);
         if(bootApplication != null) {
             excludeBeanNames.addAll(Arrays.asList(bootApplication.excludeNames()));
             excludeBeanClasses.addAll(Arrays.asList(bootApplication.exclude()));
         }
         for (Class<?> scanBean : this.scanBeans) {
-            EnableAutoConfiguration autoConfiguration = scanBean.getAnnotation(EnableAutoConfiguration.class);
+            EnableAutoConfiguration autoConfiguration = AnnotationUtil.findAnnotation(scanBean, EnableAutoConfiguration.class);
             if(autoConfiguration != null) {
                 excludeBeanNames.addAll(Arrays.asList(autoConfiguration.excludeNames()));
                 excludeBeanClasses.addAll(Arrays.asList(autoConfiguration.exclude()));

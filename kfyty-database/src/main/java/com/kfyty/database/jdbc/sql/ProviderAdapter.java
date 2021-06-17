@@ -4,6 +4,7 @@ import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.TableId;
 import com.kfyty.database.jdbc.sql.dialect.MySQLProvider;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import javafx.util.Pair;
@@ -94,7 +95,7 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
 
     protected String getPkField(Class<?> mapperClass) {
         for (Field value : ReflectUtil.getFieldMap(mapperClass).values()) {
-            if (value.isAnnotationPresent(TableId.class)) {
+            if (AnnotationUtil.hasAnnotation(value, TableId.class)) {
                 return CommonUtil.convert2Underline(value.getName());
             }
         }

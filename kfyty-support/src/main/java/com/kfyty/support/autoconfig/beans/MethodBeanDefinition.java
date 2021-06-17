@@ -4,6 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -105,8 +106,8 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         this.ensureAutowiredProcessor(context);
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
-            String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
-            parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
+            String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
+            parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
         }
         bean = ReflectUtil.invokeMethod(this.sourceDefinition.createInstance(context), this.beanMethod, parameters);
         if(context.getBean(this.getBeanName()) != null) {

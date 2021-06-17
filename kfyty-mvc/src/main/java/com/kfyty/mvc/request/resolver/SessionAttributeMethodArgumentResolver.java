@@ -3,6 +3,7 @@ package com.kfyty.mvc.request.resolver;
 import com.kfyty.mvc.annotation.SessionAttribute;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.AnnotationUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -18,11 +19,11 @@ public class SessionAttributeMethodArgumentResolver implements HandlerMethodArgu
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.getParameter().isAnnotationPresent(SessionAttribute.class);
+        return AnnotationUtil.hasAnnotation(parameter.getParameter(), SessionAttribute.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
-        return request.getSession().getAttribute(parameter.getParameter().getAnnotation(SessionAttribute.class).value());
+        return request.getSession().getAttribute(AnnotationUtil.findAnnotation(parameter.getParameter(), SessionAttribute.class).value());
     }
 }

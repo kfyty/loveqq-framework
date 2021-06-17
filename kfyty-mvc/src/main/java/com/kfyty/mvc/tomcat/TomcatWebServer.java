@@ -2,6 +2,7 @@ package com.kfyty.mvc.tomcat;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -199,7 +200,7 @@ public class TomcatWebServer implements WebServer {
     private void prepareWebFilter(Context context) {
         for (Filter webFilter : this.config.getWebFilters()) {
             FilterDef filterDef = new FilterDef();
-            WebFilter annotation = webFilter.getClass().getAnnotation(WebFilter.class);
+            WebFilter annotation = AnnotationUtil.findAnnotation(webFilter, WebFilter.class);
             filterDef.setFilter(webFilter);
             filterDef.setFilterClass(webFilter.getClass().getName());
             filterDef.setFilterName(webFilter.getClass().getSimpleName());

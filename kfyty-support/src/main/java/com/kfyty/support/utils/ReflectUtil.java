@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -242,9 +244,12 @@ public abstract class ReflectUtil {
         }
     }
 
+    public static Method getSuperMethod(Method method) {
+        return getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
+    }
+
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
         if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            log.error("method does not exist: [{}] !", methodName);
             return null;
         }
         try {
@@ -253,6 +258,48 @@ public abstract class ReflectUtil {
         } catch(NoSuchMethodException e) {
             return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
         }
+    }
+
+    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?> ... parameterTypes) {
+        return getConstructor(clazz, false, parameterTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?> ... parameterTypes) {
+        try {
+            return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
+        } catch(NoSuchMethodException e) {
+            return getSuperConstructor(clazz, containPrivate, parameterTypes);
+        }
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
+        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?> ... parameterTypes) {
+        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return null;
+        }
+        try {
+            Constructor<T> constructor = (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
+            return !containPrivate && Modifier.isPrivate(constructor.getModifiers()) ? null : constructor;
+        } catch(NoSuchMethodException e) {
+            return getSuperConstructor(clazz, containPrivate, parameterTypes);
+        }
+    }
+
+    public static Parameter getSuperParameters(Parameter parameter) {
+        Executable executable = parameter.getDeclaringExecutable();
+        if(executable instanceof Method) {
+            Method method = (Method) executable;
+            Method superMethod = getSuperMethod(method);
+            return superMethod == null ? null : superMethod.getParameters()[(int) getFieldValue(parameter, "index")];
+        }
+        Constructor<?> constructor = (Constructor<?>) executable;
+        Constructor<?> superConstructor = getSuperConstructor(constructor);
+        return superConstructor == null ? null : superConstructor.getParameters()[(int) getFieldValue(parameter, "index")];
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz) {

@@ -5,6 +5,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -98,7 +99,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     protected void prepareConstructorArgs() {
-        Constructor<?> constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> e.isAnnotationPresent(Autowired.class));
+        Constructor<?> constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> AnnotationUtil.hasAnnotation(e, Autowired.class));
         if(constructor.getParameterCount() == 0 || CommonUtil.size(this.constructorArgs) == constructor.getParameterCount()) {
             return;
         }
@@ -106,8 +107,8 @@ public class GenericBeanDefinition implements BeanDefinition {
             if(this.constructorArgs != null && this.constructorArgs.containsKey(parameter.getType())) {
                 continue;
             }
-            String beanName = BeanUtil.getBeanName(parameter.getType(), parameter.getAnnotation(Qualifier.class));
-            Object resolveBean = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), parameter.getAnnotation(Autowired.class));
+            String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
+            Object resolveBean = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
             this.addConstructorArgs(parameter.getType(), resolveBean);
         }
     }

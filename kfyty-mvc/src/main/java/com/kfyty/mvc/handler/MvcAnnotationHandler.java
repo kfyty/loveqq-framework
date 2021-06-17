@@ -3,6 +3,7 @@ package com.kfyty.mvc.handler;
 import com.kfyty.mvc.annotation.RequestMapping;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.request.RequestMethod;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
@@ -77,8 +78,8 @@ public class MvcAnnotationHandler {
 
     private void handleAnnotation() {
         Class<?> clazz = this.mappingController.getClass();
-        if(clazz.isAnnotationPresent(RequestMapping.class)) {
-            this.superUrl = CommonUtil.formatURI(clazz.getAnnotation(RequestMapping.class).value());
+        if(AnnotationUtil.hasAnnotation(clazz, RequestMapping.class)) {
+            this.superUrl = CommonUtil.formatURI(AnnotationUtil.findAnnotation(clazz, RequestMapping.class).value());
         }
         this.handleMethodAnnotation();
     }
@@ -99,11 +100,11 @@ public class MvcAnnotationHandler {
     }
 
     private RequestMapping findRequestMapping(Method method) {
-        if(method.isAnnotationPresent(RequestMapping.class)) {
-            return method.getAnnotation(RequestMapping.class);
+        if(AnnotationUtil.hasAnnotation(method, RequestMapping.class)) {
+            return AnnotationUtil.findAnnotation(method, RequestMapping.class);
         }
-        for (Annotation annotation : method.getAnnotations()) {
-            if(annotation.annotationType().isAnnotationPresent(RequestMapping.class)) {
+        for (Annotation annotation : AnnotationUtil.findAnnotations(method)) {
+            if(AnnotationUtil.hasAnnotation(annotation.annotationType(), RequestMapping.class)) {
                 return new RequestMapping() {
 
                     @Override
@@ -113,7 +114,7 @@ public class MvcAnnotationHandler {
 
                     @Override
                     public RequestMethod requestMethod() {
-                        return annotation.annotationType().getAnnotation(RequestMapping.class).requestMethod();
+                        return AnnotationUtil.findAnnotation(annotation.annotationType(), RequestMapping.class).requestMethod();
                     }
 
                     @Override

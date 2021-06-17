@@ -8,6 +8,7 @@ import com.kfyty.database.generate.configuration.annotation.GenerateTemplate;
 import com.kfyty.database.generate.configuration.annotation.Table;
 import com.kfyty.database.generate.database.AbstractDataBaseMapper;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
@@ -99,14 +100,14 @@ public class GenerateConfigurable {
 
     private void initGenerateConfigurableFromAnnotation(GenerateConfiguration configuration) {
         Class<? extends GenerateConfiguration> configurationClass = configuration.getClass();
-        this.dataBaseMapper = dataBaseMapper != null ? dataBaseMapper : Optional.ofNullable(configurationClass.getAnnotation(DataBaseMapper.class)).map(DataBaseMapper::value).orElse(null);
-        this.dataBaseName = Optional.ofNullable(configurationClass.getAnnotation(DataBase.class)).map(DataBase::value).orElse(null);
-        this.tables = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
-        this.tablePattern = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(Pattern.compile("([\\s\\S]*)"));
-        this.queryTableSql = Optional.ofNullable(configurationClass.getAnnotation(Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
-        this.basePackage = Optional.ofNullable(configurationClass.getAnnotation(BasePackage.class)).map(BasePackage::value).orElse(null);
-        this.filePath = Optional.ofNullable(configurationClass.getAnnotation(FilePath.class)).map(FilePath::value).orElse(null);
-        List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(configurationClass.getAnnotation(GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (AbstractGenerateTemplate) ReflectUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(null);
+        this.dataBaseMapper = dataBaseMapper != null ? dataBaseMapper : Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, DataBaseMapper.class)).map(DataBaseMapper::value).orElse(null);
+        this.dataBaseName = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, DataBase.class)).map(DataBase::value).orElse(null);
+        this.tables = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
+        this.tablePattern = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(Pattern.compile("([\\s\\S]*)"));
+        this.queryTableSql = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
+        this.basePackage = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, BasePackage.class)).map(BasePackage::value).orElse(null);
+        this.filePath = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, FilePath.class)).map(FilePath::value).orElse(null);
+        List<AbstractGenerateTemplate> generateTemplateList = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, GenerateTemplate.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (AbstractGenerateTemplate) ReflectUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(null);
         if(!CommonUtil.empty(generateTemplateList)) {
             this.generateTemplateList.addAll(generateTemplateList);
         }

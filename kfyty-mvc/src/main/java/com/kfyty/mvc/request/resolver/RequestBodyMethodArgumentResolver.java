@@ -4,6 +4,7 @@ import com.kfyty.mvc.annotation.RequestBody;
 import com.kfyty.mvc.mapping.URLMapping;
 import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.JsonUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.getParameter().isAnnotationPresent(RequestBody.class);
+        return AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestBody.class);
     }
 
     @Override

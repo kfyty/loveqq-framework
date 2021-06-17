@@ -8,6 +8,7 @@ import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.exception.BeansException;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +109,7 @@ public class DefaultApplicationContext implements ApplicationContext {
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
         Map<String, Object> beans = new HashMap<>(2);
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
-            if(beanDefinition.getBeanType().isAnnotationPresent(annotationClass)) {
+            if(AnnotationUtil.hasAnnotation(beanDefinition.getBeanType(), annotationClass)) {
                 beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
             }
         }
@@ -172,7 +173,7 @@ public class DefaultApplicationContext implements ApplicationContext {
             if(bean instanceof ApplicationContextAware) {
                 ((ApplicationContextAware) bean).setApplicationContext(this);
             }
-            this.configResolver.doBeanPostProcessBeforeInitialization(name, bean);
+            this.configResolver.doBeanPostProcessAfterInstantiation(name, bean);
         }
     }
 

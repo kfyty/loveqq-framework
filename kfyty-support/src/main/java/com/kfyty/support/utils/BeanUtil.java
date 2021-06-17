@@ -48,11 +48,11 @@ public abstract class BeanUtil {
 
     public static int getBeanOrder(BeanDefinition beanDefinition) {
         if(beanDefinition instanceof MethodBeanDefinition) {
-            Order order = ((MethodBeanDefinition) beanDefinition).getBeanMethod().getAnnotation(Order.class);
+            Order order = AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Order.class);
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         if(beanDefinition instanceof GenericBeanDefinition) {
-            Order order = beanDefinition.getBeanType().getAnnotation(Order.class);
+            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Order.class);
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         return Order.LOWEST_PRECEDENCE;

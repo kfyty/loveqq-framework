@@ -4,6 +4,7 @@ import com.kfyty.mvc.annotation.ResponseBody;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.JsonUtil;
 
 import java.io.Writer;
@@ -23,7 +24,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
             return false;
         }
         Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
-        return returnType.getMethod().isAnnotationPresent(ResponseBody.class) || declaringClass.isAssignableFrom(ResponseBody.class) || declaringClass.isAssignableFrom(RestController.class);
+        return AnnotationUtil.hasAnnotation(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotation(declaringClass, ResponseBody.class, RestController.class);
     }
 
     @Override

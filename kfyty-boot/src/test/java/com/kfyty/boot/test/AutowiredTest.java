@@ -1,6 +1,10 @@
 package com.kfyty.boot.test;
 
 import com.kfyty.boot.K;
+import com.kfyty.mvc.annotation.GetMapping;
+import com.kfyty.mvc.annotation.PostMapping;
+import com.kfyty.mvc.annotation.PutMapping;
+import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -13,6 +17,7 @@ import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
@@ -20,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -35,10 +41,14 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@RestController
 @BootApplication
-public class AutowiredTest {
+public class AutowiredTest implements InitializingBean {
+    @Autowired
+    private AutowiredTest  autowiredTest;
 
     @Test
+    @PostMapping("test")
     public void autowiredTest() {
         K.run(AutowiredTest.class);
     }
@@ -46,6 +56,19 @@ public class AutowiredTest {
     @Bean
     public Bean1 bean1() {
         return new Bean1();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
+        Assert.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
+        Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
+        Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
+        Assert.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
+        Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
+        Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
+        Assert.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assert.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
     }
 }
 

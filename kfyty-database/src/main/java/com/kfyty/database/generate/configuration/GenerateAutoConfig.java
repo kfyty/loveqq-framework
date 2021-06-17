@@ -10,6 +10,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,14 +50,14 @@ public class GenerateAutoConfig implements ImportBeanDefine, BeanRefreshComplete
     @Override
     @SneakyThrows
     public void onComplete(Class<?> primarySource, String ... args) {
-        if(!primarySource.isAnnotationPresent(EnableAutoGenerate.class)) {
+        if(!AnnotationUtil.hasAnnotation(primarySource, EnableAutoGenerate.class)) {
             return;
         }
         if(this.generateConfiguration == null) {
             log.warn("generate config does not exist !");
             return;
         }
-        EnableAutoGenerate annotation = primarySource.getAnnotation(EnableAutoGenerate.class);
+        EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(primarySource, EnableAutoGenerate.class);
         List<? extends AbstractGenerateTemplate> templates = annotation.templateEngine().newInstance().loadTemplates(annotation.templatePrefix());
         if(CommonUtil.empty(templates)) {
             log.warn(": No freemarker template found for prefix: '" + annotation.templatePrefix() + "' !");

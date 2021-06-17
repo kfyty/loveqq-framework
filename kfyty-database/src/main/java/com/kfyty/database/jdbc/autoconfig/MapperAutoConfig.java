@@ -4,6 +4,7 @@ import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ public class MapperAutoConfig implements ImportBeanDefine {
     public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
         return scanClasses
                 .stream()
-                .filter(e -> e.isAnnotationPresent(Mapper.class))
+                .filter(e -> AnnotationUtil.hasAnnotation(e, Mapper.class))
                 .map(e -> GenericBeanDefinition.from(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }

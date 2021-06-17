@@ -8,6 +8,7 @@ import com.kfyty.database.generate.info.AbstractTableStructInfo;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.support.io.SimpleBufferedWriter;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
@@ -78,8 +79,8 @@ public class GenerateSources {
 
         Set<String> tables = Optional.ofNullable(configurable.getTables()).orElse(new HashSet<>());
 
-        if(!CommonUtil.empty(configurable.getQueryTableSql())) {
-            Query annotation = configurable.getDataBaseMapper().getMethod("findTableList").getAnnotation(Query.class);
+        if(CommonUtil.notEmpty(configurable.getQueryTableSql())) {
+            Query annotation = AnnotationUtil.findAnnotation(ReflectUtil.getMethod(configurable.getDataBaseMapper(), "findTableList"), Query.class);
             ReflectUtil.setAnnotationValue(annotation, "value", configurable.getQueryTableSql());
             tables.addAll(dataBaseMapper.findTableList());
         }

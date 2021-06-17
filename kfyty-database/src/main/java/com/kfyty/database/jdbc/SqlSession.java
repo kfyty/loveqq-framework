@@ -10,6 +10,7 @@ import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -265,7 +266,7 @@ public class SqlSession implements InvocationHandler {
      */
     public Annotation[] getAnnotationFromMethod(Method method) throws Exception {
         List<Annotation> annotations = new ArrayList<>();
-        for(Annotation annotation : method.getAnnotations()) {
+        for(Annotation annotation : AnnotationUtil.findAnnotations(method)) {
             Object o = ReflectUtil.invokeSimpleMethod(annotation, "value");
             if(o.getClass().isArray()) {
                 annotations.addAll(Arrays.asList((Annotation[]) o));
@@ -363,7 +364,7 @@ public class SqlSession implements InvocationHandler {
         Map<String, MethodParameter> params = new HashMap<>();
         for(int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
-            Param annotation = parameter.getAnnotation(Param.class);
+            Param annotation = AnnotationUtil.findAnnotation(parameter, Param.class);
             if(annotation != null) {
                 params.put(annotation.value(), new MethodParameter(parameter.getType(), args[i]));
             }

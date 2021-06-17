@@ -213,7 +213,7 @@ public class DispatcherServlet extends HttpServlet {
         ModelViewContainer container = new ModelViewContainer(request, response);
         container.setPrefix(prefix).setSuffix(suffix);
         for (Object param : params) {
-            if(Model.class.isAssignableFrom(param.getClass())) {
+            if(param != null && Model.class.isAssignableFrom(param.getClass())) {
                 container.setModel((Model) param);
                 break;
             }

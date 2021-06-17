@@ -3,6 +3,7 @@ package com.kfyty.boot.proxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -29,7 +30,7 @@ public class ConfigurationAnnotationEnhancerProxy implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-        Bean annotation = method.getAnnotation(Bean.class);
+        Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if(annotation == null) {
             return methodProxy.invokeSuper(o, objects);
         }

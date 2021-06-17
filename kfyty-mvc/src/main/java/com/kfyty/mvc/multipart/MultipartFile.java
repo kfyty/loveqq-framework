@@ -17,6 +17,8 @@ import java.nio.file.Path;
  */
 public interface MultipartFile {
 
+    boolean isFile();
+
     String getName();
 
     String getOriginalFilename();

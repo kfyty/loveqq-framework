@@ -6,6 +6,7 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.utils.AnnotationUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -36,8 +37,8 @@ public class MethodAnnotationResolver {
     public void prepareBeanDefines(BeanDefinition beanDefinition) {
         Method[] methods = beanDefinition.getBeanType().getMethods();
         for (Method method : methods) {
-            if(method.isAnnotationPresent(Bean.class)) {
-                BeanDefinition methodBeanDefinition = GenericBeanDefinition.from(beanDefinition, method, method.getAnnotation(Bean.class));
+            if(AnnotationUtil.hasAnnotation(method, Bean.class)) {
+                BeanDefinition methodBeanDefinition = GenericBeanDefinition.from(beanDefinition, method, AnnotationUtil.findAnnotation(method, Bean.class));
                 this.configResolver.registerBeanDefinition(methodBeanDefinition);
             }
         }
@@ -57,7 +58,7 @@ public class MethodAnnotationResolver {
     public void doResolver(Object bean) {
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
-            if(method.isAnnotationPresent(Autowired.class)) {
+            if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
                 this.autowiredProcessor.doAutowired(bean, method);
             }
         }

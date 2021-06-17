@@ -3,8 +3,11 @@ package com.kfyty.mvc.request.resolver;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.kfyty.mvc.annotation.RequestParam;
 import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
+import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JsonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -32,12 +35,13 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.getParameter().isAnnotationPresent(RequestParam.class);
+        ReturnType<Object, Object, Object> type = ReturnType.getReturnType(parameter.getParameter());
+        return !MultipartFile.class.isAssignableFrom(type.getActualType()) && AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
-        RequestParam annotation = parameter.getParameter().getAnnotation(RequestParam.class);
+        RequestParam annotation = AnnotationUtil.findAnnotation(parameter.getParameter(), RequestParam.class);
         if(CommonUtil.empty(annotation.value())) {
             return JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request)), parameter.getParamType());
         }

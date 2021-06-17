@@ -1,5 +1,7 @@
 package com.kfyty.mvc.util;
 
+import com.kfyty.mvc.multipart.DefaultMultipartFile;
+import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.support.utils.CommonUtil;
 
 import javax.servlet.ServletInputStream;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,7 +27,8 @@ import java.util.stream.Collectors;
  * @since JDK 1.8
  */
 public class ServletUtil {
-    private static final String CURRENT_REQUEST_PARAM = "__CURRENT__REQUEST__PARAM__" + UUID.randomUUID();
+    public static final String CURRENT_REQUEST_PARAM = "__CURRENT__REQUEST__PARAM__" + UUID.randomUUID();
+    public static final String CURRENT_REQUEST_FILES = "__CURRENT__REQUEST__FILES__" + UUID.randomUUID();
 
     /**
      * 将请求参数备份一下，以支持 PUT/DELETE 方法
@@ -50,6 +54,16 @@ public class ServletUtil {
                     builder.append(entry.getKey()).append("=").append(s).append("&");
                 }
             }
+            List<MultipartFile> files = DefaultMultipartFile.from(request);
+            for (Iterator<MultipartFile> i = files.iterator(); i.hasNext(); ) {
+                MultipartFile file = i.next();
+                if(file.isFile()) {
+                   continue;
+                }
+                builder.append(file.getName()).append("=").append(new String(file.getBytes())).append("&");
+                i.remove();
+            }
+            request.setAttribute(CURRENT_REQUEST_FILES, files);
             return builder.length() < 1 ? "" : builder.deleteCharAt(builder.length() - 1).toString();
         }
         int contentLength = request.getContentLength();
@@ -69,7 +83,7 @@ public class ServletUtil {
      * 如果获取不到则尝试从备份数据中获取
      */
     public static String getParameter(HttpServletRequest request, String paramName) throws IOException {
-        String param = request.getParameter(paramName);
+        String param = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
         return CommonUtil.notEmpty(param) ? param : tryGetParameter(request, paramName);
     }
 
@@ -88,12 +102,12 @@ public class ServletUtil {
     /**
      * 获取 ParametersMap，如果获取不到则尝试从备份数据中获取
      */
-    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) {
+    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request) throws IOException {
         Map<String, Object> map = new HashMap<>();
         Enumeration<?> parameterNames = request.getParameterNames();
         while(parameterNames.hasMoreElements()) {
             String paramName = (String) parameterNames.nextElement();
-            map.put(paramName, request.getParameter(paramName));
+            map.put(paramName, URLDecoder.decode(request.getParameter(paramName), "UTF-8"));
         }
         return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request);
     }
@@ -101,7 +115,7 @@ public class ServletUtil {
     /**
      * 根据参数名前缀获取 ParametersMap，如果获取不到则尝试从备份数据中获取
      */
-    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) {
+    public static Map<String, Object> getRequestParametersMap(HttpServletRequest request, String prefix) throws IOException {
         if(CommonUtil.empty(prefix)) {
             return getRequestParametersMap(request);
         }
@@ -111,7 +125,7 @@ public class ServletUtil {
         while(parameterNames.hasMoreElements()) {
             String paramName = (String) parameterNames.nextElement();
             if(paramName.startsWith(prefix)) {
-                map.put(paramName.replace(prefix, ""), request.getParameter(paramName));
+                map.put(paramName.replace(prefix, ""), URLDecoder.decode(request.getParameter(paramName), "UTF-8"));
             }
         }
         return CommonUtil.notEmpty(map) ? map : tryGetRequestParametersMap(request, prefix);
@@ -152,7 +166,7 @@ public class ServletUtil {
         return values;
     }
 
-    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) {
+    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request) throws IOException {
         Map<String, Object> map = new HashMap<>();
         String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
         if(CommonUtil.empty(split)) {
@@ -163,12 +177,12 @@ public class ServletUtil {
             if(CommonUtil.empty(paramMap) || paramMap.length < 2) {
                 continue;
             }
-            map.put(paramMap[0], paramMap[1]);
+            map.put(paramMap[0], URLDecoder.decode(paramMap[1], "UTF-8"));
         }
         return map;
     }
 
-    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) {
+    private static Map<String, Object> tryGetRequestParametersMap(HttpServletRequest request, String prefix) throws IOException {
         Map<String, Object> map = new HashMap<>();
         String[] split = ((String) request.getAttribute(CURRENT_REQUEST_PARAM)).split("&");
         if(CommonUtil.empty(split)) {
@@ -180,7 +194,7 @@ public class ServletUtil {
                 continue;
             }
             if(paramMap[0].startsWith(prefix)) {
-                map.put(paramMap[0].replace(prefix, ""), paramMap[1]);
+                map.put(paramMap[0].replace(prefix, ""), URLDecoder.decode(paramMap[1], "UTF-8"));
             }
         }
         return map;
