@@ -22,7 +22,7 @@
         <cglib.version>3.3.0</cglib.version>
 
         <druid.version>1.1.15</druid.version>
-        <mysql.version>5.1.44</mysql.version>
+        <mysql.version>8.0.16</mysql.version>
         <oracle14.version>10.2.0.4.0</oracle14.version>
         <mssql.version>7.4.0.jre8</mssql.version>
 
