@@ -22,4 +22,8 @@ public @interface BootApplication {
     Class<?>[] exclude() default {};
 
     String[] excludeNames() default {};
+
+    ComponentFilter componentFilter() default @ComponentFilter(includeFilter = {
+            BootApplication.class, Configuration.class, Component.class, Service.class, Repository.class
+    });
 }

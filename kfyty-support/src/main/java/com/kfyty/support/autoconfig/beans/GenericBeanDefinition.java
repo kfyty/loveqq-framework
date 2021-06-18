@@ -122,6 +122,15 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     /**
      * 从 Class 生成一个 bean 定义
+     * 该 bean 类型为 FactoryBean，则该 bean 的 name 由 FactoryBean#beanType$beanType 组成
+     */
+    public static BeanDefinition from(Class<?> factoryBeanType, Class<?> beanType) {
+        String beanName = CommonUtil.format("{}${}", BeanUtil.convert2BeanName(factoryBeanType), BeanUtil.convert2BeanName(beanType));
+        return from(beanName, beanType);
+    }
+
+    /**
+     * 从 Class 生成一个 bean 定义
      */
     public static BeanDefinition from(String beanName, Class<?> beanType) {
         return new GenericBeanDefinition(beanName, beanType);

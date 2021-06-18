@@ -8,7 +8,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 
 /**
- * 描述:
+ * 描述: 描述方法参数，也可用于单独描述方法
  *
  * @author kfyty725
  * @date 2021/6/3 15:43
@@ -18,9 +18,19 @@ import java.lang.reflect.Type;
 @AllArgsConstructor
 public class MethodParameter {
     /**
+     * 方法所在实例
+     */
+    private Object source;
+
+    /**
      * 参数所在的方法
      */
     private Method method;
+
+    /**
+     * 方法参数
+     */
+    private Object[] methodArgs;
 
     /**
      * 原始参数对象
@@ -56,6 +66,16 @@ public class MethodParameter {
         this.method = method;
         this.returnType = method.getReturnType();
         this.returnGeneric = method.getGenericReturnType();
+    }
+
+    public MethodParameter(Object source, Method method) {
+        this(method);
+        this.source = source;
+    }
+
+    public MethodParameter(Object source, Method method, Object ... methodArgs) {
+        this(source, method);
+        this.methodArgs = methodArgs;
     }
 
     public MethodParameter(Method method, Parameter parameter) {

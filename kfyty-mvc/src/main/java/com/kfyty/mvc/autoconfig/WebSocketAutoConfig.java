@@ -25,7 +25,7 @@ public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
     private ServerEndpointExporter serverEndpointExporter;
 
-    @Bean
+    @Bean(initMethod = "registerEndpoints")
     public ServerEndpointExporter serverEndpointExporter(ServletContext servletContext) {
         return new ServerEndpointExporter(servletContext);
     }
@@ -35,6 +35,5 @@ public class WebSocketAutoConfig implements InitializingBean {
         for (Object value : applicationContext.getBeanWithAnnotation(ServerEndpoint.class).values()) {
             this.serverEndpointExporter.addEndpointClass(value.getClass());
         }
-        this.serverEndpointExporter.registerEndpoints();
     }
 }

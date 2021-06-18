@@ -1,7 +1,6 @@
 package com.kfyty.mvc.request.support;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,7 +14,6 @@ import javax.servlet.http.HttpServletResponse;
  * @email kfyty725@hotmail.com
  */
 @Data
-@NoArgsConstructor
 @Accessors(chain = true)
 public class ModelViewContainer {
     private String prefix;
@@ -23,6 +21,10 @@ public class ModelViewContainer {
     private Model model;
     private HttpServletRequest request;
     private HttpServletResponse response;
+
+    public ModelViewContainer() {
+        this(RequestContextHolder.getCurrentRequest(), ResponseContextHolder.getCurrentResponse());
+    }
 
     public ModelViewContainer(HttpServletRequest request, HttpServletResponse response) {
         this.request = request;

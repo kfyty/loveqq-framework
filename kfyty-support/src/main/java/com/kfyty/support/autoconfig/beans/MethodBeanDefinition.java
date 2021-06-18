@@ -91,7 +91,9 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         }
         if(this.destroyMethod == null) {
             Object bean = applicationContext.getBean(this.getBeanName());
-            this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
+            if(bean != null) {
+                this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
+            }
         }
         return destroyMethod;
     }

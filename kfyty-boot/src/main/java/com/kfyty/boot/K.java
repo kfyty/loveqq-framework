@@ -3,6 +3,7 @@ package com.kfyty.boot;
 import com.kfyty.boot.resolver.AnnotationConfigResolver;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
+import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
@@ -34,35 +35,54 @@ import java.util.Set;
 public class K {
     private static final String META_FACTORIES = "META-INF/k.factories";
     private static final String META_FACTORIES_CONFIG = "com.kfyty.boot.auto.config";
-    private static final Set<String> excludeBeanNames = new HashSet<>(4);
-    private static final Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
 
-    private final Set<Class<?>> scanBeans;
     private final Class<?> primarySource;
+    private final Set<Class<?>> scanClasses;
+    private final Set<String> excludeBeanNames = new HashSet<>(4);
+    private final Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
+    private final Set<Class<? extends Annotation>> includeFilterAnnotations = new HashSet<>();
+    private final Set<Class<? extends Annotation>> excludeFilterAnnotations = new HashSet<>();
 
     public K(Class<?> clazz) {
         Objects.requireNonNull(clazz);
-        this.scanBeans = new HashSet<>();
+        this.scanClasses = new HashSet<>();
         this.primarySource = clazz;
     }
 
     public ApplicationContext run(String ... args) {
         long start = System.currentTimeMillis();
-        HashSet<String> primaryPackage = new HashSet<>(Collections.singleton(primarySource.getPackage().getName()));
-        this.prepareScanBean(primaryPackage);
+        this.prepareScanBean(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareMetaInfFactories();
         this.excludeScanBean();
-        ApplicationContext applicationContext = AnnotationConfigResolver.create(this.primarySource).doResolver(scanBeans, args);
+        ApplicationContext applicationContext = AnnotationConfigResolver.create(this).doResolver(scanClasses, args);
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         return applicationContext;
     }
 
-    public static boolean isExclude(String beanName) {
+    public Class<?> getPrimarySource() {
+        return primarySource;
+    }
+
+    public boolean isExclude(String beanName) {
         return excludeBeanNames.contains(beanName);
     }
 
-    public static boolean isExclude(Class<?> beanClass) {
+    public boolean isExclude(Class<?> beanClass) {
         return excludeBeanClasses.contains(beanClass);
+    }
+
+    public boolean isIncludeFilter(Class<?> beanClass) {
+        for (Class<? extends Annotation> excludeFilterAnnotation : excludeFilterAnnotations) {
+            if(AnnotationUtil.hasAnnotation(beanClass, excludeFilterAnnotation)) {
+                return false;
+            }
+        }
+        for (Class<? extends Annotation> excludeFilterAnnotation : includeFilterAnnotations) {
+            if(AnnotationUtil.hasAnnotation(beanClass, excludeFilterAnnotation)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static ApplicationContext run(Class<?> clazz, String ... args) {
@@ -80,10 +100,10 @@ public class K {
     }
 
     private void processScanBean(Class<?> clazz) {
-        if(this.scanBeans.contains(clazz)) {
+        if(this.scanClasses.contains(clazz)) {
             return;
         }
-        this.scanBeans.add(clazz);
+        this.scanClasses.add(clazz);
         ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
         if (componentScan != null) {
             this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
@@ -125,14 +145,27 @@ public class K {
         if(bootApplication != null) {
             excludeBeanNames.addAll(Arrays.asList(bootApplication.excludeNames()));
             excludeBeanClasses.addAll(Arrays.asList(bootApplication.exclude()));
+            this.scanComponentFilter(bootApplication.componentFilter());
         }
-        for (Class<?> scanBean : this.scanBeans) {
-            EnableAutoConfiguration autoConfiguration = AnnotationUtil.findAnnotation(scanBean, EnableAutoConfiguration.class);
-            if(autoConfiguration != null) {
-                excludeBeanNames.addAll(Arrays.asList(autoConfiguration.excludeNames()));
-                excludeBeanClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
+        for (Class<?> scanBean : this.scanClasses) {
+            this.scanAutoConfiguration(AnnotationUtil.findAnnotation(scanBean, EnableAutoConfiguration.class));
+            for (Annotation annotation : AnnotationUtil.findAnnotations(scanBean)) {
+                this.scanAutoConfiguration(AnnotationUtil.findAnnotation(annotation, EnableAutoConfiguration.class));
             }
         }
-        this.scanBeans.removeAll(excludeBeanClasses);
+        this.scanClasses.removeAll(excludeBeanClasses);
+    }
+
+    private void scanAutoConfiguration(EnableAutoConfiguration autoConfiguration) {
+        if(autoConfiguration != null) {
+            excludeBeanNames.addAll(Arrays.asList(autoConfiguration.excludeNames()));
+            excludeBeanClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
+            this.scanComponentFilter(autoConfiguration.componentFilter());
+        }
+    }
+
+    private void scanComponentFilter(ComponentFilter componentFilter) {
+        includeFilterAnnotations.addAll(Arrays.asList(componentFilter.includeFilter()));
+        excludeFilterAnnotations.addAll(Arrays.asList(componentFilter.excludeFilter()));
     }
 }

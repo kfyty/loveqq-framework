@@ -10,8 +10,10 @@ import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 描述: bean 工具
@@ -58,10 +60,18 @@ public abstract class BeanUtil {
         return Order.LOWEST_PRECEDENCE;
     }
 
+    public static int getBeanOrder(Object bean) {
+        return Optional.ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE);
+    }
+
     public static <S, T> T copyBean(S source, T target) {
         Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
         Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
         for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
+            if(Modifier.isFinal(fieldEntry.getValue().getModifiers())) {
+                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy bean skip final field: {}", param), fieldEntry.getValue());
+                continue;
+            }
             if(!targetFieldMap.containsKey(fieldEntry.getKey())) {
                 log.warn("cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass());
                 continue;

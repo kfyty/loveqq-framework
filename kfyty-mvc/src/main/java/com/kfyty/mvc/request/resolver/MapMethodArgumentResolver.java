@@ -1,6 +1,6 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.support.method.MethodParameter;
 
@@ -23,7 +23,7 @@ public class MapMethodArgumentResolver implements HandlerMethodArgumentResolver 
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         return ServletUtil.getRequestParametersMap(request);
     }
 }

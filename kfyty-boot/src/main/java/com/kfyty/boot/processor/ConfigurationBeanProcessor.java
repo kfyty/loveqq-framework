@@ -5,10 +5,9 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
-import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.utils.AnnotationUtil;
-import lombok.Getter;
+import com.kfyty.support.utils.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 
@@ -20,9 +19,8 @@ import net.sf.cglib.proxy.Enhancer;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Component
+@Configuration
 public class ConfigurationBeanProcessor implements ApplicationContextAware, InstantiationAwareBeanPostProcessor {
-    @Getter
     private ApplicationContext context;
 
     @Override
@@ -44,6 +42,7 @@ public class ConfigurationBeanProcessor implements ApplicationContextAware, Inst
         enhancer.setSuperclass(bean.getClass());
         enhancer.setCallback(new ConfigurationAnnotationEnhancerProxy(this.context));
         Object enhancerBean = enhancer.create();
+        BeanUtil.copyBean(bean, enhancerBean);
         if(log.isDebugEnabled()) {
             log.debug("enhanced configuration bean: {} -> {}", bean, enhancerBean);
         }

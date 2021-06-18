@@ -1,6 +1,6 @@
 package com.kfyty.mvc.handler;
 
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.support.utils.CommonUtil;
 
@@ -20,55 +20,55 @@ import java.util.stream.Collectors;
  */
 public class RequestMappingMatchHandler {
 
-    public URLMapping doMatchRequest(HttpServletRequest request) {
-        Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> allURLMappingMap = URLMapping.getUrlMappingMap();
-        Map<Integer, Map<String, URLMapping>> urlLengthMapMap = allURLMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
+    public MethodMapping doMatchRequest(HttpServletRequest request) {
+        Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> allURLMappingMap = MethodMapping.getMethodMappingMap();
+        Map<Integer, Map<String, MethodMapping>> urlLengthMapMap = allURLMappingMap.get(RequestMethod.matchRequestMethod(request.getMethod()));
         if(CommonUtil.empty(urlLengthMapMap)) {
             return null;
         }
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
-        Map<String, URLMapping> urlMappingMap = urlLengthMapMap.get(paths.size());
+        Map<String, MethodMapping> urlMappingMap = urlLengthMapMap.get(paths.size());
         if(CommonUtil.empty(urlMappingMap)) {
             return null;
         }
-        URLMapping urlMapping = urlMappingMap.get(request.getRequestURI());
-        return urlMapping != null ? urlMapping : matchRestfulURLMapping(request, paths, urlMappingMap);
+        MethodMapping methodMapping = urlMappingMap.get(request.getRequestURI());
+        return methodMapping != null ? methodMapping : matchRestfulURLMapping(request, paths, urlMappingMap);
     }
 
-    private URLMapping matchRestfulURLMapping(HttpServletRequest request, List<String> paths, Map<String, URLMapping> urlMappingMap) {
-        List<URLMapping> urlMappings = new ArrayList<>();
-        for(URLMapping urlMapping : urlMappingMap.values()) {
-            if(!urlMapping.isRestfulUrl()) {
+    private MethodMapping matchRestfulURLMapping(HttpServletRequest request, List<String> paths, Map<String, MethodMapping> urlMappingMap) {
+        List<MethodMapping> methodMappings = new ArrayList<>();
+        for(MethodMapping methodMapping : urlMappingMap.values()) {
+            if(!methodMapping.isRestfulUrl()) {
                 continue;
             }
             boolean match = true;
             for (int i = 0; i < paths.size(); i++) {
-                if(MvcAnnotationHandler.PATH_VARIABLE_PATTERN.matcher(urlMapping.getPaths().get(i)).matches()) {
+                if(MvcAnnotationHandler.PATH_VARIABLE_PATTERN.matcher(methodMapping.getPaths().get(i)).matches()) {
                     continue;
                 }
-                if(!urlMapping.getPaths().get(i).equals(paths.get(i))) {
+                if(!methodMapping.getPaths().get(i).equals(paths.get(i))) {
                     match = false;
                     break;
                 }
             }
             if(match) {
-                urlMappings.add(urlMapping);
+                methodMappings.add(methodMapping);
             }
         }
-        return matchBestMatch(request, urlMappings);
+        return matchBestMatch(request, methodMappings);
     }
 
-    private URLMapping matchBestMatch(HttpServletRequest request, List<URLMapping> urlMappings) {
-        if(CommonUtil.empty(urlMappings)) {
+    private MethodMapping matchBestMatch(HttpServletRequest request, List<MethodMapping> methodMappings) {
+        if(CommonUtil.empty(methodMappings)) {
             return null;
         }
-        if(urlMappings.size() == 1) {
-            return urlMappings.get(0);
+        if(methodMappings.size() == 1) {
+            return methodMappings.get(0);
         }
-        urlMappings = urlMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
-        if(urlMappings.get(0).getRestfulURLMappingIndex().size() == urlMappings.get(1).getRestfulURLMappingIndex().size()) {
+        methodMappings = methodMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
+        if(methodMappings.get(0).getRestfulURLMappingIndex().size() == methodMappings.get(1).getRestfulURLMappingIndex().size()) {
             throw new IllegalArgumentException(CommonUtil.format("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
         }
-        return urlMappings.get(0);
+        return methodMappings.get(0);
     }
 }

@@ -1,7 +1,7 @@
 package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.PathVariable;
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -27,7 +27,7 @@ public class PathVariableMethodArgumentResolver implements HandlerMethodArgument
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         Map<String, Integer> restfulURLMappingIndex = mapping.getRestfulURLMappingIndex();
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         Integer paramIndex = restfulURLMappingIndex.get(AnnotationUtil.findAnnotation(parameter.getParameter(), PathVariable.class).value());

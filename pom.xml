@@ -19,6 +19,7 @@
     <properties>
         <jackson.version>2.9.10.5</jackson.version>
         <freemarker.version>2.3.30</freemarker.version>
+        <cglib.version>3.3.0</cglib.version>
 
         <druid.version>1.1.15</druid.version>
         <mysql.version>5.1.44</mysql.version>
@@ -115,6 +116,12 @@
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>${mssql.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
         </dependency>
 
         <dependency>

@@ -1,7 +1,7 @@
 package com.kfyty.mvc.handler;
 
 import com.kfyty.mvc.annotation.RequestMapping;
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -50,7 +50,7 @@ public class MvcAnnotationHandler {
     /**
      * 当前控制器所包含的 url 映射关系方法
      */
-    private final List<URLMapping> urlMappingList = new ArrayList<>();
+    private final List<MethodMapping> methodMappingList = new ArrayList<>();
 
     public MvcAnnotationHandler(Object mappingController) {
         this.setMappingController(mappingController);
@@ -58,21 +58,21 @@ public class MvcAnnotationHandler {
 
     public void setMappingController(Object mappingController) {
         this.mappingController = mappingController;
-        this.urlMappingList.clear();
+        this.methodMappingList.clear();
         this.handleAnnotation();
     }
 
     public void buildURLMappingMap() {
-        if(CommonUtil.empty(urlMappingList)) {
+        if(CommonUtil.empty(methodMappingList)) {
             return;
         }
-        Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> urlMappingMap = URLMapping.getUrlMappingMap();
-        for(URLMapping urlMapping : urlMappingList) {
-            if(!urlMappingMap.containsKey(urlMapping.getRequestMethod())) {
-                urlMappingMap.put(urlMapping.getRequestMethod(), urlMapping.buildMap());
+        Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> urlMappingMap = MethodMapping.getMethodMappingMap();
+        for(MethodMapping methodMapping : methodMappingList) {
+            if(!urlMappingMap.containsKey(methodMapping.getRequestMethod())) {
+                urlMappingMap.put(methodMapping.getRequestMethod(), methodMapping.buildMap());
                 continue;
             }
-            Optional.ofNullable(urlMapping.buildMap()).ifPresent(e -> urlMappingMap.get(urlMapping.getRequestMethod()).putAll(e));
+            Optional.ofNullable(methodMapping.buildMap()).ifPresent(e -> urlMappingMap.get(methodMapping.getRequestMethod()).putAll(e));
         }
     }
 
@@ -88,9 +88,9 @@ public class MvcAnnotationHandler {
         Method[] methods = this.mappingController.getClass().getMethods();
         for (Method method : methods) {
             if(this.existsRequestMapping(method)) {
-                URLMapping urlMapping = URLMapping.newURLMapping(mappingController, method);
-                this.parseRequestMappingAnnotation(urlMapping);
-                this.urlMappingList.add(urlMapping);
+                MethodMapping methodMapping = MethodMapping.newURLMapping(mappingController, method);
+                this.parseRequestMappingAnnotation(methodMapping);
+                this.methodMappingList.add(methodMapping);
             }
         }
     }
@@ -127,30 +127,30 @@ public class MvcAnnotationHandler {
         return null;
     }
 
-    private void parseRequestMappingAnnotation(URLMapping urlMapping) {
-        RequestMapping annotation = this.findRequestMapping(urlMapping.getMappingMethod());
+    private void parseRequestMappingAnnotation(MethodMapping methodMapping) {
+        RequestMapping annotation = this.findRequestMapping(methodMapping.getMappingMethod());
         String mappingPath = CommonUtil.formatURI(annotation.value());
-        urlMapping.setUrl(superUrl + mappingPath);
-        urlMapping.setRequestMethod(annotation.requestMethod());
-        this.parsePathVariable(urlMapping);
+        methodMapping.setUrl(superUrl + mappingPath);
+        methodMapping.setRequestMethod(annotation.requestMethod());
+        this.parsePathVariable(methodMapping);
         if(log.isDebugEnabled()) {
-            log.debug("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", urlMapping.getUrl(), urlMapping.getRequestMethod(), urlMapping.getMappingMethod());
+            log.debug("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
         }
     }
 
-    private void parsePathVariable(URLMapping urlMapping) {
-        List<String> paths = CommonUtil.split(urlMapping.getUrl(), "[/]");
-        urlMapping.setUrlLength(paths.size());
-        if(!RESTFUL_URL_PATTERN.matcher(urlMapping.getUrl()).matches()) {
+    private void parsePathVariable(MethodMapping methodMapping) {
+        List<String> paths = CommonUtil.split(methodMapping.getUrl(), "[/]");
+        methodMapping.setUrlLength(paths.size());
+        if(!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
             return;
         }
         for (int i = 0; i < paths.size(); i++) {
             if(!PATH_VARIABLE_PATTERN.matcher(paths.get(i)).matches()) {
                 continue;
             }
-            urlMapping.getRestfulURLMappingIndex().put(paths.get(i).replaceAll("[\\{\\}]", ""), i);
+            methodMapping.getRestfulURLMappingIndex().put(paths.get(i).replaceAll("[\\{\\}]", ""), i);
         }
-        urlMapping.setRestfulUrl(true);
-        urlMapping.setPaths(paths);
+        methodMapping.setRestfulUrl(true);
+        methodMapping.setPaths(paths);
     }
 }

@@ -160,7 +160,7 @@ class FactoryImport implements ImportBeanDefine {
         return scanClasses
                 .stream()
                 .filter(e -> !e.equals(Factory.class) && Factory.class.isAssignableFrom(e))
-                .map(e -> GenericBeanDefinition.from(FactoryProxy.class).addConstructorArgs(Class.class, e))
+                .map(e -> GenericBeanDefinition.from(e, FactoryProxy.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }
 }

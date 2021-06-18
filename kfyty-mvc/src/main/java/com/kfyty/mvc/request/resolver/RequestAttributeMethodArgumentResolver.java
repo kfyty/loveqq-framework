@@ -1,7 +1,7 @@
 package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.RequestAttribute;
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 
@@ -23,7 +23,7 @@ public class RequestAttributeMethodArgumentResolver implements HandlerMethodArgu
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         return request.getAttribute(AnnotationUtil.findAnnotation(parameter.getParameter(), RequestAttribute.class).value());
     }
 }

@@ -21,6 +21,7 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebListener;
 import java.util.EventListener;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 描述:
@@ -56,13 +57,13 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     public DispatcherServlet dispatcherServlet() {
         DispatcherServlet dispatcherServlet = new DispatcherServlet();
         if(this.interceptorChain != null) {
-            dispatcherServlet.getInterceptorChains().addAll(this.interceptorChain);
+            this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
         }
         if(this.argumentResolvers != null) {
-            dispatcherServlet.getArgumentResolvers().addAll(this.argumentResolvers);
+            this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
         }
         if(this.returnValueProcessors != null) {
-            dispatcherServlet.getReturnValueProcessors().addAll(this.returnValueProcessors);
+            this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
         }
         return dispatcherServlet;
     }
@@ -79,7 +80,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Override
     public void onComplete(Class<?> primarySource, String ... args) {
-        WebServer server = applicationContext.getBean(WebServer.class);
+        WebServer server = this.applicationContext.getBean(WebServer.class);
         if(server != null) {
             server.start();
         }
@@ -87,9 +88,6 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
 
     @Override
     public void onDestroy() {
-        WebServer server = applicationContext.getBean(WebServer.class);
-        if(server != null) {
-            server.stop();
-        }
+        Optional.ofNullable(this.applicationContext).map(e -> e.getBean(WebServer.class)).ifPresent(WebServer::stop);
     }
 }

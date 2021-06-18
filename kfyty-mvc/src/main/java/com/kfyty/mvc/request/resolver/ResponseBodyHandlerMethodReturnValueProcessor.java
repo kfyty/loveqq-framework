@@ -2,7 +2,9 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.ResponseBody;
 import com.kfyty.mvc.annotation.RestController;
+import com.kfyty.mvc.annotation.RestControllerAdvice;
 import com.kfyty.mvc.request.support.ModelViewContainer;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.JsonUtil;
@@ -16,6 +18,7 @@ import java.io.Writer;
  * @date 2021/6/10 11:29
  * @email kfyty725@hotmail.com
  */
+@Order(0)
 public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMethodReturnValueProcessor {
 
     @Override
@@ -24,7 +27,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
             return false;
         }
         Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
-        return AnnotationUtil.hasAnnotation(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotation(declaringClass, ResponseBody.class, RestController.class);
+        return AnnotationUtil.hasAnnotation(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotation(declaringClass, ResponseBody.class, RestController.class, RestControllerAdvice.class);
     }
 
     @Override

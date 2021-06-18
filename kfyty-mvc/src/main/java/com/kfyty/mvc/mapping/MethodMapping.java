@@ -19,14 +19,14 @@ import java.util.Map;
  */
 @Data
 @Slf4j
-public class URLMapping {
+public class MethodMapping {
     /**
      * URL 映射 Map，包含所有的映射关系
      * RequestMethod    请求方法
      * Integer          url 长度
      * String           uri
      */
-    private static Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> urlMappingMap;
+    private static Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> methodMappingMap;
 
     /**
      * 是否是 restful 风格 url
@@ -69,35 +69,35 @@ public class URLMapping {
     private Object mappingController;
 
     static {
-        urlMappingMap = new HashMap<>();
+        methodMappingMap = new HashMap<>();
     }
 
-    public URLMapping() {
+    public MethodMapping() {
         this.restfulUrl = false;
         this.restfulURLMappingIndex = new HashMap<>();
     }
 
-    public static URLMapping newURLMapping(Object mappingController, Method mappingMethod) {
-        URLMapping urlMapping = new URLMapping();
-        urlMapping.setMappingController(mappingController);
-        urlMapping.setMappingMethod(mappingMethod);
-        return urlMapping;
+    public static MethodMapping newURLMapping(Object mappingController, Method mappingMethod) {
+        MethodMapping methodMapping = new MethodMapping();
+        methodMapping.setMappingController(mappingController);
+        methodMapping.setMappingMethod(mappingMethod);
+        return methodMapping;
     }
 
-    public static Map<RequestMethod, Map<Integer, Map<String, URLMapping>>> getUrlMappingMap() {
-        return urlMappingMap;
+    public static Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> getMethodMappingMap() {
+        return methodMappingMap;
     }
 
-    public Map<Integer, Map<String, URLMapping>> buildMap() {
-        Map<String, URLMapping> innerMap = new HashMap<>();
-        Map<Integer, Map<String, URLMapping>> outerMap = new HashMap<>();
-        Map<Integer, Map<String, URLMapping>> urlLengthMappingMap = URLMapping.urlMappingMap.get(this.requestMethod);
+    public Map<Integer, Map<String, MethodMapping>> buildMap() {
+        Map<String, MethodMapping> innerMap = new HashMap<>();
+        Map<Integer, Map<String, MethodMapping>> outerMap = new HashMap<>();
+        Map<Integer, Map<String, MethodMapping>> urlLengthMappingMap = MethodMapping.methodMappingMap.get(this.requestMethod);
         if(urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.urlLength)) {
             innerMap.put(this.url, this);
             outerMap.put(this.urlLength, innerMap);
             return outerMap;
         }
-        Map<String, URLMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
+        Map<String, MethodMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
         if(urlMappingMap.containsKey(this.url)) {
             throw new IllegalArgumentException(CommonUtil.format("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }

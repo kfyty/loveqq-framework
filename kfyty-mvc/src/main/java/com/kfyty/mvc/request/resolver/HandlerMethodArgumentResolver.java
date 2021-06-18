@@ -1,6 +1,6 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.support.method.MethodParameter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,5 +17,5 @@ public interface HandlerMethodArgumentResolver {
 
     boolean supportsParameter(MethodParameter parameter);
 
-    Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException;
+    Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException;
 }

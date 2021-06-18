@@ -14,7 +14,6 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-        <cglib.version>3.3.0</cglib.version>
     </properties>
 
     <build>
@@ -63,12 +62,6 @@
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-mvc</artifactId>
             <version>${kfyty.utils.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>${cglib.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -2,8 +2,6 @@ package com.kfyty.boot.resolver;
 
 import com.kfyty.boot.K;
 import com.kfyty.boot.configuration.DefaultApplicationContext;
-import com.kfyty.mvc.annotation.Controller;
-import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
@@ -11,12 +9,8 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.annotation.Repository;
-import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
@@ -50,21 +44,28 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public class AnnotationConfigResolver {
-    private Class<?> primarySource;
+    private final K boot;
     private DefaultApplicationContext applicationContext;
     private AutowiredProcessor autowiredProcessor;
     private FieldAnnotationResolver fieldAnnotationResolver;
     private MethodAnnotationResolver methodAnnotationResolver;
 
-    public static AnnotationConfigResolver create(Class<?> primarySource) {
-        AnnotationConfigResolver configResolver = new AnnotationConfigResolver();
-        configResolver.primarySource = primarySource;
+    private AnnotationConfigResolver(K boot) {
+        this.boot = boot;
+    }
+
+    public static AnnotationConfigResolver create(K boot) {
+        AnnotationConfigResolver configResolver = new AnnotationConfigResolver(boot);
         configResolver.applicationContext = new DefaultApplicationContext(configResolver);
         configResolver.autowiredProcessor = new AutowiredProcessor(configResolver.applicationContext);
         configResolver.fieldAnnotationResolver = new FieldAnnotationResolver(configResolver);
         configResolver.methodAnnotationResolver = new MethodAnnotationResolver(configResolver);
         configResolver.registerDefaultBean();
         return configResolver;
+    }
+
+    public Class<?> getPrimarySource() {
+        return this.boot.getPrimarySource();
     }
 
     public void registerBeanDefinition(BeanDefinition beanDefinition) {
@@ -91,7 +92,7 @@ public class AnnotationConfigResolver {
 
             this.processInstantiateBean();
 
-            this.processRefreshComplete(this.primarySource, args);
+            this.processRefreshComplete(this.getPrimarySource(), args);
 
             Runtime.getRuntime().addShutdownHook(new Thread(this::processDestroy));
 
@@ -118,8 +119,7 @@ public class AnnotationConfigResolver {
 
     private void prepareBeanDefines(Set<Class<?>> scanClasses) {
         scanClasses.stream()
-                .filter(e -> !ReflectUtil.isAbstract(e))
-                .filter(e -> AnnotationUtil.hasAnyAnnotation(e, BootApplication.class, Configuration.class, Component.class, Controller.class, RestController.class, Service.class, Repository.class))
+                .filter(e -> !ReflectUtil.isAbstract(e) && this.boot.isIncludeFilter(e))
                 .map(e -> {
                     for (Annotation annotation : AnnotationUtil.findAnnotations(e)) {
                         if (AnnotationUtil.hasAnnotation(annotation.annotationType(), Component.class)) {
@@ -146,7 +146,7 @@ public class AnnotationConfigResolver {
         Iterator<BeanDefinition> iterator = this.applicationContext.getBeanDefinitions().values().iterator();
         while (iterator.hasNext()) {
             BeanDefinition beanDefinition = iterator.next();
-            if(K.isExclude(beanDefinition.getBeanName()) || K.isExclude(beanDefinition.getBeanType())) {
+            if(this.boot.isExclude(beanDefinition.getBeanName()) || this.boot.isExclude(beanDefinition.getBeanType())) {
                 iterator.remove();
                 log.info("exclude bean definition: {}", beanDefinition);
             }

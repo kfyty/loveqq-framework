@@ -2,7 +2,7 @@ package com.kfyty.mvc.request.resolver;
 
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.kfyty.mvc.annotation.RequestParam;
-import com.kfyty.mvc.mapping.URLMapping;
+import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.support.jdbc.ReturnType;
@@ -40,7 +40,7 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, URLMapping mapping, HttpServletRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         RequestParam annotation = AnnotationUtil.findAnnotation(parameter.getParameter(), RequestParam.class);
         if(CommonUtil.empty(annotation.value())) {
             return JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request)), parameter.getParamType());

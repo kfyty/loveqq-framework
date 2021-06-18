@@ -303,7 +303,7 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz) {
-        return getFieldMap(clazz, false);
+        return getFieldMap(clazz, true);
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {

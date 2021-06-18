@@ -19,4 +19,6 @@ public @interface EnableAutoConfiguration {
     Class<?>[] exclude() default {};
 
     String[] excludeNames() default {};
+
+    ComponentFilter componentFilter() default @ComponentFilter();
 }
