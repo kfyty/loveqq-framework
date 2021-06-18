@@ -14,7 +14,7 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-        <tomcat.version>9.0.35</tomcat.version>
+        <tomcat.version>9.0.43</tomcat.version>
     </properties>
 
     <build>
