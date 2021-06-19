@@ -108,6 +108,7 @@ public class AnnotationConfigResolver {
         for (InstantiationAwareBeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(InstantiationAwareBeanPostProcessor.class).values()) {
             Object newBean = beanPostProcessor.postProcessAfterInstantiation(bean, beanName);
             if(newBean != null && newBean != bean) {
+                bean = newBean;
                 applicationContext.replaceBean(beanName, newBean);
             }
         }

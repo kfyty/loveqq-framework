@@ -33,6 +33,16 @@ public interface BeanDefinition {
     Map<Class<?>, Object> getConstructArgs();
 
     /**
+     * 获取构造器参数类型
+     */
+    Class<?>[] getConstructArgTypes();
+
+    /**
+     * 获取构造器参数
+     */
+    Object[] getConstructArgValues();
+
+    /**
      * 生成 bean 实例
      */
     Object createInstance(ApplicationContext context);

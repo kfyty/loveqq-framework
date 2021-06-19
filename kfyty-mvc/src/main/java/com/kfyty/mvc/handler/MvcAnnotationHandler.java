@@ -57,6 +57,7 @@ public class MvcAnnotationHandler {
     }
 
     public void setMappingController(Object mappingController) {
+        this.superUrl = "";
         this.mappingController = mappingController;
         this.methodMappingList.clear();
         this.handleAnnotation();

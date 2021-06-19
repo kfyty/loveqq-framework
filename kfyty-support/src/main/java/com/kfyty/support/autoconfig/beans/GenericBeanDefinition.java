@@ -78,6 +78,16 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public Class<?>[] getConstructArgTypes() {
+        return CommonUtil.empty(getConstructArgs()) ? CommonUtil.EMPTY_CLASS_ARRAY : getConstructArgs().keySet().toArray(new Class<?>[0]);
+    }
+
+    @Override
+    public Object[] getConstructArgValues() {
+        return CommonUtil.empty(getConstructArgs()) ? CommonUtil.EMPTY_OBJECT_ARRAY : getConstructArgs().values().toArray();
+    }
+
+    @Override
     public Object createInstance(ApplicationContext context) {
         Object bean = context.getBean(this.getBeanName());
         if(bean != null) {

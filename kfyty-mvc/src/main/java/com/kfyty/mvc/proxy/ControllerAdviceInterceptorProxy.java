@@ -1,16 +1,18 @@
 package com.kfyty.mvc.proxy;
 
 import com.kfyty.mvc.annotation.ExceptionHandler;
+import com.kfyty.mvc.annotation.RequestMapping;
 import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodProxyWrap;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -23,21 +25,25 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class ControllerAdviceProxy implements MethodInterceptor {
+public class ControllerAdviceInterceptorProxy implements InterceptorChainPoint {
     private final ApplicationContext context;
     private final List<Object> controllerAdviceBeans;
 
     private DispatcherServlet dispatcherServlet;
 
-    public ControllerAdviceProxy(ApplicationContext context, List<Object> controllerAdviceBeans) {
+    public ControllerAdviceInterceptorProxy(ApplicationContext context, List<Object> controllerAdviceBeans) {
         this.context = context;
         this.controllerAdviceBeans = controllerAdviceBeans;
     }
 
     @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+    public Object proceed(MethodProxyWrap methodProxy, InterceptorChain chain) throws Throwable {
+        Method sourceMethod = methodProxy.getSourceMethod();
+        if(!AnnotationUtil.hasAnnotationElement(sourceMethod, RequestMapping.class)) {
+            return chain.proceed(methodProxy);
+        }
         try {
-            return proxy.invokeSuper(obj, args);
+            return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
             MethodParameter controllerAdvice = this.findControllerAdvice(throwable);
             if(controllerAdvice != null) {

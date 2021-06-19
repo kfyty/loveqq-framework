@@ -3,36 +3,34 @@ package com.kfyty.boot.proxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodProxyWrap;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
- * 描述: Configuration 注解代理
+ * 描述: bean 注解代理
  *
  * @author kfyty725
  * @date 2021/6/13 17:30
  * @email kfyty725@hotmail.com
  */
-public class ConfigurationAnnotationEnhancerProxy implements MethodInterceptor {
+public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     private final ApplicationContext context;
-    private final Set<String> proxying;
 
-    public ConfigurationAnnotationEnhancerProxy(ApplicationContext context) {
+    public BeanMethodInterceptorProxy(ApplicationContext context) {
         this.context = context;
-        this.proxying = new HashSet<>();
     }
 
     @Override
-    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+    public Object proceed(MethodProxyWrap methodProxy, InterceptorChain chain) throws Throwable {
+        Method method = methodProxy.getSourceMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if(annotation == null) {
-            return methodProxy.invokeSuper(o, objects);
+            return chain.proceed(methodProxy);
         }
         String beanName = BeanUtil.getBeanName(method.getReturnType(), annotation);
         Object bean = this.context.getBean(beanName);
@@ -40,12 +38,6 @@ public class ConfigurationAnnotationEnhancerProxy implements MethodInterceptor {
             return bean;
         }
         BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName, method.getReturnType());
-        if(beanDefinition == null || this.proxying.contains(beanDefinition.getBeanName())) {
-            return methodProxy.invokeSuper(o, objects);
-        }
-        this.proxying.add(beanDefinition.getBeanName());
-        bean = this.context.registerBean(beanDefinition);
-        this.proxying.remove(beanDefinition.getBeanName());
-        return bean;
+        return this.context.registerBean(beanDefinition);
     }
 }

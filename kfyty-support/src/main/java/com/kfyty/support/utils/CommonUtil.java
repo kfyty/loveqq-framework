@@ -33,6 +33,16 @@ public abstract class CommonUtil {
      */
     public static final Pattern UPPER_CASE_PATTERN = Pattern.compile("[A-Z0-9]*");
 
+    /**
+     * 空对象数组
+     */
+    public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+
+    /**
+     * 空 Class 数组
+     */
+    public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
+
     public static boolean empty(Object obj) {
         if(obj != null && CharSequence.class.isAssignableFrom(obj.getClass())) {
             return ((CharSequence) obj).toString().trim().length() < 1;

@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 标记该类为一个 bean 定义，同时可以排除一些自动配置类
+ * 描述: 标记该类为一个 bean 定义，同时可以排除一些自动配置类，加载自定义注解
  *
  * @author kfyty725
  * @date 2021/6/12 11:28
@@ -22,6 +22,8 @@ public @interface BootApplication {
     Class<?>[] exclude() default {};
 
     String[] excludeNames() default {};
+
+    boolean proxyTargetClass() default true;
 
     ComponentFilter componentFilter() default @ComponentFilter(includeFilter = {
             BootApplication.class, Configuration.class, Component.class, Service.class, Repository.class

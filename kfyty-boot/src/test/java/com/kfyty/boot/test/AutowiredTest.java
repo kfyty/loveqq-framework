@@ -20,11 +20,11 @@ import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@BootApplication
-public class AutowiredTest implements InitializingBean {
+@BootApplication(proxyTargetClass = false)
+public class AutowiredTest {
     @Autowired
     private AutowiredTest  autowiredTest;
 
@@ -58,7 +58,7 @@ public class AutowiredTest implements InitializingBean {
         return new Bean1();
     }
 
-    @Override
+    @PostConstruct
     public void afterPropertiesSet() {
         Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
         Assert.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
@@ -73,14 +73,14 @@ public class AutowiredTest implements InitializingBean {
 }
 
 @Configuration
-@NoArgsConstructor
 class Config {
     @Autowired
     private AutowiredTest test;
 
     @Autowired
-    public Config(Factory factory, List<Inter> inters) {
+    public Config(Factory factory, HelloInter helloInter, List<Inter> inters) {
         Assert.assertNotNull(factory);
+        Assert.assertEquals("kfyty", helloInter.hello("kfyty"));
     }
 
     @Bean
@@ -168,10 +168,6 @@ class FactoryImport implements ImportBeanDefine {
 class FactoryProxy implements FactoryBean<Factory> {
     private final Class<?> clazz;
 
-    public FactoryProxy() {
-        this(null);
-    }
-
     public FactoryProxy(Class<?> clazz) {
         this.clazz = clazz;
     }
@@ -184,5 +180,18 @@ class FactoryProxy implements FactoryBean<Factory> {
     @Override
     public Factory getObject() {
         return (Factory) ReflectUtil.newInstance(clazz);
+    }
+}
+
+interface HelloInter {
+    String hello(String name);
+}
+
+@Configuration
+class HelloInterImpl implements HelloInter {
+
+    @Override
+    public String hello(String name) {
+        return name;
     }
 }

@@ -51,8 +51,30 @@ public abstract class AnnotationUtil {
         return false;
     }
 
+    @SafeVarargs
+    public static boolean hasAnnotationElement(Method method, Class<? extends Annotation>... annotations) {
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (hasAnnotationElement(method, annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean hasAnnotation(Method method, Class<? extends Annotation> annotationClass) {
         return findAnnotation(method, annotationClass) != null;
+    }
+
+    public static boolean hasAnnotationElement(Method method, Class<? extends Annotation> annotationClass) {
+        if(hasAnnotation(method, annotationClass)) {
+            return true;
+        }
+        for (Annotation annotation : findAnnotations(method)) {
+            if(hasAnnotation(annotation.annotationType(), annotationClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SafeVarargs

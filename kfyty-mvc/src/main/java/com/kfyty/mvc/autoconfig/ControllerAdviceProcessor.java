@@ -4,17 +4,19 @@ import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.ControllerAdvice;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.RestControllerAdvice;
-import com.kfyty.mvc.proxy.ControllerAdviceProxy;
+import com.kfyty.mvc.proxy.ControllerAdviceInterceptorProxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.proxy.factory.DynamicProxyFactory;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.Enhancer;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -45,7 +47,20 @@ public class ControllerAdviceProcessor implements ApplicationContextAware, Insta
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         this.prepareControllerAdviceCondition();
-        return this.canEnhancer(bean) ? this.doEnhancerBean(bean) : null;
+        if(!this.canEnhancer(bean)) {
+            return null;
+        }
+        if(AopUtil.isProxy(bean)) {
+            AopUtil.getInterceptorChain(bean).addInterceptorPoint(new ControllerAdviceInterceptorProxy(this.context, this.controllerAdviceBeans));
+            return null;
+        }
+        BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName);
+        Object proxy = DynamicProxyFactory.create(bean, this.context).createProxy(bean, beanDefinition);
+        AopUtil.getInterceptorChain(proxy).addInterceptorPoint(new ControllerAdviceInterceptorProxy(this.context, this.controllerAdviceBeans));
+        if(log.isDebugEnabled()) {
+            log.debug("proxy controller bean: {} -> {}", bean, proxy);
+        }
+        return BeanUtil.copyBean(bean, proxy);
     }
 
     @SuppressWarnings("unchecked")
@@ -75,24 +90,16 @@ public class ControllerAdviceProcessor implements ApplicationContextAware, Insta
 
     @SuppressWarnings("unchecked")
     private boolean canEnhancer(Object bean) {
-        String beanPackage = bean.getClass().getPackage().getName();
+        Package pa = bean.getClass().getPackage();
+        if(pa == null) {
+            return false;
+        }
+        String beanPackage = pa.getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if(beanPackage.startsWith(basePackage)) {
                 return true;
             }
         }
         return AnnotationUtil.hasAnyAnnotation(bean, this.controllerAdviceAnnotations.toArray(new Class[0]));
-    }
-
-    private Object doEnhancerBean(Object bean) {
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(bean.getClass());
-        enhancer.setCallback(new ControllerAdviceProxy(this.context, this.controllerAdviceBeans));
-        Object enhancerBean = enhancer.create();
-        BeanUtil.copyBean(bean, enhancerBean);
-        if(log.isDebugEnabled()) {
-            log.debug("enhanced controller bean: {} -> {}", bean, enhancerBean);
-        }
-        return enhancerBean;
     }
 }

@@ -42,8 +42,19 @@ public abstract class ReflectUtil {
         return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
     }
 
-    public static boolean isJdkProxy(Object instance) {
-        return Proxy.isProxyClass(instance.getClass());
+    public static boolean hasAnyInterfaces(Class<?> clazz) {
+        return getInterfaces(clazz).length > 0;
+    }
+
+    public static Class<?>[] getInterfaces(Class<?> clazz) {
+        if(!clazz.isInterface()) {
+            return clazz.getInterfaces();
+        }
+        Class<?>[] clazzInterfaces = clazz.getInterfaces();
+        Class<?>[] interfaces = new Class[clazzInterfaces.length + 1];
+        System.arraycopy(clazzInterfaces, 0, interfaces, 0, clazzInterfaces.length);
+        interfaces[clazzInterfaces.length] = clazz;
+        return interfaces;
     }
 
     public static boolean isBaseDataType(Class<?> clazz) {
