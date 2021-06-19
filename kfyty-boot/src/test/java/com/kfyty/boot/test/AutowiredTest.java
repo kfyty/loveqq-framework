@@ -61,6 +61,7 @@ public class AutowiredTest {
     @PostConstruct
     public void afterPropertiesSet() {
         Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
+        Assert.assertTrue(AnnotationUtil.hasAnnotationElement(this.autowiredTest, Component.class));
         Assert.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
         Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
         Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
@@ -80,6 +81,7 @@ class Config {
     @Autowired
     public Config(Factory factory, HelloInter helloInter, List<Inter> inters) {
         Assert.assertNotNull(factory);
+        Assert.assertSame(helloInter.bean5(), helloInter.bean5());
         Assert.assertEquals("kfyty", helloInter.hello("kfyty"));
     }
 
@@ -105,6 +107,8 @@ class Bean2 {}
 class Bean3 {}
 
 class Bean4 {}
+
+class Bean5 {}
 
 interface Inter {}
 
@@ -184,14 +188,31 @@ class FactoryProxy implements FactoryBean<Factory> {
 }
 
 interface HelloInter {
+
     String hello(String name);
+
+    @Bean
+    Bean5 bean5();
 }
 
 @Configuration
-class HelloInterImpl implements HelloInter {
+class HelloInterImpl implements HelloInter, InitializingBean {
+    @Autowired
+    private Factory factory;
 
     @Override
     public String hello(String name) {
         return name;
+    }
+
+    @Bean
+    @Override
+    public Bean5 bean5() {
+        return new Bean5();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        Assert.assertNotNull(this.factory);
     }
 }

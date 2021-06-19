@@ -11,6 +11,7 @@ import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -56,12 +57,17 @@ public class FieldAnnotationResolver {
 
     /**
      * 对特定 bean 执行属性注入
+     * 如果该 bean 是 jdk 代理，则对原对象执行注入
      * 如果容器正在刷新中且要注入的属性实例由该 bean 中的方法定义，则先执行该方法定义
      * @param clazz bean 的类型
      * @param bean bean 实例
      * @param refreshing 当前容器是否正在刷新中
      */
     public void doResolver(Class<?> clazz, Object bean, boolean refreshing) {
+        if(AopUtil.isJdkProxy(bean)) {
+            bean = AopUtil.getInterceptorChain(bean).getSource();
+            clazz = bean.getClass();
+        }
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(clazz).entrySet()) {
             Field field = entry.getValue();
             if(refreshing && AnnotationUtil.hasAnnotation(field, Lazy.class)) {
@@ -93,8 +99,8 @@ public class FieldAnnotationResolver {
                 ReturnType<?, ?, ?> paramType = ReturnType.getReturnType(parameter);
                 BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, paramType.getActualType());
                 if(beanDefinition instanceof MethodBeanDefinition) {
-                    BeanDefinition sourceDefinition = ((MethodBeanDefinition) beanDefinition).getSourceDefinition();
-                    if(sourceDefinition.getBeanType().equals(clazz)) {
+                    BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
+                    if(parentDefinition.getBeanType().equals(clazz)) {
                         for (Parameter nestedParam : ((MethodBeanDefinition) beanDefinition).getBeanMethod().getParameters()) {
                             if(ReturnType.getReturnType(nestedParam).getActualType().isAssignableFrom(field.getType())) {
                                 throw new BeansException("bean circular dependency: " + nestedParam);

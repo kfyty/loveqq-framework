@@ -22,9 +22,18 @@ public abstract class AnnotationUtil {
         return hasAnnotation(source.getClass(), annotation);
     }
 
+    public static boolean hasAnnotationElement(Object source, Class<? extends Annotation> annotation) {
+        return hasAnnotationElement(source.getClass(), annotation);
+    }
+
     @SafeVarargs
     public static boolean hasAnyAnnotation(Object source, Class<? extends Annotation>... annotations) {
         return hasAnyAnnotation(source.getClass(), annotations);
+    }
+
+    @SafeVarargs
+    public static boolean hasAnnotationElement(Object source, Class<? extends Annotation>... annotations) {
+        return hasAnnotationElement(source.getClass(), annotations);
     }
 
     @SafeVarargs
@@ -37,8 +46,30 @@ public abstract class AnnotationUtil {
         return false;
     }
 
+    @SafeVarargs
+    public static boolean hasAnnotationElement(Class<?> source, Class<? extends Annotation>... annotations) {
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (hasAnnotationElement(source, annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean hasAnnotation(Class<?> source, Class<? extends Annotation> annotationClass) {
         return findAnnotation(source, annotationClass) != null;
+    }
+
+    public static boolean hasAnnotationElement(Class<?> source, Class<? extends Annotation> annotationClass) {
+        if (hasAnnotation(source, annotationClass)) {
+            return true;
+        }
+        for (Annotation annotation : findAnnotations(source)) {
+            if (hasAnnotation(annotation.annotationType(), annotationClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SafeVarargs
@@ -66,11 +97,11 @@ public abstract class AnnotationUtil {
     }
 
     public static boolean hasAnnotationElement(Method method, Class<? extends Annotation> annotationClass) {
-        if(hasAnnotation(method, annotationClass)) {
+        if (hasAnnotation(method, annotationClass)) {
             return true;
         }
         for (Annotation annotation : findAnnotations(method)) {
-            if(hasAnnotation(annotation.annotationType(), annotationClass)) {
+            if (hasAnnotation(annotation.annotationType(), annotationClass)) {
                 return true;
             }
         }
@@ -144,11 +175,11 @@ public abstract class AnnotationUtil {
     }
 
     public static Annotation[] findAnnotations(Parameter parameter) {
-        if(parameter == null) {
+        if (parameter == null) {
             return EMPTY_ANNOTATIONS;
         }
         Annotation[] annotations = parameter.getAnnotations();
-        if(CommonUtil.notEmpty(annotations)) {
+        if (CommonUtil.notEmpty(annotations)) {
             return annotations;
         }
         return findAnnotations(ReflectUtil.getSuperParameters(parameter));
@@ -195,11 +226,11 @@ public abstract class AnnotationUtil {
     }
 
     public static <T extends Annotation> T findAnnotation(Parameter parameter, Class<T> annotationClass) {
-        if(parameter == null) {
+        if (parameter == null) {
             return null;
         }
         T annotation = parameter.getAnnotation(annotationClass);
-        if(annotation != null) {
+        if (annotation != null) {
             return annotation;
         }
         return findAnnotation(ReflectUtil.getSuperParameters(parameter), annotationClass);

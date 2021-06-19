@@ -5,6 +5,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -32,7 +33,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
      * 该方法所在的 bean 定义
      */
     @Getter
-    private final BeanDefinition sourceDefinition;
+    private final BeanDefinition parentDefinition;
 
     /**
      * Bean 注解的方法
@@ -64,13 +65,13 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     @Getter
     private Method destroyMethod;
 
-    public MethodBeanDefinition(Class<?> beanType, BeanDefinition sourceDefinition, Method beanMethod) {
-        this(BeanUtil.convert2BeanName(beanType), beanType, sourceDefinition, beanMethod);
+    public MethodBeanDefinition(Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
+        this(BeanUtil.convert2BeanName(beanType), beanType, parentDefinition, beanMethod);
     }
 
-    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition sourceDefinition, Method beanMethod) {
+    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
         super(beanName, beanType);
-        this.sourceDefinition = sourceDefinition;
+        this.parentDefinition = parentDefinition;
         this.beanMethod = beanMethod;
     }
 
@@ -111,7 +112,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
             parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
         }
-        bean = ReflectUtil.invokeMethod(this.sourceDefinition.createInstance(context), this.beanMethod, parameters);
+        Object parentInstance = this.parentDefinition.createInstance(context);
+        if(AopUtil.isJdkProxy(parentInstance)) {
+            parentInstance = AopUtil.getInterceptorChain(parentInstance).getSource();
+        }
+        bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, parameters);
         if(context.getBean(this.getBeanName()) != null) {
             return bean;
         }

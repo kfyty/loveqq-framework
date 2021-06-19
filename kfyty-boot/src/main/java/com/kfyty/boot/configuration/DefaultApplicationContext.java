@@ -137,8 +137,8 @@ public class DefaultApplicationContext implements ApplicationContext {
             return bean;
         }
         if(beforeAutowired && beanDefinition instanceof MethodBeanDefinition) {
-            BeanDefinition sourceDefinition = ((MethodBeanDefinition) beanDefinition).getSourceDefinition();
-            this.configResolver.getFieldAnnotationResolver().doResolver(sourceDefinition.getBeanType(), registerBean(sourceDefinition), true);
+            BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
+            this.configResolver.getFieldAnnotationResolver().doResolver(parentDefinition.getBeanType(), registerBean(parentDefinition), true);
         }
         if(beforeAutowired && beanDefinition instanceof FactoryBeanDefinition) {
             BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();

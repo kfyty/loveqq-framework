@@ -7,6 +7,7 @@ import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -53,9 +54,13 @@ public class MethodAnnotationResolver {
 
     /**
      * 对特定的 bean 执行方法注入
+     * 如果该 bean 是 jdk 代理，则对原对象执行注入
      * @param bean bean 实例
      */
     public void doResolver(Object bean) {
+        if(AopUtil.isJdkProxy(bean)) {
+            bean = AopUtil.getInterceptorChain(bean).getSource();
+        }
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
             if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
