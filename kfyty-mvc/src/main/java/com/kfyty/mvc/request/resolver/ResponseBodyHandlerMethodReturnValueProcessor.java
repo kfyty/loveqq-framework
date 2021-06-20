@@ -27,7 +27,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
             return false;
         }
         Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
-        return AnnotationUtil.hasAnnotation(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotation(declaringClass, ResponseBody.class, RestController.class, RestControllerAdvice.class);
+        return AnnotationUtil.hasAnnotationElement(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotationElement(declaringClass, ResponseBody.class, RestController.class, RestControllerAdvice.class);
     }
 
     @Override

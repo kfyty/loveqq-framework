@@ -14,6 +14,7 @@ import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -63,6 +64,13 @@ public class ControllerAdviceInterceptorProxy implements InterceptorChainPoint {
                 }
                 for (Class<? extends Throwable> clazz : annotation.value()) {
                     if(clazz.isAssignableFrom(throwable.getClass())) {
+                        while (throwable != null && !throwable.getClass().equals(clazz) && !throwable.getClass().equals(Throwable.class)) {
+                            if(throwable instanceof InvocationTargetException) {
+                                throwable = ((InvocationTargetException) throwable).getTargetException();
+                                continue;
+                            }
+                            throwable = throwable.getCause();
+                        }
                         return new MethodParameter(adviceBean, method, throwable);
                     }
                 }

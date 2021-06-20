@@ -30,6 +30,10 @@ public abstract class AopUtil {
         return instance.getClass().getName().contains(CGLIB_CLASS_SEPARATOR);
     }
 
+    public static Object getSourceIfNecessary(Object bean) {
+        return isJdkProxy(bean) ? getInterceptorChain(bean).getSource() : bean;
+    }
+
     public static InterceptorChain getInterceptorChain(Object proxy) {
         if(!isProxy(proxy)) {
             throw new SupportException("the instance is not a proxy !");

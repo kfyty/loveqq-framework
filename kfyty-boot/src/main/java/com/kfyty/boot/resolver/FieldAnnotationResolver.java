@@ -64,10 +64,8 @@ public class FieldAnnotationResolver {
      * @param refreshing 当前容器是否正在刷新中
      */
     public void doResolver(Class<?> clazz, Object bean, boolean refreshing) {
-        if(AopUtil.isJdkProxy(bean)) {
-            bean = AopUtil.getInterceptorChain(bean).getSource();
-            clazz = bean.getClass();
-        }
+        bean = AopUtil.getSourceIfNecessary(bean);
+        clazz = AopUtil.isJdkProxy(bean) ? bean.getClass() : clazz;
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(clazz).entrySet()) {
             Field field = entry.getValue();
             if(refreshing && AnnotationUtil.hasAnnotation(field, Lazy.class)) {

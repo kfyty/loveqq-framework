@@ -58,9 +58,7 @@ public class MethodAnnotationResolver {
      * @param bean bean 实例
      */
     public void doResolver(Object bean) {
-        if(AopUtil.isJdkProxy(bean)) {
-            bean = AopUtil.getInterceptorChain(bean).getSource();
-        }
+        bean = AopUtil.getSourceIfNecessary(bean);
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
             if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {

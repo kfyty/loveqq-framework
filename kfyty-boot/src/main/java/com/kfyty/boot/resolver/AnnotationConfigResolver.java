@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -158,12 +159,7 @@ public class AnnotationConfigResolver {
         Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions();
         Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
                 .stream()
-                .sorted((define1, define2) -> {
-                    if(InstantiationAwareBeanPostProcessor.class.isAssignableFrom(define1.getBeanType()) && !InstantiationAwareBeanPostProcessor.class.isAssignableFrom(define2.getBeanType())) {
-                        return Order.HIGHEST_PRECEDENCE;
-                    }
-                    return BeanUtil.getBeanOrder(define1) - BeanUtil.getBeanOrder(define2);
-                })
+                .sorted(Comparator.comparing(e -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(((BeanDefinition) e).getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE).thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e)))
                 .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
                     throw new IllegalStateException("duplicate key " + k2);
                 }, LinkedHashMap::new));

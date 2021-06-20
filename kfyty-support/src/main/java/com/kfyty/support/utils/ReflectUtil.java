@@ -256,7 +256,17 @@ public abstract class ReflectUtil {
     }
 
     public static Method getSuperMethod(Method method) {
-        return getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
+        Method superMethod = getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
+        if(superMethod != null) {
+            return superMethod;
+        }
+        for (Class<?> clazz : method.getDeclaringClass().getInterfaces()) {
+            superMethod = getMethod(clazz, method.getName(), false, method.getParameterTypes());
+            if(superMethod != null) {
+                return superMethod;
+            }
+        }
+        return null;
     }
 
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {

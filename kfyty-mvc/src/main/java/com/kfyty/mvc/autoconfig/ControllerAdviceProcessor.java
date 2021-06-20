@@ -47,7 +47,7 @@ public class ControllerAdviceProcessor implements ApplicationContextAware, Insta
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         this.prepareControllerAdviceCondition();
-        if(!this.canEnhancer(bean)) {
+        if(!this.canEnhancer(AopUtil.getSourceIfNecessary(bean))) {
             return null;
         }
         if(AopUtil.isProxy(bean)) {
@@ -90,11 +90,7 @@ public class ControllerAdviceProcessor implements ApplicationContextAware, Insta
 
     @SuppressWarnings("unchecked")
     private boolean canEnhancer(Object bean) {
-        Package pa = bean.getClass().getPackage();
-        if(pa == null) {
-            return false;
-        }
-        String beanPackage = pa.getName();
+        String beanPackage = bean.getClass().getPackage().getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if(beanPackage.startsWith(basePackage)) {
                 return true;

@@ -32,7 +32,7 @@ public class ConfigurationBeanProcessor implements ApplicationContextAware, Inst
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        Class<?> beanClass = bean.getClass();
+        Class<?> beanClass = AopUtil.getSourceIfNecessary(bean).getClass();
         if(!AnnotationUtil.hasAnyAnnotation(beanClass, Configuration.class, BootApplication.class)) {
             return null;
         }

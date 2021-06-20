@@ -197,8 +197,15 @@ interface HelloInter {
 
 @Configuration
 class HelloInterImpl implements HelloInter, InitializingBean {
+    private boolean flag = false;
+
     @Autowired
     private Factory factory;
+
+    @PostConstruct
+    public void init() {
+        flag = true;
+    }
 
     @Override
     public String hello(String name) {
@@ -214,5 +221,6 @@ class HelloInterImpl implements HelloInter, InitializingBean {
     @Override
     public void afterPropertiesSet() {
         Assert.assertNotNull(this.factory);
+        Assert.assertTrue(this.flag);
     }
 }

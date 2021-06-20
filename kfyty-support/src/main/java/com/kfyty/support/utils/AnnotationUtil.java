@@ -32,8 +32,8 @@ public abstract class AnnotationUtil {
     }
 
     @SafeVarargs
-    public static boolean hasAnnotationElement(Object source, Class<? extends Annotation>... annotations) {
-        return hasAnnotationElement(source.getClass(), annotations);
+    public static boolean hasAnyAnnotationElement(Object source, Class<? extends Annotation>... annotations) {
+        return hasAnyAnnotationElement(source.getClass(), annotations);
     }
 
     @SafeVarargs
@@ -47,7 +47,7 @@ public abstract class AnnotationUtil {
     }
 
     @SafeVarargs
-    public static boolean hasAnnotationElement(Class<?> source, Class<? extends Annotation>... annotations) {
+    public static boolean hasAnyAnnotationElement(Class<?> source, Class<? extends Annotation>... annotations) {
         for (Class<? extends Annotation> annotation : annotations) {
             if (hasAnnotationElement(source, annotation)) {
                 return true;
@@ -83,7 +83,7 @@ public abstract class AnnotationUtil {
     }
 
     @SafeVarargs
-    public static boolean hasAnnotationElement(Method method, Class<? extends Annotation>... annotations) {
+    public static boolean hasAnyAnnotationElement(Method method, Class<? extends Annotation>... annotations) {
         for (Class<? extends Annotation> annotation : annotations) {
             if (hasAnnotationElement(method, annotation)) {
                 return true;
