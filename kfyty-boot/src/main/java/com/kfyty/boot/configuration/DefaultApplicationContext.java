@@ -3,10 +3,14 @@ package com.kfyty.boot.configuration;
 import com.kfyty.boot.resolver.AnnotationConfigResolver;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.event.ApplicationEvent;
+import com.kfyty.support.event.ApplicationEventPublisher;
+import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -36,6 +40,9 @@ public class DefaultApplicationContext implements ApplicationContext {
     private final Map<String, BeanDefinition> beanDefinitions;
 
     private final Map<String, Object> beanInstances;
+
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public DefaultApplicationContext(AnnotationConfigResolver configResolver) {
         this.configResolver = configResolver;
@@ -187,6 +194,16 @@ public class DefaultApplicationContext implements ApplicationContext {
         if(bean != null) {
             this.beanInstances.put(name, bean);
         }
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent<?> event) {
+        this.applicationEventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void registerEventListener(ApplicationListener<?> applicationListener) {
+        this.applicationEventPublisher.registerEventListener(applicationListener);
     }
 
     public void doInBeans(BiConsumer<String, Object> bean) {

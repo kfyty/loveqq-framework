@@ -5,6 +5,7 @@ import com.kfyty.mvc.annotation.GetMapping;
 import com.kfyty.mvc.annotation.PostMapping;
 import com.kfyty.mvc.annotation.PutMapping;
 import com.kfyty.mvc.annotation.RestController;
+import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -12,11 +13,14 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.event.ApplicationEvent;
+import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -222,5 +226,39 @@ class HelloInterImpl implements HelloInter, InitializingBean {
     public void afterPropertiesSet() {
         Assert.assertNotNull(this.factory);
         Assert.assertTrue(this.flag);
+    }
+}
+
+@Component
+class TestEventListener implements ApplicationListener<TestEvent>, InitializingBean {
+    @Autowired
+    private ApplicationContext context;
+
+    @Override
+    public void onApplicationEvent(TestEvent testEvent) {
+        Assert.assertEquals(testEvent.getSource(), "event");
+    }
+
+    @EventListener(TestEvent.class)
+    public void onTestEvent(TestEvent testEvent) {
+        Assert.assertEquals(testEvent.getSource(), "event");
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        this.context.publishEvent(new TestEvent("event"));
+    }
+}
+
+class TestEvent extends ApplicationEvent<String> {
+
+    /**
+     * Constructs a prototypical Event.
+     *
+     * @param source The object on which the Event initially occurred.
+     * @throws IllegalArgumentException if source is null.
+     */
+    public TestEvent(String source) {
+        super(source);
     }
 }

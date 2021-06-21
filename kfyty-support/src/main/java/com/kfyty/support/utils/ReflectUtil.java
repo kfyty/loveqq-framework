@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -134,7 +135,7 @@ public abstract class ReflectUtil {
     }
 
     public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex) {
-        return getSuperGeneric(clazz, genericIndex, 0);
+        return getSuperGeneric(clazz, genericIndex, 0, null);
     }
 
     /**
@@ -142,17 +143,30 @@ public abstract class ReflectUtil {
      * @param clazz 子类
      * @param genericIndex 泛型索引
      * @param interfaceIndex 实现的接口索引
+     * @param interfaceFilter 接口匹配过滤器，interfaceIndex < 0 时有效
      */
-    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, int interfaceIndex) {
+    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, int interfaceIndex, Predicate<Type> interfaceFilter) {
         Objects.requireNonNull(clazz);
         Type genericSuperclass = clazz.getGenericSuperclass();
-        if(genericSuperclass == null || genericSuperclass.equals(Object.class)) {
-            genericSuperclass = clazz.getGenericInterfaces()[interfaceIndex];
+        if(genericSuperclass == null || genericSuperclass.equals(Object.class) || !(genericSuperclass instanceof ParameterizedType)) {
+            Type[] interfaces = clazz.getGenericInterfaces();
+            if(interfaceIndex > -1) {
+                genericSuperclass = interfaces[interfaceIndex];
+            } else {
+                Optional<Type> filterInterface = Arrays.stream(interfaces).filter(interfaceFilter).findAny();
+                if(!filterInterface.isPresent()) {
+                    throw new SupportException("parent interface match failed !");
+                }
+                genericSuperclass = filterInterface.get();
+            }
         }
         if(!(genericSuperclass instanceof ParameterizedType)) {
             throw new SupportException(clazz.getName() + "does not contain generic types !");
         }
         Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
+        if(actualTypeArguments[genericIndex] instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) actualTypeArguments[genericIndex]).getRawType();
+        }
         return (Class<?>) actualTypeArguments[genericIndex];
     }
 

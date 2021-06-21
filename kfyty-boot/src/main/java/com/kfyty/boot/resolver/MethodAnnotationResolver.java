@@ -59,8 +59,7 @@ public class MethodAnnotationResolver {
      */
     public void doResolver(Object bean) {
         bean = AopUtil.getSourceIfNecessary(bean);
-        Method[] methods = bean.getClass().getMethods();
-        for (Method method : methods) {
+        for (Method method : bean.getClass().getMethods()) {
             if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
                 this.autowiredProcessor.doAutowired(bean, method);
             }

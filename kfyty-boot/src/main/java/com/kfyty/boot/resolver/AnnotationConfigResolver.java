@@ -123,6 +123,10 @@ public class AnnotationConfigResolver {
         scanClasses.stream()
                 .filter(e -> !ReflectUtil.isAbstract(e) && this.boot.isIncludeFilter(e))
                 .map(e -> {
+                    Component component = AnnotationUtil.findAnnotation(e, Component.class);
+                    if(component != null && CommonUtil.notEmpty(component.value())) {
+                        return GenericBeanDefinition.from(component.value(), e);
+                    }
                     for (Annotation annotation : AnnotationUtil.findAnnotations(e)) {
                         if (AnnotationUtil.hasAnnotation(annotation.annotationType(), Component.class)) {
                             String beanName = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
