@@ -32,6 +32,9 @@
 
         <junit.version>4.12</junit.version>
         <lombok.version>1.18.8</lombok.version>
+
+        <compiler.plugin.version>3.8.0</compiler.plugin.version>
+        <source.plugin.version>3.1.0</source.plugin.version>
     </properties>
 
     <build>
@@ -39,18 +42,19 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>${compiler.plugin.version}</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                     <source>8</source>
                     <target>8</target>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>${source.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -134,6 +138,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -13,7 +13,7 @@ import java.util.Map;
 
 public interface UserMapper extends BaseMapper<Integer, User> {
     @Query("select id, id `user.id`, username `user.username`, create_time `user.createTime` from user where id = #{id}")
-    UserVo findById(@Param("id") Integer id);
+    UserVo findById(Integer id);
 
     @Query("select username from user where id = #{id}")
     String findNameById(@Param("id") Integer id);

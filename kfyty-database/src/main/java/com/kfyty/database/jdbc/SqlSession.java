@@ -356,6 +356,7 @@ public class SqlSession implements InvocationHandler {
 
     /**
      * 将方法参数中有 @Param 注解的参数封装为 Map
+     * 若 @Param 注解不存在，则直接使用 Parameter#getName()
      * @param parameters    方法参数数组
      * @param args          参数数组
      * @return              参数 Map
@@ -365,9 +366,8 @@ public class SqlSession implements InvocationHandler {
         for(int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             Param annotation = AnnotationUtil.findAnnotation(parameter, Param.class);
-            if(annotation != null) {
-                params.put(annotation.value(), new MethodParameter(parameter.getType(), args[i]));
-            }
+            String paramName = annotation != null && CommonUtil.notEmpty(annotation.value()) ? annotation.value() : parameter.getName();
+            params.put(paramName, new MethodParameter(parameter.getType(), args[i]));
         }
         return params;
     }
