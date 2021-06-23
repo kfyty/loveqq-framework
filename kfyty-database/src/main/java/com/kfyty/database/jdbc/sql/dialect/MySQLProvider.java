@@ -26,7 +26,7 @@ public class MySQLProvider extends ProviderAdapter implements InsertAllProvider,
     public String doProviderInsertAll(Class<?> mapperClass, Method sourceMethod, Execute annotation) {
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
         Pair<String, String> fieldPair = this.buildInsertField(entityClass);
-        String baseSQL = String.format("insert into %s (%s) values ", CommonUtil.convert2Underline(entityClass.getSimpleName()), fieldPair.getKey());
+        String baseSQL = String.format("insert into %s (%s) values ", CommonUtil.camelCase2Underline(entityClass.getSimpleName()), fieldPair.getKey());
         ReflectUtil.setAnnotationValue(annotation, "value", baseSQL);
         ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {
                 new ForEach() {

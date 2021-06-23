@@ -41,7 +41,7 @@ public abstract class AbstractTemplateEngine implements AbstractGenerateTemplate
     @Override
     public String classSuffix() {
         String suffix = template.substring(0, template.indexOf("."));
-        return suffix.endsWith("_NoSu") ? "" : CommonUtil.convert2Hump(suffix, true);
+        return suffix.endsWith("_NoSu") ? "" : CommonUtil.underline2CamelCase(suffix, true);
     }
 
     @Override
@@ -58,14 +58,14 @@ public abstract class AbstractTemplateEngine implements AbstractGenerateTemplate
         variable.put("database", tableInfo.getDataBaseName());
         variable.put("table", tableInfo.getTableName());
         variable.put("note", tableInfo.getTableComment());
-        variable.put("className", CommonUtil.convert2Hump(tableInfo.getTableName(), true));
-        variable.put("classVariable", CommonUtil.convert2Hump(tableInfo.getTableName()));
+        variable.put("className", CommonUtil.underline2CamelCase(tableInfo.getTableName(), true));
+        variable.put("classVariable", CommonUtil.underline2CamelCase(tableInfo.getTableName()));
         List<AbstractFieldStructInfo> fields = new ArrayList<>(tableInfo.getFieldInfos().size());
         List<AbstractFieldStructInfo> columns = new ArrayList<>(tableInfo.getFieldInfos().size());
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             AbstractFieldStructInfo info = new AbstractFieldStructInfo();
             info.setTableName(fieldInfo.getTableName());
-            info.setField(CommonUtil.convert2Hump(fieldInfo.getField()));
+            info.setField(CommonUtil.underline2CamelCase(fieldInfo.getField()));
             info.setFieldType(this.convert2JavaType(fieldInfo.getFieldType()));
             info.setFieldComment(CommonUtil.empty(fieldInfo.getFieldComment()) ? "" : fieldInfo.getFieldComment());
             fieldInfo.setFieldType(JdbcTypeUtil.convert2JdbcType(fieldInfo.getFieldType()));

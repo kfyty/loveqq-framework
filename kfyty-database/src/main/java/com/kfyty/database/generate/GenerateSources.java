@@ -60,7 +60,7 @@ public class GenerateSources {
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
         String classSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().classSuffix()).orElse("");
         String fileTypeSuffix = Optional.ofNullable(configurable.getCurrentGenerateTemplate().fileTypeSuffix()).orElse(".java");
-        return savePath + File.separator + CommonUtil.convert2Hump(info.getTableName(), true) + classSuffix + fileTypeSuffix;
+        return savePath + File.separator + CommonUtil.underline2CamelCase(info.getTableName(), true) + classSuffix + fileTypeSuffix;
     }
 
     protected File initFile(AbstractTableStructInfo info) throws IOException {

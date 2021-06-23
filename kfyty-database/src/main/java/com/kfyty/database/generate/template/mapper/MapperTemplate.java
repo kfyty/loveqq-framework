@@ -27,8 +27,8 @@ public class MapperTemplate extends EntityTemplate {
     protected void initGenerateData(AbstractTableStructInfo tableInfo, String basePackage) {
         super.initGenerateData(tableInfo, basePackage);
         this.mapperPackageName = (CommonUtil.empty(basePackage) ? "" : basePackage + ".") + mapperInterfaceSuffix().toLowerCase();
-        this.mapperClassName = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + mapperInterfaceSuffix();
-        this.mapperClassVariableName = CommonUtil.convert2Hump(tableInfo.getTableName(), false) + mapperInterfaceSuffix();
+        this.mapperClassName = CommonUtil.underline2CamelCase(tableInfo.getTableName(), true) + mapperInterfaceSuffix();
+        this.mapperClassVariableName = CommonUtil.underline2CamelCase(tableInfo.getTableName(), false) + mapperInterfaceSuffix();
         this.mapperClassQualifiedName = this.mapperPackageName + "." + this.mapperClassName;
         this.pkInfo = tableInfo.getFieldInfos().stream().filter(AbstractFieldStructInfo::primaryKey).findFirst().orElse(null);
     }
@@ -85,7 +85,7 @@ public class MapperTemplate extends EntityTemplate {
         out.write(") values (");
         for (int i = 0; i < tableInfo.getFieldInfos().size(); i++) {
             String field = tableInfo.getFieldInfos().get(i).getField();
-            out.write("#{{}.{}}", this.entityClassVariableName, CommonUtil.convert2Hump(field, false));
+            out.write("#{{}.{}}", this.entityClassVariableName, CommonUtil.underline2CamelCase(field, false));
             if(i != tableInfo.getFieldInfos().size() - 1) {
                 out.write(", ");
             }
@@ -98,7 +98,7 @@ public class MapperTemplate extends EntityTemplate {
         out.writeLine("\t\t<set>");
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             String field = fieldInfo.getField();
-            String classField = CommonUtil.convert2Hump(field, false);
+            String classField = CommonUtil.underline2CamelCase(field, false);
             if(fieldInfo.primaryKey()) {
                 continue;
             }

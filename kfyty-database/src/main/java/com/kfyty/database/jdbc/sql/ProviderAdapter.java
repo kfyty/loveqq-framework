@@ -55,14 +55,14 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
     public String doProviderSelectAll(Class<?> mapperClass, Method sourceMethod, Query annotation) {
         String sql = "select * from %s";
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()));
+        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getSimpleName()));
     }
 
     @Override
     public String doProviderSelectByPrimaryKey(Class<?> mapperClass, Method sourceMethod, Query annotation) {
         String sql = "select * from %s where %s = #{%s}";
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()), getPkField(mapperClass), PROVIDER_PARAM_PK);
+        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getSimpleName()), getPkField(mapperClass), PROVIDER_PARAM_PK);
     }
 
     @Override
@@ -74,14 +74,14 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
     public String doProviderDeleteByPrimaryKey(Class<?> mapperClass, Method sourceMethod, Execute annotation) {
         String sql = "delete from %s where %s = #{%s}";
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()), getPkField(mapperClass), PROVIDER_PARAM_PK);
+        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getSimpleName()), getPkField(mapperClass), PROVIDER_PARAM_PK);
     }
 
     @Override
     public String doProviderDeleteAll(Class<?> mapperClass, Method sourceMethod, Execute annotation) {
         String sql = "delete from %s";
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        return String.format(sql, CommonUtil.convert2Underline(entityClass.getSimpleName()));
+        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getSimpleName()));
     }
 
     @Override
@@ -96,7 +96,7 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
     protected String getPkField(Class<?> mapperClass) {
         for (Field value : ReflectUtil.getFieldMap(mapperClass).values()) {
             if (AnnotationUtil.hasAnnotation(value, TableId.class)) {
-                return CommonUtil.convert2Underline(value.getName());
+                return CommonUtil.camelCase2Underline(value.getName());
             }
         }
         return DEFAULT_PK_FIELD;
@@ -110,7 +110,7 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
             if ("serialVersionUID".equals(name)) {
                 continue;
             }
-            fields.append(CommonUtil.convert2Underline(name)).append(",");
+            fields.append(CommonUtil.camelCase2Underline(name)).append(",");
             values.append("#{").append(PROVIDER_PARAM_ENTITY).append(".").append(name).append("},");
         }
         fields.deleteCharAt(fields.length() - 1);
@@ -121,18 +121,18 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
     public String buildInsertSQL(Class<?> mapperClass) {
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
         Pair<String, String> fieldPair = this.buildInsertField(entityClass);
-        return String.format("insert into %s (%s) values (%s)", CommonUtil.convert2Underline(entityClass.getSimpleName()), fieldPair.getKey(), fieldPair.getValue());
+        return String.format("insert into %s (%s) values (%s)", CommonUtil.camelCase2Underline(entityClass.getSimpleName()), fieldPair.getKey(), fieldPair.getValue());
     }
 
     public String buildUpdateSQL(Class<?> mapperClass) {
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1);
-        StringBuilder sql = new StringBuilder("update " + CommonUtil.convert2Underline(entityClass.getSimpleName()) + " set ");
+        StringBuilder sql = new StringBuilder("update " + CommonUtil.camelCase2Underline(entityClass.getSimpleName()) + " set ");
         for (Field field : ReflectUtil.getFieldMap(entityClass).values()) {
             String name = field.getName();
             if ("serialVersionUID".equals(name)) {
                 continue;
             }
-            sql.append(CommonUtil.convert2Underline(name)).append(" = ");
+            sql.append(CommonUtil.camelCase2Underline(name)).append(" = ");
             sql.append("#{").append(PROVIDER_PARAM_ENTITY).append(".").append(name).append("},");
         }
         sql.deleteCharAt(sql.length() - 1);

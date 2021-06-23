@@ -38,12 +38,12 @@ public class EntityTemplate implements AbstractGenerateTemplate {
 
     protected void initGenerateData(AbstractTableStructInfo tableInfo, String basePackage) {
         this.packageName = initPackageName(basePackage, classSuffix());
-        this.className = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + classSuffix();
-        this.classVariableName = CommonUtil.convert2Hump(tableInfo.getTableName()) + classSuffix();
+        this.className = CommonUtil.underline2CamelCase(tableInfo.getTableName(), true) + classSuffix();
+        this.classVariableName = CommonUtil.underline2CamelCase(tableInfo.getTableName()) + classSuffix();
         this.classQualifiedName = CommonUtil.empty(packageName) ? className : packageName + "." + className;
         this.entityPackageName = initPackageName(basePackage, entityClassSuffix());
-        this.entityClassName = CommonUtil.convert2Hump(tableInfo.getTableName(), true) + entityClassSuffix();
-        this.entityClassVariableName = CommonUtil.convert2Hump(tableInfo.getTableName()) + entityClassSuffix();
+        this.entityClassName = CommonUtil.underline2CamelCase(tableInfo.getTableName(), true) + entityClassSuffix();
+        this.entityClassVariableName = CommonUtil.underline2CamelCase(tableInfo.getTableName()) + entityClassSuffix();
         this.entityClassQualifiedName = CommonUtil.empty(entityPackageName) ? entityClassName : entityPackageName + "." + entityClassName;
     }
 
@@ -120,7 +120,7 @@ public class EntityTemplate implements AbstractGenerateTemplate {
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             generateFieldComment(fieldInfo, out);
             generateFieldAnnotation(fieldInfo, out);
-            out.writeLine("\tprivate {} {};\n", convert2JavaType(fieldInfo.getFieldType()), CommonUtil.convert2Hump(fieldInfo.getField(), false));
+            out.writeLine("\tprivate {} {};\n", convert2JavaType(fieldInfo.getFieldType()), CommonUtil.underline2CamelCase(fieldInfo.getField(), false));
         }
     }
 

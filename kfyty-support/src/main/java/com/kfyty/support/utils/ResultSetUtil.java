@@ -123,7 +123,7 @@ public abstract class ResultSetUtil {
             Map<String, Field> fieldMap = ReflectUtil.getFieldMap(clazz);
             ResultSetMetaData metaData = resultSet.getMetaData();
             for(int i = 1; i <= metaData.getColumnCount(); i++) {
-                String fieldName = CommonUtil.convert2Hump(metaData.getColumnLabel(i));
+                String fieldName = CommonUtil.underline2CamelCase(metaData.getColumnLabel(i));
                 Field field = fieldMap.get(fieldName);
                 if(field != null) {
                     Object value = extractObject(resultSet, metaData.getColumnLabel(i), field.getType());

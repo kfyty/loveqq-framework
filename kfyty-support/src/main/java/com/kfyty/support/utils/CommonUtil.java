@@ -3,6 +3,7 @@ package com.kfyty.support.utils;
 import com.kfyty.support.exception.SupportException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -114,34 +115,40 @@ public abstract class CommonUtil {
         }
     }
 
-    public static String convert2Hump(String s) {
-        return convert2Hump(s, false);
+    public static String underline2CamelCase(String s) {
+        return underline2CamelCase(s, false);
     }
 
-    public static String convert2Hump(String target, boolean isClass) {
+    public static String underline2CamelCase(String target, boolean isClass) {
         if(empty(target)) {
-            throw new SupportException("convert to hump failed, target can't empty !");
+            throw new SupportException("convert underline to camel case failed, target can't empty !");
         }
-        int index = 0;
+        StringBuilder builder = new StringBuilder();
         target = UPPER_CASE_PATTERN.matcher(target).matches() || target.contains("_") ? target.toLowerCase() : target;
-        while(target.contains("_")) {
-            index = target.indexOf('_', index);
-            if(index == target.length() - 1) {
-                break;
+        for (int i = 0; i < target.length(); i++) {
+            char c = target.charAt(i);
+            if(c != '_') {
+                builder.append(c);
+                continue;
             }
-            char ch = target.charAt(index + 1);
-            target = target.replace("_" + ch, "" + Character.toUpperCase(ch));
+            while (i < target.length() && (c = target.charAt(i)) == '_') {
+                i++;
+            }
+            if(i < target.length()) {
+                builder.append(i == 1 ? c : Character.toUpperCase(c));
+            }
         }
+        target = builder.toString();
         return !isClass ? target : target.length() == 1 ? target.toUpperCase() : Character.toUpperCase(target.charAt(0)) + target.substring(1);
     }
 
-    public static String convert2Underline(String s) {
-        return convert2Underline(s, true);
+    public static String camelCase2Underline(String s) {
+        return camelCase2Underline(s, true);
     }
 
-    public static String convert2Underline(String target, boolean lower) {
+    public static String camelCase2Underline(String target, boolean lower) {
         if(empty(target)) {
-            throw new SupportException("convert to underline failed, target can't empty !");
+            throw new SupportException("convert camel case to underline failed, target can't empty !");
         }
         if(UPPER_CASE_PATTERN.matcher(target).matches()) {
             return lower ? target.toLowerCase() : target.toUpperCase();
@@ -152,7 +159,7 @@ public abstract class CommonUtil {
         for(int i = 1; i < target.length(); i++) {
             c = target.charAt(i);
             if(Character.isUpperCase(c)) {
-                builder.append("_").append(Character.toLowerCase(c));
+                builder.append('_').append(Character.toLowerCase(c));
                 continue;
             }
             builder.append(c);
@@ -176,11 +183,24 @@ public abstract class CommonUtil {
         return !uri.endsWith("/") ? uri : uri.substring(0, uri.length() - 1);
     }
 
-    public static void saveJdkProxyClass(String savePath, Object object, Object proxy) {
+    public static void ensureFolderExists(String path) {
+        File file = new File(path);
+        if(!file.exists() && !file.mkdirs()) {
+            throw new SupportException("ensure folder exists failed !");
+        }
+    }
+
+    /**
+     * 保存 jdk 生成的代理类
+     * @param savePath 保存路径
+     * @param proxy 代理对象
+     */
+    public static void saveJdkProxyClass(String savePath, Object proxy) {
         try {
             Class<?> clazz = Class.forName("sun.misc.ProxyGenerator");
-            Method method = clazz.getMethod("generateProxyClass", String.class, Class[].class);
-            byte[] b = (byte[]) method.invoke(null, proxy.getClass().getName(), new Class[] {object.getClass()});
+            Method method = ReflectUtil.getMethod(clazz, "generateProxyClass", String.class, Class[].class);
+            byte[] b = (byte[]) ReflectUtil.invokeMethod(null, method, proxy.getClass().getName(), proxy.getClass().getInterfaces());
+            ensureFolderExists(savePath);
             FileOutputStream out = new FileOutputStream(savePath + proxy.getClass().getName() + ".class");
             out.write(b);
             out.flush();
