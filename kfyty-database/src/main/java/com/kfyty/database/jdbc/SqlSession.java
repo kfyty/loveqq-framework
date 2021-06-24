@@ -6,9 +6,10 @@ import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
+import com.kfyty.support.generic.Generic;
+import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -80,14 +81,13 @@ public class SqlSession implements InvocationHandler {
      * @return              返回值
      * @throws Exception
      */
-    @SuppressWarnings("rawtypes")
-    private Object requestQuery(Method sourceMethod, Annotation annotation, ReturnType returnType, Map<String, MethodParameter> params) throws Exception {
+    private Object requestQuery(Method sourceMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) throws Exception {
         checkMapKey(annotation, returnType);
         String annotationName = annotation.annotationType().getSimpleName();
         String methodName = Character.toLowerCase(annotationName.charAt(0)) + annotationName.substring(1);
         String sql = this.parseForEach(sourceMethod, annotation, params);
         Map<String, Object> map = this.parseSQL(sql, params);
-        Method method = JdbcUtil.class.getDeclaredMethod(methodName, Transaction.class, ReturnType.class, String.class, MethodParameter[].class);
+        Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
         Object obj = ReflectUtil.invokeMethod(null, method, this.getTransaction(), returnType, map.get("sql"), map.get("args"));
         this.handleSubQuery(sourceMethod, annotation, obj);
         return obj;
@@ -110,12 +110,11 @@ public class SqlSession implements InvocationHandler {
      * @param returnType    返回值类型
      * @throws Exception
      */
-    @SuppressWarnings("rawtypes")
-    private void checkMapKey(Annotation annotation, ReturnType returnType) {
+    private void checkMapKey(Annotation annotation, SimpleGeneric returnType) {
         if(!(annotation instanceof Query || annotation instanceof SubQuery)) {
             return;
         }
-        returnType.setKey((String) ReflectUtil.invokeSimpleMethod(annotation, "key"));
+        returnType.setMapKey((String) ReflectUtil.invokeSimpleMethod(annotation, "key"));
     }
 
     /**
@@ -226,7 +225,6 @@ public class SqlSession implements InvocationHandler {
      * @param obj           父查询映射的结果对象，若是集合，则为其中的每一个对象
      * @throws Exception
      */
-    @SuppressWarnings("rawtypes")
     private void handleSubQuery(Method sourceMethod, SubQuery[] subQueries, Object obj) throws Exception {
         if(CommonUtil.empty(subQueries) || obj == null) {
             return ;
@@ -234,7 +232,7 @@ public class SqlSession implements InvocationHandler {
         for (SubQuery subQuery : subQueries) {
             Field returnField = ReflectUtil.getField(obj.getClass(), subQuery.returnField());
             Map<String, MethodParameter> params = this.getParamFromAnnotation(subQuery.paramField(), subQuery.mapperField(), obj);
-            ReturnType returnType = ReturnType.getReturnType(returnField);
+            SimpleGeneric returnType = SimpleGeneric.from(returnField);
             ReflectUtil.setFieldValue(obj, returnField, this.requestQuery(sourceMethod, subQuery, returnType, params));
         }
     }
@@ -244,18 +242,20 @@ public class SqlSession implements InvocationHandler {
      * @param method 方法
      * @return 返回值类型包装
      */
-    @SuppressWarnings("rawtypes")
-    private ReturnType parseReturnType(Method method) {
+    private SimpleGeneric parseReturnType(Method method) {
         if(!method.getDeclaringClass().equals(BaseMapper.class) || method.getReturnType().equals(void.class)) {
-            return ReturnType.getReturnType(method);
+            return SimpleGeneric.from(method);
         }
         Class<?> entityClass = ReflectUtil.getSuperGeneric(this.mapperClass, 1);
         if(method.getReturnType().equals(Object.class)) {
-            return new ReturnType<>(false, false, entityClass, null, null);
-        } else if(Collection.class.isAssignableFrom(method.getReturnType())) {
-            return new ReturnType<>(false, true, method.getReturnType(), entityClass, null);
+            return new SimpleGeneric(entityClass);
         }
-        throw new IllegalArgumentException("parse return failed !");
+        if (Collection.class.isAssignableFrom(method.getReturnType())) {
+            SimpleGeneric simpleGeneric = new SimpleGeneric(method.getReturnType(), method.getGenericReturnType());
+            simpleGeneric.getGenericInfo().put(new Generic(entityClass), null);
+            return simpleGeneric;
+        }
+        throw new IllegalArgumentException("parse return type failed !");
     }
 
     /**
@@ -286,10 +286,9 @@ public class SqlSession implements InvocationHandler {
      * @throws Throwable
      */
     @Override
-    @SuppressWarnings("rawtypes")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Annotation[] annotations = this.getAnnotationFromMethod(method);
-        ReturnType returnType = this.parseReturnType(method);
+        SimpleGeneric returnType = this.parseReturnType(method);
         if(annotations.length == 1) {
             return this.requestQuery(method, annotations[0], returnType, this.getRealParameters(method.getParameters(), args));
         }

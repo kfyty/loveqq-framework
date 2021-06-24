@@ -262,3 +262,29 @@ class TestEvent extends ApplicationEvent<String> {
         super(source);
     }
 }
+
+class Entity {}
+interface Base<T, K> {}
+abstract class BaseImpl<T, K> implements Base<T, K> {}
+
+@Component
+class DefaultBase extends BaseImpl<Entity, Integer> {}
+
+@Component
+class CommonBase extends BaseImpl<Bean1, Integer> {}
+
+class BaseController<T, K> {
+    @Autowired
+    protected Base<T, K> service;
+}
+
+@Component
+class DefaultController extends BaseController<Entity, Integer> implements InitializingBean {
+    @Autowired
+    private DefaultBase defaultBase;
+
+    @Override
+    public void afterPropertiesSet() {
+        Assert.assertSame(this.defaultBase, this.service);
+    }
+}

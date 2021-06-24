@@ -1,7 +1,7 @@
 package com.kfyty.support.utils;
 
+import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.jdbc.ReturnType;
 import com.kfyty.support.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class JdbcUtil {
-    public static <T, K, V> Object query(Transaction transaction, ReturnType<T, K, V> returnType, String sql, MethodParameter... params) throws SQLException {
+    public static <T, K, V> Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -83,12 +83,11 @@ public abstract class JdbcUtil {
         return preparedStatement;
     }
 
-    private static <T, K, V> Object subQuery(Transaction transaction, ReturnType<T, K, V> returnType, String sql, MethodParameter ... params) throws SQLException {
+    private static <T, K, V> Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter ... params) throws SQLException {
         return query(transaction, returnType, sql, params);
     }
 
-    @SuppressWarnings("rawtypes")
-    private static void execute(Transaction transaction, ReturnType non, String sql, MethodParameter ... params) throws SQLException {
+    private static void execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter ... params) throws SQLException {
         execute(transaction, sql, params);
     }
 }

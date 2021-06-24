@@ -7,6 +7,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -15,6 +16,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -170,23 +172,28 @@ public abstract class ReflectUtil {
         return (Class<?>) actualTypeArguments[genericIndex];
     }
 
-    public static Class<?> getActualFieldType(Class<?> clazz, Field field) {
-        String genericSignature = (String) invokeSimpleMethod(field, "getGenericSignature");
-        if(genericSignature == null) {
-            return field.getType();
-        }
+    public static Class<?> getActualGenericType(Class<?> clazz, int index) {
         Type genericSuperclass = clazz.getGenericSuperclass();
         if(!(genericSuperclass instanceof ParameterizedType)) {
-            return field.getType();
+            throw new SupportException("unable to get the parent generic type !");
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
+        return (Class<?>) parameterizedType.getActualTypeArguments()[index];
+    }
+
+    public static int getActualGenericIndex(Class<?> clazz, String typeVariable) {
+        Type genericSuperclass = clazz.getGenericSuperclass();
+        if(!(genericSuperclass instanceof ParameterizedType)) {
+            throw new SupportException("unable to get the parent generic type !");
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
         TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
         for (int i = 0; i < typeParameters.length; i++) {
-            if(genericSignature.contains(typeParameters[i].getName())) {
-                return (Class<?>) parameterizedType.getActualTypeArguments()[i];
+            if(typeVariable.equals(typeParameters[i].getName())) {
+                return i;
             }
         }
-        return field.getType();
+        throw new SupportException("can't find actual generic index !");
     }
 
     public static Object getFieldValue(Object obj, String fieldName) {
@@ -199,6 +206,18 @@ public abstract class ReflectUtil {
             field.setAccessible(true);
             field.set(obj, value);
             field.setAccessible(accessible);
+        } catch (Exception e) {
+            throw new SupportException(e);
+        }
+    }
+
+    public static void setFinalFieldValue(Object obj, Field field, Object value) {
+        try {
+            int modifiers = field.getModifiers();
+            Field modifiersField = ReflectUtil.getField(Field.class, "modifiers");
+            setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
+            setFieldValue(obj, field, value);
+            setFieldValue(field, modifiersField, modifiers);
         } catch (Exception e) {
             throw new SupportException(e);
         }
@@ -421,5 +440,33 @@ public abstract class ReflectUtil {
             setFieldValue(obj, field, (obj = ReflectUtil.newInstance(field.getType())));
             clazz = field.getType();
         }
+    }
+
+    /**
+     * 获取泛型的原始类型
+     */
+    public static Class<?> getRawType(Type type) {
+        if(type instanceof Class) {
+            Class<?> clazz = (Class<?>) type;
+            return clazz.isArray() ? clazz.getComponentType() : clazz;
+        }
+        if(type instanceof GenericArrayType) {
+            return getRawType(((GenericArrayType) type).getGenericComponentType());
+        }
+        if(type instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) type).getRawType();
+        }
+        if(type instanceof WildcardType) {
+            WildcardType wildcardType = (WildcardType) type;
+            return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
+        }
+        throw new SupportException("unable to get the raw type !");
+    }
+
+    public static String getTypeVariableName(Type type) {
+        if(type instanceof TypeVariable) {
+            return ((TypeVariable<?>) type).getName();
+        }
+        throw new SupportException("unable to get the type variable !");
     }
 }

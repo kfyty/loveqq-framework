@@ -9,7 +9,7 @@ import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.exception.BeansException;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -87,20 +87,20 @@ public class FieldAnnotationResolver {
         if(ReflectUtil.getFieldValue(bean, field) != null) {
             return;
         }
-        ReturnType<?, ?, ?> type = ReturnType.getReturnType(clazz, field);
+        ActualGeneric type = ActualGeneric.from(clazz, field);
         for (Method method : clazz.getMethods()) {
-            if(!AnnotationUtil.hasAnnotation(method, Bean.class) || !type.getActualType().isAssignableFrom(method.getReturnType())) {
+            if(!AnnotationUtil.hasAnnotation(method, Bean.class) || !type.getSimpleActualType().isAssignableFrom(method.getReturnType())) {
                 continue;
             }
             for (Parameter parameter : method.getParameters()) {
                 String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-                ReturnType<?, ?, ?> paramType = ReturnType.getReturnType(parameter);
-                BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, paramType.getActualType());
+                ActualGeneric paramType = ActualGeneric.from(parameter);
+                BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, paramType.getSimpleActualType());
                 if(beanDefinition instanceof MethodBeanDefinition) {
                     BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
                     if(parentDefinition.getBeanType().equals(clazz)) {
                         for (Parameter nestedParam : ((MethodBeanDefinition) beanDefinition).getBeanMethod().getParameters()) {
-                            if(ReturnType.getReturnType(nestedParam).getActualType().isAssignableFrom(field.getType())) {
+                            if(ActualGeneric.from(nestedParam).getSimpleActualType().isAssignableFrom(field.getType())) {
                                 throw new BeansException("bean circular dependency: " + nestedParam);
                             }
                         }

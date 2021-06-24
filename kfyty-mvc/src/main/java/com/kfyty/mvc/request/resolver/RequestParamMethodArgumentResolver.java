@@ -5,7 +5,7 @@ import com.kfyty.mvc.annotation.RequestParam;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -35,8 +35,8 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        ReturnType<Object, Object, Object> type = ReturnType.getReturnType(parameter.getParameter());
-        return !MultipartFile.class.isAssignableFrom(type.getActualType()) && AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class);
+        SimpleGeneric type = SimpleGeneric.from(parameter.getParameter());
+        return !MultipartFile.class.isAssignableFrom(type.getSimpleActualType()) && AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class);
     }
 
     @Override

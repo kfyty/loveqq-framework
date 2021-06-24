@@ -4,7 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -118,7 +118,7 @@ public class GenericBeanDefinition implements BeanDefinition {
                 continue;
             }
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            Object resolveBean = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            Object resolveBean = this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
             this.addConstructorArgs(parameter.getType(), resolveBean);
         }
     }

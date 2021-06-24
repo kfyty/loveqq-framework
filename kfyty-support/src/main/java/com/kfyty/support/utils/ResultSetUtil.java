@@ -1,7 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.TooManyResultException;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.type.TypeHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,26 +49,26 @@ public abstract class ResultSetUtil {
         TYPE_HANDLER.put(clazz, typeHandler);
     }
 
-    public static <T, K, V> Object processObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
-        if(returnType.isArray()) {
-            return processArrayObject(resultSet, returnType.getKeyParameterizedType());
+    public static Object processObject(ResultSet resultSet, SimpleGeneric returnType) throws Exception {
+        if(returnType.isSimpleArray()) {
+            return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if(!returnType.isParameterizedType()) {
-            return processSingleObject(resultSet, returnType.getReturnType());
+        if(!returnType.isSimpleParameterizedType()) {
+            return processSingleObject(resultSet, returnType.getSourceType());
         }
-        if(Set.class.isAssignableFrom(returnType.getReturnType())) {
-            return processSetObject(resultSet, returnType.getKeyParameterizedType());
+        if(Set.class.isAssignableFrom(returnType.getSourceType())) {
+            return processSetObject(resultSet, returnType.getFirst().get());
         }
-        if(returnType.getValueParameterizedType() == null && List.class.isAssignableFrom(returnType.getReturnType())) {
-            return processListObject(resultSet, returnType.getKeyParameterizedType());
+        if(List.class.isAssignableFrom(returnType.getSourceType()) && !Map.class.isAssignableFrom(returnType.getFirst().get())) {
+            return processListObject(resultSet, returnType.getFirst().get());
         }
-        if(Map.class.isAssignableFrom(returnType.getReturnType()) && !CommonUtil.empty(returnType.getKey())) {
+        if(returnType.isMapGeneric() && !CommonUtil.empty(returnType.getMapKey())) {
             return processMapObject(resultSet, returnType);
         }
-        if(Map.class.isAssignableFrom(returnType.getReturnType())) {
-            return processSingleMapObject(resultSet, returnType);
+        if(returnType.isMapGeneric()) {
+            return processSingleMapObject(resultSet);
         }
-        return processListMapObject(resultSet, returnType);
+        return processListMapObject(resultSet);
     }
 
     public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws Exception {
@@ -143,21 +143,21 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
-        List<V> values = processListObject(resultSet, returnType.getValueParameterizedType());
+    public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws Exception {
+        List<V> values = processListObject(resultSet, (Class<V>) returnType.getMapValueType().get());
         if(CommonUtil.empty(values)) {
             return new HashMap<>(2);
         }
         Map<K, V> result = new HashMap<>();
         for (V value : values) {
-            Field field = ReflectUtil.getField(returnType.getValueParameterizedType(), returnType.getKey());
+            Field field = ReflectUtil.getField(returnType.getMapValueType().get(), returnType.getMapKey());
             result.put((K) ReflectUtil.getFieldValue(value, field), value);
         }
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+    public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws Exception {
         if(resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(new HashMap<>(2), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
@@ -173,7 +173,7 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Object processListMapObject(ResultSet resultSet, ReturnType<T, K, V> returnType) throws Exception {
+    public static <K, V> Object processListMapObject(ResultSet resultSet) throws Exception {
         if(resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }

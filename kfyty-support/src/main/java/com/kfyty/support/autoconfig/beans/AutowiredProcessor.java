@@ -4,7 +4,9 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.exception.BeansException;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.ActualGeneric;
+import com.kfyty.support.generic.Generic;
+import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -42,8 +45,9 @@ public class AutowiredProcessor {
             return;
         }
         Autowired annotation = AnnotationUtil.findAnnotation(field, Autowired.class);
-        String beanName = BeanUtil.getBeanName(field.getType(), annotation);
-        Object targetBean = this.doResolveBean(beanName, ReturnType.getReturnType(clazz, field), annotation);
+        ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
+        String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
+        Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
         ReflectUtil.setFieldValue(bean, field, targetBean);
         if(log.isDebugEnabled()) {
             log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
@@ -55,7 +59,7 @@ public class AutowiredProcessor {
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            parameters[index++] = this.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            parameters[index++] = this.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if(log.isDebugEnabled()) {
@@ -70,29 +74,29 @@ public class AutowiredProcessor {
      * @param returnType     目标 bean 类型
      * @return bean
      */
-    public Object doResolveBean(String targetBeanName, ReturnType<?, ?, ?> returnType, Autowired autowired) {
+    public Object doResolveBean(String targetBeanName, ActualGeneric returnType, Autowired autowired) {
         if (resolving.contains(targetBeanName)) {
             throw new BeansException("bean circular dependency: " + targetBeanName);
         }
-        this.prepareResolving(targetBeanName, returnType.getActualType(), returnType.isParameterizedType());
-        Map<String, ?> beans = this.doGetBean(targetBeanName, returnType.getActualType(), returnType.isParameterizedType(), autowired);
+        this.prepareResolving(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType());
+        Map<String, ?> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
         Object resolveBean = null;
-        if(List.class.isAssignableFrom(returnType.getReturnType())) {
+        if(List.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new ArrayList<>(beans.values());
         }
-        if(Set.class.isAssignableFrom(returnType.getReturnType())) {
+        if(Set.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new HashSet<>(beans.values());
         }
-        if(Map.class.isAssignableFrom(returnType.getReturnType())) {
+        if(returnType.isMapGeneric()) {
             resolveBean = beans;
         }
-        if(returnType.isArray()) {
-            resolveBean = beans.values().toArray((Object[]) Array.newInstance(returnType.getActualType(), 0));
+        if(returnType.isSimpleArray()) {
+            resolveBean = beans.values().toArray((Object[]) Array.newInstance(returnType.getSimpleActualType(), 0));
         }
         if(resolveBean == null) {
-            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : beans.get(targetBeanName);
+            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
         }
-        this.removeResolving(targetBeanName, returnType.getActualType(), returnType.isParameterizedType());
+        this.removeResolving(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType());
         return resolveBean;
     }
 
@@ -135,5 +139,36 @@ public class AutowiredProcessor {
 
     private boolean autowiredRequired(Autowired autowired) {
         return autowired == null || autowired.required();
+    }
+
+    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, ActualGeneric actualGeneric) {
+        Object bean = beans.get(beanName);
+        if(bean != null) {
+            return bean;
+        }
+        ArrayList<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
+        for (Object value : beans.values()) {
+            SimpleGeneric generic = SimpleGeneric.from(value.getClass());
+            if(generic.size() != targetGenerics.size()) {
+                continue;
+            }
+            boolean matched = true;
+            ArrayList<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
+            for (int i = 0; i < generics.size(); i++) {
+                Class<?> target = targetGenerics.get(i).get();
+                Class<?> toBeMatched = generics.get(i).get();
+                if(!Objects.equals(target, toBeMatched)) {
+                    matched = false;
+                    break;
+                }
+            }
+            if(matched) {
+                if(bean != null) {
+                    throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
+                }
+                bean = value;
+            }
+        }
+        return bean;
     }
 }

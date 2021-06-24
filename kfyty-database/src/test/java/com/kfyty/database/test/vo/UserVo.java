@@ -11,7 +11,7 @@ import lombok.Data;
  * @email kfyty725@hotmail.com
  */
 @Data
-public class UserVo {
+public class UserVo implements Comparable<UserVo> {
     private Integer id;
     private User user;
 
@@ -19,5 +19,10 @@ public class UserVo {
         UserVo vo = new UserVo();
         vo.setId(id);
         return vo;
+    }
+
+    @Override
+    public int compareTo(UserVo o) {
+        return 0;
     }
 }

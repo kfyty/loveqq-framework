@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.Random;
 
 @Data
-public class User {
+public class User implements Comparable<User> {
     private Integer id;
     private String username;
     private Date createTime;
@@ -20,5 +20,10 @@ public class User {
         user.setCreateTime(new Date());
         user.setImage("hello".getBytes(StandardCharsets.UTF_8));
         return user;
+    }
+
+    @Override
+    public int compareTo(User o) {
+        return 0;
     }
 }

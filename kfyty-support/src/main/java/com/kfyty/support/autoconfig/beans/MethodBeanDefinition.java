@@ -3,7 +3,7 @@ package com.kfyty.support.autoconfig.beans;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
-import com.kfyty.support.jdbc.ReturnType;
+import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -110,7 +110,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ReturnType.getReturnType(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
         }
         Object parentInstance = this.parentDefinition.createInstance(context);
         if(AopUtil.isJdkProxy(parentInstance)) {
