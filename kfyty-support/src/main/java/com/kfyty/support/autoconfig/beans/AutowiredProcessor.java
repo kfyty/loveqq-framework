@@ -8,6 +8,7 @@ import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,9 @@ public class AutowiredProcessor {
         ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
+        if(AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
+            targetBean = AopUtil.getSourceIfNecessary(targetBean);
+        }
         ReflectUtil.setFieldValue(bean, field, targetBean);
         if(log.isDebugEnabled()) {
             log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
@@ -59,7 +63,11 @@ public class AutowiredProcessor {
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            parameters[index++] = this.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            Object targetBean = this.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            if(AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
+                targetBean = AopUtil.getSourceIfNecessary(targetBean);
+            }
+            parameters[index++] = targetBean;
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if(log.isDebugEnabled()) {
