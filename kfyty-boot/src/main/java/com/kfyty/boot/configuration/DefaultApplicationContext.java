@@ -1,5 +1,6 @@
 package com.kfyty.boot.configuration;
 
+import com.kfyty.boot.processor.AutowiredAnnotationBeanPostProcessor;
 import com.kfyty.boot.resolver.AnnotationConfigResolver;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
@@ -18,7 +19,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +43,9 @@ public class DefaultApplicationContext implements ApplicationContext {
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Autowired
+    private AutowiredAnnotationBeanPostProcessor autowiredAnnotationBeanPostProcessor;
 
     public DefaultApplicationContext(AnnotationConfigResolver configResolver) {
         this.configResolver = configResolver;
@@ -75,7 +78,12 @@ public class DefaultApplicationContext implements ApplicationContext {
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return getBeanDefinitions().entrySet().stream().filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return getBeanDefinitions().entrySet()
+                .stream()
+                .filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
+                    throw new IllegalStateException("duplicate key " + k2);
+                }, LinkedHashMap::new));
     }
 
     @Override
@@ -102,7 +110,7 @@ public class DefaultApplicationContext implements ApplicationContext {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanOfType(Class<T> clazz) {
-        Map<String, Object> beans = new HashMap<>(2);
+        Map<String, Object> beans = new LinkedHashMap<>(2);
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
             if(clazz.isAssignableFrom(beanDefinition.getBeanType())) {
                 beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
@@ -114,7 +122,7 @@ public class DefaultApplicationContext implements ApplicationContext {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
-        Map<String, Object> beans = new HashMap<>(2);
+        Map<String, Object> beans = new LinkedHashMap<>(2);
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
             if(AnnotationUtil.hasAnnotation(beanDefinition.getBeanType(), annotationClass)) {
                 beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
@@ -145,11 +153,11 @@ public class DefaultApplicationContext implements ApplicationContext {
         }
         if(beforeAutowired && beanDefinition instanceof MethodBeanDefinition) {
             BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
-            this.configResolver.getFieldAnnotationResolver().doResolver(parentDefinition.getBeanType(), registerBean(parentDefinition), true);
+            this.autowiredAnnotationBeanPostProcessor.doResolver(parentDefinition.getBeanType(), registerBean(parentDefinition), true);
         }
         if(beforeAutowired && beanDefinition instanceof FactoryBeanDefinition) {
             BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
-            this.configResolver.getFieldAnnotationResolver().doResolver(factoryBeanDefinition.getBeanType(), registerBean(factoryBeanDefinition), true);
+            this.autowiredAnnotationBeanPostProcessor.doResolver(factoryBeanDefinition.getBeanType(), registerBean(factoryBeanDefinition), true);
         }
         bean = this.getBean(beanDefinition.getBeanName());
         if(bean != null) {
@@ -206,7 +214,8 @@ public class DefaultApplicationContext implements ApplicationContext {
         this.applicationEventPublisher.registerEventListener(applicationListener);
     }
 
-    public void doInBeans(BiConsumer<String, Object> bean) {
+    @Override
+    public void forEach(BiConsumer<String, Object> bean) {
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
             bean.accept(entry.getKey(), entry.getValue());
         }

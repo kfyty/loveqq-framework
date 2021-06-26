@@ -154,14 +154,14 @@ public class AutowiredProcessor {
         if(bean != null) {
             return bean;
         }
-        ArrayList<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
+        List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
         for (Object value : beans.values()) {
             SimpleGeneric generic = SimpleGeneric.from(value.getClass());
             if(generic.size() != targetGenerics.size()) {
                 continue;
             }
             boolean matched = true;
-            ArrayList<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
+            List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
             for (int i = 0; i < generics.size(); i++) {
                 Class<?> target = targetGenerics.get(i).get();
                 Class<?> toBeMatched = generics.get(i).get();

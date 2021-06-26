@@ -16,9 +16,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface Order {
 
-    int HIGHEST_PRECEDENCE = Integer.MIN_VALUE;
+    int HIGHEST_PRECEDENCE = Integer.MIN_VALUE + 1;
 
-    int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
+    int LOWEST_PRECEDENCE = Integer.MAX_VALUE - 1;
 
     int value() default LOWEST_PRECEDENCE;
 }

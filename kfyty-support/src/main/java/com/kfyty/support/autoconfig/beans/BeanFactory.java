@@ -2,6 +2,7 @@ package com.kfyty.support.autoconfig.beans;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * 描述: bean 工厂
@@ -31,4 +32,6 @@ public interface BeanFactory {
     void replaceBean(Class<?> clazz, Object bean);
 
     void replaceBean(String name, Object bean);
+
+    void forEach(BiConsumer<String, Object> bean);
 }

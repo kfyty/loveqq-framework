@@ -1,9 +1,13 @@
-package com.kfyty.boot.resolver;
+package com.kfyty.boot.processor;
 
-import com.kfyty.boot.configuration.DefaultApplicationContext;
+import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ApplicationContextAware;
+import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lazy;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -23,36 +27,62 @@ import java.lang.reflect.Parameter;
 import java.util.Map;
 
 /**
- * 功能描述: 属性注解解析器
+ * 功能描述: Autowired 注解处理器
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/27 10:43
  * @since JDK 1.8
  */
 @Slf4j
-public class FieldAnnotationResolver {
-    private final DefaultApplicationContext applicationContext;
-    private final AutowiredProcessor autowiredProcessor;
+@Component
+@Order(Integer.MIN_VALUE)
+public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextAware, InstantiationAwareBeanPostProcessor {
+    private ApplicationContext applicationContext;
+    private AutowiredProcessor autowiredProcessor;
 
-    public FieldAnnotationResolver(AnnotationConfigResolver configResolver) {
-        this.applicationContext = configResolver.getApplicationContext();
-        this.autowiredProcessor = configResolver.getAutowiredProcessor();
+    private boolean isApplicationContextResolved = false;
+
+    @Override
+    public void setApplicationContext(ApplicationContext context) {
+        this.applicationContext = context;
+        this.autowiredProcessor = new AutowiredProcessor(context);
+    }
+
+    @Override
+    public Object postProcessAfterInstantiation(Object bean, String beanName) {
+        if(!this.isApplicationContextResolved) {
+            this.isApplicationContextResolved = true;
+            this.doResolver(this.applicationContext.getClass(), this.applicationContext);
+        }
+        return null;
+    }
+
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
+        this.doResolver();
+        return null;
     }
 
     /**
-     * 对容器内的所有的 bean 执行属性注入
+     * 对容器内的所有的 bean 执行属性注入以及方法注入
      */
     public void doResolver() {
-        this.applicationContext.doInBeans((beanName, bean) -> this.doResolver(this.applicationContext.getBeanDefinition(beanName).getBeanType(), bean));
+        this.applicationContext.forEach((beanName, bean) -> this.doResolver(this.applicationContext.getBeanDefinition(beanName).getBeanType(), bean));
     }
 
     /**
-     * 对特定 bean 执行属性注入
+     * 对特定 bean 执行属性注入以及方法注入
      * @param clazz bean 的类型
      * @param bean bean 实例
      */
     public void doResolver(Class<?> clazz, Object bean) {
         this.doResolver(clazz, bean, false);
+        bean = AopUtil.getSourceIfNecessary(bean);
+        for (Method method : bean.getClass().getMethods()) {
+            if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
+                this.autowiredProcessor.doAutowired(bean, method);
+            }
+        }
     }
 
     /**

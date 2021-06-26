@@ -1,7 +1,8 @@
 com.kfyty.boot.auto.config=\
+    com.kfyty.boot.processor.AutowiredAnnotationBeanPostProcessor,\
     com.kfyty.boot.processor.PostConstructProcessor,\
     com.kfyty.boot.processor.PreDestroyProcessor,\
-    com.kfyty.boot.processor.ConfigurationBeanProcessor,\
-    com.kfyty.boot.processor.EventListenerAnnotationProcessor,\
+    com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
+    com.kfyty.boot.processor.EventListenerAnnotationBeanPostProcessor,\
     com.kfyty.boot.event.DefaultApplicationEventPublisher,\
     com.kfyty.boot.configuration.DefaultThreadPoolExecutor

@@ -21,7 +21,7 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@Import(config = ControllerAdviceProcessor.class)
+@Import(config = ControllerAdviceBeanPostProcessor.class)
 public class MvcAutoConfig implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 

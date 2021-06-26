@@ -3,17 +3,19 @@ package com.kfyty.boot.resolver;
 import com.kfyty.boot.K;
 import com.kfyty.boot.configuration.DefaultApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -46,10 +48,7 @@ import java.util.stream.Collectors;
 @Getter
 public class AnnotationConfigResolver {
     private final K boot;
-    private DefaultApplicationContext applicationContext;
-    private AutowiredProcessor autowiredProcessor;
-    private FieldAnnotationResolver fieldAnnotationResolver;
-    private MethodAnnotationResolver methodAnnotationResolver;
+    private ApplicationContext applicationContext;
 
     private AnnotationConfigResolver(K boot) {
         this.boot = boot;
@@ -58,9 +57,6 @@ public class AnnotationConfigResolver {
     public static AnnotationConfigResolver create(K boot) {
         AnnotationConfigResolver configResolver = new AnnotationConfigResolver(boot);
         configResolver.applicationContext = new DefaultApplicationContext(configResolver);
-        configResolver.autowiredProcessor = new AutowiredProcessor(configResolver.applicationContext);
-        configResolver.fieldAnnotationResolver = new FieldAnnotationResolver(configResolver);
-        configResolver.methodAnnotationResolver = new MethodAnnotationResolver(configResolver);
         configResolver.registerDefaultBean();
         return configResolver;
     }
@@ -74,9 +70,9 @@ public class AnnotationConfigResolver {
         if(FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
             BeanDefinition factoryBeanDefinition = GenericBeanDefinition.from(beanDefinition);
             this.applicationContext.registerBeanDefinition(factoryBeanDefinition);
-            this.methodAnnotationResolver.prepareBeanDefines(factoryBeanDefinition);
+            this.prepareBeanDefines(factoryBeanDefinition);
         }
-        this.methodAnnotationResolver.prepareBeanDefines(beanDefinition);
+        this.prepareBeanDefines(beanDefinition);
     }
 
     public ApplicationContext doResolver(Set<Class<?>> scanClasses, String ... args) {
@@ -87,9 +83,6 @@ public class AnnotationConfigResolver {
             this.sortBeanDefinition();
 
             this.instantiateBeanDefinition();
-
-            this.fieldAnnotationResolver.doResolver();
-            this.methodAnnotationResolver.doResolver();
 
             this.processInstantiateBean();
 
@@ -111,6 +104,20 @@ public class AnnotationConfigResolver {
             if(newBean != null && newBean != bean) {
                 bean = newBean;
                 applicationContext.replaceBean(beanName, newBean);
+            }
+        }
+    }
+
+    /**
+     * 解析该 BeanDefinition 中可能存在的其他 BeanDefinition
+     * @param beanDefinition BeanDefinition
+     */
+    private void prepareBeanDefines(BeanDefinition beanDefinition) {
+        Method[] methods = beanDefinition.getBeanType().getMethods();
+        for (Method method : methods) {
+            if(AnnotationUtil.hasAnnotation(method, Bean.class)) {
+                BeanDefinition methodBeanDefinition = GenericBeanDefinition.from(beanDefinition, method, AnnotationUtil.findAnnotation(method, Bean.class));
+                this.applicationContext.registerBeanDefinition(methodBeanDefinition);
             }
         }
     }
@@ -144,6 +151,9 @@ public class AnnotationConfigResolver {
         Set<BeanDefinition> importBeanDefines = this.applicationContext.getBeanDefinitions().values().stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).collect(Collectors.toSet());
         for (BeanDefinition importBeanDefine : importBeanDefines) {
             ImportBeanDefine bean = (ImportBeanDefine) this.applicationContext.registerBean(importBeanDefine);
+            if(bean instanceof ApplicationContextAware) {
+                ((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
+            }
             bean.doImport(scanClasses).forEach(this::registerBeanDefinition);
         }
     }
@@ -152,7 +162,16 @@ public class AnnotationConfigResolver {
         Iterator<BeanDefinition> iterator = this.applicationContext.getBeanDefinitions().values().iterator();
         while (iterator.hasNext()) {
             BeanDefinition beanDefinition = iterator.next();
-            if(this.boot.isExclude(beanDefinition.getBeanName()) || this.boot.isExclude(beanDefinition.getBeanType())) {
+            boolean isExclude = this.boot.isExclude(beanDefinition.getBeanName()) || this.boot.isExclude(beanDefinition.getBeanType());
+            if(!isExclude && (beanDefinition instanceof MethodBeanDefinition)) {
+                BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
+                isExclude = this.boot.isExclude(parentDefinition.getBeanName()) || this.boot.isExclude(parentDefinition.getBeanType());
+            }
+            if(!isExclude && (beanDefinition instanceof FactoryBeanDefinition)) {
+                BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
+                isExclude = this.boot.isExclude(factoryBeanDefinition.getBeanName()) || this.boot.isExclude(factoryBeanDefinition.getBeanType());
+            }
+            if(isExclude) {
                 iterator.remove();
                 log.info("exclude bean definition: {}", beanDefinition);
             }
@@ -183,7 +202,7 @@ public class AnnotationConfigResolver {
         Collection<BeanPostProcessor> beanPostProcessors = applicationContext.getBeanOfType(BeanPostProcessor.class).values();
 
         for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
-            this.applicationContext.doInBeans((beanName, bean) -> {
+            this.applicationContext.forEach((beanName, bean) -> {
                 Object newBean = beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
                 if(newBean != null && newBean != bean) {
                     applicationContext.replaceBean(beanName, newBean);
@@ -196,7 +215,7 @@ public class AnnotationConfigResolver {
         this.processBeanMethod(e -> e.getInitMethod(this.applicationContext) != null, MethodBeanDefinition::getInitMethod);
 
         for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
-            this.applicationContext.doInBeans((beanName, bean) -> {
+            this.applicationContext.forEach((beanName, bean) -> {
                 Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);
                 if(newBean != null && newBean != bean) {
                     applicationContext.replaceBean(beanName, newBean);
@@ -215,7 +234,7 @@ public class AnnotationConfigResolver {
         log.info("destroy bean...");
 
         for (BeanPostProcessor beanPostProcessor : applicationContext.getBeanOfType(BeanPostProcessor.class).values()) {
-            this.applicationContext.doInBeans((beanName, bean) -> beanPostProcessor.postProcessBeforeDestroy(bean, beanName));
+            this.applicationContext.forEach((beanName, bean) -> beanPostProcessor.postProcessBeforeDestroy(bean, beanName));
         }
 
         applicationContext.getBeanOfType(DestroyBean.class).values().forEach(DestroyBean::onDestroy);

@@ -20,5 +20,5 @@ public @interface EventListener {
     /**
      * 要监听的事件
      */
-    Class<? extends ApplicationEvent<?>>[] value();
+    Class<? extends ApplicationEvent<?>>[] value() default {};
 }

@@ -9,6 +9,7 @@ import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.CommonUtil;
 
 import java.lang.reflect.Method;
 
@@ -20,7 +21,7 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-public class EventListenerAnnotationProcessor implements BeanPostProcessor {
+public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcessor {
     @Autowired
     private ApplicationContext context;
 
@@ -40,8 +41,13 @@ public class EventListenerAnnotationProcessor implements BeanPostProcessor {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private void createEventListener(String beanName, Method listenerMethod, EventListener eventListener) {
-        for (Class<? extends ApplicationEvent<?>> eventType : eventListener.value()) {
+        Class<? extends ApplicationEvent<?>>[] eventTypes = eventListener.value();
+        if(CommonUtil.empty(eventTypes)) {
+            eventTypes = (Class<? extends ApplicationEvent<?>>[]) listenerMethod.getParameterTypes();
+        }
+        for (Class<? extends ApplicationEvent<?>> eventType : eventTypes) {
             this.applicationEventPublisher.registerEventListener(new EventListenerAnnotationListener(beanName, listenerMethod, eventType, this.context));
         }
     }
