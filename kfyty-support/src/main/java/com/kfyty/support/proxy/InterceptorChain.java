@@ -1,6 +1,9 @@
 package com.kfyty.support.proxy;
 
+import com.kfyty.support.utils.BeanUtil;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -24,11 +27,17 @@ public class InterceptorChain extends MethodInvocationInterceptor {
     public InterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
         this(source);
         this.chainPoints.addAll(chainPoints);
+        this.sortInterceptorChain();
     }
 
     public InterceptorChain addInterceptorPoint(InterceptorChainPoint chainPoint) {
         this.chainPoints.add(chainPoint);
+        this.sortInterceptorChain();
         return this;
+    }
+
+    public void sortInterceptorChain() {
+        this.chainPoints.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     @Override
