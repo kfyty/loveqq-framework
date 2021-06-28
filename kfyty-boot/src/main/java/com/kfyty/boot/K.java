@@ -53,7 +53,7 @@ public class K {
         long start = System.currentTimeMillis();
         this.prepareScanBean(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareMetaInfFactories();
-        this.excludeScanBean();
+        this.prepareExcludeScannedBean();
         ApplicationContext applicationContext = AnnotationConfigResolver.create(this).doResolver(scanClasses, args);
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         return applicationContext;
@@ -140,7 +140,7 @@ public class K {
         }
     }
 
-    private void excludeScanBean() {
+    private void prepareExcludeScannedBean() {
         BootApplication bootApplication = AnnotationUtil.findAnnotation(this.primarySource, BootApplication.class);
         if(bootApplication != null) {
             excludeBeanNames.addAll(Arrays.asList(bootApplication.excludeNames()));
@@ -153,7 +153,6 @@ public class K {
                 this.scanAutoConfiguration(AnnotationUtil.findAnnotation(annotation, EnableAutoConfiguration.class));
             }
         }
-        this.scanClasses.removeAll(excludeBeanClasses);
     }
 
     private void scanAutoConfiguration(EnableAutoConfiguration autoConfiguration) {

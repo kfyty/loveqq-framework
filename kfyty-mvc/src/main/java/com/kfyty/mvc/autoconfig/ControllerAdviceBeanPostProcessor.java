@@ -4,7 +4,7 @@ import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.ControllerAdvice;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.mvc.annotation.RestControllerAdvice;
-import com.kfyty.mvc.proxy.ControllerAdviceInterceptorProxy;
+import com.kfyty.mvc.proxy.ControllerExceptionAdviceInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -39,7 +39,7 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
         if(!this.canCreateProxy(AopUtil.getSourceIfNecessary(bean))) {
             return null;
         }
-        return this.createProxy(bean, beanName, new ControllerAdviceInterceptorProxy(this.applicationContext, this.controllerAdviceBeans));
+        return this.createProxy(bean, beanName, new ControllerExceptionAdviceInterceptorProxy(this.applicationContext, this.controllerAdviceBeans));
     }
 
     @SuppressWarnings("unchecked")

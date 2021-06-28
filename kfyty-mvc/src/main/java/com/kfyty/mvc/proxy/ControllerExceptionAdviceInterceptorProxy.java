@@ -11,11 +11,13 @@ import com.kfyty.support.proxy.InterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrap;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 
 /**
@@ -26,13 +28,13 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class ControllerAdviceInterceptorProxy implements InterceptorChainPoint {
+public class ControllerExceptionAdviceInterceptorProxy implements InterceptorChainPoint {
     private final ApplicationContext context;
     private final List<Object> controllerAdviceBeans;
 
     private DispatcherServlet dispatcherServlet;
 
-    public ControllerAdviceInterceptorProxy(ApplicationContext context, List<Object> controllerAdviceBeans) {
+    public ControllerExceptionAdviceInterceptorProxy(ApplicationContext context, List<Object> controllerAdviceBeans) {
         this.context = context;
         this.controllerAdviceBeans = controllerAdviceBeans;
     }
@@ -46,48 +48,58 @@ public class ControllerAdviceInterceptorProxy implements InterceptorChainPoint {
         try {
             return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
-            MethodParameter controllerAdvice = this.findControllerAdvice(throwable);
-            if(controllerAdvice != null) {
-                this.processControllerAdvice(controllerAdvice, throwable);
+            MethodParameter controllerExceptionAdvice = this.findControllerExceptionAdvice(throwable);
+            if(controllerExceptionAdvice != null) {
+                this.processControllerAdvice(controllerExceptionAdvice, throwable);
                 return null;
             }
             throw throwable;
         }
     }
 
-    private MethodParameter findControllerAdvice(Throwable throwable) {
+    private MethodParameter findControllerExceptionAdvice(Throwable throwable) {
         for (Object adviceBean : this.controllerAdviceBeans) {
             for (Method method : adviceBean.getClass().getMethods()) {
                 ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, ExceptionHandler.class);
                 if(annotation == null) {
                     continue;
                 }
-                for (Class<? extends Throwable> clazz : annotation.value()) {
-                    if(clazz.isAssignableFrom(throwable.getClass())) {
-                        while (throwable != null && !throwable.getClass().equals(clazz) && !throwable.getClass().equals(Throwable.class)) {
-                            if(throwable instanceof InvocationTargetException) {
-                                throwable = ((InvocationTargetException) throwable).getTargetException();
-                                continue;
-                            }
-                            throwable = throwable.getCause();
-                        }
-                        return new MethodParameter(adviceBean, method, throwable);
+                Class<?>[] exceptionClasses = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : method.getParameterTypes();
+                for (Class<?> exceptionClass : exceptionClasses) {
+                    if(!Throwable.class.isAssignableFrom(exceptionClass) || !exceptionClass.isAssignableFrom(throwable.getClass())) {
+                        continue;
                     }
+                    Throwable target = throwable;
+                    while (!target.getClass().equals(exceptionClass) && !target.getClass().equals(Throwable.class)) {
+                        Throwable cause = target instanceof InvocationTargetException ? ((InvocationTargetException) target).getTargetException() : target.getCause();
+                        if(cause == null) {
+                            break;
+                        }
+                        target = cause;
+                    }
+                    Parameter[] parameters = method.getParameters();
+                    Object[] exceptionArgs = new Object[parameters.length];
+                    for (int i = 0; i < method.getParameters().length; i++) {
+                        if(parameters[i].getType().isAssignableFrom(target.getClass())) {
+                            exceptionArgs[i] = target;
+                        }
+                    }
+                    return new MethodParameter(adviceBean, method, exceptionArgs);
                 }
             }
         }
         return null;
     }
 
-    private void processControllerAdvice(MethodParameter controllerAdvice, Throwable throwable) throws Throwable {
+    private void processControllerAdvice(MethodParameter exceptionAdviceMethod, Throwable throwable) throws Throwable {
         if(this.dispatcherServlet == null) {
             this.dispatcherServlet = this.context.getBean(DispatcherServlet.class);
         }
-        Object retValue = ReflectUtil.invokeMethod(controllerAdvice.getSource(), controllerAdvice.getMethod(), controllerAdvice.getMethodArgs());
+        Object retValue = ReflectUtil.invokeMethod(exceptionAdviceMethod.getSource(), exceptionAdviceMethod.getMethod(), exceptionAdviceMethod.getMethodArgs());
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.dispatcherServlet.getReturnValueProcessors()) {
-            if(returnValueProcessor.supportsReturnType(controllerAdvice)) {
+            if(returnValueProcessor.supportsReturnType(exceptionAdviceMethod)) {
                 ModelViewContainer container = new ModelViewContainer().setPrefix(dispatcherServlet.getPrefix()).setSuffix(dispatcherServlet.getSuffix());
-                returnValueProcessor.handleReturnValue(retValue, controllerAdvice, container);
+                returnValueProcessor.handleReturnValue(retValue, exceptionAdviceMethod, container);
                 return;
             }
         }
