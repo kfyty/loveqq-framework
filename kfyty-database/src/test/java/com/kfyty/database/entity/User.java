@@ -1,4 +1,4 @@
-package com.kfyty.database.test.entity;
+package com.kfyty.database.entity;
 
 import lombok.Data;
 

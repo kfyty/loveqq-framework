@@ -49,12 +49,14 @@ public class AutowiredProcessor {
         ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
-        if(AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
+        if(targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
             targetBean = AopUtil.getSourceIfNecessary(targetBean);
         }
-        ReflectUtil.setFieldValue(bean, field, targetBean);
-        if(log.isDebugEnabled()) {
-            log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
+        if(targetBean != null) {
+            ReflectUtil.setFieldValue(bean, field, targetBean);
+            if(log.isDebugEnabled()) {
+                log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
+            }
         }
     }
 
@@ -64,7 +66,7 @@ public class AutowiredProcessor {
         for (Parameter parameter : method.getParameters()) {
             String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
             Object targetBean = this.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
-            if(AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
+            if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
                 targetBean = AopUtil.getSourceIfNecessary(targetBean);
             }
             parameters[index++] = targetBean;
@@ -133,6 +135,9 @@ public class AutowiredProcessor {
             } else {
                 BeanDefinition beanDefinition = this.context.getBeanDefinition(targetBeanName, targetType);
                 if(beanDefinition == null) {
+                    if(!autowiredRequired(autowired)) {
+                        return beanOfType;
+                    }
                     throw new BeansException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
                 }
                 this.context.registerBean(beanDefinition);

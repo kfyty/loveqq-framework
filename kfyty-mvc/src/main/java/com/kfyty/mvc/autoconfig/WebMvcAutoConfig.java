@@ -2,7 +2,7 @@ package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.RestController;
-import com.kfyty.mvc.handler.MvcAnnotationHandler;
+import com.kfyty.mvc.handler.RequestMappingAnnotationHandler;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -22,15 +22,15 @@ import java.util.Map;
  */
 @Configuration
 @Import(config = ControllerAdviceBeanPostProcessor.class)
-public class MvcAutoConfig implements ApplicationContextAware {
+public class WebMvcAutoConfig implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 
     @Autowired
-    private MvcAnnotationHandler mvcAnnotationHandler;
+    private RequestMappingAnnotationHandler requestMappingAnnotationHandler;
 
     @Bean
-    public MvcAnnotationHandler mvcAnnotationHandler() {
-        return new MvcAnnotationHandler();
+    public RequestMappingAnnotationHandler requestMappingAnnotationHandler() {
+        return new RequestMappingAnnotationHandler();
     }
 
     @Override
@@ -43,8 +43,7 @@ public class MvcAutoConfig implements ApplicationContextAware {
         Map<String, Object> controllers = applicationContext.getBeanWithAnnotation(Controller.class);
         controllers.putAll(applicationContext.getBeanWithAnnotation(RestController.class));
         for (Object value : controllers.values()) {
-            mvcAnnotationHandler.setMappingController(value);
-            mvcAnnotationHandler.buildURLMappingMap();
+            requestMappingAnnotationHandler.doParseMappingController(value);
         }
     }
 }

@@ -1,6 +1,6 @@
-package com.kfyty.database.test.vo;
+package com.kfyty.database.vo;
 
-import com.kfyty.database.test.entity.User;
+import com.kfyty.database.entity.User;
 import lombok.Data;
 
 /**

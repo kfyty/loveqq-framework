@@ -1,12 +1,12 @@
-package com.kfyty.boot.test.async;
+package com.kfyty.async;
 
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.BeanRefreshComplete;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Async;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2021/6/26 12:07
  * @email kfyty725@hotmail.com
  */
-@BootApplication(proxyTargetClass = false)
+@Configuration
 public class AsyncTest implements InitializingBean, BeanRefreshComplete {
     int[] async = new int[2];
     CountDownLatch latch = new CountDownLatch(1);

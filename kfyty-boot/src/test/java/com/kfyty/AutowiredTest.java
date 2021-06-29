@@ -1,4 +1,4 @@
-package com.kfyty.boot.test.autowired;
+package com.kfyty;
 
 import com.kfyty.boot.K;
 import com.kfyty.mvc.annotation.GetMapping;

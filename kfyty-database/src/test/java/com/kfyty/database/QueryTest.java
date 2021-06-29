@@ -1,10 +1,10 @@
-package com.kfyty.database.test;
+package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
-import com.kfyty.database.test.entity.User;
-import com.kfyty.database.test.mapper.UserMapper;
+import com.kfyty.database.entity.User;
+import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.jdbc.SqlSessionFactory;
-import com.kfyty.database.test.vo.UserVo;
+import com.kfyty.database.vo.UserVo;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,12 +1,12 @@
-package com.kfyty.database.test.mapper;
+package com.kfyty.database.mapper;
 
 import com.kfyty.database.jdbc.BaseMapper;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.SubQuery;
-import com.kfyty.database.test.entity.User;
+import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
-import com.kfyty.database.test.vo.UserVo;
+import com.kfyty.database.vo.UserVo;
 
 import java.util.List;
 import java.util.Map;

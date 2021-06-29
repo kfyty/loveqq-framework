@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @NoArgsConstructor
-public class MvcAnnotationHandler {
+public class RequestMappingAnnotationHandler {
     /**
      * 验证是否是 restful 风格 url 的正则表达式
      */
@@ -52,18 +52,15 @@ public class MvcAnnotationHandler {
      */
     private final List<MethodMapping> methodMappingList = new ArrayList<>();
 
-    public MvcAnnotationHandler(Object mappingController) {
-        this.setMappingController(mappingController);
-    }
-
-    public void setMappingController(Object mappingController) {
+    public synchronized void doParseMappingController(Object mappingController) {
         this.superUrl = "";
         this.mappingController = mappingController;
         this.methodMappingList.clear();
         this.handleAnnotation();
+        this.buildURLMappingMap();
     }
 
-    public void buildURLMappingMap() {
+    private void buildURLMappingMap() {
         if(CommonUtil.empty(methodMappingList)) {
             return;
         }

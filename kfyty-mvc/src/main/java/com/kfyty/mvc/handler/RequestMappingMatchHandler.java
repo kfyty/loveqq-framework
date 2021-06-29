@@ -43,7 +43,7 @@ public class RequestMappingMatchHandler {
             }
             boolean match = true;
             for (int i = 0; i < paths.size(); i++) {
-                if(MvcAnnotationHandler.PATH_VARIABLE_PATTERN.matcher(methodMapping.getPaths().get(i)).matches()) {
+                if(RequestMappingAnnotationHandler.PATH_VARIABLE_PATTERN.matcher(methodMapping.getPaths().get(i)).matches()) {
                     continue;
                 }
                 if(!methodMapping.getPaths().get(i).equals(paths.get(i))) {
