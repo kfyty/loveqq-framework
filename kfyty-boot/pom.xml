@@ -25,14 +25,15 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>kfyty-database</artifactId>
+            <artifactId>kfyty-mvc</artifactId>
             <version>${kfyty.utils.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.kfyty</groupId>
-            <artifactId>kfyty-mvc</artifactId>
-            <version>${kfyty.utils.version}</version>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -78,6 +78,7 @@ public class AnnotationConfigResolver {
     public ApplicationContext doResolver(Set<Class<?>> scanClasses, String ... args) {
         try {
             this.prepareBeanDefines(scanClasses);
+            this.excludeBeanDefinition();
             this.processImportBeanDefinition(scanClasses);
             this.excludeBeanDefinition();
             this.sortBeanDefinition();

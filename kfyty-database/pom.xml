@@ -15,7 +15,6 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-        <k-jte.version>1.0-SNAPSHOT</k-jte.version>
     </properties>
 
     <dependencies>
@@ -25,11 +24,27 @@
             <version>${kfyty.utils.version}</version>
         </dependency>
 
-        <!-- jsp 模板引擎：https://github.com/kfyty/k-jte.git -->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>k-jte</artifactId>
-            <version>${k-jte.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

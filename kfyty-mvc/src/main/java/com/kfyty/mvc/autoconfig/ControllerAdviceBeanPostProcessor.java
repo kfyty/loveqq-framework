@@ -55,26 +55,28 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
 
     @SuppressWarnings("unchecked")
     private void prepareControllerAdviceCondition() {
-        if(this.controllerAdviceBasePackages != null) {
+        if(this.controllerAdviceAnnotations != null) {
             return;
         }
         this.controllerAdviceBeans = new LinkedList<>(this.applicationContext.getBeanWithAnnotation(ControllerAdvice.class).values());
         this.controllerAdviceBeans.addAll(this.applicationContext.getBeanWithAnnotation(RestControllerAdvice.class).values());
-        this.controllerAdviceBasePackages = new LinkedList<>();
-        this.controllerAdviceAnnotations = new LinkedList<>();
-        for (Object adviceBean : this.controllerAdviceBeans) {
-            Annotation annotation = AnnotationUtil.findAnnotation(adviceBean, ControllerAdvice.class);
-            if(annotation == null) {
-                annotation = AnnotationUtil.findAnnotation(adviceBean, RestControllerAdvice.class);
+        if(this.controllerAdviceAnnotations == null) {
+            this.controllerAdviceAnnotations = new LinkedList<>();
+            this.controllerAdviceBasePackages = new LinkedList<>();
+            for (Object adviceBean : this.controllerAdviceBeans) {
+                Annotation annotation = AnnotationUtil.findAnnotation(adviceBean, ControllerAdvice.class);
+                if(annotation == null) {
+                    annotation = AnnotationUtil.findAnnotation(adviceBean, RestControllerAdvice.class);
+                }
+                this.controllerAdviceAnnotations.addAll(Arrays.asList((Class<? extends Annotation>[]) ReflectUtil.invokeSimpleMethod(annotation, "annotations")));
+                this.controllerAdviceBasePackages.addAll(Arrays.asList((String[]) ReflectUtil.invokeSimpleMethod(annotation, "value")));
+                this.controllerAdviceBasePackages.addAll(Arrays.asList((String[]) ReflectUtil.invokeSimpleMethod(annotation, "basePackages")));
+                this.controllerAdviceBasePackages.addAll(Arrays.stream((Class<?>[]) ReflectUtil.invokeSimpleMethod(annotation, "basePackageClasses")).map(e -> e.getPackage().getName()).collect(Collectors.toList()));
             }
-            this.controllerAdviceAnnotations.addAll(Arrays.asList((Class<? extends Annotation>[]) ReflectUtil.invokeSimpleMethod(annotation, "annotations")));
-            this.controllerAdviceBasePackages.addAll(Arrays.asList((String[]) ReflectUtil.invokeSimpleMethod(annotation, "value")));
-            this.controllerAdviceBasePackages.addAll(Arrays.asList((String[]) ReflectUtil.invokeSimpleMethod(annotation, "basePackages")));
-            this.controllerAdviceBasePackages.addAll(Arrays.stream((Class<?>[]) ReflectUtil.invokeSimpleMethod(annotation, "basePackageClasses")).map(e -> e.getPackage().getName()).collect(Collectors.toList()));
-        }
-        if(CommonUtil.empty(this.controllerAdviceAnnotations) && CommonUtil.empty(this.controllerAdviceBasePackages)) {
-            this.controllerAdviceAnnotations.add(Controller.class);
-            this.controllerAdviceAnnotations.add(RestController.class);
+            if(CommonUtil.notEmpty(this.controllerAdviceBeans) && CommonUtil.empty(this.controllerAdviceAnnotations) && CommonUtil.empty(this.controllerAdviceBasePackages)) {
+                this.controllerAdviceAnnotations.add(Controller.class);
+                this.controllerAdviceAnnotations.add(RestController.class);
+            }
         }
     }
 }
