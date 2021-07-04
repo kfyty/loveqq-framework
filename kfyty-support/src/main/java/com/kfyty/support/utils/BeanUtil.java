@@ -10,7 +10,9 @@ import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,12 +38,13 @@ public abstract class BeanUtil {
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
-    public static String getBeanName(Class<?> clazz, Bean bean) {
-        return CommonUtil.notEmpty(bean.value()) ? bean.value() : convert2BeanName(clazz);
+    public static String getBeanName(Parameter parameter) {
+        Qualifier qualifier = AnnotationUtil.findAnnotation(parameter, Qualifier.class);
+        return qualifier != null ? qualifier.value() : getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Autowired.class));
     }
 
-    public static String getBeanName(Class<?> clazz, Qualifier qualifier) {
-        return qualifier != null ? qualifier.value() : convert2BeanName(clazz);
+    public static String getBeanName(Method method, Bean bean) {
+        return bean != null && CommonUtil.notEmpty(bean.value()) ? bean.value() : method.getName();
     }
 
     public static String getBeanName(Class<?> clazz, Autowired autowired) {

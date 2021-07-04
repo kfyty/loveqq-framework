@@ -59,6 +59,7 @@ public class AutowiredTest {
 
     @Bean
     public Bean1 bean1() {
+        Assert.assertNotNull(this.autowiredTest);
         return new Bean1();
     }
 
@@ -91,6 +92,7 @@ class Config {
 
     @Bean
     public Bean2 bean2(Bean1 bean1, Bean3 bean3, Inter1 inter1, List<Inter> inters, Inter[] interArr) {
+        Assert.assertNotNull(test);
         Map<String, Inter> interMap = Arrays.stream(interArr).collect(Collectors.toMap(k -> BeanUtil.convert2BeanName(k.getClass()), Function.identity()));
         Assert.assertSame(bean1, test.bean1());
         Assert.assertSame(bean3, this.bean3(inter1, interMap));
@@ -100,6 +102,7 @@ class Config {
 
     @Bean
     public Bean3 bean3(@Qualifier("inter1") Inter inter1, Map<String, Inter> interMap) {
+        Assert.assertNotNull(test);
         return new Bean3();
     }
 }
@@ -131,6 +134,8 @@ class Inter1 extends InterImpl<Bean1> implements InitializingBean {
 
     @Bean
     public Bean4 bean4(Bean1 bean1) {
+        Assert.assertNotNull(this.t);
+        Assert.assertNotNull(this.bean1);
         return new Bean4();
     }
 
@@ -219,6 +224,7 @@ class HelloInterImpl implements HelloInter, InitializingBean {
     @Bean
     @Override
     public Bean5 bean5() {
+        Assert.assertNotNull(factory);
         return new Bean5();
     }
 

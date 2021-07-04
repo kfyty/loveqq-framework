@@ -3,8 +3,6 @@ package com.kfyty.support.autoconfig.beans;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.exception.BeansException;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,8 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@ToString
-@Getter @Setter
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class InstantiatedBeanDefinition extends GenericBeanDefinition {
 
@@ -27,9 +24,8 @@ public class InstantiatedBeanDefinition extends GenericBeanDefinition {
 
     @Override
     public Object createInstance(ApplicationContext context) {
-        Object bean = context.getBean(this.getBeanName());
-        if(bean != null) {
-            return bean;
+        if(context.contains(this.getBeanName())) {
+            return context.getBean(this.getBeanName());
         }
         throw new BeansException("the bean definition does not support instantiation: " + this);
     }

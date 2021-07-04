@@ -7,7 +7,7 @@ import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
 import com.kfyty.mvc.tomcat.TomcatWebServer;
-import com.kfyty.support.autoconfig.BeanRefreshComplete;
+import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -32,7 +32,7 @@ import java.util.Optional;
  */
 @Configuration
 @Import(config = WebSocketAutoConfig.class)
-public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
+public class TomcatAutoConfig implements ContextRefreshCompleted, DestroyBean {
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -56,15 +56,9 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     @Bean
     public DispatcherServlet dispatcherServlet() {
         DispatcherServlet dispatcherServlet = new DispatcherServlet();
-        if(this.interceptorChain != null) {
-            this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
-        }
-        if(this.argumentResolvers != null) {
-            this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
-        }
-        if(this.returnValueProcessors != null) {
-            this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
-        }
+        this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
+        this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
+        this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
         return dispatcherServlet;
     }
 
@@ -79,7 +73,7 @@ public class TomcatAutoConfig implements BeanRefreshComplete, DestroyBean {
     }
 
     @Override
-    public void onComplete(Class<?> primarySource, String ... args) {
+    public void onCompleted(ApplicationContext applicationContext) {
         WebServer server = this.applicationContext.getBean(WebServer.class);
         if(server != null) {
             server.start();

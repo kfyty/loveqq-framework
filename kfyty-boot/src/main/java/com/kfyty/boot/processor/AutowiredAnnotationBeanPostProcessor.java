@@ -8,145 +8,94 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.annotation.Qualifier;
+import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: Autowired 注解处理器
+ * 必须实现 InstantiationAwareBeanPostProcessor 接口，以保证其最高的优先级
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/27 10:43
  * @since JDK 1.8
  */
 @Slf4j
-@Component
 @Order(Integer.MIN_VALUE)
-public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextAware, InstantiationAwareBeanPostProcessor {
-    private ApplicationContext applicationContext;
+@Component(AutowiredCapableSupport.BEAN_NAME)
+public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextAware, InstantiationAwareBeanPostProcessor, AutowiredCapableSupport {
     private AutowiredProcessor autowiredProcessor;
 
-    private boolean isApplicationContextResolved = false;
+    private final Map<Object, Method> lazyAutowiredMethod = new HashMap<>();
+    private final Map<Object, Pair<Class<?>, Field>> lazyAutowiredField = new HashMap<>();
 
     @Override
     public void setApplicationContext(ApplicationContext context) {
-        this.applicationContext = context;
         this.autowiredProcessor = new AutowiredProcessor(context);
+        this.doAutowiredBean(context);
     }
 
     @Override
-    public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        if(!this.isApplicationContextResolved) {
-            this.isApplicationContextResolved = true;
-            this.doResolver(this.applicationContext.getClass(), this.applicationContext);
-        }
-        return null;
+    public void doAutowiredBean(Object bean) {
+        bean = AopUtil.getSourceIfNecessary(bean);
+        this.doAutowiredBeanField(bean.getClass(), bean);
+        this.doAutowiredBeanMethod(bean.getClass(), bean);
     }
 
     @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        this.doResolver();
-        return null;
-    }
-
-    /**
-     * 对容器内的所有的 bean 执行属性注入以及方法注入
-     */
-    public void doResolver() {
-        this.applicationContext.forEach((beanName, bean) -> this.doResolver(this.applicationContext.getBeanDefinition(beanName).getBeanType(), bean));
-    }
-
-    /**
-     * 对特定 bean 执行属性注入以及方法注入
-     * @param clazz bean 的类型
-     * @param bean bean 实例
-     */
-    public void doResolver(Class<?> clazz, Object bean) {
-        this.doResolver(clazz, bean, false);
-        bean = AopUtil.getSourceIfNecessary(bean);
-        for (Method method : bean.getClass().getMethods()) {
-            if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
-                this.autowiredProcessor.doAutowired(bean, method);
-            }
+    public void doAutowiredLazy() {
+        for (Map.Entry<Object, Method> entry : this.lazyAutowiredMethod.entrySet()) {
+            this.autowiredProcessor.doAutowired(entry.getKey(), entry.getValue());
         }
+        for (Map.Entry<Object, Pair<Class<?>, Field>> entry : this.lazyAutowiredField.entrySet()) {
+            this.autowiredProcessor.doAutowired(entry.getValue().getKey(), entry.getKey(), entry.getValue().getValue());
+        }
+        this.lazyAutowiredMethod.clear();
+        this.lazyAutowiredField.clear();
     }
 
-    /**
-     * 对特定 bean 执行属性注入
-     * 如果该 bean 是 jdk 代理，则对原对象执行注入
-     * 如果容器正在刷新中且要注入的属性实例由该 bean 中的方法定义，则先执行该方法定义
-     * @param clazz bean 的类型
-     * @param bean bean 实例
-     * @param refreshing 当前容器是否正在刷新中
-     */
-    public void doResolver(Class<?> clazz, Object bean, boolean refreshing) {
-        bean = AopUtil.getSourceIfNecessary(bean);
-        clazz = AopUtil.isJdkProxy(bean) ? bean.getClass() : clazz;
-        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(clazz).entrySet()) {
-            Field field = entry.getValue();
-            if(refreshing && AnnotationUtil.hasAnnotation(field, Lazy.class)) {
-                continue;
-            }
-            if(refreshing) {
-                this.refreshSelfAutowired(clazz, bean, field);
-            }
+    protected void doAutowiredBeanField(Class<?> clazz, Object bean) {
+        List<Field> lazies = new ArrayList<>(4);
+        List<Method> beanMethods = Arrays.stream(clazz.getMethods()).filter(e -> AnnotationUtil.hasAnnotation(e, Bean.class)).collect(Collectors.toList());
+        for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
             if(AnnotationUtil.hasAnnotation(field, Autowired.class)) {
+                if(AnnotationUtil.hasAnnotation(field, Lazy.class)) {
+                    this.lazyAutowiredField.put(bean, new Pair<>(clazz, field));
+                    continue;
+                }
+                ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
+                if(beanMethods.stream().anyMatch(e -> actualGeneric.getSimpleActualType().isAssignableFrom(e.getReturnType()))) {
+                    lazies.add(field);
+                    continue;
+                }
                 this.autowiredProcessor.doAutowired(clazz, bean, field);
             }
         }
+        lazies.forEach(e -> this.autowiredProcessor.doAutowired(clazz, bean, e));
     }
 
-    /**
-     * 刷新注入自身的属性，并提前注册该属性实例所依赖的 bean
-     */
-    private void refreshSelfAutowired(Class<?> clazz, Object bean, Field field) {
-        if(ReflectUtil.getFieldValue(bean, field) != null) {
-            return;
-        }
-        ActualGeneric type = ActualGeneric.from(clazz, field);
+    protected void doAutowiredBeanMethod(Class<?> clazz, Object bean) {
         for (Method method : clazz.getMethods()) {
-            if(!AnnotationUtil.hasAnnotation(method, Bean.class) || !type.getSimpleActualType().isAssignableFrom(method.getReturnType())) {
-                continue;
-            }
-            for (Parameter parameter : method.getParameters()) {
-                String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-                ActualGeneric paramType = ActualGeneric.from(parameter);
-                BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, paramType.getSimpleActualType());
-                if(beanDefinition instanceof MethodBeanDefinition) {
-                    BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
-                    if(parentDefinition.getBeanType().equals(clazz)) {
-                        for (Parameter nestedParam : ((MethodBeanDefinition) beanDefinition).getBeanMethod().getParameters()) {
-                            if(ActualGeneric.from(nestedParam).getSimpleActualType().isAssignableFrom(field.getType())) {
-                                throw new BeansException("bean circular dependency: " + nestedParam);
-                            }
-                        }
-                        this.applicationContext.registerBean(beanDefinition, false);
-                    }
+            if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
+                if(AnnotationUtil.hasAnnotation(method, Lazy.class)) {
+                    this.lazyAutowiredMethod.put(bean, method);
+                    continue;
                 }
-            }
-            Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
-            String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.convert2BeanName(method.getReturnType());
-            BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName, method.getReturnType());
-            if(beanDefinition != null) {
-                Object targetBean = this.applicationContext.registerBean(beanDefinition, false);
-                if(targetBean == null) {
-                    throw new BeansException("the return value of the bean annotation method can't be null !");
-                }
-                ReflectUtil.setFieldValue(bean, field, targetBean);
+                this.autowiredProcessor.doAutowired(bean, method);
             }
         }
     }

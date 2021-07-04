@@ -114,7 +114,7 @@ public class SqlSession implements InvocationHandler {
         if(!(annotation instanceof Query || annotation instanceof SubQuery)) {
             return;
         }
-        returnType.setMapKey((String) ReflectUtil.invokeSimpleMethod(annotation, "key"));
+        returnType.setMapKey(ReflectUtil.invokeSimpleMethod(annotation, "key"));
     }
 
     /**
@@ -123,13 +123,12 @@ public class SqlSession implements InvocationHandler {
      * @param annotation 注解
      * @return SQL
      */
-    @SuppressWarnings("unchecked")
     private String getSQL(Method sourceMethod, Annotation annotation) {
-        Class<? extends Provider> provider = (Class<? extends Provider>) ReflectUtil.invokeSimpleMethod(annotation, "provider");
+        Class<? extends Provider> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
         if(!provider.equals(Provider.class)) {
             return this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation);
         }
-        String sql = (String) ReflectUtil.invokeSimpleMethod(annotation, "value");
+        String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
         if(CommonUtil.empty(sql)) {
             throw new NullPointerException("sql statement is empty !");
         }
@@ -145,7 +144,7 @@ public class SqlSession implements InvocationHandler {
      */
     private String parseForEach(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
         String sql = getSQL(sourceMethod, annotation);
-        ForEach[] forEachList = (ForEach[]) ReflectUtil.invokeSimpleMethod(annotation, "forEach");
+        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(annotation, "forEach");
         if(CommonUtil.empty(forEachList)) {
             return sql;
         }
@@ -202,7 +201,7 @@ public class SqlSession implements InvocationHandler {
         if(!(annotation instanceof Query && obj != null)) {
             return ;
         }
-        SubQuery[] subQueries = (SubQuery[]) ReflectUtil.invokeSimpleMethod(annotation, "subQuery");
+        SubQuery[] subQueries = ReflectUtil.invokeSimpleMethod(annotation, "subQuery");
         if(obj instanceof Collection) {
             for (Object o : (Collection<?>) obj) {
                 this.handleSubQuery(sourceMethod, subQueries, o);

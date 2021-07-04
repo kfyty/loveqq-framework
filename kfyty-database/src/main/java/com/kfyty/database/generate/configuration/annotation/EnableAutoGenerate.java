@@ -1,6 +1,6 @@
 package com.kfyty.database.generate.configuration.annotation;
 
-import com.kfyty.database.generate.configuration.GenerateAutoConfig;
+import com.kfyty.database.generate.configuration.AutoGenerateAutoConfig;
 import com.kfyty.database.generate.template.AbstractTemplateEngine;
 import com.kfyty.database.generate.template.freemarker.FreemarkerTemplate;
 import com.kfyty.support.autoconfig.annotation.Import;
@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(config = GenerateAutoConfig.class)
+@Import(config = AutoGenerateAutoConfig.class)
 public @interface EnableAutoGenerate {
 
     boolean loadTemplate() default true;

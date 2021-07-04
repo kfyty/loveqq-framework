@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 用于排除一些自动配置类
+ * 描述: 自动配置
  *
  * @author kfyty725
  * @date 2021/6/12 11:28
@@ -20,5 +20,9 @@ public @interface EnableAutoConfiguration {
 
     String[] excludeNames() default {};
 
-    ComponentFilter componentFilter() default @ComponentFilter();
+    ComponentFilter includeFilter() default @ComponentFilter(annotations = {
+            BootApplication.class, Configuration.class, Component.class, Service.class, Repository.class
+    });
+
+    ComponentFilter excludeFilter() default @ComponentFilter();
 }

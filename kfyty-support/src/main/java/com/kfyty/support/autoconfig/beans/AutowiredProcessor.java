@@ -2,7 +2,6 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.generic.Generic;
@@ -19,6 +18,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,12 +33,16 @@ import java.util.Set;
  */
 @Slf4j
 public class AutowiredProcessor {
-    private final Set<String> resolving = new HashSet<>();
-
     private final ApplicationContext context;
+    private final Set<String> resolving;
 
     public AutowiredProcessor(ApplicationContext context) {
         this.context = context;
+        this.resolving = new LinkedHashSet<>();
+    }
+
+    public ApplicationContext getContext() {
+        return context;
     }
 
     public void doAutowired(Class<?> clazz, Object bean, Field field) {
@@ -64,8 +68,8 @@ public class AutowiredProcessor {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
-            String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            Object targetBean = this.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
+            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(method, Autowired.class));
             if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
                 targetBean = AopUtil.getSourceIfNecessary(targetBean);
             }
@@ -86,7 +90,7 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, ActualGeneric returnType, Autowired autowired) {
         if (resolving.contains(targetBeanName)) {
-            throw new BeansException("bean circular dependency: " + targetBeanName);
+            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
         }
         this.prepareResolving(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType());
         Map<String, ?> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
@@ -183,5 +187,17 @@ public class AutowiredProcessor {
             }
         }
         return bean;
+    }
+
+    private String buildCircularDependency() {
+        StringBuilder builder = new StringBuilder("┌─────┐\r\n");
+        Object[] beanNames = this.resolving.toArray();
+        for (int i = 0; i < beanNames.length; i++) {
+            builder.append(beanNames[i]).append(" -> ").append(this.context.getBeanDefinition(beanNames[i].toString())).append("\r\n");
+            if(i < beanNames.length - 1) {
+                builder.append("↑     ↓\r\n");
+            }
+        }
+        return builder.append("└─────┘").toString();
     }
 }

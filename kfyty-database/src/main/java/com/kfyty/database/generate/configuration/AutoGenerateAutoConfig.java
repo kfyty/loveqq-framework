@@ -4,10 +4,12 @@ import com.kfyty.database.generate.GenerateSources;
 import com.kfyty.database.generate.configuration.annotation.EnableAutoGenerate;
 import com.kfyty.database.generate.database.AbstractDataBaseMapper;
 import com.kfyty.database.generate.template.AbstractGenerateTemplate;
-import com.kfyty.support.autoconfig.BeanRefreshComplete;
+import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -28,11 +30,11 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Configuration
-public class GenerateAutoConfig implements ImportBeanDefine, BeanRefreshComplete {
+public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshCompleted {
     @Autowired(required = false)
     private GenerateConfiguration generateConfiguration;
 
-    @Autowired(required = false)
+    @Lazy @Autowired(required = false)
     private Class<? extends AbstractDataBaseMapper> dataBaseMapper;
 
     @Autowired(required = false)
@@ -49,18 +51,15 @@ public class GenerateAutoConfig implements ImportBeanDefine, BeanRefreshComplete
 
     @Override
     @SneakyThrows
-    public void onComplete(Class<?> primarySource, String ... args) {
-        if(!AnnotationUtil.hasAnnotation(primarySource, EnableAutoGenerate.class)) {
-            return;
-        }
+    public void onCompleted(ApplicationContext applicationContext) {
         if(this.generateConfiguration == null) {
             log.warn("generate config does not exist !");
             return;
         }
-        EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(primarySource, EnableAutoGenerate.class);
+        EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);
         List<? extends AbstractGenerateTemplate> templates = annotation.templateEngine().newInstance().loadTemplates(annotation.templatePrefix());
         if(CommonUtil.empty(templates)) {
-            log.warn(": No freemarker template found for prefix: '" + annotation.templatePrefix() + "' !");
+            log.warn("no template found for prefix: '" + annotation.templatePrefix() + "' !");
         }
         GenerateSources generateSources = new GenerateSources(this.generateConfiguration);
         generateSources.refreshGenerateTemplate(templates);

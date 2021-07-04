@@ -1,6 +1,7 @@
 package com.kfyty.support.utils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -17,6 +18,14 @@ import java.util.List;
  */
 public abstract class AnnotationUtil {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+
+    public static boolean isAnnotation(Class<?> clazz) {
+        return clazz != null && Annotation.class.isAssignableFrom(clazz);
+    }
+
+    public static boolean isMetaAnnotation(Class<?> clazz) {
+        return isAnnotation(clazz) && "java.lang.annotation".equals(clazz.getPackage().getName());
+    }
 
     public static boolean hasAnnotation(Object source, Class<? extends Annotation> annotation) {
         return hasAnnotation(source.getClass(), annotation);
@@ -64,8 +73,47 @@ public abstract class AnnotationUtil {
         if (hasAnnotation(source, annotationClass)) {
             return true;
         }
+        if(isMetaAnnotation(source)) {
+            return false;
+        }
         for (Annotation annotation : findAnnotations(source)) {
-            if (hasAnnotation(annotation.annotationType(), annotationClass)) {
+            if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasAnnotation(Constructor<?> constructor, Class<? extends Annotation> annotationClass) {
+        return findAnnotation(constructor, annotationClass) != null;
+    }
+
+    public static boolean hasAnnotationElement(Constructor<?> constructor, Class<? extends Annotation> annotationClass) {
+        if (hasAnnotation(constructor, annotationClass)) {
+            return true;
+        }
+        for (Annotation annotation : findAnnotations(constructor)) {
+            if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SafeVarargs
+    public static boolean hasAnyAnnotation(Constructor<?> constructor, Class<? extends Annotation>... annotations) {
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (hasAnnotation(constructor, annotation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SafeVarargs
+    public static boolean hasAnyAnnotationElement(Constructor<?> constructor, Class<? extends Annotation>... annotations) {
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (hasAnnotationElement(constructor, annotation)) {
                 return true;
             }
         }
@@ -101,7 +149,7 @@ public abstract class AnnotationUtil {
             return true;
         }
         for (Annotation annotation : findAnnotations(method)) {
-            if (hasAnnotation(annotation.annotationType(), annotationClass)) {
+            if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
                 return true;
             }
         }
@@ -163,6 +211,17 @@ public abstract class AnnotationUtil {
         return field.getAnnotations();
     }
 
+    public static Annotation[] findAnnotations(Constructor<?> constructor) {
+        if (constructor == null) {
+            return EMPTY_ANNOTATIONS;
+        }
+        Annotation[] annotations = constructor.getAnnotations();
+        if (CommonUtil.notEmpty(annotations)) {
+            return annotations;
+        }
+        return findAnnotations(ReflectUtil.getSuperConstructor(constructor));
+    }
+
     public static Annotation[] findAnnotations(Method method) {
         if (method == null) {
             return EMPTY_ANNOTATIONS;
@@ -212,6 +271,17 @@ public abstract class AnnotationUtil {
 
     public static <T extends Annotation> T findAnnotation(Field field, Class<T> annotationClass) {
         return field == null ? null : field.getAnnotation(annotationClass);
+    }
+
+    public static <T extends Annotation> T findAnnotation(Constructor<?> constructor, Class<T> annotationClass) {
+        if (constructor == null) {
+            return null;
+        }
+        T annotation = constructor.getAnnotation(annotationClass);
+        if (annotation != null) {
+            return annotation;
+        }
+        return findAnnotation(ReflectUtil.getSuperConstructor(constructor), annotationClass);
     }
 
     public static <T extends Annotation> T findAnnotation(Method method, Class<T> annotationClass) {

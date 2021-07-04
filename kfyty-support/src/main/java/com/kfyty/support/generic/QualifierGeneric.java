@@ -176,8 +176,11 @@ public class QualifierGeneric {
             }
             if(actualTypeArgument instanceof GenericArrayType) {
                 Type componentType = ((GenericArrayType) actualTypeArgument).getGenericComponentType();
+                while (componentType instanceof GenericArrayType) {
+                    componentType = ((GenericArrayType) componentType).getGenericComponentType();
+                }
                 if(componentType instanceof TypeVariable) {
-                    this.processTypeVariable((TypeVariable<?>) componentType, true, superType);
+                    this.processTypeVariable(actualTypeArgument.getTypeName(), true, superType);
                     continue;
                 }
             }
@@ -194,14 +197,14 @@ public class QualifierGeneric {
     }
 
     private void processTypeVariable(TypeVariable<?> typeVariable) {
-        this.processTypeVariable(typeVariable, false, null);
+        this.processTypeVariable(getTypeVariableName(typeVariable), false, null);
     }
 
-    private void processTypeVariable(TypeVariable<?> typeVariable, boolean isArray, Class<?> superType) {
+    private void processTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
         if(superType == null) {
-            this.genericInfo.put(new Generic(getTypeVariableName(typeVariable), isArray), null);
+            this.genericInfo.put(new Generic(typeVariableName, isArray), null);
             return;
         }
-        this.genericInfo.put(new SuperGeneric(getTypeVariableName(typeVariable), isArray, superType), null);
+        this.genericInfo.put(new SuperGeneric(typeVariableName, isArray, superType), null);
     }
 }

@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import(config = {WebMvcAutoConfig.class, TomcatAutoConfig.class})
-@EnableAutoConfiguration(componentFilter = @ComponentFilter(includeFilter = {
+@EnableAutoConfiguration(includeFilter = @ComponentFilter(annotations = {
         Controller.class, RestController.class, ControllerAdvice.class, RestControllerAdvice.class
 }))
 public @interface EnableWebMvc {

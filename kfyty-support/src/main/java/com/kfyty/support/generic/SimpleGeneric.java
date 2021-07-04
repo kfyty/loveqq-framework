@@ -70,7 +70,7 @@ public class SimpleGeneric extends QualifierGeneric {
         if(isMapGeneric()) {
             return getMapValueType().get();
         }
-        if(!Collection.class.isAssignableFrom(this.sourceType) && !isSimpleArray()) {
+        if(!Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !isSimpleArray()) {
             return this.sourceType;
         }
         return this.getFirst().get();

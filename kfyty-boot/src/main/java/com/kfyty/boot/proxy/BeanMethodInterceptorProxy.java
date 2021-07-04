@@ -32,10 +32,9 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
         if(annotation == null) {
             return chain.proceed(methodProxy);
         }
-        String beanName = BeanUtil.getBeanName(method.getReturnType(), annotation);
-        Object bean = this.context.getBean(beanName);
-        if(bean != null) {
-            return bean;
+        String beanName = BeanUtil.getBeanName(method, annotation);
+        if(this.context.contains(beanName)) {
+            return this.context.getBean(beanName);
         }
         BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName, method.getReturnType());
         return this.context.registerBean(beanDefinition);

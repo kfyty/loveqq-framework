@@ -1,7 +1,8 @@
 package com.kfyty.boot;
 
-import com.kfyty.boot.resolver.AnnotationConfigResolver;
+import com.kfyty.boot.context.factory.ApplicationContextFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.CommandLineRunner;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
@@ -10,15 +11,20 @@ import com.kfyty.support.autoconfig.annotation.Import;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
+import com.kfyty.support.utils.ReflectUtil;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -32,61 +38,61 @@ import java.util.Set;
  * @since JDK 1.8
  */
 @Slf4j
+@Getter
 public class K {
     private static final String META_FACTORIES = "META-INF/k.factories";
     private static final String META_FACTORIES_CONFIG = "com.kfyty.boot.auto.config";
 
     private final Class<?> primarySource;
+    private final String[] commanderArgs;
     private final Set<Class<?>> scanClasses;
-    private final Set<String> excludeBeanNames = new HashSet<>(4);
-    private final Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
-    private final Set<Class<? extends Annotation>> includeFilterAnnotations = new HashSet<>();
-    private final Set<Class<? extends Annotation>> excludeFilterAnnotations = new HashSet<>();
+    private final Map<Class<?>, Set<Class<?>>> scanNestedClasses;
+    private final Set<String> excludeBeanNames;
+    private final Set<Class<?>> excludeBeanClasses;
+    private final List<ComponentFilter> includeFilterAnnotations;
+    private final List<ComponentFilter> excludeFilterAnnotations;
 
-    public K(Class<?> clazz) {
+    private ApplicationContextFactory applicationContextFactory;
+
+    public K(Class<?> clazz, String ... args) {
         Objects.requireNonNull(clazz);
-        this.scanClasses = new HashSet<>();
         this.primarySource = clazz;
+        this.commanderArgs = args;
+        this.scanClasses = new HashSet<>();
+        this.scanNestedClasses = new HashMap<>();
+        this.excludeBeanNames = new HashSet<>(4);
+        this.excludeBeanClasses = new HashSet<>(4);
+        this.includeFilterAnnotations = new ArrayList<>(4);
+        this.excludeFilterAnnotations = new ArrayList<>(4);
+        this.applicationContextFactory = new ApplicationContextFactory();
     }
 
-    public ApplicationContext run(String ... args) {
+    public void setApplicationContextFactory(ApplicationContextFactory applicationContextFactory) {
+        this.applicationContextFactory = applicationContextFactory;
+    }
+
+    public ApplicationContext run() {
         long start = System.currentTimeMillis();
         this.prepareScanBean(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareMetaInfFactories();
-        this.prepareExcludeScannedBean();
-        ApplicationContext applicationContext = AnnotationConfigResolver.create(this).doResolver(scanClasses, args);
+        ApplicationContext applicationContext = this.applicationContextFactory.create(this).refresh();
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
+        this.invokeRunner(applicationContext);
         return applicationContext;
     }
 
-    public Class<?> getPrimarySource() {
-        return primarySource;
-    }
-
-    public boolean isExclude(String beanName) {
-        return excludeBeanNames.contains(beanName);
-    }
-
-    public boolean isExclude(Class<?> beanClass) {
-        return excludeBeanClasses.contains(beanClass);
-    }
-
-    public boolean isIncludeFilter(Class<?> beanClass) {
-        for (Class<? extends Annotation> excludeFilterAnnotation : excludeFilterAnnotations) {
-            if(AnnotationUtil.hasAnnotation(beanClass, excludeFilterAnnotation)) {
-                return false;
-            }
-        }
-        for (Class<? extends Annotation> excludeFilterAnnotation : includeFilterAnnotations) {
-            if(AnnotationUtil.hasAnnotation(beanClass, excludeFilterAnnotation)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static ApplicationContext run(Class<?> clazz, String ... args) {
-        return new K(clazz).run(args);
+        return new K(clazz, args).run();
+    }
+
+    private void invokeRunner(ApplicationContext applicationContext) {
+        applicationContext.getBeanOfType(CommandLineRunner.class).values().forEach(e -> {
+            try {
+                e.run(this.commanderArgs);
+            } catch (Exception ex) {
+                throw new IllegalStateException("failed to execute CommandLineRunner", ex);
+            }
+        });
     }
 
     @SneakyThrows
@@ -95,29 +101,6 @@ public class K {
             Set<Class<?>> classes = PackageUtil.scanClass(basePackage);
             for (Class<?> clazz : classes) {
                 this.processScanBean(clazz);
-            }
-        }
-    }
-
-    private void processScanBean(Class<?> clazz) {
-        if(this.scanClasses.contains(clazz)) {
-            return;
-        }
-        this.scanClasses.add(clazz);
-        ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
-        if (componentScan != null) {
-            this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
-        }
-        if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
-            for (Class<?> importClazz : AnnotationUtil.findAnnotation(clazz, Import.class).config()) {
-                this.processScanBean(importClazz);
-            }
-        }
-        for (Annotation annotation : AnnotationUtil.findAnnotations(clazz)) {
-            if(AnnotationUtil.hasAnnotation(annotation.annotationType(), Import.class)) {
-                for (Class<?> importClazz : AnnotationUtil.findAnnotation(annotation.annotationType(), Import.class).config()) {
-                    this.processScanBean(importClazz);
-                }
             }
         }
     }
@@ -140,31 +123,44 @@ public class K {
         }
     }
 
-    private void prepareExcludeScannedBean() {
-        BootApplication bootApplication = AnnotationUtil.findAnnotation(this.primarySource, BootApplication.class);
-        if(bootApplication != null) {
-            excludeBeanNames.addAll(Arrays.asList(bootApplication.excludeNames()));
-            excludeBeanClasses.addAll(Arrays.asList(bootApplication.exclude()));
-            this.scanComponentFilter(bootApplication.componentFilter());
+    private void processScanBean(Class<?> clazz) {
+        if(this.scanClasses.contains(clazz)) {
+            return;
         }
-        for (Class<?> scanBean : this.scanClasses) {
-            this.scanAutoConfiguration(AnnotationUtil.findAnnotation(scanBean, EnableAutoConfiguration.class));
-            for (Annotation annotation : AnnotationUtil.findAnnotations(scanBean)) {
-                this.scanAutoConfiguration(AnnotationUtil.findAnnotation(annotation, EnableAutoConfiguration.class));
+        this.scanClasses.add(clazz);
+        ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
+        if (componentScan != null) {
+            this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
+        }
+        this.processAutoConfiguration(clazz);
+    }
+
+    private void processAutoConfiguration(Class<?> clazz) {
+        if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
+            Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(this::processScanBean);
+        }
+        this.processAutoConfiguration(AnnotationUtil.findAnnotation(clazz, BootApplication.class));
+        this.processAutoConfiguration(AnnotationUtil.findAnnotation(clazz, EnableAutoConfiguration.class));
+        if(!AnnotationUtil.isMetaAnnotation(clazz)) {
+            for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(clazz)) {
+                this.processAutoConfiguration(nestedAnnotation.annotationType());
             }
         }
     }
 
-    private void scanAutoConfiguration(EnableAutoConfiguration autoConfiguration) {
-        if(autoConfiguration != null) {
-            excludeBeanNames.addAll(Arrays.asList(autoConfiguration.excludeNames()));
-            excludeBeanClasses.addAll(Arrays.asList(autoConfiguration.exclude()));
-            this.scanComponentFilter(autoConfiguration.componentFilter());
+    private void processAutoConfiguration(Annotation annotation) {
+        if(annotation == null) {
+            return;
         }
-    }
-
-    private void scanComponentFilter(ComponentFilter componentFilter) {
-        includeFilterAnnotations.addAll(Arrays.asList(componentFilter.includeFilter()));
-        excludeFilterAnnotations.addAll(Arrays.asList(componentFilter.excludeFilter()));
+        ComponentFilter includeFilter = ReflectUtil.invokeSimpleMethod(annotation, "includeFilter");
+        ComponentFilter excludeFilter = ReflectUtil.invokeSimpleMethod(annotation, "excludeFilter");
+        excludeBeanNames.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "excludeNames")));
+        excludeBeanClasses.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "exclude")));
+        if(!includeFilterAnnotations.contains(includeFilter)) {
+            includeFilterAnnotations.add(includeFilter);
+        }
+        if(!excludeFilterAnnotations.contains(excludeFilter)) {
+            excludeFilterAnnotations.add(excludeFilter);
+        }
     }
 }

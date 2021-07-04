@@ -12,5 +12,8 @@ import com.kfyty.support.event.ApplicationEventPublisher;
  * @email kfyty725@hotmail.com
  */
 public interface ApplicationContext extends BeanDefinitionRegistry, BeanFactory, ApplicationEventPublisher {
+
     Class<?> getPrimarySource();
+
+    ApplicationContext refresh();
 }

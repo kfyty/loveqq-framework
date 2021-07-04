@@ -87,7 +87,7 @@ public class ProviderAdapter implements InsertProvider, SelectByPrimaryKeyProvid
     @Override
     public String doProvide(Class<?> mapperClass, Method sourceMethod, Annotation annotation) {
         Provider provider = (Provider) ReflectUtil.newInstance(ProviderAdapter.dialectMap.get(ProviderAdapter.dialect));
-        Class<?> providerClazz = (Class<?>) ReflectUtil.invokeSimpleMethod(annotation, "provider");
+        Class<?> providerClazz = ReflectUtil.invokeSimpleMethod(annotation, "provider");
         String methodName = "doProvider" + providerClazz.getSimpleName().replace("Provider", "");
         Method method = ReflectUtil.getMethod(providerClazz, methodName, Class.class, Method.class, annotation.annotationType());
         return (String) ReflectUtil.invokeMethod(provider, method, mapperClass, sourceMethod, annotation);

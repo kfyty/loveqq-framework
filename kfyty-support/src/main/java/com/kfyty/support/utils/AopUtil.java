@@ -4,6 +4,7 @@ import com.kfyty.support.exception.SupportException;
 import com.kfyty.support.proxy.InterceptorChain;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 
@@ -31,7 +32,11 @@ public abstract class AopUtil {
     }
 
     public static Object getSourceIfNecessary(Object bean) {
-        return isJdkProxy(bean) ? getInterceptorChain(bean).getSource() : bean;
+        if(!isJdkProxy(bean)) {
+            return bean;
+        }
+        InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
+        return invocationHandler instanceof InterceptorChain ? ((InterceptorChain) invocationHandler).getSource() : invocationHandler;
     }
 
     public static InterceptorChain getInterceptorChain(Object proxy) {

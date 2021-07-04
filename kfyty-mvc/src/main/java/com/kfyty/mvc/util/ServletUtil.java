@@ -83,8 +83,8 @@ public class ServletUtil {
      * 如果获取不到则尝试从备份数据中获取
      */
     public static String getParameter(HttpServletRequest request, String paramName) throws IOException {
-        String param = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
-        return CommonUtil.notEmpty(param) ? param : tryGetParameter(request, paramName);
+        String parameter = request.getParameter(paramName);
+        return CommonUtil.notEmpty(parameter) ? URLDecoder.decode(parameter, "UTF-8") : tryGetParameter(request, paramName);
     }
 
     /**

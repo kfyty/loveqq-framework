@@ -13,8 +13,18 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentFilter {
+    /**
+     * 基础包名
+     */
+    String[] value() default {};
 
-    Class<? extends Annotation>[] includeFilter() default {};
+    /**
+     * 具体的某些类
+     */
+    Class<?>[] classes() default {};
 
-    Class<? extends Annotation>[] excludeFilter() default {};
+    /**
+     * 注解
+     */
+    Class<? extends Annotation>[] annotations() default {};
 }

@@ -77,15 +77,18 @@ public class QualifierGenericTest {
         Field t = ReflectUtil.getField(DefaultController.class, "t");
         Field arrT = ReflectUtil.getField(DefaultController.class, "arrT");
         Field service = ReflectUtil.getField(DefaultController.class, "service");
+        Field entityClass = ReflectUtil.getField(DefaultController.class, "entityClass");
         ActualGeneric fromT = ActualGeneric.from(DefaultController.class, t);
         ActualGeneric fromArrT = ActualGeneric.from(DefaultController.class, arrT);
         ActualGeneric fromService = ActualGeneric.from(DefaultController.class, service);
+        ActualGeneric fromEntityClass = ActualGeneric.from(DefaultController.class, entityClass);
         Assert.assertFalse(fromT.isSimpleParameterizedType());
         Assert.assertEquals(fromT.getSourceType(), Entity.class);
         Assert.assertEquals(fromArrT.getSourceType(), Entity[].class);
         Assert.assertEquals(fromArrT.getFirst().get(), Entity.class);
         Assert.assertEquals(fromService.getFirst().get(), Entity.class);
         Assert.assertEquals(fromService.getSecond().get(), Integer.class);
+        Assert.assertEquals(fromEntityClass.getSimpleActualType(), Entity.class);
     }
 }
 
@@ -98,6 +101,7 @@ class BaseController<T, K extends Integer> {
     protected T t;
     protected T[] arrT;
     protected Base<T, K> service;
+    protected Class<T> entityClass;
 }
 
 class DefaultController extends BaseController<Entity, Integer> {}

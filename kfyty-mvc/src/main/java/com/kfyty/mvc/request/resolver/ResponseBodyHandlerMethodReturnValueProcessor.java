@@ -1,8 +1,6 @@
 package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.annotation.ResponseBody;
-import com.kfyty.mvc.annotation.RestController;
-import com.kfyty.mvc.annotation.RestControllerAdvice;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.method.MethodParameter;
@@ -27,7 +25,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
             return false;
         }
         Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
-        return AnnotationUtil.hasAnnotationElement(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnyAnnotationElement(declaringClass, ResponseBody.class, RestController.class, RestControllerAdvice.class);
+        return AnnotationUtil.hasAnnotationElement(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnnotationElement(declaringClass, ResponseBody.class);
     }
 
     @Override

@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Component
+@EnableAutoConfiguration
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BootApplication {
@@ -25,7 +26,7 @@ public @interface BootApplication {
 
     boolean proxyTargetClass() default true;
 
-    ComponentFilter componentFilter() default @ComponentFilter(includeFilter = {
-            BootApplication.class, Configuration.class, Component.class, Service.class, Repository.class
-    });
+    ComponentFilter includeFilter() default @ComponentFilter();
+
+    ComponentFilter excludeFilter() default @ComponentFilter();
 }

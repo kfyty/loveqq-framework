@@ -7,6 +7,6 @@ package com.kfyty.support.autoconfig;
  * @date 2021/5/21 16:57
  * @email kfyty725@hotmail.com
  */
-public interface BeanRefreshComplete {
-    void onComplete(Class<?> primarySource, String ... args);
+public interface ContextRefreshCompleted {
+    void onCompleted(ApplicationContext applicationContext);
 }

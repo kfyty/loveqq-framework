@@ -13,6 +13,8 @@ public interface BeanDefinitionRegistry {
 
     void registerBeanDefinition(BeanDefinition beanDefinition);
 
+    boolean containsBeanDefinition(String beanName);
+
     Map<String, BeanDefinition> getBeanDefinitions();
 
     Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);

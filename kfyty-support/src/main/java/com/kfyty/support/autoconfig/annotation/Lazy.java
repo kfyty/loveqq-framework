@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
  */
-@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD})
 public @interface Lazy {
 }

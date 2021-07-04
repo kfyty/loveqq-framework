@@ -2,7 +2,6 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
@@ -26,7 +25,7 @@ import java.lang.reflect.Parameter;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
@@ -99,30 +98,35 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         return destroyMethod;
     }
 
+    /**
+     * 因为方法可能被代理，因此执行方法后需要再次判断
+     */
     @Override
     public Object createInstance(ApplicationContext context) {
-        Object bean = context.getBean(this.getBeanName());
-        if(bean != null) {
-            return bean;
+        if(context.contains(this.getBeanName())) {
+            return context.getBean(this.getBeanName());
         }
-        int index = 0;
         this.ensureAutowiredProcessor(context);
-        Object[] parameters = new Object[this.beanMethod.getParameterCount()];
-        for (Parameter parameter : this.beanMethod.getParameters()) {
-            String beanName = BeanUtil.getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Qualifier.class));
-            parameters[index++] = this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
-        }
-        Object parentInstance = this.parentDefinition.createInstance(context);
+        Object parentInstance = context.registerBean(this.parentDefinition);
         if(AopUtil.isJdkProxy(parentInstance)) {
             parentInstance = AopUtil.getInterceptorChain(parentInstance).getSource();
         }
-        bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, parameters);
-        if(context.getBean(this.getBeanName()) != null) {
-            return bean;
+        Object bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, this.prepareMethodArgs());
+        if(context.contains(this.getBeanName())) {
+            return context.getBean(this.getBeanName());
         }
         if(log.isDebugEnabled()) {
-            log.debug("instantiate bean from bean method: [{}] !", bean);
+            log.debug("instantiate bean from bean method: [{}] !", AopUtil.isJdkProxy(bean) ? this.beanType : bean);
         }
         return bean;
+    }
+
+    protected Object[] prepareMethodArgs() {
+        int index = 0;
+        Object[] parameters = new Object[this.beanMethod.getParameterCount()];
+        for (Parameter parameter : this.beanMethod.getParameters()) {
+            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+        }
+        return parameters;
     }
 }

@@ -23,7 +23,8 @@ public interface BeanDefinition {
     Class<?> getBeanType();
 
     /**
-     * 添加构造器参数
+     * 添加默认的构造器参数，参数索引从 0 开始
+     * 其他的参数将从 bean 工厂获取
      */
     BeanDefinition addConstructorArgs(Class<?> argType, Object arg);
 
@@ -38,12 +39,12 @@ public interface BeanDefinition {
     Class<?>[] getConstructArgTypes();
 
     /**
-     * 获取构造器参数
+     * 获取构造器参数值
      */
     Object[] getConstructArgValues();
 
     /**
-     * 生成 bean 实例
+     * 创建 bean 实例
      */
     Object createInstance(ApplicationContext context);
 }

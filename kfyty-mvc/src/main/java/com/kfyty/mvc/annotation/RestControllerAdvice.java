@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
  * @date 2021/6/18 10:15
  * @email kfyty725@hotmail.com
  */
+@ResponseBody
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RestControllerAdvice {

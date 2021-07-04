@@ -13,6 +13,8 @@ import java.util.function.BiConsumer;
  */
 public interface BeanFactory {
 
+    boolean contains(String name);
+
     <T> T getBean(Class<T> clazz);
 
     <T> T getBean(String name);
@@ -22,8 +24,6 @@ public interface BeanFactory {
     <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass);
 
     Object registerBean(BeanDefinition beanDefinition);
-
-    Object registerBean(BeanDefinition beanDefinition, boolean beforeAutowired);
 
     void registerBean(Class<?> clazz, Object bean);
 

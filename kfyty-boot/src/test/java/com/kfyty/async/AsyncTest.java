@@ -1,12 +1,13 @@
 package com.kfyty.async;
 
 import com.kfyty.boot.K;
-import com.kfyty.support.autoconfig.BeanRefreshComplete;
+import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Async;
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
@@ -25,8 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2021/6/26 12:07
  * @email kfyty725@hotmail.com
  */
-@Configuration
-public class AsyncTest implements InitializingBean, BeanRefreshComplete {
+@BootApplication
+public class AsyncTest implements InitializingBean, ContextRefreshCompleted {
     int[] async = new int[2];
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger index = new AtomicInteger(0);
@@ -47,7 +48,7 @@ public class AsyncTest implements InitializingBean, BeanRefreshComplete {
 
     @Override
     @SneakyThrows
-    public void onComplete(Class<?> primarySource, String... args) {
+    public void onCompleted(ApplicationContext applicationContext) {
         latch.await();
         Assert.assertEquals(this.async[0], 1);
         Assert.assertEquals(this.async[1], 2);

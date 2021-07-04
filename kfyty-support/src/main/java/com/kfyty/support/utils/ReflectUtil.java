@@ -149,7 +149,7 @@ public abstract class ReflectUtil {
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, int interfaceIndex, Predicate<Type> interfaceFilter) {
         Objects.requireNonNull(clazz);
-        Type genericSuperclass = clazz.getGenericSuperclass();
+        Type genericSuperclass = getGenericSuperclass(clazz);
         if(genericSuperclass == null || genericSuperclass.equals(Object.class) || !(genericSuperclass instanceof ParameterizedType)) {
             Type[] interfaces = clazz.getGenericInterfaces();
             if(interfaceIndex > -1) {
@@ -163,7 +163,7 @@ public abstract class ReflectUtil {
             }
         }
         if(!(genericSuperclass instanceof ParameterizedType)) {
-            throw new SupportException(clazz.getName() + "does not contain generic types !");
+            throw new SupportException(clazz.getName() + " does not contain generic types !");
         }
         Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
         if(actualTypeArguments[genericIndex] instanceof ParameterizedType) {
@@ -172,8 +172,17 @@ public abstract class ReflectUtil {
         return (Class<?>) actualTypeArguments[genericIndex];
     }
 
-    public static Class<?> getActualGenericType(Class<?> clazz, int index) {
+    public static Type getGenericSuperclass(Class<?> clazz) {
         Type genericSuperclass = clazz.getGenericSuperclass();
+        while (genericSuperclass != null && !Objects.equals(clazz.getSuperclass(), Object.class) && !(genericSuperclass instanceof ParameterizedType)) {
+            clazz = clazz.getSuperclass();
+            genericSuperclass = clazz.getGenericSuperclass();
+        }
+        return genericSuperclass;
+    }
+
+    public static Class<?> getActualGenericType(Class<?> clazz, int index) {
+        Type genericSuperclass = getGenericSuperclass(clazz);
         if(!(genericSuperclass instanceof ParameterizedType)) {
             throw new SupportException("unable to get the parent generic type !");
         }
@@ -182,7 +191,7 @@ public abstract class ReflectUtil {
     }
 
     public static int getActualGenericIndex(Class<?> clazz, String typeVariable) {
-        Type genericSuperclass = clazz.getGenericSuperclass();
+        Type genericSuperclass = getGenericSuperclass(clazz);
         if(!(genericSuperclass instanceof ParameterizedType)) {
             throw new SupportException("unable to get the parent generic type !");
         }
@@ -235,8 +244,9 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static Object invokeSimpleMethod(Object obj, String methodName, Object ... args) {
-        return invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeSimpleMethod(Object obj, String methodName, Object ... args) {
+        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
     }
 
     public static Object invokeMethod(Object obj, Method method, Object ... args) {
