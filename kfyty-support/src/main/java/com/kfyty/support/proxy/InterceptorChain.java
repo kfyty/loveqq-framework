@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class InterceptorChain extends MethodInvocationInterceptor {
     private int currentChainIndex;
-    private MethodProxyWrap intercepting;
+    private MethodProxyWrapper intercepting;
     private final List<InterceptorChainPoint> chainPoints;
 
     public InterceptorChain(Object source) {
@@ -41,7 +41,7 @@ public class InterceptorChain extends MethodInvocationInterceptor {
     }
 
     @Override
-    protected Object process(MethodProxyWrap methodProxy) throws Throwable {
+    protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
         if(this.intercepting != null) {
             return this.proceed(methodProxy);
         }
@@ -53,7 +53,7 @@ public class InterceptorChain extends MethodInvocationInterceptor {
         }
     }
 
-    public Object proceed(MethodProxyWrap methodProxy) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy) throws Throwable {
         if(++this.currentChainIndex == this.chainPoints.size()) {
             this.currentChainIndex = -1;
             return methodProxy.invoke();

@@ -9,7 +9,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.proxy.InterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
-import com.kfyty.support.proxy.MethodProxyWrap;
+import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -40,7 +40,7 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
     }
 
     @Override
-    public Object proceed(MethodProxyWrap methodProxy, InterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
         Method sourceMethod = methodProxy.getSourceMethod();
         if(!AnnotationUtil.hasAnnotationElement(sourceMethod, RequestMapping.class)) {
             return chain.proceed(methodProxy);

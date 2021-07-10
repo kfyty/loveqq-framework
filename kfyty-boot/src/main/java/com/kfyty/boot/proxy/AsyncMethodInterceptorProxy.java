@@ -6,7 +6,7 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.exception.AsyncMethodException;
 import com.kfyty.support.proxy.InterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
-import com.kfyty.support.proxy.MethodProxyWrap;
+import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 
@@ -34,7 +34,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrap methodProxy, InterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
         Async annotation = AnnotationUtil.findAnnotation(methodProxy.getSourceMethod(), Async.class);
         if(annotation == null) {
             annotation = AnnotationUtil.findAnnotation(methodProxy.getSource(), Async.class);

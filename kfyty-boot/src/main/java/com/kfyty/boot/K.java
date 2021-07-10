@@ -1,6 +1,7 @@
 package com.kfyty.boot;
 
 import com.kfyty.boot.context.factory.ApplicationContextFactory;
+import com.kfyty.support.annotation.AnnotationWrapper;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.CommandLineRunner;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
@@ -11,7 +12,6 @@ import com.kfyty.support.autoconfig.annotation.Import;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
-import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -49,8 +50,8 @@ public class K {
     private final Map<Class<?>, Set<Class<?>>> scanNestedClasses;
     private final Set<String> excludeBeanNames;
     private final Set<Class<?>> excludeBeanClasses;
-    private final List<ComponentFilter> includeFilterAnnotations;
-    private final List<ComponentFilter> excludeFilterAnnotations;
+    private final List<AnnotationWrapper<ComponentFilter>> includeFilterAnnotations;
+    private final List<AnnotationWrapper<ComponentFilter>> excludeFilterAnnotations;
 
     private ApplicationContextFactory applicationContextFactory;
 
@@ -139,8 +140,19 @@ public class K {
         if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
             Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(this::processScanBean);
         }
-        this.processAutoConfiguration(AnnotationUtil.findAnnotation(clazz, BootApplication.class));
-        this.processAutoConfiguration(AnnotationUtil.findAnnotation(clazz, EnableAutoConfiguration.class));
+        this.processComponentFilter(clazz, true, AnnotationUtil.findAnnotation(clazz, ComponentFilter.class));
+        Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, ComponentScan.class)).ifPresent(e -> {
+            this.processComponentFilter(clazz, true, e.includeFilter());
+            this.processComponentFilter(clazz, false, e.excludeFilter());
+        });
+        Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, BootApplication.class)).ifPresent(e -> {
+            excludeBeanNames.addAll(Arrays.asList(e.excludeNames()));
+            excludeBeanClasses.addAll(Arrays.asList(e.exclude()));
+        });
+        Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, EnableAutoConfiguration.class)).ifPresent(e -> {
+            excludeBeanNames.addAll(Arrays.asList(e.excludeNames()));
+            excludeBeanClasses.addAll(Arrays.asList(e.exclude()));
+        });
         if(!AnnotationUtil.isMetaAnnotation(clazz)) {
             for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(clazz)) {
                 this.processAutoConfiguration(nestedAnnotation.annotationType());
@@ -148,19 +160,20 @@ public class K {
         }
     }
 
-    private void processAutoConfiguration(Annotation annotation) {
-        if(annotation == null) {
+    private void processComponentFilter(Object declaring, boolean isInclude, ComponentFilter componentFilter) {
+        if(this.isEmptyComponentFilter(componentFilter)) {
             return;
         }
-        ComponentFilter includeFilter = ReflectUtil.invokeSimpleMethod(annotation, "includeFilter");
-        ComponentFilter excludeFilter = ReflectUtil.invokeSimpleMethod(annotation, "excludeFilter");
-        excludeBeanNames.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "excludeNames")));
-        excludeBeanClasses.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "exclude")));
-        if(!includeFilterAnnotations.contains(includeFilter)) {
-            includeFilterAnnotations.add(includeFilter);
+        AnnotationWrapper<ComponentFilter> filter = new AnnotationWrapper<>(declaring, componentFilter);
+        if(isInclude && !AnnotationWrapper.contains(this.includeFilterAnnotations, componentFilter)) {
+            includeFilterAnnotations.add(filter);
         }
-        if(!excludeFilterAnnotations.contains(excludeFilter)) {
-            excludeFilterAnnotations.add(excludeFilter);
+        if(!isInclude && !AnnotationWrapper.contains(this.excludeFilterAnnotations, componentFilter)) {
+            excludeFilterAnnotations.add(filter);
         }
+    }
+
+    private boolean isEmptyComponentFilter(ComponentFilter filter) {
+        return filter == null || CommonUtil.empty(filter.value()) && CommonUtil.empty(filter.classes()) && CommonUtil.empty(filter.annotations());
     }
 }

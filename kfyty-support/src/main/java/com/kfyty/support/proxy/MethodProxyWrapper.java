@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
  */
 @Getter
 @EqualsAndHashCode(exclude = "source")
-public class MethodProxyWrap {
+public class MethodProxyWrapper {
     /**
      * 用于执行方法的原实例
      * 对于 jdk 代理则是原 bean，对于 cglib 代理则是代理对象
@@ -38,11 +38,11 @@ public class MethodProxyWrap {
      */
     private final MethodProxy methodProxy;
 
-    public MethodProxyWrap(Object source, Method sourceMethod, Object[] args) {
+    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args) {
         this(source, sourceMethod, args, null);
     }
 
-    public MethodProxyWrap(Object source, Method sourceMethod, Object[] args, MethodProxy methodProxy) {
+    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args, MethodProxy methodProxy) {
         this.source = source;
         this.sourceMethod = sourceMethod;
         this.args = args;

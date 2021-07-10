@@ -1,6 +1,7 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
+import com.kfyty.support.annotation.AnnotationWrapper;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
@@ -21,6 +22,7 @@ import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -50,8 +52,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected Set<Class<?>> scanClasses;
     protected Set<String> excludeBeanNames = new HashSet<>(4);
     protected Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
-    protected List<ComponentFilter> includeFilterAnnotations = new ArrayList<>(4);
-    protected List<ComponentFilter> excludeFilterAnnotations = new ArrayList<>(4);
+    protected List<AnnotationWrapper<ComponentFilter>> includeFilterAnnotations = new ArrayList<>(4);
+    protected List<AnnotationWrapper<ComponentFilter>> excludeFilterAnnotations = new ArrayList<>(4);
 
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
@@ -144,26 +146,46 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         return excludeBeanClasses.contains(beanClass);
     }
 
+    /**
+     * 根据组件过滤器进行匹配
+     *      排除过滤：
+     *          若返回 true，则排除过滤匹配失败，继续执行包含过滤
+     *          若返回 false，说明可能被排除，此时需继续判断该注解的声明是否被排除
+     *       包含过滤：
+     *          直接返回即可
+     * @param beanClass 目标 bean class
+     * @return 该 bean class 是否能够生成 bean 定义
+     */
     public boolean matchComponentFilter(Class<?> beanClass) {
-        if(!matchComponentFilter(this.excludeFilterAnnotations, beanClass, false)) {
-            return false;
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = matchComponentFilter(this.excludeFilterAnnotations, beanClass, false);
+        if(!exclude.getKey() && exclude.getValue() != null) {
+            return !matchComponentFilter(exclude.getValue().getDeclaring());
         }
-        return matchComponentFilter(this.includeFilterAnnotations, beanClass, true);
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = matchComponentFilter(this.includeFilterAnnotations, beanClass, true);
+        return include.getKey();
     }
 
-    protected boolean matchComponentFilter(List<ComponentFilter> componentFilters, Class<?> beanClass, boolean isInclude) {
-        for (ComponentFilter componentFilter : componentFilters) {
+    /**
+     * 根据组件过滤器进行匹配
+     * @param componentFilterWrappers 组件过滤条件
+     * @param beanClass 目标 bean class
+     * @param isInclude 当前匹配排除还是包含
+     * @return 匹配结果，以及对应的过滤组件
+     */
+    protected Pair<Boolean, AnnotationWrapper<ComponentFilter>> matchComponentFilter(List<AnnotationWrapper<ComponentFilter>> componentFilterWrappers, Class<?> beanClass, boolean isInclude) {
+        for (AnnotationWrapper<ComponentFilter> componentFilterWrapper : componentFilterWrappers) {
+            ComponentFilter componentFilter = componentFilterWrapper.get();
             if(Arrays.stream(componentFilter.value()).anyMatch(beanClass.getName()::startsWith)) {
-                return isInclude;
+                return new Pair<>(isInclude, componentFilterWrapper);
             }
             if(Arrays.asList(componentFilter.classes()).contains(beanClass)) {
-                return isInclude;
+                return new Pair<>(isInclude, componentFilterWrapper);
             }
             if(Arrays.stream(componentFilter.annotations()).anyMatch(e -> AnnotationUtil.hasAnnotation(beanClass, e))) {
-                return isInclude;
+                return new Pair<>(isInclude, componentFilterWrapper);
             }
         }
-        return !isInclude;
+        return new Pair<>(!isInclude, null);
     }
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {

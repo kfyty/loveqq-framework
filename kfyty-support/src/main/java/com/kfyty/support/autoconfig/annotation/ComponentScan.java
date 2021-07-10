@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 用于添加需要扫描的基础包名
+ * 描述: 组件扫描配置
  *
  * @author kfyty725
  * @date 2021/5/21 16:46
@@ -15,5 +15,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentScan {
+
     String[] value() default {};
+
+    ComponentFilter includeFilter() default @ComponentFilter();
+
+    ComponentFilter excludeFilter() default @ComponentFilter();
 }

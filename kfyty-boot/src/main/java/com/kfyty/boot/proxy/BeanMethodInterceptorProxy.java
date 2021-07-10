@@ -5,7 +5,7 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.InterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
-import com.kfyty.support.proxy.MethodProxyWrap;
+import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 
@@ -26,7 +26,7 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrap methodProxy, InterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
         Method method = methodProxy.getSourceMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if(annotation == null) {
