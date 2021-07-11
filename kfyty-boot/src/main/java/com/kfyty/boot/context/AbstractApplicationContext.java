@@ -100,7 +100,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 /* 导入自定义的 bean 定义，可能会被配置排除 */
                 this.processImportBeanDefinition(this.scanClasses);
 
-                /* 实例化 bean 定义 */
+                /* 实例化单例 bean 定义 */
                 this.instantiateBeanDefinition();
 
                 /* 子类扩展 */
@@ -128,6 +128,26 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         }
     }
 
+    /**
+     * 根据组件过滤器进行匹配
+     *      排除过滤：
+     *          若返回 true，则排除过滤匹配失败，继续执行包含过滤
+     *          若返回 false，说明可能被排除，此时需继续判断该注解的声明是否被排除
+     *       包含过滤：
+     *          直接返回即可
+     * @param beanClass 目标 bean class
+     * @return 该 bean class 是否能够生成 bean 定义
+     */
+    @Override
+    public boolean doFilterComponent(Class<?> beanClass) {
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = doFilterComponent(this.excludeFilterAnnotations, beanClass, false);
+        if(!exclude.getKey() && exclude.getValue() != null) {
+            return !doFilterComponent(exclude.getValue().getDeclaring());
+        }
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = doFilterComponent(this.includeFilterAnnotations, beanClass, true);
+        return include.getKey();
+    }
+
     @Override
     public void publishEvent(ApplicationEvent<?> event) {
         this.applicationEventPublisher.publishEvent(event);
@@ -148,31 +168,12 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     /**
      * 根据组件过滤器进行匹配
-     *      排除过滤：
-     *          若返回 true，则排除过滤匹配失败，继续执行包含过滤
-     *          若返回 false，说明可能被排除，此时需继续判断该注解的声明是否被排除
-     *       包含过滤：
-     *          直接返回即可
-     * @param beanClass 目标 bean class
-     * @return 该 bean class 是否能够生成 bean 定义
-     */
-    public boolean matchComponentFilter(Class<?> beanClass) {
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = matchComponentFilter(this.excludeFilterAnnotations, beanClass, false);
-        if(!exclude.getKey() && exclude.getValue() != null) {
-            return !matchComponentFilter(exclude.getValue().getDeclaring());
-        }
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = matchComponentFilter(this.includeFilterAnnotations, beanClass, true);
-        return include.getKey();
-    }
-
-    /**
-     * 根据组件过滤器进行匹配
      * @param componentFilterWrappers 组件过滤条件
      * @param beanClass 目标 bean class
      * @param isInclude 当前匹配排除还是包含
      * @return 匹配结果，以及对应的过滤组件
      */
-    protected Pair<Boolean, AnnotationWrapper<ComponentFilter>> matchComponentFilter(List<AnnotationWrapper<ComponentFilter>> componentFilterWrappers, Class<?> beanClass, boolean isInclude) {
+    protected Pair<Boolean, AnnotationWrapper<ComponentFilter>> doFilterComponent(List<AnnotationWrapper<ComponentFilter>> componentFilterWrappers, Class<?> beanClass, boolean isInclude) {
         for (AnnotationWrapper<ComponentFilter> componentFilterWrapper : componentFilterWrappers) {
             ComponentFilter componentFilter = componentFilterWrapper.get();
             if(Arrays.stream(componentFilter.value()).anyMatch(beanClass.getName()::startsWith)) {
@@ -181,7 +182,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
             if(Arrays.asList(componentFilter.classes()).contains(beanClass)) {
                 return new Pair<>(isInclude, componentFilterWrapper);
             }
-            if(Arrays.stream(componentFilter.annotations()).anyMatch(e -> AnnotationUtil.hasAnnotation(beanClass, e))) {
+            if(Arrays.stream(componentFilter.annotations()).anyMatch(e -> AnnotationUtil.hasAnnotationElement(beanClass, e))) {
                 return new Pair<>(isInclude, componentFilterWrapper);
             }
         }
@@ -189,7 +190,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
-        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.matchComponentFilter(e)).map(GenericBeanDefinition::from).forEach(this::registerBeanDefinition);
+        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(GenericBeanDefinition::from).forEach(this::registerBeanDefinition);
         this.getBeanDefinitions().values().removeIf(this::excludeBeanDefinition);
     }
 
@@ -242,7 +243,9 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected void instantiateBeanDefinition() {
         this.sortBeanDefinition();
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
-            this.registerBean(beanDefinition);
+            if(beanDefinition.isSingleton()) {
+                this.registerBean(beanDefinition);
+            }
         }
     }
 

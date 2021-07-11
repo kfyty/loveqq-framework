@@ -5,4 +5,5 @@ com.kfyty.boot.auto.config=\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
     com.kfyty.boot.processor.EventListenerAnnotationBeanPostProcessor,\
     com.kfyty.boot.event.DefaultApplicationEventPublisher,\
-    com.kfyty.boot.configuration.DefaultThreadPoolExecutor
+    com.kfyty.boot.configuration.DefaultThreadPoolExecutor,\
+    com.kfyty.boot.beans.LookupBeanDefinitionImport

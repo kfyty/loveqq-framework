@@ -2,6 +2,7 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.utils.AopUtil;
+import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 描述: FactoryBean 定义的 bean 定义
+ * 描述: FactoryBean 类型的 bean 定义所衍生的 bean 定义
  *
  * @author kfyty725
  * @date 2021/6/12 12:06
@@ -20,13 +21,19 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class FactoryBeanDefinition extends GenericBeanDefinition {
     /**
-     * FactoryBean 的 bean 定义
+     * 该 bean 定义所在的工厂 bean 定义
+     * 该工厂 bean 定义的构造方法，必须有一个符合 defaultConstructorArgs 参数的构造器，以支持构造临时对象
+     * 其实际实例化时的构造器，可用 Autowired 进行标注
      */
     @Getter
     private final BeanDefinition factoryBeanDefinition;
 
     public FactoryBeanDefinition(BeanDefinition factoryBeanDefinition) {
-        super(((FactoryBean<?>) ReflectUtil.newInstance(factoryBeanDefinition.getBeanType(), factoryBeanDefinition.getConstructArgs())).getBeanType());
+        this((FactoryBean<?>) ReflectUtil.newInstance(factoryBeanDefinition.getBeanType(), ((GenericBeanDefinition) factoryBeanDefinition).defaultConstructorArgs), factoryBeanDefinition);
+    }
+
+    private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
+        super(BeanUtil.convert2BeanName(temp.getBeanType()), temp.getBeanType(), temp.isSingleton());
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 

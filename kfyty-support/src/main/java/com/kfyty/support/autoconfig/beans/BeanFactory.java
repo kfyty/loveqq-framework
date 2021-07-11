@@ -25,9 +25,9 @@ public interface BeanFactory {
 
     Object registerBean(BeanDefinition beanDefinition);
 
-    void registerBean(Class<?> clazz, Object bean);
+    Object registerBean(Class<?> clazz, Object bean);
 
-    void registerBean(String name, Object bean);
+    Object registerBean(String name, Object bean);
 
     void replaceBean(Class<?> clazz, Object bean);
 

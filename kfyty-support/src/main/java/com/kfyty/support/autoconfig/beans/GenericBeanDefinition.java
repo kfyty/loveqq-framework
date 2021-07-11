@@ -43,6 +43,11 @@ public class GenericBeanDefinition implements BeanDefinition {
      */
     protected final Class<?> beanType;
 
+    /**
+     * 是否是单例
+     */
+    protected final boolean isSingleton;
+
     protected Constructor<?> constructor;
 
     protected Map<Class<?>, Object> defaultConstructorArgs;
@@ -54,8 +59,13 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType) {
+        this(beanName, beanType, BeanUtil.isSingleton(beanType));
+    }
+
+    public GenericBeanDefinition(String beanName, Class<?> beanType, boolean isSingleton) {
         this.beanName = beanName;
         this.beanType = beanType;
+        this.isSingleton = isSingleton;
     }
 
     @Override
@@ -66,6 +76,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public Class<?> getBeanType() {
         return this.beanType;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return this.isSingleton;
     }
 
     @Override
@@ -138,23 +153,23 @@ public class GenericBeanDefinition implements BeanDefinition {
      * 从 Class 生成一个 bean 定义
      */
     public static BeanDefinition from(Class<?> beanType) {
-        return new GenericBeanDefinition(findBeanName(beanType), beanType);
+        return from(findBeanName(beanType), beanType, BeanUtil.isSingleton(beanType));
     }
 
     /**
      * 从 Class 生成一个 bean 定义
+     */
+    public static BeanDefinition from(String beanName, Class<?> beanType, boolean isSingleton) {
+        return new GenericBeanDefinition(beanName, beanType, isSingleton);
+    }
+
+    /**
+     * 从 Class 生成一个 FactoryBean 定义
      * 该 bean 类型为 FactoryBean，该 bean 的 name 由 targetBeanTypeBeanName$factoryBeanTypeBeanName 组成
      */
     public static BeanDefinition from(Class<?> targetBeanType, Class<?> factoryBeanType) {
         String beanName = CommonUtil.format("{}${}", BeanUtil.convert2BeanName(targetBeanType), BeanUtil.convert2BeanName(factoryBeanType));
-        return from(beanName, factoryBeanType);
-    }
-
-    /**
-     * 从 Class 生成一个 bean 定义
-     */
-    public static BeanDefinition from(String beanName, Class<?> beanType) {
-        return new GenericBeanDefinition(beanName, beanType);
+        return from(beanName, factoryBeanType, BeanUtil.isSingleton(factoryBeanType));
     }
 
     /**
@@ -183,11 +198,11 @@ public class GenericBeanDefinition implements BeanDefinition {
      */
     public static String findBeanName(Class<?> beanType) {
         Component component = AnnotationUtil.findAnnotation(beanType, Component.class);
-        if(component != null && CommonUtil.notEmpty(component.value())) {
+        if (component != null && CommonUtil.notEmpty(component.value())) {
             return component.value();
         }
         for (Annotation annotation : AnnotationUtil.findAnnotations(beanType)) {
-            if (AnnotationUtil.hasAnnotation(annotation.annotationType(), Component.class)) {
+            if (AnnotationUtil.hasAnnotationElement(annotation.annotationType(), Component.class)) {
                 String beanName = ReflectUtil.invokeSimpleMethod(annotation, "value");
                 if (CommonUtil.notEmpty(beanName)) {
                     return beanName;

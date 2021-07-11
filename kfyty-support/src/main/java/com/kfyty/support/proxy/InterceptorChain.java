@@ -42,7 +42,7 @@ public class InterceptorChain extends MethodInvocationInterceptor {
 
     @Override
     protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
-        if(this.intercepting != null) {
+        if(this.intercepting != null && this.intercepting.equals(methodProxy)) {
             return this.proceed(methodProxy);
         }
         try {

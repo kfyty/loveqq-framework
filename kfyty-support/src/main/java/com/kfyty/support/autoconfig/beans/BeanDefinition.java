@@ -13,6 +13,16 @@ import java.util.Map;
  */
 public interface BeanDefinition {
     /**
+     * 单例作用域
+     */
+    String SCOPE_SINGLETON = "singleton";
+
+    /**
+     * 原型作用域
+     */
+    String SCOPE_PROTOTYPE = "prototype";
+
+    /**
      * bean name，唯一
      */
     String getBeanName();
@@ -21,6 +31,11 @@ public interface BeanDefinition {
      * bean 的类型
      */
     Class<?> getBeanType();
+
+    /**
+     * 是否单例
+     */
+    boolean isSingleton();
 
     /**
      * 添加默认的构造器参数，参数索引从 0 开始

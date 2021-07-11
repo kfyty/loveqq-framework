@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,8 +34,8 @@ import java.util.Set;
  */
 @Slf4j
 public class AutowiredProcessor {
-    private final ApplicationContext context;
     private final Set<String> resolving;
+    private final ApplicationContext context;
 
     public AutowiredProcessor(ApplicationContext context) {
         this.context = context;
@@ -89,12 +90,8 @@ public class AutowiredProcessor {
      * @return bean
      */
     public Object doResolveBean(String targetBeanName, ActualGeneric returnType, Autowired autowired) {
-        if (resolving.contains(targetBeanName)) {
-            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
-        }
-        this.prepareResolving(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType());
-        Map<String, ?> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
         Object resolveBean = null;
+        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
         if(List.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new ArrayList<>(beans.values());
         }
@@ -110,15 +107,24 @@ public class AutowiredProcessor {
         if(resolveBean == null) {
             resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
         }
-        this.removeResolving(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType());
         return resolveBean;
+    }
+
+    private void checkResolving(String targetBeanName) {
+        if (resolving.contains(targetBeanName)) {
+            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
+        }
     }
 
     private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
         if(!isGeneric) {
+            this.checkResolving(targetBeanName);
             resolving.add(targetBeanName);
-        } else {
-            this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.add(e.getBeanName()));
+            return;
+        }
+        for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
+            this.checkResolving(beanDefinition.getBeanName());
+            resolving.add(beanDefinition.getBeanName());
         }
     }
 
@@ -130,24 +136,37 @@ public class AutowiredProcessor {
         }
     }
 
-    private Map<String, ?> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
-        Map<String, ?> beanOfType = this.context.getBeanOfType(targetType);
+    private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
+        Map<String, Object> beanOfType = new HashMap<>(2);
         Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType);
-        if(beanOfType.isEmpty() || isGeneric && beanOfType.size() < targetBeanDefinitions.size() || !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            if(isGeneric) {
-                targetBeanDefinitions.values().forEach(this.context::registerBean);
-            } else {
-                BeanDefinition beanDefinition = this.context.getBeanDefinition(targetBeanName, targetType);
-                if(beanDefinition == null) {
-                    if(!autowiredRequired(autowired)) {
-                        return beanOfType;
-                    }
-                    throw new BeansException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
-                }
-                this.context.registerBean(beanDefinition);
+        for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
+            if(this.context.contains(entry.getKey())) {
+                beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
             }
         }
-        beanOfType = this.context.getBeanOfType(targetType);
+        if(beanOfType.size() < targetBeanDefinitions.size()) {
+            try {
+                this.prepareResolving(targetBeanName, targetType, isGeneric);
+                if(isGeneric) {
+                    for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
+                        if(!beanOfType.containsKey(entry.getKey())) {
+                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue()));
+                        }
+                    }
+                } else {
+                    BeanDefinition beanDefinition = this.context.getBeanDefinition(targetBeanName, targetType);
+                    if(beanDefinition == null) {
+                        if(!autowiredRequired(autowired)) {
+                            return beanOfType;
+                        }
+                        throw new BeansException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
+                    }
+                    beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition));
+                }
+            } finally {
+                this.removeResolving(targetBeanName, targetType, isGeneric);
+            }
+        }
         if(autowiredRequired(autowired) && beanOfType.isEmpty() || autowiredRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
             throw new BeansException("resolve target bean failed, no bean found of name: " + targetBeanName);
         }

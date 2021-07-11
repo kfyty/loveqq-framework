@@ -1,13 +1,15 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.boot.proxy.AsyncMethodInterceptorProxy;
 import com.kfyty.boot.proxy.BeanMethodInterceptorProxy;
+import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Async;
-import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Lookup;
+import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -26,11 +28,14 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         Class<?> beanClass = AopUtil.getSourceIfNecessary(bean).getClass();
-        if(AnnotationUtil.hasAnyAnnotation(beanClass, Configuration.class, BootApplication.class)) {
+        if(AnnotationUtil.hasAnnotationElement(beanClass, Configuration.class)) {
             bean = this.createProxy(bean, beanName, new BeanMethodInterceptorProxy(this.applicationContext));
         }
         if(AnnotationUtil.hasAnnotation(beanClass, Async.class) || Arrays.stream(beanClass.getMethods()).anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class))) {
             bean = this.createProxy(bean, beanName, new AsyncMethodInterceptorProxy(this.applicationContext));
+        }
+        if(!ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && Arrays.stream(beanClass.getMethods()).anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class))) {
+            bean = this.createProxy(bean, beanName, new LookupMethodInterceptorProxy(this.applicationContext));
         }
         return bean;
     }

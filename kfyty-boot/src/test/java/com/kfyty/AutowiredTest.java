@@ -96,7 +96,9 @@ class Config {
         Map<String, Inter> interMap = Arrays.stream(interArr).collect(Collectors.toMap(k -> BeanUtil.convert2BeanName(k.getClass()), Function.identity()));
         Assert.assertSame(bean1, test.bean1());
         Assert.assertSame(bean3, this.bean3(inter1, interMap));
+        Assert.assertSame(bean3, this.bean3(inter1, interMap));
         Assert.assertEquals(2, inters.size());
+        Assert.assertEquals(inters, Arrays.stream(interArr).collect(Collectors.toList()));
         return new Bean2();
     }
 

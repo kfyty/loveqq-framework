@@ -2,6 +2,7 @@ package com.kfyty.boot.proxy;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.InterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
@@ -18,6 +19,7 @@ import java.lang.reflect.Method;
  * @date 2021/6/13 17:30
  * @email kfyty725@hotmail.com
  */
+@Order(0)
 public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     private final ApplicationContext context;
 
@@ -29,7 +31,7 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
         Method method = methodProxy.getSourceMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
-        if(annotation == null) {
+        if(annotation == null || !BeanUtil.isSingleton(method)) {
             return chain.proceed(methodProxy);
         }
         String beanName = BeanUtil.getBeanName(method, annotation);

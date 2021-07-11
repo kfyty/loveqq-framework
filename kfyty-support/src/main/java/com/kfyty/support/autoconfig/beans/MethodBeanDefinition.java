@@ -69,7 +69,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
-        super(beanName, beanType);
+        this(beanName, beanType, parentDefinition, beanMethod, BeanUtil.isSingleton(beanMethod));
+    }
+
+    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, boolean isSingleton) {
+        super(beanName, beanType, isSingleton);
         this.parentDefinition = parentDefinition;
         this.beanMethod = beanMethod;
     }

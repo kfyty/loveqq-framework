@@ -1,5 +1,7 @@
 package com.kfyty.mvc.annotation;
 
+import com.kfyty.support.autoconfig.annotation.Component;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,11 +15,12 @@ import java.lang.annotation.Target;
  * @date 2021/6/18 10:15
  * @email kfyty725@hotmail.com
  */
+@Component
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ControllerAdvice {
 
-    String[] value() default {};
+    String value() default "";
 
     String[] basePackages() default {};
 

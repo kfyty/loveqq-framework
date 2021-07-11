@@ -6,18 +6,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 自动配置注解
+ * 描述: 单例中注入原型实例可使用
  *
  * @author kfyty725
- * @date 2021/6/12 11:28
+ * @date 2021/7/11 12:29
  * @email kfyty725@hotmail.com
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@ComponentFilter(annotations = Component.class)
-public @interface EnableAutoConfiguration {
-
-    Class<?>[] exclude() default {};
-
-    String[] excludeNames() default {};
+public @interface Lookup {
+    /**
+     * bean 名称，默认解析返回值类型
+     */
+    String value() default "";
 }

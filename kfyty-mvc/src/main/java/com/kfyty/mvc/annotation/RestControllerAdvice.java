@@ -14,11 +14,12 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @ResponseBody
+@ControllerAdvice
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RestControllerAdvice {
 
-    String[] value() default {};
+    String value() default "";
 
     String[] basePackages() default {};
 

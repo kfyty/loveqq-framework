@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
  */
-@Component
+@Configuration
 @EnableAutoConfiguration
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
