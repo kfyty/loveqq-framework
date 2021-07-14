@@ -22,7 +22,7 @@ public class PostConstructProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
         bean = AopUtil.getSourceIfNecessary(bean);
-        for (Method method : bean.getClass().getMethods()) {
+        for (Method method : ReflectUtil.getMethods(bean.getClass())) {
             if(AnnotationUtil.hasAnnotation(method, PostConstruct.class)) {
                 ReflectUtil.invokeMethod(bean, method);
             }

@@ -83,7 +83,7 @@ public class RequestMappingAnnotationHandler {
     }
 
     private void handleMethodAnnotation() {
-        Method[] methods = this.mappingController.getClass().getMethods();
+        List<Method> methods = ReflectUtil.getMethods(this.mappingController.getClass());
         for (Method method : methods) {
             if(this.existsRequestMapping(method)) {
                 MethodMapping methodMapping = MethodMapping.newURLMapping(mappingController, method);

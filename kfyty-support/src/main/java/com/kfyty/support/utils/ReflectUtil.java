@@ -23,11 +23,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -40,6 +43,50 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class ReflectUtil {
+    /**
+     * 属性缓存
+     */
+    private static final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
+
+    /**
+     * 方法缓存
+     */
+    private static final Map<String, Method> methodCache = new ConcurrentHashMap<>();
+
+    /**
+     * 所有属性缓存
+     */
+    private static final Map<Class<?>, Map<String, Field>> fieldMapCache = new ConcurrentHashMap<>();
+
+    /**
+     * 所有方法缓存
+     */
+    private static final Map<Class<?>, List<Method>> methodsCache = new ConcurrentHashMap<>();
+
+    public static Class<?> load(String className) {
+        return load(className, true);
+    }
+
+    public static Class<?> load(String className, boolean throwIfFailed) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            if(throwIfFailed) {
+                throw new SupportException("load class failed, class does not exist !", e);
+            }
+            log.error("load class failed, class does not exist: [{}]", className);
+            return null;
+        }
+    }
+
+    public static boolean ifPresent(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 
     public static boolean isAbstract(Class<?> clazz) {
         return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
@@ -262,7 +309,11 @@ public abstract class ReflectUtil {
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
-        return getField(clazz, fieldName, false);
+        String key = clazz.getName() + "#" + fieldName;
+        if(fieldCache.containsKey(key)) {
+            return fieldCache.get(key);
+        }
+        return fieldCache.computeIfAbsent(key, k -> getField(clazz, fieldName, true));
     }
 
     public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
@@ -275,7 +326,6 @@ public abstract class ReflectUtil {
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
         if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            log.error("field does not exist: [{}] !", fieldName);
             return null;
         }
         try {
@@ -287,7 +337,11 @@ public abstract class ReflectUtil {
     }
 
     public static Method getMethod(Class<?> clazz, String methodName, Class<?> ... parameterTypes) {
-        return getMethod(clazz, methodName, false, parameterTypes);
+        String key = CommonUtil.format("{}#{}({})", clazz, methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")));
+        if(methodCache.containsKey(key)) {
+            return methodCache.get(key);
+        }
+        return methodCache.computeIfAbsent(key, k -> getMethod(clazz, methodName, false, parameterTypes));
     }
 
     public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
@@ -295,6 +349,18 @@ public abstract class ReflectUtil {
             return clazz.getDeclaredMethod(methodName, parameterTypes);
         } catch(NoSuchMethodException e) {
             return getSuperMethod(clazz, methodName, containPrivate);
+        }
+    }
+
+    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
+        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return null;
+        }
+        try {
+            Method method = clazz.getDeclaredMethod(methodName, parameterTypes);
+            return !containPrivate && Modifier.isPrivate(method.getModifiers()) ? null : method;
+        } catch(NoSuchMethodException e) {
+            return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
         }
     }
 
@@ -312,16 +378,8 @@ public abstract class ReflectUtil {
         return null;
     }
 
-    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
-        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            return null;
-        }
-        try {
-            Method method = clazz.getDeclaredMethod(methodName, parameterTypes);
-            return !containPrivate && Modifier.isPrivate(method.getModifiers()) ? null : method;
-        } catch(NoSuchMethodException e) {
-            return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
-        }
+    public static boolean isSuperMethod(Method superMethod, Method method) {
+        return !Modifier.isPrivate(superMethod.getModifiers()) && superMethod.getName().equals(method.getName()) && Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
     }
 
     public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?> ... parameterTypes) {
@@ -337,10 +395,6 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
-        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
-    }
-
     @SuppressWarnings("unchecked")
     public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?> ... parameterTypes) {
         if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
@@ -352,6 +406,10 @@ public abstract class ReflectUtil {
         } catch(NoSuchMethodException e) {
             return getSuperConstructor(clazz, containPrivate, parameterTypes);
         }
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
+        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
     }
 
     public static Parameter getSuperParameters(Parameter parameter) {
@@ -367,13 +425,16 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz) {
-        return getFieldMap(clazz, true);
+        if(fieldMapCache.containsKey(clazz)) {
+            return fieldMapCache.get(clazz);
+        }
+        return fieldMapCache.computeIfAbsent(clazz, k -> getFieldMap(clazz, true));
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
         Map<String, Field> map = new HashMap<>();
         map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
-        map.putAll(getSuperFieldMap(clazz, containPrivate));
+        getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
         return map;
     }
 
@@ -383,8 +444,38 @@ public abstract class ReflectUtil {
         }
         Map<String, Field> map = new HashMap<>();
         map.putAll(Arrays.stream(clazz.getDeclaredFields()).filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e)));
-        map.putAll(getSuperFieldMap(clazz, containPrivate));
+        getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
         return map;
+    }
+
+    public static List<Method> getMethods(Class<?> clazz) {
+        if(methodsCache.containsKey(clazz)) {
+            return methodsCache.get(clazz);
+        }
+        return methodsCache.computeIfAbsent(clazz, k -> getMethods(clazz, false));
+    }
+
+    public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
+        List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
+        for (Method superMethod : getSuperMethods(clazz, containPrivate)) {
+            if(list.stream().noneMatch(e -> isSuperMethod(superMethod, e))) {
+                list.add(superMethod);
+            }
+        }
+        return list;
+    }
+
+    public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
+        if(clazz == null || Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return Collections.emptyList();
+        }
+        List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toList());
+        for (Method superMethod : getSuperMethods(clazz, containPrivate)) {
+            if(list.stream().noneMatch(e -> isSuperMethod(superMethod, e))) {
+                list.add(superMethod);
+            }
+        }
+        return list;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

@@ -119,12 +119,16 @@ public class AutowiredProcessor {
     private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
         if(!isGeneric) {
             this.checkResolving(targetBeanName);
-            resolving.add(targetBeanName);
+            if(!this.context.containsReference(targetBeanName)) {
+                resolving.add(targetBeanName);
+            }
             return;
         }
         for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
             this.checkResolving(beanDefinition.getBeanName());
-            resolving.add(beanDefinition.getBeanName());
+            if(!this.context.containsReference(beanDefinition.getBeanName())) {
+                resolving.add(beanDefinition.getBeanName());
+            }
         }
     }
 
@@ -142,6 +146,10 @@ public class AutowiredProcessor {
         for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
             if(this.context.contains(entry.getKey())) {
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
+            } else if(isGeneric) {
+                this.prepareResolving(targetBeanName, targetType, true);
+                this.context.registerBeanReference(entry.getValue());
+                this.removeResolving(targetBeanName, targetType, true);
             }
         }
         if(beanOfType.size() < targetBeanDefinitions.size()) {

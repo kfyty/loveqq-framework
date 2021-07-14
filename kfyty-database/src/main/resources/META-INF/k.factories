@@ -1,1 +1,1 @@
-com.kfyty.boot.auto.config=com.kfyty.database.jdbc.autoconfig.MapperAutoConfig
+com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.database.jdbc.autoconfig.MapperAutoConfig

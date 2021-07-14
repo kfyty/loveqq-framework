@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarEntry;
 
@@ -50,11 +51,7 @@ public abstract class PackageUtil {
             return result;
         }
         for (String clazz : classes) {
-            try {
-                result.add(Class.forName(clazz));
-            } catch (Throwable e) {
-                log.error("load class error !", e);
-            }
+            Optional.ofNullable(ReflectUtil.load(clazz, false)).ifPresent(result::add);
         }
         return result;
     }

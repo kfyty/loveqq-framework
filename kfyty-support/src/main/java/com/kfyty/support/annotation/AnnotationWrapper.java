@@ -1,5 +1,6 @@
 package com.kfyty.support.annotation;
 
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -23,12 +24,12 @@ import java.util.Objects;
 @EqualsAndHashCode
 public class AnnotationWrapper<T extends Annotation> {
     /**
-     * 注解声明对象
+     * 注解声明对象，支持 Class，Constructor，Field，Method，Parameter，Annotation
      */
     private final Object declaring;
 
     /**
-     * 注解实例，支持 Class，Constructor，Field，Method，Parameter
+     * 注解实例
      */
     private final T annotation;
 
@@ -55,6 +56,10 @@ public class AnnotationWrapper<T extends Annotation> {
 
     public boolean isDeclaringParameter() {
         return this.declaring instanceof Parameter;
+    }
+
+    public boolean isDeclaringAnnotation() {
+        return AnnotationUtil.isAnnotation(this.declaring.getClass());
     }
 
     public T get() {

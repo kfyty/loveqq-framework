@@ -25,8 +25,6 @@ public class DefaultApplicationContext extends AbstractApplicationContext {
         this.commanderArgs = this.boot.getCommanderArgs();
         this.primarySource = this.boot.getPrimarySource();
         this.scanClasses = this.boot.getScanClasses();
-        this.excludeBeanNames = this.boot.getExcludeBeanNames();
-        this.excludeBeanClasses = this.boot.getExcludeBeanClasses();
         this.includeFilterAnnotations = this.boot.getIncludeFilterAnnotations();
         this.excludeFilterAnnotations = this.boot.getExcludeFilterAnnotations();
         super.beforeRefresh();

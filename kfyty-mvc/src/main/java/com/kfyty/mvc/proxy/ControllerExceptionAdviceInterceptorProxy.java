@@ -59,7 +59,7 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
 
     private MethodParameter findControllerExceptionAdvice(Throwable throwable) {
         for (Object adviceBean : this.controllerAdviceBeans) {
-            for (Method method : adviceBean.getClass().getMethods()) {
+            for (Method method : ReflectUtil.getMethods(adviceBean.getClass())) {
                 ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, ExceptionHandler.class);
                 if(annotation == null) {
                     continue;

@@ -50,6 +50,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     protected final Map<String, Object> beanInstances;
 
     /**
+     * 早期 bean 引用
+     */
+    protected final Map<String, Object> beanReference;
+
+    /**
      * bean 后置处理器
      */
     protected final List<BeanPostProcessor> beanPostProcessors;
@@ -62,6 +67,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public AbstractBeanFactory() {
         this.beanDefinitions = Collections.synchronizedMap(new LinkedHashMap<>());
         this.beanInstances = new ConcurrentHashMap<>();
+        this.beanReference = new ConcurrentHashMap<>();
         this.beanPostProcessors = new ArrayList<>();
     }
 
@@ -87,7 +93,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if(FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
             this.registerBeanDefinition(GenericBeanDefinition.from(beanDefinition));
         }
-        for (Method method : beanDefinition.getBeanType().getMethods()) {
+        for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if(beanAnnotation != null) {
                 this.registerBeanDefinition(GenericBeanDefinition.from(beanDefinition, method, beanAnnotation));
@@ -132,6 +138,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
+    public boolean containsReference(String name) {
+        return this.contains(name) || this.beanReference.containsKey(name);
+    }
+
+    @Override
     public <T> T getBean(Class<T> clazz) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz);
         if(beanDefinitions.size() > 1) {
@@ -147,6 +158,16 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             return (T) this.beanInstances.get(name);
         }
         return (T) this.registerBean(this.getBeanDefinition(name));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getBeanReference(String name) {
+        if(this.contains(name)) {
+            this.removeBeanReference(name);
+            return this.getBean(name);
+        }
+        return (T) this.beanReference.get(name);
     }
 
     @Override
@@ -182,7 +203,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if(this.contains(beanDefinition.getBeanName())) {
             return this.getBean(beanDefinition.getBeanName());
         }
-        Object bean = this.doCreateBean(beanDefinition);
+        Object bean = this.containsReference(beanDefinition.getBeanName()) ? this.getBeanReference(beanDefinition.getBeanName()) : this.doCreateBean(beanDefinition);
         if(!this.contains(beanDefinition.getBeanName())) {
             return this.registerBean(beanDefinition.getBeanName(), bean);
         }
@@ -207,12 +228,26 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             if(beanDefinition.isSingleton()) {
                 this.beanInstances.put(name, bean);
             }
+            this.removeBeanReference(name);
             this.invokeAwareMethod(name, bean);
             bean = this.invokeBeanPostProcessAfterInstantiation(name, getExposedBean(beanDefinition, bean));
             this.doAutowiredBean(name, getExposedBean(beanDefinition, bean));
             bean = this.invokeLifecycleMethod(name, getExposedBean(beanDefinition, bean));
             return bean;
         }
+    }
+
+    @Override
+    public Object registerBeanReference(BeanDefinition beanDefinition) {
+        if(this.containsReference(beanDefinition.getBeanName())) {
+            return this.getBeanReference(beanDefinition.getBeanName());
+        }
+        Object earlyBean = this.doCreateBean(beanDefinition);
+        if(this.containsReference(beanDefinition.getBeanName())) {
+            return this.getBeanReference(beanDefinition.getBeanName());
+        }
+        this.beanReference.put(beanDefinition.getBeanName(), earlyBean);
+        return earlyBean;
     }
 
     @Override
@@ -225,6 +260,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if(bean != null && this.contains(name)) {
             this.beanInstances.put(name, bean);
         }
+    }
+
+    @Override
+    public void removeBeanReference(String name) {
+        this.beanReference.remove(name);
     }
 
     @Override

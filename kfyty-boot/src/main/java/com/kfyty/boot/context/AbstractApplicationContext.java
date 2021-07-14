@@ -13,7 +13,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.event.ApplicationEvent;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -50,8 +48,6 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected String[] commanderArgs;
     protected Class<?> primarySource;
     protected Set<Class<?>> scanClasses;
-    protected Set<String> excludeBeanNames = new HashSet<>(4);
-    protected Set<Class<?>> excludeBeanClasses = new HashSet<>(4);
     protected List<AnnotationWrapper<ComponentFilter>> includeFilterAnnotations = new ArrayList<>(4);
     protected List<AnnotationWrapper<ComponentFilter>> excludeFilterAnnotations = new ArrayList<>(4);
 
@@ -97,7 +93,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 /* 注册 bean 后置处理器 */
                 this.registerBeanPostProcessors();
 
-                /* 导入自定义的 bean 定义，可能会被配置排除 */
+                /* 导入自定义的 bean 定义 */
                 this.processImportBeanDefinition(this.scanClasses);
 
                 /* 实例化单例 bean 定义 */
@@ -158,14 +154,6 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         this.applicationEventPublisher.registerEventListener(applicationListener);
     }
 
-    public boolean isExclude(String beanName) {
-        return excludeBeanNames.contains(beanName);
-    }
-
-    public boolean isExclude(Class<?> beanClass) {
-        return excludeBeanClasses.contains(beanClass);
-    }
-
     /**
      * 根据组件过滤器进行匹配
      * @param componentFilterWrappers 组件过滤条件
@@ -191,31 +179,14 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
         scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(GenericBeanDefinition::from).forEach(this::registerBeanDefinition);
-        this.getBeanDefinitions().values().removeIf(this::excludeBeanDefinition);
     }
 
     protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {
         Set<BeanDefinition> importBeanDefines = this.getBeanDefinitions().values().stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toCollection(LinkedHashSet::new));
         for (BeanDefinition importBeanDefine : importBeanDefines) {
             ImportBeanDefine bean = (ImportBeanDefine) this.registerBean(importBeanDefine);
-            bean.doImport(scanClasses).stream().filter(e -> !this.excludeBeanDefinition(e)).forEach(this::registerBeanDefinition);
+            bean.doImport(scanClasses).forEach(this::registerBeanDefinition);
         }
-    }
-
-    protected boolean excludeBeanDefinition(BeanDefinition beanDefinition) {
-        boolean isExclude = this.isExclude(beanDefinition.getBeanName()) || this.isExclude(beanDefinition.getBeanType());
-        if(!isExclude && (beanDefinition instanceof MethodBeanDefinition)) {
-            BeanDefinition parentDefinition = ((MethodBeanDefinition) beanDefinition).getParentDefinition();
-            isExclude = this.isExclude(parentDefinition.getBeanName()) || this.isExclude(parentDefinition.getBeanType());
-        }
-        if(!isExclude && (beanDefinition instanceof FactoryBeanDefinition)) {
-            BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
-            isExclude = this.isExclude(factoryBeanDefinition.getBeanName()) || this.isExclude(factoryBeanDefinition.getBeanType());
-        }
-        if(isExclude) {
-            log.info("exclude bean definition: {}", beanDefinition);
-        }
-        return isExclude;
     }
 
     protected void registerBeanPostProcessors() {

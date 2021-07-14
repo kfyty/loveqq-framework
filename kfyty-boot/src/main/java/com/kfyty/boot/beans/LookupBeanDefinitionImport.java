@@ -11,7 +11,6 @@ import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,7 +34,7 @@ public class LookupBeanDefinitionImport implements ApplicationContextAware, Impo
     public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
         return scanClasses.parallelStream()
                 .filter(e -> ReflectUtil.isAbstract(e) && this.applicationContext.doFilterComponent(e))
-                .filter(e -> Arrays.stream(e.getMethods()).anyMatch(m -> AnnotationUtil.hasAnnotation(m, Lookup.class)))
+                .filter(e -> ReflectUtil.getMethods(e).stream().anyMatch(m -> AnnotationUtil.hasAnnotation(m, Lookup.class)))
                 .map(e -> GenericBeanDefinition.from(e, LookupBeanFactory.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }

@@ -10,6 +10,7 @@ import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Lookup;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import org.junit.Assert;
@@ -91,4 +92,27 @@ class C {
     public ComponentT componentT() {
         return new ComponentT();
     }
+}
+
+abstract class AA {}
+
+@Order(0)
+@Component
+class AAConfig {
+    @Autowired
+    private List<AA> aas;
+}
+
+@Order(2)
+@Component
+class AA1 extends AA {
+    @Autowired
+    private AA2 aa2;
+}
+
+@Order(3)
+@Component
+class AA2 extends AA {
+    @Autowired
+    private AA1 aa1;
 }

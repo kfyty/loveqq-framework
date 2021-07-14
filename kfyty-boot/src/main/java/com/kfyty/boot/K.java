@@ -9,27 +9,25 @@ import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.io.FactoriesLoader;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: 启动类
@@ -41,15 +39,10 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class K {
-    private static final String META_FACTORIES = "META-INF/k.factories";
-    private static final String META_FACTORIES_CONFIG = "com.kfyty.boot.auto.config";
-
     private final Class<?> primarySource;
     private final String[] commanderArgs;
     private final Set<Class<?>> scanClasses;
-    private final Map<Class<?>, Set<Class<?>>> scanNestedClasses;
-    private final Set<String> excludeBeanNames;
-    private final Set<Class<?>> excludeBeanClasses;
+    private final Set<String> excludeQualifierAutoConfigNames;
     private final List<AnnotationWrapper<ComponentFilter>> includeFilterAnnotations;
     private final List<AnnotationWrapper<ComponentFilter>> excludeFilterAnnotations;
 
@@ -60,9 +53,7 @@ public class K {
         this.primarySource = clazz;
         this.commanderArgs = args;
         this.scanClasses = new HashSet<>();
-        this.scanNestedClasses = new HashMap<>();
-        this.excludeBeanNames = new HashSet<>(4);
-        this.excludeBeanClasses = new HashSet<>(4);
+        this.excludeQualifierAutoConfigNames = new HashSet<>(4);
         this.includeFilterAnnotations = new ArrayList<>(4);
         this.excludeFilterAnnotations = new ArrayList<>(4);
         this.applicationContextFactory = new ApplicationContextFactory();
@@ -75,7 +66,7 @@ public class K {
     public ApplicationContext run() {
         long start = System.currentTimeMillis();
         this.prepareScanBean(Collections.singleton(primarySource.getPackage().getName()));
-        this.prepareMetaInfFactories();
+        this.prepareScanAutoConfigFactories();
         ApplicationContext applicationContext = this.applicationContextFactory.create(this).refresh();
         log.info("Started {} in {} seconds", this.primarySource.getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         this.invokeRunner(applicationContext);
@@ -101,25 +92,18 @@ public class K {
         for (String basePackage : basePackages) {
             Set<Class<?>> classes = PackageUtil.scanClass(basePackage);
             for (Class<?> clazz : classes) {
-                this.processScanBean(clazz);
+                if(!AnnotationUtil.isAnnotation(clazz)) {
+                    this.processScanBean(clazz);
+                }
             }
         }
     }
 
-    @SneakyThrows
-    private void prepareMetaInfFactories() {
-        Enumeration<URL> urls = this.primarySource.getClassLoader().getResources(META_FACTORIES);
-        while (urls.hasMoreElements()) {
-            URL url = urls.nextElement();
-            Properties properties = new Properties();
-            properties.load(url.openStream());
-            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                if (entry.getKey().toString().equals(META_FACTORIES_CONFIG)) {
-                    Set<String> classes = CommonUtil.split(entry.getValue().toString(), ",", true);
-                    for (String clazz : classes) {
-                        this.processScanBean(Class.forName(clazz));
-                    }
-                }
+    private void prepareScanAutoConfigFactories() {
+        Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
+        for (String className : factories) {
+            if(!this.excludeQualifierAutoConfigNames.contains(className)) {
+                Optional.ofNullable(ReflectUtil.load(className, false)).ifPresent(this::processScanBean);
             }
         }
     }
@@ -133,35 +117,36 @@ public class K {
         if (componentScan != null) {
             this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
         }
-        this.processAutoConfiguration(clazz);
+        this.processAutoConfiguration(clazz, null);
     }
 
-    private void processAutoConfiguration(Class<?> clazz) {
+    private void processAutoConfiguration(Class<?> clazz, AnnotationWrapper<?> wrapper) {
         if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
             Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(this::processScanBean);
         }
-        this.processComponentFilter(clazz, true, AnnotationUtil.findAnnotation(clazz, ComponentFilter.class));
+        Object declaring = wrapper == null ? clazz : wrapper.getDeclaring();
+        this.processComponentFilter(declaring, true, AnnotationUtil.findAnnotation(clazz, ComponentFilter.class));
         Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, ComponentScan.class)).ifPresent(e -> {
-            this.processComponentFilter(clazz, true, e.includeFilter());
-            this.processComponentFilter(clazz, false, e.excludeFilter());
+            this.processComponentFilter(declaring, true, e.includeFilter());
+            this.processComponentFilter(declaring, false, e.excludeFilter());
         });
         Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, BootApplication.class)).ifPresent(e -> {
-            excludeBeanNames.addAll(Arrays.asList(e.excludeNames()));
-            excludeBeanClasses.addAll(Arrays.asList(e.exclude()));
+            excludeQualifierAutoConfigNames.addAll(Arrays.asList(e.excludeNames()));
+            excludeQualifierAutoConfigNames.addAll(Arrays.stream(e.exclude()).map(Class::getName).collect(Collectors.toList()));
         });
         Optional.ofNullable(AnnotationUtil.findAnnotation(clazz, EnableAutoConfiguration.class)).ifPresent(e -> {
-            excludeBeanNames.addAll(Arrays.asList(e.excludeNames()));
-            excludeBeanClasses.addAll(Arrays.asList(e.exclude()));
+            excludeQualifierAutoConfigNames.addAll(Arrays.asList(e.excludeNames()));
+            excludeQualifierAutoConfigNames.addAll(Arrays.stream(e.exclude()).map(Class::getName).collect(Collectors.toList()));
         });
         if(!AnnotationUtil.isMetaAnnotation(clazz)) {
             for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(clazz)) {
-                this.processAutoConfiguration(nestedAnnotation.annotationType());
+                this.processAutoConfiguration(nestedAnnotation.annotationType(), new AnnotationWrapper<>(declaring, nestedAnnotation));
             }
         }
     }
 
     private void processComponentFilter(Object declaring, boolean isInclude, ComponentFilter componentFilter) {
-        if(this.isEmptyComponentFilter(componentFilter)) {
+        if(componentFilter == null || CommonUtil.empty(componentFilter.value()) && CommonUtil.empty(componentFilter.classes()) && CommonUtil.empty(componentFilter.annotations())) {
             return;
         }
         AnnotationWrapper<ComponentFilter> filter = new AnnotationWrapper<>(declaring, componentFilter);
@@ -171,9 +156,5 @@ public class K {
         if(!isInclude && !AnnotationWrapper.contains(this.excludeFilterAnnotations, componentFilter)) {
             excludeFilterAnnotations.add(filter);
         }
-    }
-
-    private boolean isEmptyComponentFilter(ComponentFilter filter) {
-        return filter == null || CommonUtil.empty(filter.value()) && CommonUtil.empty(filter.classes()) && CommonUtil.empty(filter.annotations());
     }
 }

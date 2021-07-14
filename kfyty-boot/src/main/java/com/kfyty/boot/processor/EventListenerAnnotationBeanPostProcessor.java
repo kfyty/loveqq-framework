@@ -10,6 +10,7 @@ import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.reflect.Method;
 
@@ -33,7 +34,7 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
      */
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        for (Method method : bean.getClass().getMethods()) {
+        for (Method method : ReflectUtil.getMethods(bean.getClass())) {
             if(AnnotationUtil.hasAnnotation(method, EventListener.class)) {
                 this.createEventListener(beanName, method, AnnotationUtil.findAnnotation(method, EventListener.class));
             }

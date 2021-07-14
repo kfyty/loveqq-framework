@@ -12,8 +12,6 @@ import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
-
 /**
  * 描述:
  *
@@ -31,10 +29,10 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
         if(AnnotationUtil.hasAnnotationElement(beanClass, Configuration.class)) {
             bean = this.createProxy(bean, beanName, new BeanMethodInterceptorProxy(this.applicationContext));
         }
-        if(AnnotationUtil.hasAnnotation(beanClass, Async.class) || Arrays.stream(beanClass.getMethods()).anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class))) {
+        if(AnnotationUtil.hasAnnotation(beanClass, Async.class) || ReflectUtil.getMethods(beanClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class))) {
             bean = this.createProxy(bean, beanName, new AsyncMethodInterceptorProxy(this.applicationContext));
         }
-        if(!ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && Arrays.stream(beanClass.getMethods()).anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class))) {
+        if(!ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && ReflectUtil.getMethods(beanClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class))) {
             bean = this.createProxy(bean, beanName, new LookupMethodInterceptorProxy(this.applicationContext));
         }
         return bean;

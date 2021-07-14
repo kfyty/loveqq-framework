@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
 
     protected void doAutowiredBeanField(Class<?> clazz, Object bean) {
         List<Field> lazies = new ArrayList<>(4);
-        List<Method> beanMethods = Arrays.stream(clazz.getMethods()).filter(e -> AnnotationUtil.hasAnnotation(e, Bean.class)).collect(Collectors.toList());
+        List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> AnnotationUtil.hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
             if(AnnotationUtil.hasAnnotation(field, Autowired.class)) {
                 if(AnnotationUtil.hasAnnotation(field, Lazy.class)) {
@@ -89,7 +88,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
     }
 
     protected void doAutowiredBeanMethod(Class<?> clazz, Object bean) {
-        for (Method method : clazz.getMethods()) {
+        for (Method method : ReflectUtil.getMethods(clazz)) {
             if(AnnotationUtil.hasAnnotation(method, Autowired.class)) {
                 if(AnnotationUtil.hasAnnotation(method, Lazy.class)) {
                     this.lazyAutowiredMethod.put(bean, method);

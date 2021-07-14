@@ -15,9 +15,13 @@ public interface BeanFactory {
 
     boolean contains(String name);
 
+    boolean containsReference(String name);
+
     <T> T getBean(Class<T> clazz);
 
     <T> T getBean(String name);
+
+    <T> T getBeanReference(String name);
 
     <T> Map<String, T> getBeanOfType(Class<T> clazz);
 
@@ -29,9 +33,13 @@ public interface BeanFactory {
 
     Object registerBean(String name, Object bean);
 
+    Object registerBeanReference(BeanDefinition beanDefinition);
+
     void replaceBean(Class<?> clazz, Object bean);
 
     void replaceBean(String name, Object bean);
+
+    void removeBeanReference(String name);
 
     void forEach(BiConsumer<String, Object> bean);
 }
