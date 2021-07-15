@@ -12,11 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class JdbcTypeUtil {
 
-    public static String convert2JdbcType(String dataBaseType) {
-        if(dataBaseType.toLowerCase().contains("timestamp")) {
+    public static String convert2JdbcType(String databaseType) {
+        if(databaseType.toLowerCase().contains("timestamp")) {
             return "TIMESTAMP";
         }
-        switch (dataBaseType.toLowerCase()) {
+        switch (databaseType.toLowerCase()) {
             case "bit":
                 return "BIT";
             case "smallint":
@@ -69,11 +69,11 @@ public abstract class JdbcTypeUtil {
         }
     }
 
-    public static String convert2JavaType(String dataBaseType) {
-        if(dataBaseType.toLowerCase().contains("timestamp")) {
+    public static String convert2JavaType(String databaseType) {
+        if(databaseType.toLowerCase().contains("timestamp")) {
             return "Date";
         }
-        switch (dataBaseType.toLowerCase()) {
+        switch (databaseType.toLowerCase()) {
             case "bit":
                 return "Byte";
             case "char":

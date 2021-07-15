@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 功能描述: SqlSession
@@ -41,6 +43,8 @@ import java.util.Map;
  */
 @Slf4j
 public class SqlSession implements InvocationHandler {
+    private static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
+
     /**
      * mapper class
      */
@@ -79,7 +83,7 @@ public class SqlSession implements InvocationHandler {
      * @param annotation    注解
      * @param params        参数
      * @return              返回值
-     * @throws Exception
+     * @throws Exception    Exception
      */
     private Object requestQuery(Method sourceMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) throws Exception {
         checkMapKey(annotation, returnType);
@@ -108,7 +112,6 @@ public class SqlSession implements InvocationHandler {
      * 检查注解中的 key 属性
      * @param annotation    注解
      * @param returnType    返回值类型
-     * @throws Exception
      */
     private void checkMapKey(Annotation annotation, SimpleGeneric returnType) {
         if(!(annotation instanceof Query || annotation instanceof SubQuery)) {
@@ -140,7 +143,6 @@ public class SqlSession implements InvocationHandler {
      * @param annotation    注解
      * @param params        参数
      * @return              拼接完毕的 sql
-     * @throws Exception
      */
     private String parseForEach(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
         String sql = getSQL(sourceMethod, annotation);
@@ -180,7 +182,7 @@ public class SqlSession implements InvocationHandler {
             return null;
         }
         if(paramField.length != mapperField.length) {
-            log.error(": parameters number and mapper field number can't match !");
+            log.error("parameters number and mapper field number can't match !");
             return null;
         }
         Map<String, MethodParameter> param = new HashMap<>();
@@ -195,7 +197,7 @@ public class SqlSession implements InvocationHandler {
      * 处理子查询
      * @param annotation    包含子查询的注解
      * @param obj           父查询的结果集
-     * @throws Exception
+     * @throws Exception    Exception
      */
     private void handleSubQuery(Method sourceMethod, Annotation annotation, Object obj) throws Exception {
         if(!(annotation instanceof Query && obj != null)) {
@@ -222,7 +224,7 @@ public class SqlSession implements InvocationHandler {
      * 处理子查询
      * @param subQueries    子查询注解
      * @param obj           父查询映射的结果对象，若是集合，则为其中的每一个对象
-     * @throws Exception
+     * @throws Exception    Exception
      */
     private void handleSubQuery(Method sourceMethod, SubQuery[] subQueries, Object obj) throws Exception {
         if(CommonUtil.empty(subQueries) || obj == null) {
@@ -259,9 +261,9 @@ public class SqlSession implements InvocationHandler {
 
     /**
      * 处理重复注解
-     * @param method    存在注解的方法
-     * @return          注解数组
-     * @throws Exception
+     * @param method     存在注解的方法
+     * @return           注解数组
+     * @throws Exception Exception
      */
     public Annotation[] getAnnotationFromMethod(Method method) throws Exception {
         List<Annotation> annotations = new ArrayList<>();
@@ -278,11 +280,11 @@ public class SqlSession implements InvocationHandler {
 
     /**
      * 代理方法
-     * @param proxy     代理对象
-     * @param method    被代理的方法
-     * @param args      被代理的方法的方法参数
-     * @return          被代理的方法的返回值
-     * @throws Throwable
+     * @param proxy      代理对象
+     * @param method     被代理的方法
+     * @param args       被代理的方法的方法参数
+     * @return           被代理的方法的返回值
+     * @throws Throwable Throwable
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -304,27 +306,27 @@ public class SqlSession implements InvocationHandler {
      * @param sql           sql 语句
      * @param parameters    @see getRealParameters() 返回值
      * @return              Map 集合，包含 sql/args
-     * @throws Exception
+     * @throws Exception    Exception
      */
     public Map<String, Object> parseSQL(String sql, Map<String, MethodParameter> parameters) throws Exception {
         List<MethodParameter> args = new ArrayList<>();
         Map<String, List<String>> params = this.getFormalParameters(sql);
         for(Map.Entry<String, List<String>> next : params.entrySet()) {
             for(String param : next.getValue()) {
-                Class<?> paramType = null;
                 Object value = null;
+                Class<?> paramType = null;
                 if(!param.contains(".")) {
                     MethodParameter methodParam = parameters.get(param);
-                    paramType = methodParam.getParamType();
                     value = methodParam.getValue();
+                    paramType = methodParam.getParamType();
                 } else {
                     String nested = param.substring(param.indexOf(".") + 1);
                     Object root = parameters.get(param.split("\\.")[0]).getValue();
-                    paramType = ReflectUtil.parseFieldType(nested, root.getClass());
                     value = ReflectUtil.parseValue(nested, root);
+                    paramType = ReflectUtil.parseFieldType(nested, root.getClass());
                 }
                 if(value == null) {
-                    log.warn(": null parameter found:[{}] !", param);
+                    log.warn("null parameter found:[{}] !", param);
                 }
                 if("#".equals(next.getKey())) {
                     args.add(new MethodParameter(paramType, value));
@@ -373,22 +375,20 @@ public class SqlSession implements InvocationHandler {
     /**
      * 解析 sql 中的 #{}/${} 中的字符串，并分别保存到 Map
      * @param sql   sql 语句
-     * @return      解析得到的包含 #{}/${} 的Map
+     * @return      解析得到的包含 #{}/${} 的 Map
      */
     public Map<String, List<String>> getFormalParameters(String sql) {
-        int begin = 0;
-        int end = begin;
         Map<String, List<String>> params = new HashMap<>();
         params.put("#", new ArrayList<>());
         params.put("$", new ArrayList<>());
-        while(begin != -1 && end != -1) {
-            begin = Math.min(sql.indexOf("#{", end), sql.indexOf("${", end));
-            begin = begin != -1 ? begin : Math.max(sql.indexOf("#{", end), sql.indexOf("${", end));
-            end = sql.indexOf("}", begin);
-            if(begin == -1 || end == -1) {
-                break;
+        Matcher matcher = PARAMETERS_PATTERN.matcher(sql);
+        while (matcher.find()) {
+            String group = matcher.group();
+            if(group.charAt(0) == '#') {
+                params.get("#").add(group.replaceAll("[#{}]", ""));
+            } else {
+                params.get("$").add(group.replaceAll("[${}]", ""));
             }
-            Object o = sql.charAt(begin) == '#' ? params.get("#").add(sql.substring(begin + 2, end)) : params.get("$").add(sql.substring(begin + 2, end));
         }
         return params;
     }

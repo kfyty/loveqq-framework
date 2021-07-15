@@ -1,10 +1,11 @@
 package com.kfyty.database.util;
 
-import com.kfyty.database.generate.template.freemarker.FreemarkerTemplate;
-import com.kfyty.database.generate.template.jsp.JspTemplate;
+import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
+import com.kfyty.database.generator.template.jsp.JspTemplate;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.PropertiesUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,7 @@ public abstract class TemplateEngineUtil {
         if(CONFIG != null) {
             return CONFIG;
         }
-        CONFIG = new Properties();
-        CONFIG.load(TemplateEngineUtil.class.getResourceAsStream(CONFIG_PATH));
+        CONFIG = PropertiesUtil.load(CONFIG_PATH, TemplateEngineUtil.class);
         return CONFIG;
     }
 
@@ -82,7 +82,7 @@ public abstract class TemplateEngineUtil {
     }
 
     public static String getTemplateNames(String prefix) throws IOException {
-        log.debug(": load template for prefix: '" + prefix + "' !");
+        log.debug("load template for prefix: '" + prefix + "' !");
         String key = CommonUtil.empty(prefix) ? "template" : prefix + ".template";
         return loadGenerateProperties().getProperty(key);
     }

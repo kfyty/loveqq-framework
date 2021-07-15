@@ -2,9 +2,9 @@ package com.kfyty.support.proxy.factory;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
+import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
 
@@ -23,8 +23,7 @@ public abstract class DynamicProxyFactory {
     }
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
-        Class<?>[] interfaces = ReflectUtil.getInterfaces(bean.getClass());
-        if(CommonUtil.empty(interfaces)) {
+        if (!ReflectUtil.hasAnyInterfaces(bean.getClass()) || AnnotationUtil.hasAnnotationElement(bean.getClass(), Configuration.class)) {
             return create(true);
         }
         BootApplication annotation = AnnotationUtil.findAnnotation(context.getPrimarySource(), BootApplication.class);
