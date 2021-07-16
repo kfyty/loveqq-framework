@@ -203,11 +203,13 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if(this.contains(beanDefinition.getBeanName())) {
             return this.getBean(beanDefinition.getBeanName());
         }
-        Object bean = this.containsReference(beanDefinition.getBeanName()) ? this.getBeanReference(beanDefinition.getBeanName()) : this.doCreateBean(beanDefinition);
-        if(!this.contains(beanDefinition.getBeanName())) {
-            return this.registerBean(beanDefinition.getBeanName(), bean);
+        synchronized (this.beanInstances) {
+            Object bean = this.containsReference(beanDefinition.getBeanName()) ? this.getBeanReference(beanDefinition.getBeanName()) : this.doCreateBean(beanDefinition);
+            if(!this.contains(beanDefinition.getBeanName())) {
+                return this.registerBean(beanDefinition.getBeanName(), bean);
+            }
+            return this.getBean(beanDefinition.getBeanName());
         }
-        return this.getBean(beanDefinition.getBeanName());
     }
 
     @Override
@@ -217,7 +219,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Object registerBean(String name, Object bean) {
-        synchronized (this) {
+        synchronized (this.beanInstances) {
             if(this.contains(name)) {
                 throw new BeansException("conflicting bean name: " + name);
             }

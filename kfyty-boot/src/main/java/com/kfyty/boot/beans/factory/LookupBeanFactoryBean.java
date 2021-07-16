@@ -15,13 +15,13 @@ import net.sf.cglib.proxy.Enhancer;
  * @date 2021/7/11 12:43
  * @email kfyty725@hotmail.com
  */
-public class LookupBeanFactory<T> implements ApplicationContextAware, FactoryBean<T> {
+public class LookupBeanFactoryBean<T> implements ApplicationContextAware, FactoryBean<T> {
     private final Class<?> beanType;
     private final boolean isSingleton;
 
     private ApplicationContext applicationContext;
 
-    public LookupBeanFactory(Class<?> beanType) {
+    public LookupBeanFactoryBean(Class<?> beanType) {
         this.beanType = beanType;
         this.isSingleton = BeanUtil.isSingleton(beanType);
     }

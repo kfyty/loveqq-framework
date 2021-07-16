@@ -17,11 +17,13 @@ public class InterceptorChain extends MethodInvocationInterceptor {
     private int currentChainIndex;
     private MethodProxyWrapper intercepting;
     private final List<InterceptorChainPoint> chainPoints;
+    private final ThreadLocal<InterceptorChain> threadInterceptorChain;
 
     public InterceptorChain(Object source) {
         super(source);
         this.currentChainIndex = -1;
         this.chainPoints = new ArrayList<>(4);
+        this.threadInterceptorChain = new ThreadLocal<>();
     }
 
     public InterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
@@ -42,14 +44,17 @@ public class InterceptorChain extends MethodInvocationInterceptor {
 
     @Override
     protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
-        if(this.intercepting != null && this.intercepting.equals(methodProxy)) {
-            return this.proceed(methodProxy);
+        InterceptorChain threadChain = this.threadInterceptorChain.get();
+        if (threadChain != null && threadChain.intercepting.equals(methodProxy)) {
+            return threadChain.proceed(methodProxy);
         }
         try {
-            this.intercepting = methodProxy;
-            return new InterceptorChain(this.getSource(), this.chainPoints).proceed(methodProxy);
+            threadChain = new InterceptorChain(this.getSource(), this.chainPoints);
+            threadChain.intercepting = methodProxy;
+            this.threadInterceptorChain.set(threadChain);
+            return threadChain.proceed(methodProxy);
         } finally {
-            this.intercepting = null;
+            this.threadInterceptorChain.remove();
         }
     }
 
