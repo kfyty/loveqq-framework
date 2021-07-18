@@ -15,6 +15,8 @@ import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.utils.SerializableUtil;
+import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +47,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class SqlSession implements InvocationHandler {
     private static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
+
+    private static final Map<Annotation, byte[]> SERIALIZE_CACHE = new ConcurrentHashMap<>(4);
 
     /**
      * mapper class
@@ -126,16 +131,17 @@ public class SqlSession implements InvocationHandler {
      * @param annotation 注解
      * @return SQL
      */
-    private String getSQL(Method sourceMethod, Annotation annotation) {
+    private Pair<String, Annotation> getSQL(Method sourceMethod, Annotation annotation) {
         Class<? extends Provider> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
         if(!provider.equals(Provider.class)) {
-            return this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation);
+            annotation = SerializableUtil.clone(annotation, SERIALIZE_CACHE);
+            return new Pair<>(this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation), annotation);
         }
         String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
         if(CommonUtil.empty(sql)) {
             throw new NullPointerException("sql statement is empty !");
         }
-        return sql;
+        return new Pair<>(sql, annotation);
     }
 
     /**
@@ -145,10 +151,10 @@ public class SqlSession implements InvocationHandler {
      * @return              拼接完毕的 sql
      */
     private String parseForEach(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        String sql = getSQL(sourceMethod, annotation);
-        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(annotation, "forEach");
+        Pair<String, Annotation> sqlPair = getSQL(sourceMethod, annotation);
+        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(sqlPair.getValue(), "forEach");
         if(CommonUtil.empty(forEachList)) {
-            return sql;
+            return sqlPair.getKey();
         }
         StringBuilder builder = new StringBuilder();
         for (ForEach each : forEachList) {
@@ -156,7 +162,7 @@ public class SqlSession implements InvocationHandler {
             List<Object> list = CommonUtil.convert2List(parameter.getValue());
             builder.append(each.open());
             for(int i = 0; i < list.size(); i++) {
-                String flag = "_" + i;
+                String flag = "param_" + i + "_";
                 Object value = list.get(i);
                 builder.append(each.sqlPart().replace("#{", "#{" + flag).replace("${", "${" + flag));
                 params.put(flag + each.item(), new MethodParameter(value == null ? Object.class : value.getClass(), value));
@@ -167,7 +173,7 @@ public class SqlSession implements InvocationHandler {
             }
             builder.append(each.close());
         }
-        return sql + builder;
+        return sqlPair.getKey() + builder;
     }
 
     /**

@@ -2,7 +2,7 @@ package com.kfyty.database.generator.template;
 
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
-import com.kfyty.database.util.TemplateEngineUtil;
+import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcTypeUtil;
 import lombok.NoArgsConstructor;
@@ -35,7 +35,7 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
         try {
             this.prefix = prefix;
             this.template = template;
-            this.variable = new HashMap<>(TemplateEngineUtil.loadGenerateProperties());
+            this.variable = new HashMap<>(CodeGeneratorTemplateEngineUtil.loadGeneratorProperties());
         } catch (IOException e) {
             log.error("init template error: ", e);
         }

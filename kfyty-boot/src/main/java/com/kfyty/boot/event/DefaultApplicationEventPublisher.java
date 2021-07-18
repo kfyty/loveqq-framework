@@ -70,7 +70,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
         }
         for (ApplicationListener applicationListener : this.applicationListeners) {
             Class<?> listenerClass = AopUtil.getSourceIfNecessary(applicationListener).getClass();
-            Class<?> listenerType = ReflectUtil.getSuperGeneric(listenerClass, 0, -1, type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class));
+            Class<?> listenerType = ReflectUtil.getSuperGeneric(listenerClass, type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class));
             if(applicationListener instanceof EventListenerAnnotationListener) {
                 listenerType = ((EventListenerAnnotationListener) applicationListener).getListenerType();
             }

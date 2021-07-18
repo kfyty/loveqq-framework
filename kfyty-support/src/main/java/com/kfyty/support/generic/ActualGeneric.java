@@ -50,8 +50,12 @@ public class ActualGeneric extends SimpleGeneric {
         }
         Map<Generic, QualifierGeneric> genericMap = new LinkedHashMap<>(4);
         for (Generic generic : this.genericInfo.keySet()) {
-            Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.actualDeclaringClass, ReflectUtil.getActualGenericIndex(this.actualDeclaringClass, generic.getTypeVariable()));
-            genericMap.put(new Generic(actualFieldType, generic.isArray()), null);
+            if(!generic.isTypeVariable()) {
+                genericMap.put(generic, null);
+            } else {
+                Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.actualDeclaringClass, ReflectUtil.getActualGenericIndex(this.actualDeclaringClass, generic.getTypeVariable()));
+                genericMap.put(new Generic(actualFieldType, generic.isArray()), null);
+            }
         }
         this.genericInfo.clear();
         this.genericInfo.putAll(genericMap);
@@ -69,21 +73,29 @@ public class ActualGeneric extends SimpleGeneric {
         return (ActualGeneric) new ActualGeneric(field.getType(), field.getGenericType()).doResolve();
     }
 
-    public static ActualGeneric from(Class<?> clazz, Field field) {
-        ActualGeneric actualGeneric = new ActualGeneric(field.getType(), field.getGenericType());
-        actualGeneric.actualDeclaringClass = clazz;
-        actualGeneric.doResolve();
-        if(actualGeneric.resolveType instanceof TypeVariable || actualGeneric.getGenericInfo().keySet().stream().allMatch(Generic::isTypeVariable)) {
-            actualGeneric.processActualGeneric();
-        }
-        return actualGeneric;
-    }
-
     public static ActualGeneric from(Method method) {
         return (ActualGeneric) new ActualGeneric(method.getReturnType(), method.getGenericReturnType()).doResolve();
     }
 
     public static ActualGeneric from(Parameter parameter) {
         return (ActualGeneric) new ActualGeneric(parameter.getType(), parameter.getParameterizedType()).doResolve();
+    }
+
+    public static ActualGeneric from(Class<?> clazz, Field field) {
+        return from(clazz, field.getType(), field.getGenericType());
+    }
+
+    public static ActualGeneric from(Class<?> clazz, Parameter parameter) {
+        return from(clazz, parameter.getType(), parameter.getParameterizedType());
+    }
+
+    public static ActualGeneric from(Class<?> clazz, Class<?> type, Type genericType) {
+        ActualGeneric actualGeneric = new ActualGeneric(type, genericType);
+        actualGeneric.actualDeclaringClass = clazz;
+        actualGeneric.doResolve();
+        if(actualGeneric.resolveType instanceof TypeVariable || actualGeneric.getGenericInfo().keySet().stream().anyMatch(Generic::isTypeVariable)) {
+            actualGeneric.processActualGeneric();
+        }
+        return actualGeneric;
     }
 }

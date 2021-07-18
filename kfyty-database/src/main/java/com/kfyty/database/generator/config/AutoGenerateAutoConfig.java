@@ -53,7 +53,7 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
     @SneakyThrows
     public void onCompleted(ApplicationContext applicationContext) {
         if(this.configurationSupport == null) {
-            log.warn("generate config does not exist !");
+            log.warn("generator configuration does not exist !");
             return;
         }
         GenerateSources generateSources = new GenerateSources(this.configurationSupport);

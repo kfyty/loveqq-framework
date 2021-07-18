@@ -1,10 +1,12 @@
 package com.kfyty.database.generator.template.freemarker;
 
-import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
-import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
+import com.kfyty.database.generator.template.GeneratorTemplate;
+import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
 import com.kfyty.database.util.TemplateEngineUtil;
+import com.kfyty.support.io.SimpleBufferedWriter;
+import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import java.util.List;
 @Slf4j
 @NoArgsConstructor
 public class FreemarkerTemplate extends AbstractTemplateEngine {
+    private Template freemarkerTemplate;
 
     public FreemarkerTemplate(String prefix, String template) {
         super(prefix, template);
@@ -33,16 +36,23 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
 
     @Override
     public List<? extends GeneratorTemplate> loadTemplates(String prefix) throws Exception {
-        return TemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
+        return CodeGeneratorTemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
     }
 
     @Override
     public void doGenerate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
         try {
+            this.initTemplate();
             loadVariables(tableInfo, basePackage);
-            TemplateEngineUtil.loadFreemarkerTemplate(this.prefix, this.template).process(this.variable, out);
+            this.freemarkerTemplate.process(this.variable, out);
         } catch (TemplateException e) {
-            log.error("generate source error: ", e);
+            log.error("generate source error !", e);
+        }
+    }
+
+    protected void initTemplate() {
+        if (this.freemarkerTemplate == null) {
+            this.freemarkerTemplate = TemplateEngineUtil.loadFreemarkerTemplate(CodeGeneratorTemplateEngineUtil.getTemplatePath(prefix), this.template);
         }
     }
 }

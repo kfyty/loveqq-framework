@@ -276,7 +276,18 @@ interface Base<T, K> {}
 abstract class BaseImpl<T, K> implements Base<T, K> {}
 
 @Component
-class DefaultBase extends BaseImpl<Entity, Integer> {}
+class DefaultBase extends BaseImpl<Entity, Integer> {
+
+    @Bean
+    public Base<Bean1, Long> base1() {
+        return new Base<Bean1, Long>() {};
+    }
+
+    @Bean
+    public Base<Bean2, Long> base2() {
+        return new Base<Bean2, Long>() {};
+    }
+}
 
 @Component
 class CommonBase extends BaseImpl<Bean1, Integer> {}
@@ -286,10 +297,18 @@ class BaseController<T, K> {
     protected Base<T, K> service;
 }
 
+class IntBaseController<T> extends BaseController<T, Integer> {}
+
 @Component
-class DefaultController extends BaseController<Entity, Integer> implements InitializingBean {
+class DefaultController extends IntBaseController<Entity> implements InitializingBean {
     @Autowired
     private DefaultBase defaultBase;
+
+    @Autowired
+    private Base<Bean1, Long> bean1Base;
+
+    @Autowired
+    private Base<Bean2, Long> bean2Base;
 
     @Override
     public void afterPropertiesSet() {

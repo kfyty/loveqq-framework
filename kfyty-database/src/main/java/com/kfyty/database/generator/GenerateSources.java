@@ -51,10 +51,10 @@ public class GenerateSources {
     protected String initFilePath() {
         GeneratorTemplate template = configuration.currentTemplate();
         String basePackage = CommonUtil.empty(configuration.getBasePackage()) ? "" : configuration.getBasePackage() + ".";
-        String classSuffix = configuration.currentTemplate().classSuffix().toLowerCase();
+        String classSuffix = CommonUtil.empty(template.classSuffix()) ? "" : template.classSuffix().toLowerCase();
         String packageName = basePackage + (!classSuffix.endsWith("impl") ? classSuffix : classSuffix.replace("impl", ".impl"));
         if(CommonUtil.notEmpty(template.packageName())) {
-            packageName = configuration.currentTemplate().packageName();
+            packageName = template.packageName();
         }
         String parentPath = new File(CommonUtil.notEmpty(template.filePath()) ? template.filePath() : configuration.getFilePath()).getAbsolutePath();
         return parentPath + File.separator + packageName.replace(".", File.separator);
@@ -79,7 +79,7 @@ public class GenerateSources {
         return file;
     }
 
-    protected void initTableInfos() throws Exception {
+    protected void initTableInfos() {
         AbstractDatabaseMapper databaseMapper = SqlSessionFactory.createProxy(configuration.getDataSource(), configuration.getDatabaseMapper());
 
         Set<String> tables = Optional.ofNullable(configuration.getTables()).orElse(new HashSet<>());

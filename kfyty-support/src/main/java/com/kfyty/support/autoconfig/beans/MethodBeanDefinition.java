@@ -129,7 +129,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         int index = 0;
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
-            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
         }
         return parameters;
     }

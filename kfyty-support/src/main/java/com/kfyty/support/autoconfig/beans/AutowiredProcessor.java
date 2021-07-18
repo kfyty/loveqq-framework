@@ -70,7 +70,7 @@ public class AutowiredProcessor {
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
-            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(method, Autowired.class));
+            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(method, Autowired.class));
             if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
                 targetBean = AopUtil.getSourceIfNecessary(targetBean);
             }

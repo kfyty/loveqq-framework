@@ -75,33 +75,49 @@ public class QualifierGenericTest {
     @Test
     public void test2() {
         Field t = ReflectUtil.getField(DefaultController.class, "t");
+        Field k = ReflectUtil.getField(DefaultController.class, "k");
+        Field baseT = ReflectUtil.getField(DefaultController.class, "baseT");
         Field arrT = ReflectUtil.getField(DefaultController.class, "arrT");
         Field service = ReflectUtil.getField(DefaultController.class, "service");
+        Field baseService = ReflectUtil.getField(DefaultController.class, "baseService");
         Field entityClass = ReflectUtil.getField(DefaultController.class, "entityClass");
         ActualGeneric fromT = ActualGeneric.from(DefaultController.class, t);
+        ActualGeneric fromK = ActualGeneric.from(DefaultController.class, k);
+        ActualGeneric fromBaseT = ActualGeneric.from(DefaultController.class, baseT);
         ActualGeneric fromArrT = ActualGeneric.from(DefaultController.class, arrT);
         ActualGeneric fromService = ActualGeneric.from(DefaultController.class, service);
+        ActualGeneric fromBaseService = ActualGeneric.from(DefaultController.class, baseService);
         ActualGeneric fromEntityClass = ActualGeneric.from(DefaultController.class, entityClass);
         Assert.assertFalse(fromT.isSimpleParameterizedType());
         Assert.assertEquals(fromT.getSourceType(), Entity.class);
+        Assert.assertEquals(fromK.getSourceType(), Integer.class);
+        Assert.assertEquals(fromBaseT.getSourceType(), Entity.class);
         Assert.assertEquals(fromArrT.getSourceType(), Entity[].class);
         Assert.assertEquals(fromArrT.getFirst().get(), Entity.class);
         Assert.assertEquals(fromService.getFirst().get(), Entity.class);
         Assert.assertEquals(fromService.getSecond().get(), Integer.class);
+        Assert.assertEquals(fromBaseService.getFirst().get(), Entity.class);
+        Assert.assertEquals(fromBaseService.getSecond().get(), Integer.class);
         Assert.assertEquals(fromEntityClass.getSimpleActualType(), Entity.class);
     }
 }
 
 class Entity {}
 interface Base<T, K> {}
-abstract class BaseImpl<T, K extends Integer> implements Base<T, K> {}
-class DefaultBase extends BaseImpl<Entity, Integer> {}
 
 class BaseController<T, K extends Integer> {
     protected T t;
+    protected K k;
     protected T[] arrT;
     protected Base<T, K> service;
     protected Class<T> entityClass;
 }
 
-class DefaultController extends BaseController<Entity, Integer> {}
+class DefaultBase<T> extends BaseController<T, Integer> {
+    protected T baseT;
+    protected Base<T, Integer> baseService;
+}
+
+class CommonBase extends DefaultBase<Entity> {}
+
+class DefaultController extends CommonBase {}

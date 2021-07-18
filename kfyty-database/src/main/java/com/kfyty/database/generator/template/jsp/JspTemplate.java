@@ -7,7 +7,8 @@ import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.kjte.JstlRenderEngine;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.database.util.TemplateEngineUtil;
+import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
+import javassist.CannotCompileException;
 import javassist.ClassPool;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class JspTemplate extends AbstractTemplateEngine {
     public JspTemplate(String prefix, File jsp, String classPath) {
         super(prefix, jsp.getName());
         this.classPath = classPath;
-        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(TemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
+        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(CodeGeneratorTemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
         this.templateEngine = new JstlTemplateEngine(config);
     }
 
@@ -55,7 +56,7 @@ public class JspTemplate extends AbstractTemplateEngine {
 
     @Override
     public List<? extends GeneratorTemplate> loadTemplates(String prefix) throws Exception {
-        return TemplateEngineUtil.loadJspTemplates(this, prefix);
+        return CodeGeneratorTemplateEngineUtil.loadJspTemplates(this, prefix);
     }
 
     @Override
@@ -68,15 +69,14 @@ public class JspTemplate extends AbstractTemplateEngine {
         render.doRenderTemplate();
     }
 
-    private void initClass() {
-        if(this.jspClass != null) {
-            return;
-        }
-        try {
-            String clazz = this.classPath.replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
-            this.jspClass = ClassPool.getDefault().makeClass(new FileInputStream(clazz)).toClass();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    protected void initClass() {
+        if(this.jspClass == null) {
+            try {
+                String clazz = this.classPath.replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
+                this.jspClass = ClassPool.getDefault().makeClass(new FileInputStream(clazz)).toClass();
+            } catch (IOException | CannotCompileException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

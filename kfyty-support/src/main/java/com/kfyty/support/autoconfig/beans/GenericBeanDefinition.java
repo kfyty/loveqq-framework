@@ -143,7 +143,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
-            Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(this.constructor, Autowired.class));
+            Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(this.constructor, Autowired.class));
             constructorArgs.put(parameter.getType(), resolveBean);
         }
         return constructorArgs;
