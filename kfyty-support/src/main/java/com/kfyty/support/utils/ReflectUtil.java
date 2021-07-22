@@ -8,7 +8,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -413,7 +412,7 @@ public abstract class ReflectUtil {
         try {
             return clazz.getDeclaredMethod(methodName, parameterTypes);
         } catch(NoSuchMethodException e) {
-            return getSuperMethod(clazz, methodName, containPrivate);
+            return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
         }
     }
 

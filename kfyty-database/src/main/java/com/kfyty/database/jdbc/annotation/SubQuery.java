@@ -21,4 +21,6 @@ public @interface SubQuery {
     ForEach[] forEach() default {};
 
     Class<? extends Provider> provider() default Provider.class;
+
+    String method() default "";
 }

@@ -2,16 +2,16 @@ package com.kfyty.database.jdbc.sql.dialect;
 
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
-import com.kfyty.database.jdbc.sql.InsertAllProvider;
 import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
-import com.kfyty.database.jdbc.sql.UpdateAllProvider;
+import com.kfyty.database.util.ForEachUtil;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import javafx.util.Pair;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * 描述:
@@ -20,96 +20,23 @@ import java.lang.reflect.Method;
  * @date 2021/6/8 10:52
  * @email kfyty725@hotmail.com
  */
-public class MySQLProvider extends ProviderAdapter implements InsertAllProvider, UpdateAllProvider {
+public class MySQLProvider extends ProviderAdapter {
 
     @Override
-    public String doProviderInsertAll(Class<?> mapperClass, Method sourceMethod, Execute annotation) {
+    public String insertBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
         Pair<String, String> fieldPair = this.buildInsertField(entityClass.getValue());
         String baseSQL = String.format("insert into %s (%s) values ", CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), fieldPair.getKey());
-        ReflectUtil.setAnnotationValue(annotation, "value", baseSQL);
-        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {
-                new ForEach() {
-                    @Override
-                    public String collection() {
-                        return Provider.PROVIDER_PARAM_ENTITY;
-                    }
-
-                    @Override
-                    public String item() {
-                        return "item";
-                    }
-
-                    @Override
-                    public String open() {
-                        return "(";
-                    }
-
-                    @Override
-                    public String sqlPart() {
-                        return fieldPair.getValue().replace(Provider.PROVIDER_PARAM_ENTITY, item());
-                    }
-
-                    @Override
-                    public String separator() {
-                        return "), (";
-                    }
-
-                    @Override
-                    public String close() {
-                        return ")";
-                    }
-
-                    @Override
-                    public Class<? extends Annotation> annotationType() {
-                        return ForEach.class;
-                    }
-                }
-        });
+        ForEach forEach = ForEachUtil.create(Provider.PROVIDER_PARAM_ENTITY, "(", "), (", ")", e -> fieldPair.getValue().replace(Provider.PROVIDER_PARAM_ENTITY, e.item()));
+        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {forEach});
         return baseSQL;
     }
 
     @Override
-    public String doProviderUpdateAll(Class<?> mapperClass, Method sourceMethod, Execute annotation) {
+    public String updateBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         String updateSQL = buildUpdateSQL(mapperClass);
-        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {
-                new ForEach() {
-                    @Override
-                    public String collection() {
-                        return Provider.PROVIDER_PARAM_ENTITY;
-                    }
-
-                    @Override
-                    public String item() {
-                        return "item";
-                    }
-
-                    @Override
-                    public String open() {
-                        return "";
-                    }
-
-                    @Override
-                    public String sqlPart() {
-                        return updateSQL.replace(Provider.PROVIDER_PARAM_ENTITY, item());
-                    }
-
-                    @Override
-                    public String separator() {
-                        return ";";
-                    }
-
-                    @Override
-                    public String close() {
-                        return "";
-                    }
-
-                    @Override
-                    public Class<? extends Annotation> annotationType() {
-                        return ForEach.class;
-                    }
-                }
-        });
+        ForEach forEach = ForEachUtil.create(Provider.PROVIDER_PARAM_ENTITY, "", ";", "", e -> updateSQL.replace(Provider.PROVIDER_PARAM_ENTITY, e.item()));
+        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {forEach});
         return "";
     }
 }

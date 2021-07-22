@@ -58,7 +58,7 @@ public class MethodParameter {
     private Type returnGeneric;
 
     /**
-     * 参数值
+     * 参数值，用于描述方法参数时有效
      */
     private Object value;
 
@@ -92,6 +92,17 @@ public class MethodParameter {
      */
     public MethodParameter(Class<?> paramType, Object value) {
         this.paramType = paramType;
+        this.value = value;
+    }
+
+    /**
+     * 使用声明方法、原参数对象和参数值构造
+     * @param method 声明方法
+     * @param parameter 原参数对象
+     * @param value 参数值
+     */
+    public MethodParameter(Method method, Parameter parameter, Object value) {
+        this(method, parameter);
         this.value = value;
     }
 }

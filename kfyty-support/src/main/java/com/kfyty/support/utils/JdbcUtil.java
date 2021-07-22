@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class JdbcUtil {
-    public static <T, K, V> Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
+    public static Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -47,12 +47,13 @@ public abstract class JdbcUtil {
         }
     }
 
-    public static void execute(Transaction transaction, String sql, MethodParameter ... params) throws SQLException {
+    public static int execute(Transaction transaction, String sql, MethodParameter ... params) throws SQLException {
         Connection connection = transaction.getConnection();
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = getPreparedStatement(connection, sql, params);
             preparedStatement.execute();
+            return preparedStatement.getUpdateCount();
         } catch(SQLException e) {
             transaction.rollback();
             log.error("failed execute sql statement:[{}] --> parameters:{}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
@@ -83,11 +84,11 @@ public abstract class JdbcUtil {
         return preparedStatement;
     }
 
-    private static <T, K, V> Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter ... params) throws SQLException {
+    private static Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter ... params) throws SQLException {
         return query(transaction, returnType, sql, params);
     }
 
-    private static void execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter ... params) throws SQLException {
-        execute(transaction, sql, params);
+    private static int execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter ... params) throws SQLException {
+        return execute(transaction, sql, params);
     }
 }

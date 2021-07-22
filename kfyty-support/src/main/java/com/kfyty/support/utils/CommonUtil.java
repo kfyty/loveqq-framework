@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -45,7 +47,7 @@ public abstract class CommonUtil {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
 
     public static boolean empty(Object obj) {
-        if(obj != null && CharSequence.class.isAssignableFrom(obj.getClass())) {
+        if (obj != null && CharSequence.class.isAssignableFrom(obj.getClass())) {
             return ((CharSequence) obj).toString().trim().length() < 1;
         }
         return size(obj) < 1;
@@ -56,19 +58,47 @@ public abstract class CommonUtil {
     }
 
     public static int size(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return 0;
         }
-        if(obj.getClass().isArray()) {
+        if (obj.getClass().isArray()) {
             return Array.getLength(obj);
         }
-        if(obj instanceof Collection) {
+        if (obj instanceof Collection) {
             return ((Collection<?>) obj).size();
         }
-        if(obj instanceof Map) {
+        if (obj instanceof Map) {
             return ((Map<?, ?>) obj).size();
         }
         return 1;
+    }
+
+    public static void consumer(Object o, Consumer<Object> consumer) {
+        consumer(o, consumer, entry -> entry);
+    }
+
+    public static void consumer(Object o, Consumer<Object> consumer, Function<Map.Entry<?, ?>, Object> entryMapping) {
+        mapping(o, e -> {
+            consumer.accept(e);
+            return null;
+        }, entryMapping);
+    }
+
+    public static <T> List<T> mapping(Object o, Function<Object, T> mapping) {
+        return mapping(o, mapping, entry -> entry);
+    }
+
+    public static <T> List<T> mapping(Object o, Function<Object, T> mapping, Function<Map.Entry<?, ?>, Object> entryMapping) {
+        if (o == null) {
+            return Collections.emptyList();
+        }
+        if (o instanceof Collection || o.getClass().isArray()) {
+            return toList(o).stream().map(mapping).collect(Collectors.toList());
+        }
+        if (o instanceof Map) {
+            return ((Map<?, ?>) o).entrySet().stream().map(entryMapping).map(mapping).collect(Collectors.toList());
+        }
+        return Collections.singletonList(mapping.apply(o));
     }
 
     public static List<String> split(String source, String pattern) {
@@ -79,21 +109,24 @@ public abstract class CommonUtil {
         return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
     }
 
-    public static List<Object> convert2List(Object value) {
-        List<Object> list = new ArrayList<>();
-        if(value instanceof Collection) {
-            list.addAll((Collection<?>) value);
-        } else if(value.getClass().isArray()) {
-            list.addAll(Arrays.asList((Object[]) value));
-        } else {
-            log.error("convert data error, parameter is not collection or array !");
-            return Collections.emptyList();
+    public static List<Object> toList(Object value) {
+        if (value instanceof Collection) {
+            return new ArrayList<>((Collection<?>) value);
         }
-        return list;
+        if (value.getClass().isArray()) {
+            int size = size(value);
+            List<Object> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                list.add(Array.get(value, i));
+            }
+            return list;
+        }
+        log.error("data to list error, data is not collection or array !");
+        return Collections.emptyList();
     }
 
     public static String getStackTrace(Throwable throwable) {
-        if(throwable == null) {
+        if (throwable == null) {
             return "";
         }
         StringWriter stringWriter = new StringWriter();
@@ -102,10 +135,10 @@ public abstract class CommonUtil {
     }
 
     public static void close(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return;
         }
-        if(!(obj instanceof AutoCloseable)) {
+        if (!(obj instanceof AutoCloseable)) {
             throw new SupportException("can't close !");
         }
         try {
@@ -120,21 +153,21 @@ public abstract class CommonUtil {
     }
 
     public static String underline2CamelCase(String target, boolean isClass) {
-        if(empty(target)) {
+        if (empty(target)) {
             throw new SupportException("convert underline to camel case failed, target can't empty !");
         }
         StringBuilder builder = new StringBuilder();
         target = UPPER_CASE_PATTERN.matcher(target).matches() || target.contains("_") ? target.toLowerCase() : target;
         for (int i = 0; i < target.length(); i++) {
             char c = target.charAt(i);
-            if(c != '_') {
+            if (c != '_') {
                 builder.append(c);
                 continue;
             }
             while (i < target.length() && (c = target.charAt(i)) == '_') {
                 i++;
             }
-            if(i < target.length()) {
+            if (i < target.length()) {
                 builder.append(i == 1 ? c : Character.toUpperCase(c));
             }
         }
@@ -147,18 +180,18 @@ public abstract class CommonUtil {
     }
 
     public static String camelCase2Underline(String target, boolean lower) {
-        if(empty(target)) {
+        if (empty(target)) {
             throw new SupportException("convert camel case to underline failed, target can't empty !");
         }
-        if(UPPER_CASE_PATTERN.matcher(target).matches()) {
+        if (UPPER_CASE_PATTERN.matcher(target).matches()) {
             return lower ? target.toLowerCase() : target.toUpperCase();
         }
         char c = target.charAt(0);
         StringBuilder builder = new StringBuilder();
         builder.append(Character.isUpperCase(c) ? Character.toLowerCase(c) : c);
-        for(int i = 1; i < target.length(); i++) {
+        for (int i = 1; i < target.length(); i++) {
             c = target.charAt(i);
-            if(Character.isUpperCase(c)) {
+            if (Character.isUpperCase(c)) {
                 builder.append('_').append(Character.toLowerCase(c));
                 continue;
             }
@@ -167,11 +200,11 @@ public abstract class CommonUtil {
         return lower ? builder.toString() : builder.toString().toUpperCase();
     }
 
-    public static String format(String s, Object ... params) {
+    public static String format(String s, Object... params) {
         int index = -1;
         int paramIndex = 0;
         StringBuilder sb = new StringBuilder(s);
-        while((index = sb.indexOf("{}", index)) != -1) {
+        while ((index = sb.indexOf("{}", index)) != -1) {
             sb.replace(index, index + 2, Optional.ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
         }
         return sb.toString();
@@ -185,15 +218,16 @@ public abstract class CommonUtil {
 
     public static void ensureFolderExists(String path) {
         File file = new File(path);
-        if(!file.exists() && !file.mkdirs()) {
+        if (!file.exists() && !file.mkdirs()) {
             throw new SupportException("ensure folder exists failed !");
         }
     }
 
     /**
      * 保存 jdk 生成的代理类
+     *
      * @param savePath 保存路径
-     * @param proxy 代理对象
+     * @param proxy    代理对象
      */
     public static void saveJdkProxyClass(String savePath, Object proxy) {
         try {

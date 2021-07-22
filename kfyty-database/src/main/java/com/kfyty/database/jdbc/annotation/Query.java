@@ -23,4 +23,6 @@ public @interface Query {
     SubQuery[] subQuery() default {};
 
     Class<? extends Provider> provider() default Provider.class;
+
+    String method() default "";
 }

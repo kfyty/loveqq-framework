@@ -1,8 +1,10 @@
 package com.kfyty.database.jdbc.sql;
 
 import com.kfyty.database.jdbc.annotation.Execute;
+import com.kfyty.support.method.MethodParameter;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * 描述:
@@ -12,5 +14,8 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 public interface InsertProvider extends Provider {
-    String doProviderInsert(Class<?> mapperClass, Method sourceMethod, Execute annotation);
+
+    String insert(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+
+    String insertBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
 }
