@@ -12,6 +12,8 @@ import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Resource;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -46,12 +48,12 @@ public class AutowiredProcessor {
         return context;
     }
 
-    public void doAutowired(Class<?> clazz, Object bean, Field field) {
+    public void doAutowired(Object bean, Field field) {
         if (ReflectUtil.getFieldValue(bean, field) != null) {
             return;
         }
-        Autowired annotation = AnnotationUtil.findAnnotation(field, Autowired.class);
-        ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
+        Autowired annotation = this.findAutowiredAnnotation(field);
+        ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
         if(targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
@@ -70,7 +72,7 @@ public class AutowiredProcessor {
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
-            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(method, Autowired.class));
+            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : this.findAutowiredAnnotation(method));
             if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
                 targetBean = AopUtil.getSourceIfNecessary(targetBean);
             }
@@ -108,6 +110,42 @@ public class AutowiredProcessor {
             resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
         }
         return resolveBean;
+    }
+
+    private Autowired findAutowiredAnnotation(Field field) {
+        Autowired autowired = AnnotationUtil.findAnnotation(field, Autowired.class);
+        if (autowired != null) {
+            return autowired;
+        }
+        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(field, Resource.class));
+    }
+
+    private Autowired findAutowiredAnnotation(Method method) {
+        Autowired autowired = AnnotationUtil.findAnnotation(method, Autowired.class);
+        if (autowired != null) {
+            return autowired;
+        }
+        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(method, Resource.class));
+    }
+
+    private Autowired createAutowiredAnnotation(Resource resource) {
+        return resource == null ? null : new Autowired() {
+
+            @Override
+            public boolean required() {
+                return true;
+            }
+
+            @Override
+            public String value() {
+                return resource.name();
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Autowired.class;
+            }
+        };
     }
 
     private void checkResolving(String targetBeanName) {

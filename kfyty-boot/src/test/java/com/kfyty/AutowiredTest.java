@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -122,8 +123,13 @@ class Bean5 {}
 interface Inter {}
 
 abstract class InterImpl<T> implements Inter {
-    @Autowired
+    @Resource
     protected T t;
+
+    @Resource
+    public void setT(T t) {
+        Assert.assertSame(this.t, t);
+    }
 }
 
 @Service
@@ -295,6 +301,11 @@ class CommonBase extends BaseImpl<Bean1, Integer> {}
 class BaseController<T, K> {
     @Autowired
     protected Base<T, K> service;
+
+    @Autowired
+    public void setService(Base<T, K> service) {
+        Assert.assertSame(this.service, service);
+    }
 }
 
 class IntBaseController<T> extends BaseController<T, Integer> {}
