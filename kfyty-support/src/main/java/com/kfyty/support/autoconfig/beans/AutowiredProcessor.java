@@ -62,7 +62,7 @@ public class AutowiredProcessor {
         if(targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
             if(log.isDebugEnabled()) {
-                log.debug("autowired bean: [{}] -> [{}] !", targetBean, bean);
+                log.debug("autowired bean: {} -> {} !", AopUtil.isJdkProxy(targetBean) ? targetBean.getClass() : targetBean, bean);
             }
         }
     }
@@ -80,7 +80,7 @@ public class AutowiredProcessor {
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if(log.isDebugEnabled()) {
-            log.debug("autowired bean: [{}] -> [{}] !", parameters, bean);
+            log.debug("autowired bean: {} -> {} !", parameters, bean);
         }
     }
 

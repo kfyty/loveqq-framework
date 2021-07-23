@@ -14,6 +14,7 @@
         <module>kfyty-database</module>
         <module>kfyty-mvc</module>
         <module>kfyty-support</module>
+        <module>kfyty-boot-starter-uid-generator</module>
     </modules>
 
     <properties>

@@ -30,12 +30,12 @@ public abstract class JdbcUtil {
             resultSet = preparedStatement.executeQuery();
             Object obj = ResultSetUtil.processObject(resultSet, returnType);
             if(log.isDebugEnabled()) {
-                log.debug("               <==      Total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
+                log.debug("<==         total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
             }
             return obj;
         } catch(Exception e) {
             transaction.rollback();
-            log.error("failed execute sql statement:[{}] --> parameters:{}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
             throw new SQLException(e);
         } finally {
             CommonUtil.close(resultSet);
@@ -53,10 +53,14 @@ public abstract class JdbcUtil {
         try {
             preparedStatement = getPreparedStatement(connection, sql, params);
             preparedStatement.execute();
-            return preparedStatement.getUpdateCount();
+            int updateCount = preparedStatement.getUpdateCount();
+            if(log.isDebugEnabled()) {
+                log.debug("<== affected rows: {}", updateCount);
+            }
+            return updateCount;
         } catch(SQLException e) {
             transaction.rollback();
-            log.error("failed execute sql statement:[{}] --> parameters:{}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
             throw e;
         } finally {
             CommonUtil.close(preparedStatement);
@@ -78,8 +82,8 @@ public abstract class JdbcUtil {
             ResultSetUtil.TYPE_HANDLER.get(parameter.getParamType()).setParameter(preparedStatement, i + 1, parameter.getValue());
         }
         if(log.isDebugEnabled()) {
-            log.debug("==>  Preparing: {}", sql);
-            log.debug("==> Parameters: {}", params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.debug("==>     preparing: {}", sql);
+            log.debug("==>    parameters: {}", params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
         }
         return preparedStatement;
     }

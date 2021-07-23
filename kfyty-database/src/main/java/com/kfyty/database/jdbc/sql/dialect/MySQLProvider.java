@@ -6,7 +6,6 @@ import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import javafx.util.Pair;
 
@@ -26,7 +25,7 @@ public class MySQLProvider extends ProviderAdapter {
     public String insertBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
         Pair<String, String> fieldPair = this.buildInsertField(entityClass.getValue());
-        String baseSQL = String.format("insert into %s (%s) values ", CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), fieldPair.getKey());
+        String baseSQL = String.format("insert into %s (%s) values ", this.getTableName(entityClass.getValue()), fieldPair.getKey());
         ForEach forEach = ForEachUtil.create(Provider.PROVIDER_PARAM_ENTITY, "(", "), (", ")", e -> fieldPair.getValue().replace(Provider.PROVIDER_PARAM_ENTITY, e.item()));
         ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {forEach});
         return baseSQL;

@@ -142,7 +142,7 @@ public class SqlSession implements InvocationHandler {
         }
         String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
         if (CommonUtil.empty(sql)) {
-            throw new NullPointerException("sql statement is empty !");
+            throw new NullPointerException("SQL statement is empty !");
         }
         return new Pair<>(sql, annotation);
     }
@@ -326,8 +326,8 @@ public class SqlSession implements InvocationHandler {
                     value = ReflectUtil.parseValue(nested, root);
                     paramType = ReflectUtil.parseFieldType(nested, root.getClass());
                 }
-                if (value == null) {
-                    log.warn("null parameter found:[{}] !", param);
+                if (value == null && log.isDebugEnabled()) {
+                    log.debug("discovery null parameter: [{}] !", param);
                 }
                 if ("#".equals(next.getKey())) {
                     args.add(new MethodParameter(paramType, value));

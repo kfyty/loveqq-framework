@@ -5,6 +5,7 @@ import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.TableId;
+import com.kfyty.database.jdbc.annotation.TableName;
 import com.kfyty.database.jdbc.annotation.Transient;
 import com.kfyty.database.jdbc.sql.dialect.MySQLProvider;
 import com.kfyty.database.util.ForEachUtil;
@@ -73,13 +74,13 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
     public String selectByPk(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params) {
         String sql = "select * from %s where %s = #{%s}";
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), entityClass.getKey(), PROVIDER_PARAM_PK);
+        return String.format(sql, this.getTableName(entityClass.getValue()), entityClass.getKey(), PROVIDER_PARAM_PK);
     }
 
     @Override
     public String selectByPks(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        String baseSQL = String.format("select * from %s where %s in ", CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), entityClass.getKey());
+        String baseSQL = String.format("select * from %s where %s in ", this.getTableName(entityClass.getValue()), entityClass.getKey());
         ForEach forEach = ForEachUtil.create(Provider.PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
         ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {forEach});
         return baseSQL;
@@ -89,7 +90,7 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
     public String selectAll(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params) {
         String sql = "select * from %s";
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()));
+        return String.format(sql, this.getTableName(entityClass.getValue()));
     }
 
     @Override
@@ -106,13 +107,13 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
     public String deleteByPk(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         String sql = "delete from %s where %s = #{%s}";
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), entityClass.getKey(), PROVIDER_PARAM_PK);
+        return String.format(sql, this.getTableName(entityClass.getValue()), entityClass.getKey(), PROVIDER_PARAM_PK);
     }
 
     @Override
     public String deleteByPks(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        String baseSQL = String.format("delete from %s where %s in ", CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), entityClass.getKey());
+        String baseSQL = String.format("delete from %s where %s in ", this.getTableName(entityClass.getValue()), entityClass.getKey());
         ForEach forEach = ForEachUtil.create(Provider.PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
         ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[] {forEach});
         return baseSQL;
@@ -122,7 +123,7 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
     public String deleteAll(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         String sql = "delete from %s";
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        return String.format(sql, CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()));
+        return String.format(sql, this.getTableName(entityClass.getValue()));
     }
 
     @Override
@@ -139,6 +140,11 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
         }
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1, BASE_MAPPER_GENERIC_FILTER);
         return MAPPER_ENTITY_CLASS_CACHE.computeIfAbsent(mapperClass, e -> new Pair<>(this.getPkField(entityClass), entityClass));
+    }
+
+    protected String getTableName(Class<?> entityClass) {
+        TableName annotation = AnnotationUtil.findAnnotation(entityClass, TableName.class);
+        return annotation != null ? annotation.value() : CommonUtil.camelCase2Underline(entityClass.getSimpleName());
     }
 
     protected String getPkField(Class<?> entityClass) {
@@ -169,12 +175,12 @@ public class ProviderAdapter implements InsertProvider, SelectProvider, UpdatePr
     public String buildInsertSQL(Class<?> mapperClass) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
         Pair<String, String> fieldPair = this.buildInsertField(entityClass.getValue());
-        return String.format("insert into %s (%s) values (%s)", CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()), fieldPair.getKey(), fieldPair.getValue());
+        return String.format("insert into %s (%s) values (%s)", this.getTableName(entityClass.getValue()), fieldPair.getKey(), fieldPair.getValue());
     }
 
     public String buildUpdateSQL(Class<?> mapperClass) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        StringBuilder sql = new StringBuilder("update " + CommonUtil.camelCase2Underline(entityClass.getValue().getSimpleName()) + " set ");
+        StringBuilder sql = new StringBuilder("update " + this.getTableName(entityClass.getValue()) + " set ");
         for (Field field : ReflectUtil.getFieldMap(entityClass.getValue()).values()) {
             String name = field.getName();
             if (AnnotationUtil.hasAnnotation(field, Transient.class)) {
