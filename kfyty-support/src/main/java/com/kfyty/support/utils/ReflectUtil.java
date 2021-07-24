@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -46,22 +46,22 @@ public abstract class ReflectUtil {
     /**
      * 属性缓存
      */
-    private static final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
+    private static final Map<String, Field> fieldCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 方法缓存
      */
-    private static final Map<String, Method> methodCache = new ConcurrentHashMap<>();
+    private static final Map<String, Method> methodCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 所有属性缓存
      */
-    private static final Map<Class<?>, Map<String, Field>> fieldMapCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Map<String, Field>> fieldMapCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 所有方法缓存
      */
-    private static final Map<Class<?>, List<Method>> methodsCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, List<Method>> methodsCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static Class<?> load(String className) {
         return load(className, true);
@@ -79,7 +79,7 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static boolean ifPresent(String className) {
+    public static boolean isPresent(String className) {
         try {
             Class.forName(className);
             return true;

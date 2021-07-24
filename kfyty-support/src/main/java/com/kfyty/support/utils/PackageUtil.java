@@ -7,10 +7,13 @@ import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.jar.JarEntry;
 
 /**
@@ -22,6 +25,8 @@ import java.util.jar.JarEntry;
  */
 @Slf4j
 public abstract class PackageUtil {
+    private static final Map<String, Set<String>> scanPackageCache = Collections.synchronizedMap(new WeakHashMap<>(4));
+
     public static Set<String> scanClassName(Class<?> mainClass) throws IOException {
         return scanClassName(mainClass.getPackage().getName());
     }
@@ -31,6 +36,9 @@ public abstract class PackageUtil {
     }
 
     public static Set<String> scanClassName(String basePackage) throws IOException {
+        if (scanPackageCache.containsKey(basePackage)) {
+            return scanPackageCache.get(basePackage);
+        }
         Set<String> classes = new HashSet<>();
         Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(basePackage.replace(".", "/"));
         while(urls.hasMoreElements()) {
@@ -41,7 +49,7 @@ public abstract class PackageUtil {
             }
             classes.addAll(scanClassNameByFile(url));
         }
-        return classes;
+        return scanPackageCache.computeIfAbsent(basePackage, k -> classes);
     }
 
     public static Set<Class<?>> scanClass(String basePackage) throws IOException {

@@ -1,10 +1,10 @@
 package com.kfyty.boot;
 
 import com.kfyty.boot.context.factory.ApplicationContextFactory;
-import com.kfyty.support.annotation.AnnotationWrapper;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.CommandLineRunner;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
@@ -14,6 +14,7 @@ import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.PackageUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.wrapper.AnnotationWrapper;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -90,12 +91,7 @@ public class K {
     @SneakyThrows
     private void prepareScanBean(Set<String> basePackages) {
         for (String basePackage : basePackages) {
-            Set<Class<?>> classes = PackageUtil.scanClass(basePackage);
-            for (Class<?> clazz : classes) {
-                if(!AnnotationUtil.isAnnotation(clazz)) {
-                    this.processScanBean(clazz);
-                }
-            }
+            PackageUtil.scanClass(basePackage).forEach(this::processScanBean);
         }
     }
 
@@ -109,15 +105,17 @@ public class K {
     }
 
     private void processScanBean(Class<?> clazz) {
-        if(this.scanClasses.contains(clazz)) {
+        if(this.scanClasses.contains(clazz) || AnnotationUtil.isAnnotation(clazz)) {
             return;
         }
         this.scanClasses.add(clazz);
-        ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
-        if (componentScan != null) {
-            this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
+        if (AnnotationUtil.hasAnnotationElement(clazz, Component.class)) {
+            ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
+            if (componentScan != null) {
+                this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
+            }
+            this.processAutoConfiguration(clazz, null);
         }
-        this.processAutoConfiguration(clazz, null);
     }
 
     private void processAutoConfiguration(Class<?> clazz, AnnotationWrapper<?> wrapper) {

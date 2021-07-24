@@ -2,6 +2,7 @@ package com.kfyty.support.utils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -304,5 +305,44 @@ public abstract class AnnotationUtil {
             return annotation;
         }
         return findAnnotation(ReflectUtil.getSuperParameters(parameter), annotationClass);
+    }
+
+    public static <T extends Annotation> T findAnnotationElement(Object source, Class<T> annotationClass) {
+        return findAnnotationElement(source.getClass(), annotationClass);
+    }
+
+    public static <T extends Annotation> T findAnnotationElement(Class<?> source, Class<T> annotationClass) {
+        if (source == null) {
+            return null;
+        }
+        T annotation = findAnnotation(source, annotationClass);
+        if (annotation != null || isMetaAnnotation(source)) {
+            return annotation;
+        }
+        for (Annotation nestedAnnotation : findAnnotations(source)) {
+            annotation = findAnnotationElement(nestedAnnotation.annotationType(), annotationClass);
+            if (annotation != null) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    public static <T extends Annotation> T findAnnotationElement(Executable executable, Class<T> annotationClass) {
+        if (executable == null) {
+            return null;
+        }
+        T annotation = executable instanceof Method ? findAnnotation((Method) executable, annotationClass) : findAnnotation((Constructor<?>) executable, annotationClass);
+        if (annotation != null) {
+            return annotation;
+        }
+        Annotation[] nestedAnnotations = executable instanceof Method ? findAnnotations((Method) executable) : findAnnotations((Constructor<?>) executable);
+        for (Annotation nestedAnnotation : nestedAnnotations) {
+            annotation = findAnnotationElement(nestedAnnotation.annotationType(), annotationClass);
+            if (annotation != null) {
+                return annotation;
+            }
+        }
+        return null;
     }
 }

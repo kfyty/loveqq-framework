@@ -14,6 +14,7 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +60,7 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
         GenerateSources generateSources = new GenerateSources(this.configurationSupport);
         EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);
         if(annotation.loadTemplate()) {
-            List<? extends GeneratorTemplate> templates = annotation.templateEngine().newInstance().loadTemplates(annotation.templatePrefix());
+            List<? extends GeneratorTemplate> templates = ReflectUtil.newInstance(annotation.templateEngine()).loadTemplates(annotation.templatePrefix());
             generateSources.refreshTemplate(templates);
             if(CommonUtil.empty(templates)) {
                 log.warn("no template found for prefix: '" + annotation.templatePrefix() + "' !");

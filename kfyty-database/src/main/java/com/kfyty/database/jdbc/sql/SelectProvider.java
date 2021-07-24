@@ -13,7 +13,7 @@ import java.util.Map;
  * @date 2021/6/2 16:30
  * @email kfyty725@hotmail.com
  */
-public interface SelectProvider extends Provider {
+public interface SelectProvider {
 
     String selectByPk(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params);
 

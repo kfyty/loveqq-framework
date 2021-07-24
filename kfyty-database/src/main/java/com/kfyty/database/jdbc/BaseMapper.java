@@ -10,8 +10,8 @@ import com.kfyty.database.jdbc.sql.UpdateProvider;
 
 import java.util.List;
 
-import static com.kfyty.database.jdbc.sql.Provider.PROVIDER_PARAM_ENTITY;
-import static com.kfyty.database.jdbc.sql.Provider.PROVIDER_PARAM_PK;
+import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARAM_ENTITY;
+import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARAM_PK;
 
 /**
  * 描述:

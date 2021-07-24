@@ -4,12 +4,13 @@ import com.kfyty.support.exception.SupportException;
 import com.kfyty.support.utils.CommonUtil;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 
 /**
  * 描述: spi 工厂加载机制
@@ -21,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class FactoriesLoader {
     public static final String DEFAULT_FACTORIES_RESOURCE_LOCATION = "META-INF/k.factories";
 
-    private static final Map<String, Set<Properties>> loadedCache = new ConcurrentHashMap<>();
+    private static final Map<String, Set<Properties>> loadedCache = Collections.synchronizedMap(new WeakHashMap<>(4));
 
-    private static final Map<String, Set<String>> factoriesCache = new ConcurrentHashMap<>();
+    private static final Map<String, Set<String>> factoriesCache = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     public static Set<String> loadFactories(Class<?> clazz) {
         return loadFactories(clazz.getName());

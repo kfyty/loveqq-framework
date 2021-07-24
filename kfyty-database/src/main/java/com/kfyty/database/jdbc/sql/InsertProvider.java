@@ -13,7 +13,7 @@ import java.util.Map;
  * @date 2021/6/2 16:30
  * @email kfyty725@hotmail.com
  */
-public interface InsertProvider extends Provider {
+public interface InsertProvider {
 
     String insert(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
 

@@ -22,9 +22,6 @@ public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Autowired
-    private ServerEndpointExporter serverEndpointExporter;
-
     @Bean
     public ServerEndpointExporter serverEndpointExporter(ServletContext servletContext) {
         return new ServerEndpointExporter(servletContext);
@@ -32,9 +29,10 @@ public class WebSocketAutoConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        for (Object value : applicationContext.getBeanWithAnnotation(ServerEndpoint.class).values()) {
-            this.serverEndpointExporter.addEndpointClass(value.getClass());
+        ServerEndpointExporter serverEndpointExporter = this.applicationContext.getBean(ServerEndpointExporter.class);
+        for (Object value : this.applicationContext.getBeanWithAnnotation(ServerEndpoint.class).values()) {
+            serverEndpointExporter.addEndpointClass(value.getClass());
         }
-        this.serverEndpointExporter.registerEndpoints();
+        serverEndpointExporter.registerEndpoints();
     }
 }

@@ -107,6 +107,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
+    public void removeBeanDefinition(String beanName) {
+        this.beanDefinitions.remove(beanName);
+    }
+
+    @Override
     public Map<String, BeanDefinition> getBeanDefinitions() {
         return this.beanDefinitions;
     }

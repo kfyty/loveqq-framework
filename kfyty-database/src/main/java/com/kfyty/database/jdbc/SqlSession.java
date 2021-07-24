@@ -4,7 +4,6 @@ import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
-import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
@@ -30,10 +29,11 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,9 +46,15 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SqlSession implements InvocationHandler {
+    /**
+     * #{}、${} 正则匹配
+     */
     private static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
 
-    private static final Map<Annotation, byte[]> SERIALIZE_CACHE = new ConcurrentHashMap<>(4);
+    /**
+     * 序列化的注解缓存
+     */
+    private static final Map<Annotation, byte[]> SERIALIZE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     /**
      * mapper class
@@ -135,8 +141,8 @@ public class SqlSession implements InvocationHandler {
      * @return SQL
      */
     private Pair<String, Annotation> getSQL(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        Class<? extends Provider> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
-        if (!provider.equals(Provider.class)) {
+        Class<?> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
+        if (!provider.equals(void.class)) {
             annotation = SerializableUtil.clone(annotation, SERIALIZE_CACHE);
             return new Pair<>(this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation, params), annotation);
         }

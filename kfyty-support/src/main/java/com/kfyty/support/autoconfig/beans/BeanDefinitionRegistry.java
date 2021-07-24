@@ -15,6 +15,8 @@ public interface BeanDefinitionRegistry {
 
     boolean containsBeanDefinition(String beanName);
 
+    void removeBeanDefinition(String beanName);
+
     Map<String, BeanDefinition> getBeanDefinitions();
 
     Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);

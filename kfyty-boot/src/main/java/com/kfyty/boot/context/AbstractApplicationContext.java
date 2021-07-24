@@ -1,7 +1,8 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
-import com.kfyty.support.annotation.AnnotationWrapper;
+import com.kfyty.support.autoconfig.beans.BeanFactory;
+import com.kfyty.support.wrapper.AnnotationWrapper;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
@@ -45,6 +46,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
+    private static final Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
+            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
+            .thenComparing(BeanUtil::getBeanOrder);
+
     protected String[] commanderArgs;
     protected Class<?> primarySource;
     protected Set<Class<?>> scanClasses;
@@ -68,6 +73,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     protected void registerDefaultBean() {
         this.registerBean(ApplicationContext.class, this);
+        this.registerBean(BeanFactory.class, this);
     }
 
     @Override
@@ -193,19 +199,19 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         this.getBeanDefinitions().values()
                 .stream()
                 .filter(e -> BeanPostProcessor.class.isAssignableFrom(e.getBeanType()))
-                .sorted(Comparator.comparing(e -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(((BeanDefinition) e).getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE).thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e)))
+                .sorted(BEAN_DEFINITION_COMPARATOR)
                 .forEach(e -> this.registerBeanPostProcessors((BeanPostProcessor) this.registerBean(e)));
     }
 
     protected void sortBeanDefinition() {
-        Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions();
-        Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
-                .stream()
-                .sorted(Comparator.comparing(e -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(((BeanDefinition) e).getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE).thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e)))
-                .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
-                    throw new IllegalStateException("duplicate key " + k2);
-                }, LinkedHashMap::new));
         synchronized (this.getBeanDefinitions()) {
+            Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions();
+            Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
+                    .stream()
+                    .sorted(BEAN_DEFINITION_COMPARATOR)
+                    .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
+                        throw new IllegalStateException("duplicate key " + k2);
+                    }, LinkedHashMap::new));
             beanDefinitions.clear();
             beanDefinitions.putAll(sortBeanDefinition);
         }

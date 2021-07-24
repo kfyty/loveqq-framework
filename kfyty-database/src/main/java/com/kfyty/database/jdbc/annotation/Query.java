@@ -1,7 +1,6 @@
 package com.kfyty.database.jdbc.annotation;
 
 import com.kfyty.database.jdbc.annotation.container.Queries;
-import com.kfyty.database.jdbc.sql.Provider;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -22,7 +21,7 @@ public @interface Query {
 
     SubQuery[] subQuery() default {};
 
-    Class<? extends Provider> provider() default Provider.class;
+    Class<?> provider() default void.class;
 
     String method() default "";
 }
