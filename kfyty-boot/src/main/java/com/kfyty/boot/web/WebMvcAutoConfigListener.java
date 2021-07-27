@@ -2,11 +2,12 @@ package com.kfyty.boot.web;
 
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import lombok.SneakyThrows;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -18,15 +19,18 @@ import javax.servlet.ServletContextListener;
  * @date 2021/5/22 14:52
  * @email kfyty725@hotmail.com
  */
-@ComponentScan
+@Component
 @EnableAutoConfiguration
+@ComponentScan(excludeFilter = @ComponentFilter({
+        "com.kfyty.mvc.autoconfig.TomcatAutoConfig",
+        "com.kfyty.mvc.autoconfig.WebSocketAutoConfig"
+}))
 public class WebMvcAutoConfigListener implements ServletContextListener {
     private static final String BASE_PACKAGE_PARAM_NAME = "basePackage";
 
     private ApplicationContext applicationContext;
 
     @Override
-    @SneakyThrows
     public void contextInitialized(ServletContextEvent sce) {
         if(this.applicationContext == null) {
             synchronized (this) {

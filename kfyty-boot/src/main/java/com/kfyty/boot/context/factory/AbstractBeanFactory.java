@@ -1,5 +1,6 @@
 package com.kfyty.boot.context.factory;
 
+import com.kfyty.boot.beans.factory.ScopeProxyFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanFactoryAware;
@@ -7,6 +8,7 @@ import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
@@ -27,9 +29,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+
+import static com.kfyty.boot.beans.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
 
 /**
  * 描述: bean 工厂基础实现
@@ -59,6 +64,12 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      */
     protected final List<BeanPostProcessor> beanPostProcessors;
 
+
+    /**
+     * 同一类型的 bean 定义缓存
+     */
+    protected final Map<Class<?>, Map<String, BeanDefinition>> beanDefinitionsForType;
+
     /**
      * 应用上下文
      */
@@ -69,6 +80,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.beanInstances = new ConcurrentHashMap<>();
         this.beanReference = new ConcurrentHashMap<>();
         this.beanPostProcessors = new ArrayList<>();
+        this.beanDefinitionsForType = Collections.synchronizedMap(new WeakHashMap<>());
     }
 
     public void registerBeanPostProcessors(BeanPostProcessor beanPostProcessor) {
@@ -89,13 +101,21 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if(this.containsBeanDefinition(beanDefinition.getBeanName())) {
             throw new BeansException("conflicting bean definition: " + beanDefinition.getBeanName());
         }
+        if (!beanDefinition.isSingleton()) {
+            Scope scope = GenericBeanDefinition.getScope(beanDefinition);
+            if (scope != null && scope.scopeProxy()) {
+                beanDefinition.setAutowireCandidate(false);
+                this.beanDefinitions.putIfAbsent(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition);
+                beanDefinition = GenericBeanDefinition.from(ScopeProxyFactoryBean.class).addConstructorArgs(BeanDefinition.class, beanDefinition);
+            }
+        }
         this.beanDefinitions.putIfAbsent(beanDefinition.getBeanName(), beanDefinition);
-        if(FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
-            this.registerBeanDefinition(GenericBeanDefinition.from(beanDefinition));
+        if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
+            this.registerBeanDefinition(GenericBeanDefinition.fromFactory(beanDefinition));
         }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
-            if(beanAnnotation != null) {
+            if (beanAnnotation != null) {
                 this.registerBeanDefinition(GenericBeanDefinition.from(beanDefinition, method, beanAnnotation));
             }
         }
@@ -123,12 +143,12 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return this.getBeanDefinitions().entrySet()
+        return this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.getBeanDefinitions().entrySet()
                 .parallelStream()
-                .filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType()))
+                .filter(e -> e.getValue().isAutowireCandidate() && beanType.isAssignableFrom(e.getValue().getBeanType()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
                     throw new IllegalStateException("duplicate key " + k2);
-                }, LinkedHashMap::new));
+                }, LinkedHashMap::new)));
     }
 
     @Override

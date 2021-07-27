@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
     private static final Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
             .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
-            .thenComparing(BeanUtil::getBeanOrder);
+            .thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e));
 
     protected String[] commanderArgs;
     protected Class<?> primarySource;

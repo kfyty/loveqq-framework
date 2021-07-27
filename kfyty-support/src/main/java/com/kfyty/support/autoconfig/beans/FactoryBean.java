@@ -1,5 +1,7 @@
 package com.kfyty.support.autoconfig.beans;
 
+import com.kfyty.support.utils.BeanUtil;
+
 /**
  * 描述: factory bean
  *
@@ -8,6 +10,10 @@ package com.kfyty.support.autoconfig.beans;
  * @email kfyty725@hotmail.com
  */
 public interface FactoryBean<T> {
+
+    default String getBeanName() {
+        return BeanUtil.convert2BeanName(this.getBeanType());
+    }
 
     Class<?> getBeanType();
 

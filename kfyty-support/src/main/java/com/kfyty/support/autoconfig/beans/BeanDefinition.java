@@ -38,6 +38,16 @@ public interface BeanDefinition {
     boolean isSingleton();
 
     /**
+     * 是否是自动装配的候选者
+     */
+    boolean isAutowireCandidate();
+
+    /**
+     * 设置是否是自动装配的候选者，只对针对类型装配有效
+     */
+    void setAutowireCandidate(boolean autowireCandidate);
+
+    /**
      * 添加默认的构造器参数，参数索引从 0 开始
      * 其他的参数将从 bean 工厂获取
      */

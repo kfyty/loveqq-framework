@@ -19,8 +19,10 @@ import java.lang.reflect.Method;
  * @date 2021/6/13 17:30
  * @email kfyty725@hotmail.com
  */
-@Order(0)
+@Order(BeanMethodInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
 public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
+    public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER + 1;
+
     private final ApplicationContext context;
 
     public BeanMethodInterceptorProxy(ApplicationContext context) {

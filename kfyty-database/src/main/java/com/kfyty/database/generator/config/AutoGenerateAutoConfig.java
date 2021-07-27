@@ -46,7 +46,7 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
         return scanClasses
                 .stream()
                 .filter(AbstractDatabaseMapper.class::isAssignableFrom)
-                .map(e -> GenericBeanDefinition.from(e, DatabaseMapperFactory.class).addConstructorArgs(Class.class, e))
+                .map(e -> GenericBeanDefinition.from(DatabaseMapperFactory.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }
 

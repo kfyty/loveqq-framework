@@ -2,7 +2,6 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +32,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
-        super(BeanUtil.convert2BeanName(temp.getBeanType()), temp.getBeanType(), temp.isSingleton());
+        super(temp.getBeanName(), temp.getBeanType(), temp.isSingleton());
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 

@@ -24,7 +24,7 @@ public class MapperAutoConfig implements ImportBeanDefine {
         return scanClasses
                 .stream()
                 .filter(e -> AnnotationUtil.hasAnnotation(e, Mapper.class))
-                .map(e -> GenericBeanDefinition.from(e, MapperInterfaceFactory.class).addConstructorArgs(Class.class, e))
+                .map(e -> GenericBeanDefinition.from(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }
 }

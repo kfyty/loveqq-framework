@@ -2,6 +2,7 @@ package com.kfyty.component;
 
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.CommandLineRunner;
+import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
@@ -13,6 +14,7 @@ import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import lombok.Getter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,20 +54,46 @@ public class ComponentTest implements CommandLineRunner {
         Assert.assertNotNull(a);
         Assert.assertNull(b);
         Assert.assertNotNull(c);
-        Assert.assertNotEquals(componentT1, componentT2);
+        Assert.assertNotSame(componentT1, componentT2);
     }
 }
 
 class ComponentT {}
+class ComponentS {
+    @Getter
+    private final long time;
+
+    public ComponentS() {
+        this.time = System.currentTimeMillis();
+    }
+}
 
 @Component
 @ComponentScan(excludeFilter = @ComponentFilter(classes = B.class))
-abstract class A implements CommandLineRunner {
+abstract class A implements InitializingBean, CommandLineRunner {
+    @Autowired
+    private ComponentS componentS1;
+
+    @Autowired
+    private ComponentS componentS2;
+
+    @Autowired
+    private List<ComponentS> componentS;
+
     @Lookup
     public abstract C c();
 
     @Lookup
     public abstract List<C> cList();
+
+    @Override
+    public void afterPropertiesSet() {
+        Assert.assertNotNull(this.componentS1);
+        Assert.assertNotNull(this.componentS2);
+        Assert.assertSame(this.componentS1, this.componentS2);
+        Assert.assertNotEquals(this.componentS1.getTime(), this.componentS2.getTime());
+        Assert.assertEquals(1, this.componentS.size());
+    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -91,6 +119,12 @@ class C {
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     public ComponentT componentT() {
         return new ComponentT();
+    }
+
+    @Bean
+    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE, scopeProxy = true)
+    public ComponentS componentScope() {
+        return new ComponentS();
     }
 }
 

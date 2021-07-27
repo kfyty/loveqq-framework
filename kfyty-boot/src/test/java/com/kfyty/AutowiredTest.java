@@ -1,6 +1,7 @@
 package com.kfyty;
 
 import com.kfyty.boot.K;
+import com.kfyty.boot.web.WebMvcAutoConfigListener;
 import com.kfyty.mvc.annotation.GetMapping;
 import com.kfyty.mvc.annotation.PostMapping;
 import com.kfyty.mvc.annotation.PutMapping;
@@ -12,6 +13,8 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.ComponentFilter;
+import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
@@ -48,6 +51,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @BootApplication(proxyTargetClass = false)
+@ComponentScan(excludeFilter = @ComponentFilter(classes = WebMvcAutoConfigListener.class))
 public class AutowiredTest {
     @Autowired
     private AutowiredTest  autowiredTest;
@@ -74,7 +78,7 @@ public class AutowiredTest {
         Assert.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
         Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
         Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
-        Assert.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assert.assertEquals(3, AnnotationUtil.findAnnotations(this.autowiredTest).length);
         Assert.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
     }
 }
@@ -181,7 +185,7 @@ class FactoryImport implements ImportBeanDefine {
         return scanClasses
                 .stream()
                 .filter(e -> !e.equals(Factory.class) && Factory.class.isAssignableFrom(e))
-                .map(e -> GenericBeanDefinition.from(e, FactoryProxy.class).addConstructorArgs(Class.class, e))
+                .map(e -> GenericBeanDefinition.from(FactoryProxy.class).addConstructorArgs(Class.class, e))
                 .collect(Collectors.toSet());
     }
 }

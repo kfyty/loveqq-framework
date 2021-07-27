@@ -4,6 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 描述: 简单的通用 bean 定义
@@ -33,6 +35,11 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 public class GenericBeanDefinition implements BeanDefinition {
+    /**
+     * 工厂 bean 数量索引
+     */
+    private static final AtomicInteger FACTORY_BEAN_INDEX = new AtomicInteger(0);
+
     /**
      * 该 bean 注册的名称
      */
@@ -48,10 +55,24 @@ public class GenericBeanDefinition implements BeanDefinition {
      */
     protected final boolean isSingleton;
 
+    /**
+     * 是否是自动装配的候选者
+     */
+    protected boolean isAutowireCandidate;
+
+    /**
+     * 构造器
+     */
     protected Constructor<?> constructor;
 
+    /**
+     * 默认构造器参数
+     */
     protected Map<Class<?>, Object> defaultConstructorArgs;
 
+    /**
+     * 自动注入处理器，所有实例共享，以处理循环依赖
+     */
     protected static AutowiredProcessor autowiredProcessor = null;
 
     public GenericBeanDefinition(Class<?> beanType) {
@@ -66,6 +87,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         this.beanName = beanName;
         this.beanType = beanType;
         this.isSingleton = isSingleton;
+        this.isAutowireCandidate = true;
     }
 
     @Override
@@ -81,6 +103,16 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public boolean isSingleton() {
         return this.isSingleton;
+    }
+
+    @Override
+    public boolean isAutowireCandidate() {
+        return this.isAutowireCandidate;
+    }
+
+    @Override
+    public void setAutowireCandidate(boolean autowireCandidate) {
+        this.isAutowireCandidate = autowireCandidate;
     }
 
     @Override
@@ -149,10 +181,15 @@ public class GenericBeanDefinition implements BeanDefinition {
         return constructorArgs;
     }
 
+    /***************************************** 静态方法 *****************************************/
+
     /**
      * 从 Class 生成一个 bean 定义
      */
     public static BeanDefinition from(Class<?> beanType) {
+        if (FactoryBean.class.isAssignableFrom(beanType)) {
+            return from(beanType.getName() + "@" + FACTORY_BEAN_INDEX.getAndIncrement(), beanType, BeanUtil.isSingleton(beanType));
+        }
         return from(findBeanName(beanType), beanType, BeanUtil.isSingleton(beanType));
     }
 
@@ -161,15 +198,6 @@ public class GenericBeanDefinition implements BeanDefinition {
      */
     public static BeanDefinition from(String beanName, Class<?> beanType, boolean isSingleton) {
         return new GenericBeanDefinition(beanName, beanType, isSingleton);
-    }
-
-    /**
-     * 从 Class 生成一个 FactoryBean 定义
-     * 该 bean 类型为 FactoryBean，该 bean 的 name 由 targetBeanTypeBeanName$factoryBeanTypeBeanName 组成
-     */
-    public static BeanDefinition from(Class<?> targetBeanType, Class<?> factoryBeanType) {
-        String beanName = CommonUtil.format("{}${}", BeanUtil.convert2BeanName(targetBeanType), BeanUtil.convert2BeanName(factoryBeanType));
-        return from(beanName, factoryBeanType, BeanUtil.isSingleton(factoryBeanType));
     }
 
     /**
@@ -189,8 +217,18 @@ public class GenericBeanDefinition implements BeanDefinition {
     /**
      * 从 FactoryBean 的 bean 定义生成一个 bean 定义
      */
-    public static BeanDefinition from(BeanDefinition factoryBeanDefinition) {
+    public static BeanDefinition fromFactory(BeanDefinition factoryBeanDefinition) {
         return new FactoryBeanDefinition(factoryBeanDefinition);
+    }
+
+    /**
+     * 获取 bean 定义的作用域
+     */
+    public static Scope getScope(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            return AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Scope.class);
+        }
+        return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Scope.class);
     }
 
     /**
