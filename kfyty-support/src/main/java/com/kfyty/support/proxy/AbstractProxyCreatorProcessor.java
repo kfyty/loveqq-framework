@@ -3,8 +3,10 @@ package com.kfyty.support.proxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
+import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -26,16 +28,18 @@ public abstract class AbstractProxyCreatorProcessor implements ApplicationContex
     }
 
     public Object createProxy(Object bean, String beanName, InterceptorChainPoint interceptorChainPoint) {
-        if(AopUtil.isProxy(bean)) {
-            AopUtil.getInterceptorChain(bean).addInterceptorPoint(interceptorChainPoint);
+        if(AopUtil.addProxyInterceptorPoint(bean, interceptorChainPoint)) {
             return bean;
         }
         BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
         Object proxy = DynamicProxyFactory.create(bean, this.applicationContext).createProxy(bean, beanDefinition);
-        AopUtil.getInterceptorChain(proxy).addInterceptorPoint(interceptorChainPoint);
+        AopUtil.addProxyInterceptorPoint(proxy, interceptorChainPoint);
+        if (AnnotationUtil.hasAnnotationElement(bean, Configuration.class)) {
+            BeanUtil.copyBean(bean, proxy);
+        }
         if(log.isDebugEnabled()) {
             log.debug("proxy target bean: {} -> {}", bean, proxy);
         }
-        return AopUtil.isJdkProxy(proxy) ? proxy : BeanUtil.copyBean(bean, proxy);
+        return proxy;
     }
 }

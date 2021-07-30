@@ -10,12 +10,13 @@ import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AopUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 描述: 事件发布器默认实现
@@ -31,17 +32,17 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     /**
      * 注册的事件监听器
      */
-    private List<ApplicationListener> applicationListeners;
-
-    /**
-     * 上下文是否刷新完成
-     */
-    private boolean isRefreshed;
+    private final List<ApplicationListener> applicationListeners = new ArrayList<>();
 
     /**
      * 过早发布的事件
      */
-    private List<ApplicationEvent<?>> earlyPublishedEvent;
+    private final List<ApplicationEvent<?>> earlyPublishedEvent = new LinkedList<>();
+
+    /**
+     * 上下文是否刷新完成
+     */
+    private boolean isRefreshed = false;
 
     @Lazy
     @Autowired(required = false)
@@ -52,7 +53,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         this.isRefreshed = true;
-        if(this.earlyPublishedEvent != null) {
+        if(CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();
         }
@@ -64,12 +65,11 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     @Override
     public void publishEvent(ApplicationEvent<?> event) {
         if(!isRefreshed) {
-            this.earlyPublishedEvent = Optional.ofNullable(this.earlyPublishedEvent).orElse(new ArrayList<>(4));
             this.earlyPublishedEvent.add(event);
             return;
         }
         for (ApplicationListener applicationListener : this.applicationListeners) {
-            Class<?> listenerClass = AopUtil.getSourceIfNecessary(applicationListener).getClass();
+            Class<?> listenerClass = AopUtil.getSourceClass(applicationListener);
             Class<?> listenerType = ReflectUtil.getSuperGeneric(listenerClass, type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class));
             if(applicationListener instanceof EventListenerAnnotationListener) {
                 listenerType = ((EventListenerAnnotationListener) applicationListener).getListenerType();
@@ -82,9 +82,6 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
 
     @Override
     public void registerEventListener(ApplicationListener<?> applicationListener) {
-        if(this.applicationListeners == null) {
-            this.applicationListeners = new ArrayList<>(4);
-        }
         this.applicationListeners.add(applicationListener);
     }
 }

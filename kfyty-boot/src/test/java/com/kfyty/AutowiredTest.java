@@ -127,7 +127,7 @@ class Bean5 {}
 interface Inter {}
 
 abstract class InterImpl<T> implements Inter {
-    @Resource
+    @Autowired
     protected T t;
 
     @Resource
@@ -247,8 +247,15 @@ class HelloInterImpl implements HelloInter, InitializingBean {
     }
 }
 
+interface ITestEvent {
+    /**
+     * jdk 代理下，事件监听器必须存在接口，否则请使用 cglib 代理
+     */
+    void onTestEvent(TestEvent testEvent);
+}
+
 @Component
-class TestEventListener implements ApplicationListener<TestEvent>, InitializingBean {
+class TestEventListener implements ITestEvent, ApplicationListener<TestEvent>, InitializingBean {
     @Autowired
     private ApplicationContext context;
 
@@ -257,6 +264,7 @@ class TestEventListener implements ApplicationListener<TestEvent>, InitializingB
         Assert.assertEquals(testEvent.getSource(), "event");
     }
 
+    @Override
     @EventListener(TestEvent.class)
     public void onTestEvent(TestEvent testEvent) {
         Assert.assertEquals(testEvent.getSource(), "event");

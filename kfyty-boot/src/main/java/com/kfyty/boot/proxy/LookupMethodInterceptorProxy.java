@@ -6,7 +6,7 @@ import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.generic.ActualGeneric;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
  * @date 2021/7/11 12:30
  * @email kfyty725@hotmail.com
  */
-@Order(0)
+@Order(BeanMethodInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
 public class LookupMethodInterceptorProxy implements InterceptorChainPoint {
     private final AutowiredProcessor autowiredProcessor;
 
@@ -31,8 +31,8 @@ public class LookupMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
-        Method method = methodProxy.getSourceMethod();
+    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+        Method method = methodProxy.getSourceTargetMethod();
         Lookup annotation = AnnotationUtil.findAnnotation(method, Lookup.class);
         if(annotation == null) {
             return chain.proceed(methodProxy);

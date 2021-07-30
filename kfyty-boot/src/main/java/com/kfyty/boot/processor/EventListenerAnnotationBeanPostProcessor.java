@@ -9,8 +9,10 @@ import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 
@@ -21,6 +23,7 @@ import java.lang.reflect.Method;
  * @date 2021/6/21 18:02
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 @Configuration
 public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcessor {
     @Autowired
@@ -29,14 +32,13 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
-    /**
-     * 解析 EventListener 注解时，不应获取原对象
-     */
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        for (Method method : ReflectUtil.getMethods(bean.getClass())) {
+        Class<?> beanClass = AopUtil.getSourceClass(bean);
+        for (Method method : ReflectUtil.getMethods(beanClass)) {
             if(AnnotationUtil.hasAnnotation(method, EventListener.class)) {
-                this.createEventListener(beanName, method, AnnotationUtil.findAnnotation(method, EventListener.class));
+                Method listenerMethod = this.ensureListenerMethod(bean, method);
+                this.createEventListener(beanName, listenerMethod, AnnotationUtil.findAnnotation(method, EventListener.class));
             }
         }
         return null;
@@ -49,7 +51,28 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
             eventTypes = (Class<? extends ApplicationEvent<?>>[]) listenerMethod.getParameterTypes();
         }
         for (Class<? extends ApplicationEvent<?>> eventType : eventTypes) {
-            this.applicationEventPublisher.registerEventListener(new EventListenerAnnotationListener(beanName, listenerMethod, eventType, this.context));
+            EventListenerAnnotationListener annotationListener = new EventListenerAnnotationListener(beanName, listenerMethod, eventType, this.context);
+            this.applicationEventPublisher.registerEventListener(annotationListener);
+            if (log.isDebugEnabled()) {
+                log.debug("register annotation event listener: {}", annotationListener);
+            }
         }
+    }
+
+    /**
+     * 如果是 jdk 代理，则需要获取到接口中的方法对象，否则反射执行失败
+     */
+    private Method ensureListenerMethod(Object bean, Method method) {
+        if (!AopUtil.isJdkProxy(bean)) {
+            return method;
+        }
+        while (!method.getDeclaringClass().isInterface()) {
+            Method superMethod = ReflectUtil.getSuperMethod(method);
+            if (superMethod == null) {
+                break;
+            }
+            method = superMethod;
+        }
+        return method;
     }
 }

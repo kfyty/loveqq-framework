@@ -3,7 +3,7 @@ package com.kfyty.boot.proxy;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.ReflectUtil;
@@ -17,7 +17,7 @@ import com.kfyty.support.utils.ReflectUtil;
  */
 @Order(ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER)
 public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
-    public static final int SCOPE_PROXY_ORDER = -1;
+    public static final int SCOPE_PROXY_ORDER = -1 << 15;
 
     private final BeanFactory beanFactory;
     private final BeanDefinition sourceBeanDefinition;
@@ -28,8 +28,8 @@ public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object bean = this.beanFactory.registerBean(this.sourceBeanDefinition);
-        return ReflectUtil.invokeMethod(bean, methodProxy.getSourceMethod(), methodProxy.getArgs());
+        return ReflectUtil.invokeMethod(bean, methodProxy.getSourceMethod(), methodProxy.getArguments());
     }
 }

@@ -9,6 +9,7 @@ import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 描述: 自动注入处理器
@@ -56,13 +58,13 @@ public class AutowiredProcessor {
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
-        if(targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
-            targetBean = AopUtil.getSourceIfNecessary(targetBean);
+        if(targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceClass(targetBean))) {
+            targetBean = AopUtil.getSourceTarget(targetBean);
         }
         if(targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
             if(log.isDebugEnabled()) {
-                log.debug("autowired bean: {} -> {} !", AopUtil.isJdkProxy(targetBean) ? targetBean.getClass() : targetBean, bean);
+                log.debug("autowired bean: {} -> {} !", targetBean, bean);
             }
         }
     }
@@ -73,8 +75,8 @@ public class AutowiredProcessor {
         for (Parameter parameter : method.getParameters()) {
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
             Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : this.findAutowiredAnnotation(method));
-            if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceIfNecessary(targetBean).getClass())) {
-                targetBean = AopUtil.getSourceIfNecessary(targetBean);
+            if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceClass(targetBean))) {
+                targetBean = AopUtil.getSourceTarget(targetBean);
             }
             parameters[index++] = targetBean;
         }
@@ -86,6 +88,7 @@ public class AutowiredProcessor {
 
     /**
      * 解析 bean 依赖
+     * 仅解析自动装配的候选者
      *
      * @param targetBeanName 目标 bean name，如果是泛型则忽略
      * @param returnType     目标 bean 类型
@@ -117,7 +120,7 @@ public class AutowiredProcessor {
         if (autowired != null) {
             return autowired;
         }
-        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(field, Resource.class));
+        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(field, Resource.class), field);
     }
 
     private Autowired findAutowiredAnnotation(Method method) {
@@ -125,10 +128,10 @@ public class AutowiredProcessor {
         if (autowired != null) {
             return autowired;
         }
-        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(method, Resource.class));
+        return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(method, Resource.class), null);
     }
 
-    private Autowired createAutowiredAnnotation(Resource resource) {
+    private Autowired createAutowiredAnnotation(Resource resource, Field field) {
         return resource == null ? null : new Autowired() {
 
             @Override
@@ -138,7 +141,7 @@ public class AutowiredProcessor {
 
             @Override
             public String value() {
-                return resource.name();
+                return field == null || CommonUtil.notEmpty(resource.name()) ? resource.name() : field.getName();
             }
 
             @Override
@@ -180,7 +183,7 @@ public class AutowiredProcessor {
 
     private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
         Map<String, Object> beanOfType = new HashMap<>(2);
-        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType);
+        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType).entrySet().stream().filter(e -> e.getValue().isAutowireCandidate()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
             if(this.context.contains(entry.getKey())) {
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
@@ -200,12 +203,12 @@ public class AutowiredProcessor {
                         }
                     }
                 } else {
-                    BeanDefinition beanDefinition = this.context.getBeanDefinition(targetBeanName, targetType);
+                    BeanDefinition beanDefinition = targetBeanDefinitions.size() == 1 ? targetBeanDefinitions.values().iterator().next() : targetBeanDefinitions.get(targetBeanName);
                     if(beanDefinition == null) {
                         if(!autowiredRequired(autowired)) {
                             return beanOfType;
                         }
-                        throw new BeansException("resolve target bean failed, no bean definition found of name: " + targetBeanName);
+                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, but no bean definition found of name: {}", targetType, targetBeanName));
                     }
                     beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition));
                 }

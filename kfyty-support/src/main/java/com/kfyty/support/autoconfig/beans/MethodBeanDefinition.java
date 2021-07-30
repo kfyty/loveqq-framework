@@ -4,7 +4,6 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -112,15 +111,12 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         }
         this.ensureAutowiredProcessor(context);
         Object parentInstance = context.registerBean(this.parentDefinition);
-        if(AopUtil.isJdkProxy(parentInstance)) {
-            parentInstance = AopUtil.getInterceptorChain(parentInstance).getSource();
-        }
         Object bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, this.prepareMethodArgs());
         if(context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
         if(log.isDebugEnabled()) {
-            log.debug("instantiate bean from bean method: [{}] !", AopUtil.isJdkProxy(bean) ? this.beanType : bean);
+            log.debug("instantiate bean from bean method: {} !", bean);
         }
         return bean;
     }

@@ -8,5 +8,5 @@ package com.kfyty.support.proxy;
  * @email kfyty725@hotmail.com
  */
 public interface InterceptorChainPoint {
-    Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable;
+    Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable;
 }

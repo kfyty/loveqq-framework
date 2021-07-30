@@ -148,7 +148,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         this.ensureAutowiredProcessor(context);
         Object bean = ReflectUtil.newInstance(this.beanType, this.getConstructArgs());
         if(log.isDebugEnabled()) {
-            log.debug("instantiate bean: [{}] !", bean);
+            log.debug("instantiate bean: {} !", bean);
         }
         return bean;
     }

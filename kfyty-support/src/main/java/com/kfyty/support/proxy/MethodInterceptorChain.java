@@ -13,26 +13,26 @@ import java.util.List;
  * @date 2021/6/19 11:10
  * @email kfyty725@hotmail.com
  */
-public class InterceptorChain extends MethodInvocationInterceptor {
+public class MethodInterceptorChain extends MethodInvocationInterceptor {
     private int currentChainIndex;
     private MethodProxyWrapper intercepting;
     private final List<InterceptorChainPoint> chainPoints;
-    private final ThreadLocal<InterceptorChain> threadInterceptorChain;
+    private final ThreadLocal<MethodInterceptorChain> threadInterceptorChain;
 
-    public InterceptorChain(Object source) {
+    public MethodInterceptorChain(Object source) {
         super(source);
         this.currentChainIndex = -1;
         this.chainPoints = new ArrayList<>(4);
         this.threadInterceptorChain = new ThreadLocal<>();
     }
 
-    public InterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
+    public MethodInterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
         this(source);
         this.chainPoints.addAll(chainPoints);
         this.sortInterceptorChain();
     }
 
-    public InterceptorChain addInterceptorPoint(InterceptorChainPoint chainPoint) {
+    public MethodInterceptorChain addInterceptorPoint(InterceptorChainPoint chainPoint) {
         this.chainPoints.add(chainPoint);
         this.sortInterceptorChain();
         return this;
@@ -44,12 +44,12 @@ public class InterceptorChain extends MethodInvocationInterceptor {
 
     @Override
     protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
-        InterceptorChain threadChain = this.threadInterceptorChain.get();
+        MethodInterceptorChain threadChain = this.threadInterceptorChain.get();
         if (threadChain != null && threadChain.intercepting.equals(methodProxy)) {
             return threadChain.proceed(methodProxy);
         }
         try {
-            threadChain = new InterceptorChain(this.getSource(), this.chainPoints);
+            threadChain = new MethodInterceptorChain(this.getSource(), this.chainPoints);
             threadChain.intercepting = methodProxy;
             this.threadInterceptorChain.set(threadChain);
             return threadChain.proceed(methodProxy);

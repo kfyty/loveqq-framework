@@ -1,7 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,7 +49,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         }
         Object bean = factoryBean.getObject();
         if(log.isDebugEnabled()) {
-            log.debug("instantiate bean from factory bean: [{}] !", AopUtil.isJdkProxy(bean) ? this.beanType : bean);
+            log.debug("instantiate bean from factory bean: {} !", bean);
         }
         return bean;
     }

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -134,6 +135,18 @@ public abstract class CommonUtil {
         return stringWriter.toString();
     }
 
+    public static void sleep(long time) {
+        sleep(time, TimeUnit.MILLISECONDS);
+    }
+
+    public static void sleep(long time, TimeUnit timeUnit) {
+        try {
+            timeUnit.sleep(time);
+        } catch (InterruptedException e) {
+            throw new SupportException(e);
+        }
+    }
+
     public static void close(Object obj) {
         if (obj == null) {
             return;
@@ -231,7 +244,7 @@ public abstract class CommonUtil {
      */
     public static void saveJdkProxyClass(String savePath, Object proxy) {
         try {
-            Class<?> clazz = Class.forName("sun.misc.ProxyGenerator");
+            Class<?> clazz = ReflectUtil.load("sun.misc.ProxyGenerator");
             Method method = ReflectUtil.getMethod(clazz, "generateProxyClass", String.class, Class[].class);
             byte[] b = (byte[]) ReflectUtil.invokeMethod(null, method, proxy.getClass().getName(), proxy.getClass().getInterfaces());
             ensureFolderExists(savePath);

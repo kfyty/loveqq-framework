@@ -1,5 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 
 /**
@@ -20,6 +21,8 @@ public interface BeanDefinitionRegistry {
     Map<String, BeanDefinition> getBeanDefinitions();
 
     Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);
+
+    Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass);
 
     BeanDefinition getBeanDefinition(String beanName);
 

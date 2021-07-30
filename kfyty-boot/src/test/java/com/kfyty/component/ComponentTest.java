@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 描述:
@@ -78,7 +79,7 @@ abstract class A implements InitializingBean, CommandLineRunner {
     private ComponentS componentS2;
 
     @Autowired
-    private List<ComponentS> componentS;
+    private Map<String, ComponentS> componentS;
 
     @Lookup
     public abstract C c();

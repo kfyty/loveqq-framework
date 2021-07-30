@@ -5,7 +5,7 @@ import com.kfyty.support.autoconfig.BeanFactoryAware;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.ReflectUtil;
 import net.sf.cglib.proxy.Enhancer;
 
@@ -53,7 +53,7 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
     @Override
     public T getObject() {
         Enhancer enhancer = new Enhancer();
-        InterceptorChain interceptorChain = new InterceptorChain(null);
+        MethodInterceptorChain interceptorChain = new MethodInterceptorChain(null);
         enhancer.setSuperclass(this.getBeanType());
         enhancer.setCallback(interceptorChain.addInterceptorPoint(new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition)));
         return (T) enhancer.create();

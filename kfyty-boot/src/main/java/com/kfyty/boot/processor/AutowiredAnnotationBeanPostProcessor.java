@@ -6,6 +6,7 @@ import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
@@ -50,9 +51,14 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
 
     @Override
     public void doAutowiredBean(Object bean) {
-        bean = AopUtil.getSourceIfNecessary(bean);
-        this.doAutowiredBeanField(bean.getClass(), bean);
-        this.doAutowiredBeanMethod(bean.getClass(), bean);
+        Object sourceTarget = AopUtil.getSourceTarget(bean);
+        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        this.doAutowiredBeanField(sourceClass, sourceTarget);
+        this.doAutowiredBeanMethod(sourceClass, sourceTarget);
+        if (AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class)) {
+            this.doAutowiredBeanField(sourceClass, bean);
+            this.doAutowiredBeanMethod(sourceClass, bean);
+        }
     }
 
     @Override

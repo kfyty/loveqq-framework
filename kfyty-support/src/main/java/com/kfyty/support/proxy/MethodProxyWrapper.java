@@ -1,5 +1,8 @@
 package com.kfyty.support.proxy;
 
+import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,11 +18,11 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 @Getter
-@EqualsAndHashCode(exclude = "source")
+@EqualsAndHashCode
 public class MethodProxyWrapper {
     /**
      * 用于执行方法的原实例
-     * 对于 jdk 代理则是原 bean，对于 cglib 代理则是代理对象
+     * 当为 cglib 代理，且直接代理抽象类时，为空
      */
     private final Object source;
 
@@ -31,7 +34,12 @@ public class MethodProxyWrapper {
     /**
      * 目标方法参数
      */
-    private final Object[] args;
+    private final Object[] arguments;
+
+    /**
+     * cglib 代理对象
+     */
+    private final Object proxyObject;
 
     /**
      * cglib 的代理方法对象
@@ -39,20 +47,25 @@ public class MethodProxyWrapper {
     private final MethodProxy methodProxy;
 
     public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args) {
-        this(source, sourceMethod, args, null);
+        this(source, sourceMethod, args, null, null);
     }
 
-    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args, MethodProxy methodProxy) {
+    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args, Object proxyObject, MethodProxy methodProxy) {
         this.source = source;
         this.sourceMethod = sourceMethod;
-        this.args = args;
+        this.arguments = args;
+        this.proxyObject = proxyObject;
         this.methodProxy = methodProxy;
     }
 
+    public Method getSourceTargetMethod() {
+        return this.source == null ? this.sourceMethod : AopUtil.getSourceTargetMethod(this.source.getClass(), this.sourceMethod);
+    }
+
     public Object invoke() throws Throwable {
-        if(this.methodProxy != null) {
-            return this.methodProxy.invokeSuper(this.source, this.args);
+        if (this.source == null || AnnotationUtil.hasAnnotationElement(this.source, Configuration.class)) {
+            return this.methodProxy.invokeSuper(this.proxyObject, this.arguments);
         }
-        return ReflectUtil.invokeMethod(this.source, this.sourceMethod, this.args);
+        return ReflectUtil.invokeMethod(this.source, this.sourceMethod, this.arguments);
     }
 }

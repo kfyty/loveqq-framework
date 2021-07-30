@@ -23,7 +23,7 @@ public abstract class DynamicProxyFactory {
     }
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
-        if (!ReflectUtil.hasAnyInterfaces(bean.getClass()) || AnnotationUtil.hasAnnotationElement(bean.getClass(), Configuration.class)) {
+        if (!ReflectUtil.hasAnyInterfaces(bean.getClass()) || AnnotationUtil.hasAnnotationElement(bean, Configuration.class)) {
             return create(true);
         }
         BootApplication annotation = AnnotationUtil.findAnnotation(context.getPrimarySource(), BootApplication.class);
@@ -40,5 +40,5 @@ public abstract class DynamicProxyFactory {
         return createProxy(source, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
     }
 
-    public abstract Object createProxy(Object source, Class<?>[] argTypes, Object[] arsValues);
+    public abstract Object createProxy(Object source, Class<?>[] argTypes, Object[] argValues);
 }

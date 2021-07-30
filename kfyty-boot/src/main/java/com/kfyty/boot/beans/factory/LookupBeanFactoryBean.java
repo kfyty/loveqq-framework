@@ -4,7 +4,7 @@ import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.BeanUtil;
 import net.sf.cglib.proxy.Enhancer;
 
@@ -40,7 +40,7 @@ public class LookupBeanFactoryBean<T> implements ApplicationContextAware, Factor
     @SuppressWarnings("unchecked")
     public T getObject() {
         Enhancer enhancer = new Enhancer();
-        InterceptorChain interceptorChain = new InterceptorChain(null);
+        MethodInterceptorChain interceptorChain = new MethodInterceptorChain(null);
         enhancer.setSuperclass(this.getBeanType());
         enhancer.setCallback(interceptorChain.addInterceptorPoint(new LookupMethodInterceptorProxy(this.applicationContext)));
         return (T) enhancer.create();

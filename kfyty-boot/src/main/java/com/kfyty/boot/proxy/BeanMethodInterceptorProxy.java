@@ -4,7 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
  */
 @Order(BeanMethodInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
 public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
-    public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER + 1;
+    public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER >> 1;
 
     private final ApplicationContext context;
 
@@ -30,8 +30,8 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
-        Method method = methodProxy.getSourceMethod();
+    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+        Method method = methodProxy.getSourceTargetMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if(annotation == null || !BeanUtil.isSingleton(method)) {
             return chain.proceed(methodProxy);

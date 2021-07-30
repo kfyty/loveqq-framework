@@ -25,14 +25,14 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        Class<?> beanClass = AopUtil.getSourceIfNecessary(bean).getClass();
-        if(AnnotationUtil.hasAnnotationElement(beanClass, Configuration.class)) {
+        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        if(AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class)) {
             bean = this.createProxy(bean, beanName, new BeanMethodInterceptorProxy(this.applicationContext));
         }
-        if(AnnotationUtil.hasAnnotation(beanClass, Async.class) || ReflectUtil.getMethods(beanClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class))) {
+        if(AnnotationUtil.hasAnnotation(sourceClass, Async.class) || ReflectUtil.getMethods(sourceClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class))) {
             bean = this.createProxy(bean, beanName, new AsyncMethodInterceptorProxy(this.applicationContext));
         }
-        if(!ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && ReflectUtil.getMethods(beanClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class))) {
+        if(!ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && ReflectUtil.getMethods(sourceClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class))) {
             bean = this.createProxy(bean, beanName, new LookupMethodInterceptorProxy(this.applicationContext));
         }
         return bean;

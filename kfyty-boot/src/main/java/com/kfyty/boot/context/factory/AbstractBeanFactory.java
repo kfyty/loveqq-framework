@@ -145,10 +145,20 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
         return this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.getBeanDefinitions().entrySet()
                 .parallelStream()
-                .filter(e -> e.getValue().isAutowireCandidate() && beanType.isAssignableFrom(e.getValue().getBeanType()))
+                .filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
                     throw new IllegalStateException("duplicate key " + k2);
                 }, LinkedHashMap::new)));
+    }
+
+    @Override
+    public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass) {
+        return this.getBeanDefinitions().entrySet()
+                .parallelStream()
+                .filter(e -> AnnotationUtil.hasAnnotationElement(e.getValue().getBeanType(), annotationClass))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
+                    throw new IllegalStateException("duplicate key " + k2);
+                }, LinkedHashMap::new));
     }
 
     @Override

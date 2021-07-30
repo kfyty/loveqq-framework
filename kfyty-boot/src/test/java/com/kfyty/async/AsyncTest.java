@@ -2,8 +2,8 @@ package com.kfyty.async;
 
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ContextAfterRefreshed;
 import com.kfyty.support.autoconfig.ContextRefreshCompleted;
-import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Async;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
@@ -11,12 +11,12 @@ import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
+import com.kfyty.support.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @email kfyty725@hotmail.com
  */
 @BootApplication
-public class AsyncTest implements InitializingBean, ContextRefreshCompleted {
+public class AsyncTest implements ContextAfterRefreshed, ContextRefreshCompleted {
     int[] async = new int[2];
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger index = new AtomicInteger(0);
@@ -41,7 +41,7 @@ public class AsyncTest implements InitializingBean, ContextRefreshCompleted {
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void onAfterRefreshed(ApplicationContext applicationContext) {
         applicationEventPublisher.publishEvent(new AsyncEvent(2));
         this.async[index.getAndIncrement()] = 1;
     }
@@ -56,8 +56,6 @@ public class AsyncTest implements InitializingBean, ContextRefreshCompleted {
 }
 
 interface AsyncTask {
-    @Async
-    @EventListener(AsyncEvent.class)
     void onAsyncEvent(AsyncEvent asyncEvent);
 }
 
@@ -79,10 +77,11 @@ class AsyncTaskImpl implements AsyncTask {
     @Autowired
     private AsyncTest asyncTest;
 
+    @Async
     @Override
-    @SneakyThrows
+    @EventListener(AsyncEvent.class)
     public void onAsyncEvent(AsyncEvent event) {
-        TimeUnit.SECONDS.sleep(1);
+        CommonUtil.sleep(1000);
         asyncTest.async[asyncTest.index.getAndIncrement()] = event.getSource();
         asyncTest.latch.countDown();
     }

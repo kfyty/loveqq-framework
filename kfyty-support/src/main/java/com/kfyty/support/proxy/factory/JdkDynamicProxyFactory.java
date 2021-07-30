@@ -1,6 +1,6 @@
 package com.kfyty.support.proxy.factory;
 
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
 
@@ -18,7 +18,7 @@ public class JdkDynamicProxyFactory extends DynamicProxyFactory {
 
     @Override
     public Object createProxy(Object source) {
-        return Proxy.newProxyInstance(source.getClass().getClassLoader(), ReflectUtil.getInterfaces(source.getClass()), new InterceptorChain(source));
+        return Proxy.newProxyInstance(source.getClass().getClassLoader(), ReflectUtil.getInterfaces(source.getClass()), new MethodInterceptorChain(source));
     }
 
     @Override

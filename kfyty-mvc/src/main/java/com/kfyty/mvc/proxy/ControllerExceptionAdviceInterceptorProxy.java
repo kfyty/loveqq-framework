@@ -1,13 +1,15 @@
 package com.kfyty.mvc.proxy;
 
+import com.kfyty.mvc.annotation.ControllerAdvice;
 import com.kfyty.mvc.annotation.ExceptionHandler;
 import com.kfyty.mvc.annotation.RequestMapping;
 import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.exception.SupportException;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -15,11 +17,13 @@ import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 描述:
@@ -30,17 +34,23 @@ import java.util.Map;
  */
 @Slf4j
 public class ControllerExceptionAdviceInterceptorProxy implements InterceptorChainPoint {
-    private final DispatcherServlet dispatcherServlet;
-    private final Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap;
+    private DispatcherServlet dispatcherServlet;
+    private Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap;
 
-    public ControllerExceptionAdviceInterceptorProxy(ApplicationContext context, List<Object> controllerAdviceBeans) {
-        this.dispatcherServlet = context.getBean(DispatcherServlet.class);
-        this.exceptionHandlerMap = new LinkedHashMap<>();
-        this.initExceptionHandler(controllerAdviceBeans);
+    private final ApplicationContext applicationContext;
+
+    public ControllerExceptionAdviceInterceptorProxy(ApplicationContext context) {
+        this.applicationContext = context;
     }
 
     @SuppressWarnings("unchecked")
-    private void initExceptionHandler(List<Object> controllerAdviceBeans) {
+    private void ensureInitExceptionHandler() {
+        if (this.dispatcherServlet != null && this.exceptionHandlerMap != null) {
+            return;
+        }
+        this.dispatcherServlet = this.applicationContext.getBean(DispatcherServlet.class);
+        this.exceptionHandlerMap = new HashMap<>();
+        Collection<Object> controllerAdviceBeans = this.applicationContext.getBeanWithAnnotation(ControllerAdvice.class).values();
         for (Object adviceBean : controllerAdviceBeans) {
             for (Method method : ReflectUtil.getMethods(adviceBean.getClass())) {
                 ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, ExceptionHandler.class);
@@ -57,15 +67,16 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, InterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
         Method sourceMethod = methodProxy.getSourceMethod();
-        if(!AnnotationUtil.hasAnnotationElement(sourceMethod, RequestMapping.class)) {
+        if (!AnnotationUtil.hasAnnotationElement(sourceMethod, RequestMapping.class)) {
             return chain.proceed(methodProxy);
         }
         try {
+            this.ensureInitExceptionHandler();
             return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
-            MethodParameter controllerExceptionAdvice = this.findControllerExceptionAdvice(throwable);
+            MethodParameter controllerExceptionAdvice = this.findControllerExceptionAdvice(this.obtainThrowable(throwable));
             if(controllerExceptionAdvice != null) {
                 this.processControllerAdvice(controllerExceptionAdvice, throwable);
                 return null;
@@ -74,23 +85,29 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
         }
     }
 
-    private MethodParameter findControllerExceptionAdvice(Throwable throwable) {
-        MethodParameter handlerMethod = this.exceptionHandlerMap.get(throwable.getClass());
-        if (handlerMethod == null) {
-            for (Map.Entry<Class<? extends Throwable>, MethodParameter> entry : this.exceptionHandlerMap.entrySet()) {
-                if (entry.getKey().isAssignableFrom(throwable.getClass())) {
-                    handlerMethod = entry.getValue();
-                    break;
-                }
+    private Throwable obtainThrowable(Throwable throwable) {
+        if (throwable instanceof SupportException) {
+            throwable = throwable.getCause();
+            if (throwable instanceof InvocationTargetException) {
+                throwable = Optional.ofNullable(((InvocationTargetException) throwable).getTargetException()).orElse(throwable);
             }
         }
-        if(handlerMethod == null) {
+        return throwable;
+    }
+
+    private MethodParameter findControllerExceptionAdvice(Throwable throwable) {
+        Optional<MethodParameter> handlerMethodOpt = Optional.ofNullable(this.exceptionHandlerMap.get(throwable.getClass()));
+        if (!handlerMethodOpt.isPresent()) {
+            handlerMethodOpt = this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwable.getClass())).map(Map.Entry::getValue).findFirst();
+        }
+        if (!handlerMethodOpt.isPresent()) {
             return null;
         }
+        MethodParameter handlerMethod = handlerMethodOpt.get();
         Parameter[] parameters = handlerMethod.getMethod().getParameters();
         Object[] exceptionArgs = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
-            if(parameters[i].getType().isAssignableFrom(throwable.getClass())) {
+            if (parameters[i].getType().isAssignableFrom(throwable.getClass())) {
                 exceptionArgs[i] = throwable;
             }
         }
@@ -100,7 +117,7 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
     private void processControllerAdvice(MethodParameter exceptionAdviceMethod, Throwable throwable) throws Throwable {
         Object retValue = ReflectUtil.invokeMethod(exceptionAdviceMethod.getSource(), exceptionAdviceMethod.getMethod(), exceptionAdviceMethod.getMethodArgs());
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.dispatcherServlet.getReturnValueProcessors()) {
-            if(returnValueProcessor.supportsReturnType(exceptionAdviceMethod)) {
+            if (returnValueProcessor.supportsReturnType(exceptionAdviceMethod)) {
                 ModelViewContainer container = new ModelViewContainer().setPrefix(dispatcherServlet.getPrefix()).setSuffix(dispatcherServlet.getSuffix());
                 returnValueProcessor.handleReturnValue(retValue, exceptionAdviceMethod, container);
                 return;

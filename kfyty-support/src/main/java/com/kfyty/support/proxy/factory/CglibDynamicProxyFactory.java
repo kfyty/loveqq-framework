@@ -1,6 +1,6 @@
 package com.kfyty.support.proxy.factory;
 
-import com.kfyty.support.proxy.InterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.NoArgsConstructor;
 import net.sf.cglib.proxy.Enhancer;
@@ -21,10 +21,10 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
     }
 
     @Override
-    public Object createProxy(Object source, Class<?>[] argTypes, Object[] arsValues) {
+    public Object createProxy(Object source, Class<?>[] argTypes, Object[] argValues) {
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(source.getClass());
-        enhancer.setCallback(new InterceptorChain(source));
-        return enhancer.create(argTypes, arsValues);
+        enhancer.setCallback(new MethodInterceptorChain(source));
+        return enhancer.create(argTypes, argValues);
     }
 }

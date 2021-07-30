@@ -26,8 +26,8 @@ public abstract class MethodInvocationInterceptor implements InvocationHandler, 
     }
 
     @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-        return this.process(new MethodProxyWrapper(obj, method, args, proxy));
+    public Object intercept(Object proxyObject, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        return this.process(new MethodProxyWrapper(this.source, method, args, proxyObject, methodProxy));
     }
 
     public Object getSource() {

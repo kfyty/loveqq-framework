@@ -18,6 +18,7 @@ import com.kfyty.support.utils.SerializableUtil;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -45,7 +46,13 @@ import java.util.regex.Pattern;
  * @since JDK 1.8
  */
 @Slf4j
+@ToString
 public class SqlSession implements InvocationHandler {
+    /**
+     * toString 方法
+     */
+    private static final Method TO_STRING_METHOD = ReflectUtil.getMethod(Object.class, "toString");
+
     /**
      * #{}、${} 正则匹配
      */
@@ -69,12 +76,13 @@ public class SqlSession implements InvocationHandler {
     /**
      * 数据源
      */
-    @Getter @Setter
+    @Getter @Setter @ToString.Exclude
     private DataSource dataSource;
 
     /**
      * 事务
      */
+    @ToString.Exclude
     private Transaction transaction;
 
     public SqlSession(Class<?> mapperClass, DataSource dataSource) {
@@ -293,8 +301,11 @@ public class SqlSession implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Annotation[] annotations = this.processRepeatableAnnotation(method);
+        if (method.equals(TO_STRING_METHOD)) {
+            return this.toString();
+        }
         SimpleGeneric returnType = this.processReturnType(method);
+        Annotation[] annotations = this.processRepeatableAnnotation(method);
         Map<String, MethodParameter> methodParameter = this.processMethodParameters(method, args);
         if (annotations.length == 1) {
             return this.requestQuery(method, annotations[0], returnType, methodParameter);
