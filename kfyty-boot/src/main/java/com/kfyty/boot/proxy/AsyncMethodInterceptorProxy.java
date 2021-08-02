@@ -51,7 +51,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
                 throw new AsyncMethodException(throwable);
             }
         };
-        return this.doExecuteAsync((ExecutorService) executor, methodProxy.getSourceMethod(), task);
+        return this.doExecuteAsync((ExecutorService) executor, methodProxy.getMethod(), task);
     }
 
     private Object doExecuteAsync(ExecutorService executor, Method method, Callable<?> task) {

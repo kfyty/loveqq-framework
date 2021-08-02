@@ -1,0 +1,3 @@
+com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.aop.aspectj.creator.AspectJAdvisorCreator,\
+    com.kfyty.aop.processor.AspectJBeanPostProcessor

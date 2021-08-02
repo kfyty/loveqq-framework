@@ -1,5 +1,6 @@
 package com.kfyty.support.utils;
 
+import com.kfyty.support.wrapper.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -25,7 +26,7 @@ import java.util.jar.JarEntry;
  */
 @Slf4j
 public abstract class PackageUtil {
-    private static final Map<String, Set<String>> scanPackageCache = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<WeakKey<String>, Set<String>> scanPackageCache = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     public static Set<String> scanClassName(Class<?> mainClass) throws IOException {
         return scanClassName(mainClass.getPackage().getName());
@@ -36,26 +37,27 @@ public abstract class PackageUtil {
     }
 
     public static Set<String> scanClassName(String basePackage) throws IOException {
-        if (scanPackageCache.containsKey(basePackage)) {
-            return scanPackageCache.get(basePackage);
+        Set<String> cache = scanPackageCache.get(new WeakKey<>(basePackage));
+        if (cache != null) {
+            return cache;
         }
         Set<String> classes = new HashSet<>();
         Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(basePackage.replace(".", "/"));
-        while(urls.hasMoreElements()) {
+        while (urls.hasMoreElements()) {
             URL url = urls.nextElement();
-            if("jar".equalsIgnoreCase(url.getProtocol())) {
+            if ("jar".equalsIgnoreCase(url.getProtocol())) {
                 classes.addAll(scanClassNameByJar(url));
                 continue;
             }
             classes.addAll(scanClassNameByFile(url));
         }
-        return scanPackageCache.computeIfAbsent(basePackage, k -> classes);
+        return scanPackageCache.computeIfAbsent(new WeakKey<>(basePackage), k -> classes);
     }
 
     public static Set<Class<?>> scanClass(String basePackage) throws IOException {
         Set<Class<?>> result = new HashSet<>();
         Set<String> classes = scanClassName(basePackage);
-        if(CommonUtil.empty(classes)) {
+        if (CommonUtil.empty(classes)) {
             return result;
         }
         for (String clazz : classes) {
@@ -68,9 +70,9 @@ public abstract class PackageUtil {
         Set<String> classes = new HashSet<>();
         String path = !url.getPath().contains("!") ? url.getPath() : url.getPath().split("!")[1];
         Enumeration<JarEntry> entries = ((JarURLConnection) url.openConnection()).getJarFile().entries();
-        while(entries.hasMoreElements()) {
+        while (entries.hasMoreElements()) {
             String classPath = entries.nextElement().getName();
-            if(!("/" + classPath).startsWith(path) || !classPath.endsWith(".class")) {
+            if (!("/" + classPath).startsWith(path) || !classPath.endsWith(".class")) {
                 continue;
             }
             classes.add(classPath.replace("/", ".").replace(".class", ""));
@@ -81,15 +83,15 @@ public abstract class PackageUtil {
     private static Set<String> scanClassNameByFile(URL url) throws MalformedURLException {
         Set<String> classes = new HashSet<>();
         File[] files = new File(url.getPath()).listFiles();
-        if(CommonUtil.empty(files)) {
+        if (CommonUtil.empty(files)) {
             return classes;
         }
-        for(File file : files) {
-            if(file.isDirectory()) {
+        for (File file : files) {
+            if (file.isDirectory()) {
                 classes.addAll(scanClassNameByFile(file.toURI().toURL()));
                 continue;
             }
-            if(!file.getPath().endsWith(".class")) {
+            if (!file.getPath().endsWith(".class")) {
                 continue;
             }
             String classPath = file.getPath();

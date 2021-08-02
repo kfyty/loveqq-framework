@@ -68,8 +68,8 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Method sourceMethod = methodProxy.getSourceMethod();
-        if (!AnnotationUtil.hasAnnotationElement(sourceMethod, RequestMapping.class)) {
+        Method method = methodProxy.getMethod();
+        if (!AnnotationUtil.hasAnnotationElement(method, RequestMapping.class)) {
             return chain.proceed(methodProxy);
         }
         try {

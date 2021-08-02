@@ -18,18 +18,23 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "proxy")
 public class MethodProxyWrapper {
     /**
-     * 用于执行方法的原实例
+     * 原实例
      * 当为 cglib 代理，且直接代理抽象类时，为空
      */
     private final Object source;
 
     /**
+     * 代理对象
+     */
+    private final Object proxy;
+
+    /**
      * 执行的目标方法
      */
-    private final Method sourceMethod;
+    private final Method method;
 
     /**
      * 目标方法参数
@@ -37,35 +42,38 @@ public class MethodProxyWrapper {
     private final Object[] arguments;
 
     /**
-     * cglib 代理对象
-     */
-    private final Object proxyObject;
-
-    /**
      * cglib 的代理方法对象
      */
     private final MethodProxy methodProxy;
 
-    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args) {
-        this(source, sourceMethod, args, null, null);
+    public MethodProxyWrapper(Object source, Object proxy, Method method, Object[] args) {
+        this(source, proxy, method, args, null);
     }
 
-    public MethodProxyWrapper(Object source, Method sourceMethod, Object[] args, Object proxyObject, MethodProxy methodProxy) {
+    public MethodProxyWrapper(Object source, Object proxy, Method method, Object[] args, MethodProxy methodProxy) {
         this.source = source;
-        this.sourceMethod = sourceMethod;
+        this.proxy = proxy;
+        this.method = method;
         this.arguments = args;
-        this.proxyObject = proxyObject;
         this.methodProxy = methodProxy;
     }
 
+    public Object getSourceTarget() {
+        return this.source != null ? this.source : this.proxy;
+    }
+
+    public Class<?> getSourceClass() {
+        return this.getSourceTarget().getClass();
+    }
+
     public Method getSourceTargetMethod() {
-        return this.source == null ? this.sourceMethod : AopUtil.getSourceTargetMethod(this.source.getClass(), this.sourceMethod);
+        return this.source == null ? this.method : AopUtil.getSourceTargetMethod(this.source.getClass(), this.method);
     }
 
     public Object invoke() throws Throwable {
         if (this.source == null || AnnotationUtil.hasAnnotationElement(this.source, Configuration.class)) {
-            return this.methodProxy.invokeSuper(this.proxyObject, this.arguments);
+            return this.methodProxy.invokeSuper(this.proxy, this.arguments);
         }
-        return ReflectUtil.invokeMethod(this.source, this.sourceMethod, this.arguments);
+        return ReflectUtil.invokeMethod(this.source, this.method, this.arguments);
     }
 }

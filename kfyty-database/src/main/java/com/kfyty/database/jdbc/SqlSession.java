@@ -15,6 +15,7 @@ import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.SerializableUtil;
+import com.kfyty.support.wrapper.WeakKey;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,7 +62,7 @@ public class SqlSession implements InvocationHandler {
     /**
      * 序列化的注解缓存
      */
-    private static final Map<Annotation, byte[]> SERIALIZE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<WeakKey<Annotation>, byte[]> SERIALIZE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     /**
      * mapper class

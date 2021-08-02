@@ -14,22 +14,26 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public class MethodInterceptorChain extends MethodInvocationInterceptor {
+    private static final ThreadLocal<MethodInterceptorChain> CURRENT_INTERCEPTOR_CHAIN = new ThreadLocal<>();
+
     private int currentChainIndex;
     private MethodProxyWrapper intercepting;
     private final List<InterceptorChainPoint> chainPoints;
-    private final ThreadLocal<MethodInterceptorChain> threadInterceptorChain;
 
     public MethodInterceptorChain(Object source) {
         super(source);
         this.currentChainIndex = -1;
         this.chainPoints = new ArrayList<>(4);
-        this.threadInterceptorChain = new ThreadLocal<>();
     }
 
     public MethodInterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
-        this(source);
-        this.chainPoints.addAll(chainPoints);
-        this.sortInterceptorChain();
+        super(source);
+        this.currentChainIndex = -1;
+        this.chainPoints = new ArrayList<>(chainPoints);
+    }
+
+    public static MethodInterceptorChain currentChain() {
+        return CURRENT_INTERCEPTOR_CHAIN.get();
     }
 
     public MethodInterceptorChain addInterceptorPoint(InterceptorChainPoint chainPoint) {
@@ -38,23 +42,32 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         return this;
     }
 
+    public MethodInterceptorChain addInterceptorPoint(int index, InterceptorChainPoint chainPoint) {
+        this.chainPoints.add(index, chainPoint);
+        return this;
+    }
+
     public void sortInterceptorChain() {
-        this.chainPoints.sort(Comparator.comparing(BeanUtil::getBeanOrder));
+        this.sortInterceptorChain(Comparator.comparing(BeanUtil::getBeanOrder));
+    }
+
+    public void sortInterceptorChain(Comparator<InterceptorChainPoint> comparator) {
+        this.chainPoints.sort(comparator);
     }
 
     @Override
     protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
-        MethodInterceptorChain threadChain = this.threadInterceptorChain.get();
-        if (threadChain != null && threadChain.intercepting.equals(methodProxy)) {
-            return threadChain.proceed(methodProxy);
+        final MethodInterceptorChain currentChain = currentChain();
+        if (currentChain != null && currentChain.intercepting.equals(methodProxy)) {
+            return currentChain.proceed(methodProxy);
         }
         try {
-            threadChain = new MethodInterceptorChain(this.getSource(), this.chainPoints);
-            threadChain.intercepting = methodProxy;
-            this.threadInterceptorChain.set(threadChain);
-            return threadChain.proceed(methodProxy);
+            MethodInterceptorChain newCurrentChain = new MethodInterceptorChain(this.getSource(), this.chainPoints);
+            newCurrentChain.intercepting = methodProxy;
+            CURRENT_INTERCEPTOR_CHAIN.set(newCurrentChain);
+            return newCurrentChain.proceed(methodProxy);
         } finally {
-            this.threadInterceptorChain.remove();
+            CURRENT_INTERCEPTOR_CHAIN.set(currentChain);
         }
     }
 

@@ -1,13 +1,13 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
+import com.kfyty.support.wrapper.WeakKey;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,11 +47,11 @@ public abstract class SerializableUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T clone(T source, Map<T, byte[]> byteCache) {
+    public static <T> T clone(T source, Map<WeakKey<T>, byte[]> byteCache) {
         Objects.requireNonNull(source);
         if(byteCache == null) {
             return (T) deserialize(serialize(source));
         }
-        return (T) deserialize(byteCache.computeIfAbsent(source, k -> serialize(source)));
+        return (T) deserialize(byteCache.computeIfAbsent(new WeakKey<>(source), k -> serialize(source)));
     }
 }

@@ -22,12 +22,12 @@ public abstract class MethodInvocationInterceptor implements InvocationHandler, 
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.source, method, args));
+        return this.process(new MethodProxyWrapper(this.source, proxy, method, args));
     }
 
     @Override
-    public Object intercept(Object proxyObject, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.source, method, args, proxyObject, methodProxy));
+    public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        return this.process(new MethodProxyWrapper(this.source, proxy, method, args, methodProxy));
     }
 
     public Object getSource() {

@@ -1,5 +1,7 @@
 package com.kfyty.support.utils;
 
+import javafx.util.Pair;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -8,7 +10,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * 描述: 注解工具
@@ -19,6 +24,8 @@ import java.util.List;
  */
 public abstract class AnnotationUtil {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+
+    private static final Map<Pair<Class<?>, Class<? extends Annotation>>, Boolean> CLASS_HAS_ANNOTATION_ELEMENT_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static boolean isAnnotation(Class<?> clazz) {
         return clazz != null && Annotation.class.isAssignableFrom(clazz);
@@ -71,18 +78,20 @@ public abstract class AnnotationUtil {
     }
 
     public static boolean hasAnnotationElement(Class<?> source, Class<? extends Annotation> annotationClass) {
-        if (hasAnnotation(source, annotationClass)) {
-            return true;
-        }
-        if(isMetaAnnotation(source)) {
-            return false;
-        }
-        for (Annotation annotation : findAnnotations(source)) {
-            if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
+        return CLASS_HAS_ANNOTATION_ELEMENT_CACHE.computeIfAbsent(new Pair<>(source, annotationClass), k -> {
+            if (hasAnnotation(source, annotationClass)) {
                 return true;
             }
-        }
-        return false;
+            if(isMetaAnnotation(source)) {
+                return false;
+            }
+            for (Annotation annotation : findAnnotations(source)) {
+                if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     public static boolean hasAnnotation(Constructor<?> constructor, Class<? extends Annotation> annotationClass) {

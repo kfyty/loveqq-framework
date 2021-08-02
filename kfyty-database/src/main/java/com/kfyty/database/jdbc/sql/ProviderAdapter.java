@@ -21,9 +21,9 @@ import java.util.Optional;
 public class ProviderAdapter {
     private static final String DEFAULT_PROVIDER_DIALECT = "mysql";
 
-    private static final Map<String, Class<?>> DIALECT_MAP = new HashMap<>(4);
-
     private static String DIALECT = DEFAULT_PROVIDER_DIALECT;
+
+    private static final Map<String, Class<?>> DIALECT_MAP = new HashMap<>(4);
 
     static {
         addDialectProvider(DEFAULT_PROVIDER_DIALECT, MySQLProvider.class);

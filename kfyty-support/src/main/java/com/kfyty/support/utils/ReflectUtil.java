@@ -1,6 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
+import com.kfyty.support.wrapper.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -46,22 +47,22 @@ public abstract class ReflectUtil {
     /**
      * 属性缓存
      */
-    private static final Map<String, Field> fieldCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<WeakKey<String>, Field> fieldCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 方法缓存
      */
-    private static final Map<String, Method> methodCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<WeakKey<String>, Method> methodCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 所有属性缓存
      */
-    private static final Map<Class<?>, Map<String, Field>> fieldMapCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<WeakKey<String>, Map<String, Field>> fieldMapCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 所有方法缓存
      */
-    private static final Map<Class<?>, List<Method>> methodsCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<WeakKey<String>, List<Method>> methodsCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static Class<?> load(String className) {
         return load(className, true);
@@ -238,7 +239,7 @@ public abstract class ReflectUtil {
      * @param superClassFilter 父类类型过滤器，将会一直测试 clazz.getSuperclass()，直到测试通过或者为空
      * @param genericIndex 泛型索引，ParameterizedType.getActualTypeArguments() 返回值索引
      * @param superGenericIndex 继承的父类或父接口泛型索引，由 getGenerics() 方法返回
-     * @param superGenericFilter 父类或父接口泛型匹配过滤器，将会一直测试 getGenerics()，直到测试通过。interfaceIndex < 0 且非空时有效
+     * @param superGenericFilter 父类或父接口泛型匹配过滤器，将会一直测试 getGenerics()，直到测试通过。superGenericIndex < 0 且非空时有效
      * @see ReflectUtil#getGenerics(Class)
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Class<?>> superClassFilter, int genericIndex, int superGenericIndex, Predicate<Type> superGenericFilter) {
@@ -258,7 +259,7 @@ public abstract class ReflectUtil {
                     generics = generics.stream().filter(e -> e instanceof ParameterizedType).map(e -> ((ParameterizedType) e).getRawType()).filter(e -> e instanceof Class).flatMap(e -> getGenerics((Class<?>) e).stream()).collect(Collectors.toList());
                 }
                 if (!filterInterface.isPresent()) {
-                    throw new SupportException("parent interface match failed !");
+                    throw new SupportException("parent generic match failed !");
                 }
                 genericSuperclass = filterInterface.get();
             }
@@ -285,8 +286,8 @@ public abstract class ReflectUtil {
     }
 
     public static Type getGenericSuperclass(Class<?> clazz) {
-        Type genericSuperclass = clazz.getGenericSuperclass();
         Class<?> superClass = clazz.getSuperclass();
+        Type genericSuperclass = clazz.getGenericSuperclass();
         while (genericSuperclass != null && !Objects.equals(superClass, Object.class) && !(genericSuperclass instanceof ParameterizedType)) {
             clazz = superClass;
             superClass = clazz.getSuperclass();
@@ -380,19 +381,22 @@ public abstract class ReflectUtil {
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
-        if (fieldMapCache.containsKey(clazz) && fieldMapCache.get(clazz).containsKey(fieldName)) {
-            return fieldMapCache.get(clazz).get(fieldName);
-        }
-        String key = clazz.getName() + "#" + fieldName;
-        return fieldCache.computeIfAbsent(key, k -> getField(clazz, fieldName, true));
+        final String fieldMapKey = clazz.getName() + "@" + true;
+        return Optional
+                .ofNullable(fieldMapCache.get(new WeakKey<>(fieldMapKey)))
+                .map(e -> e.get(fieldName))
+                .orElseGet(() -> getField(clazz, fieldName, true));
     }
 
     public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch(NoSuchFieldException e) {
-            return getSuperField(clazz, fieldName, containPrivate);
-        }
+        final String key = clazz.getName() + "#" + fieldName + "@" + containPrivate;
+        return fieldCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch(NoSuchFieldException e) {
+                return getSuperField(clazz, fieldName, containPrivate);
+            }
+        });
     }
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
@@ -404,16 +408,18 @@ public abstract class ReflectUtil {
     }
 
     public static Method getMethod(Class<?> clazz, String methodName, Class<?> ... parameterTypes) {
-        String key = CommonUtil.format("{}#{}({})", clazz, methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")));
-        return methodCache.computeIfAbsent(key, k -> getMethod(clazz, methodName, false, parameterTypes));
+        return getMethod(clazz, methodName, false, parameterTypes);
     }
 
     public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
-        try {
-            return clazz.getDeclaredMethod(methodName, parameterTypes);
-        } catch(NoSuchMethodException e) {
-            return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
-        }
+        final String key = CommonUtil.format("{}#{}({})@{}", clazz, methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
+        return methodCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            try {
+                return clazz.getDeclaredMethod(methodName, parameterTypes);
+            } catch(NoSuchMethodException e) {
+                return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
+            }
+        });
     }
 
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
@@ -492,14 +498,17 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz) {
-        return fieldMapCache.computeIfAbsent(clazz, k -> getFieldMap(clazz, true));
+        return getFieldMap(clazz, true);
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
-        Map<String, Field> map = new HashMap<>();
-        map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
-        getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
-        return map;
+        final String key = clazz.getName() + "@" + containPrivate;
+        return fieldMapCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            Map<String, Field> map = new HashMap<>();
+            map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
+            getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
+            return map;
+        });
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
@@ -510,13 +519,16 @@ public abstract class ReflectUtil {
     }
 
     public static List<Method> getMethods(Class<?> clazz) {
-        return methodsCache.computeIfAbsent(clazz, k -> getMethods(clazz, false));
+        return getMethods(clazz, false);
     }
 
     public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
-        List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
-        list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
-        return list;
+        final String key = clazz + "@" + containPrivate;
+        return methodsCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
+            list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
+            return list;
+        });
     }
 
     public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
@@ -538,16 +550,13 @@ public abstract class ReflectUtil {
     }
 
     public static void makeAccessible(Field field) {
-        if ((!Modifier.isPublic(field.getModifiers()) ||
-                !Modifier.isPublic(field.getDeclaringClass().getModifiers()) ||
-                Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
+        if ((!Modifier.isPublic(field.getModifiers()) || !Modifier.isPublic(field.getDeclaringClass().getModifiers()) || Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
             field.setAccessible(true);
         }
     }
 
     public static void makeAccessible(Executable executable) {
-        if ((!Modifier.isPublic(executable.getModifiers()) ||
-                !Modifier.isPublic(executable.getDeclaringClass().getModifiers())) && !executable.isAccessible()) {
+        if ((!Modifier.isPublic(executable.getModifiers()) || !Modifier.isPublic(executable.getDeclaringClass().getModifiers())) && !executable.isAccessible()) {
             executable.setAccessible(true);
         }
     }
@@ -555,7 +564,7 @@ public abstract class ReflectUtil {
     /**
      * 根据属性参数，解析嵌套属性的类型
      * @param param     属性参数 eg: obj.field
-     * @param root       包含 obj 属性的对象
+     * @param root      包含 obj 属性的对象
      */
     public static Class<?> parseFieldType(String param, Class<?> root) {
         Class<?> clazz = root;

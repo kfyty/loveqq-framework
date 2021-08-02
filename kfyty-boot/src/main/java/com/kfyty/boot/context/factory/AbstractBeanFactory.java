@@ -20,6 +20,7 @@ import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.wrapper.WeakKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -68,7 +69,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     /**
      * 同一类型的 bean 定义缓存
      */
-    protected final Map<Class<?>, Map<String, BeanDefinition>> beanDefinitionsForType;
+    protected final Map<WeakKey<Class<?>>, Map<String, BeanDefinition>> beanDefinitionsForType;
 
     /**
      * 应用上下文
@@ -143,7 +144,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.getBeanDefinitions().entrySet()
+        return this.beanDefinitionsForType.computeIfAbsent(new WeakKey<>(beanType), k -> this.getBeanDefinitions().entrySet()
                 .parallelStream()
                 .filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {

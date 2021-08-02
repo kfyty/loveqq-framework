@@ -16,6 +16,7 @@ import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.wrapper.WeakKey;
 import javafx.util.Pair;
 
 import java.lang.reflect.Field;
@@ -24,6 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
@@ -43,7 +45,7 @@ public class AbstractProvider implements InsertProvider, SelectProvider, UpdateP
 
     private static final Predicate<Type> BASE_MAPPER_GENERIC_FILTER = e -> e instanceof ParameterizedType && ((ParameterizedType) e).getRawType().equals(BaseMapper.class);
 
-    private static final Map<Class<?>, Pair<String, Class<?>>> MAPPER_ENTITY_CLASS_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<WeakKey<Class<?>>, Pair<String, Class<?>>> MAPPER_ENTITY_CLASS_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     @Override
     public String insert(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
@@ -112,11 +114,12 @@ public class AbstractProvider implements InsertProvider, SelectProvider, UpdateP
     }
 
     protected Pair<String, Class<?>> getEntityClass(Class<?> mapperClass) {
-        if (MAPPER_ENTITY_CLASS_CACHE.containsKey(mapperClass)) {
-            return MAPPER_ENTITY_CLASS_CACHE.get(mapperClass);
+        Optional<Pair<String, Class<?>>> entityClassOpt = Optional.ofNullable(MAPPER_ENTITY_CLASS_CACHE.get(new WeakKey<Class<?>>(mapperClass)));
+        if (entityClassOpt.isPresent()) {
+            return entityClassOpt.get();
         }
         Class<?> entityClass = ReflectUtil.getSuperGeneric(mapperClass, 1, BASE_MAPPER_GENERIC_FILTER);
-        return MAPPER_ENTITY_CLASS_CACHE.computeIfAbsent(mapperClass, e -> new Pair<>(this.getPkField(entityClass), entityClass));
+        return MAPPER_ENTITY_CLASS_CACHE.computeIfAbsent(new WeakKey<>(mapperClass), e -> new Pair<>(this.getPkField(entityClass), entityClass));
     }
 
     protected String getTableName(Class<?> entityClass) {

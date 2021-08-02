@@ -30,6 +30,6 @@ public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object bean = this.beanFactory.registerBean(this.sourceBeanDefinition);
-        return ReflectUtil.invokeMethod(bean, methodProxy.getSourceMethod(), methodProxy.getArguments());
+        return ReflectUtil.invokeMethod(bean, methodProxy.getMethod(), methodProxy.getArguments());
     }
 }

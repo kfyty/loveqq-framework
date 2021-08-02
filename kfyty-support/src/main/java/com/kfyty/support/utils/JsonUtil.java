@@ -1,13 +1,14 @@
 package com.kfyty.support.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Map;
 import java.util.TimeZone;
-
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS;
 
 /**
  * 功能描述: json 工具类
@@ -17,28 +18,39 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEY
  * @since JDK 1.8
  */
 public abstract class JsonUtil {
-
-    private static final ObjectMapper OBJECT_READ_MAPPER = new ObjectMapper();
-
-    private static final ObjectMapper OBJECT_WRITE_MAPPER = new ObjectMapper();
+    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
 
     static {
-        OBJECT_READ_MAPPER.setTimeZone(TimeZone.getDefault());
-        OBJECT_WRITE_MAPPER.setTimeZone(TimeZone.getDefault());
-        OBJECT_WRITE_MAPPER.configure(WRITE_DATE_KEYS_AS_TIMESTAMPS, false);
-        OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+        configure().setTimeZone(TimeZone.getDefault());
+        configureWriter().with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
-    public static String toJson(Object o) throws JsonProcessingException {
-        return OBJECT_WRITE_MAPPER.writeValueAsString(o);
+    public static ObjectMapper configure() {
+        return DEFAULT_OBJECT_MAPPER;
     }
 
-    public static String toJson(Object o, String dateFormat) throws JsonProcessingException {
-        OBJECT_WRITE_MAPPER.setDateFormat(new SimpleDateFormat(dateFormat));
-        return OBJECT_WRITE_MAPPER.writeValueAsString(o);
+    public static ObjectReader configureReader() {
+        return configure().reader();
+    }
+
+    public static ObjectWriter configureWriter() {
+        return configure().writer();
+    }
+
+    public static String toJson(Object o) throws IOException {
+        return DEFAULT_OBJECT_MAPPER.writeValueAsString(o);
+    }
+
+    public static Map<String, Object> toMap(Object o) {
+        return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
+    }
+
+    public static <T> T toObject(Map<String, Object> map, Class<T> clazz) {
+        return DEFAULT_OBJECT_MAPPER.convertValue(map, clazz);
     }
 
     public static <T> T toObject(String json, Class<T> clazz) throws IOException {
-        return OBJECT_READ_MAPPER.readValue(json, clazz);
+        return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
     }
 }

@@ -75,8 +75,7 @@ public abstract class AopUtil {
      * @return 原 bean 的类型
      */
     public static Class<?> getSourceClass(Object bean) {
-        Object sourceTarget = getSourceTarget(bean);
-        return sourceTarget == null ? bean.getClass() : sourceTarget.getClass();
+        return getSourceTarget(bean).getClass();
     }
 
     /**

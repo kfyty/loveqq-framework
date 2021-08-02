@@ -4,6 +4,7 @@ import com.kfyty.mvc.annotation.RequestMapping;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
@@ -30,12 +31,12 @@ public class RequestMappingAnnotationHandler {
     /**
      * 验证是否是 restful 风格 url 的正则表达式
      */
-    public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)\\}.*");
+    public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
 
     /**
      * 匹配 {pathVariable} 的正则表达式
      */
-    public static final Pattern PATH_VARIABLE_PATTERN = Pattern.compile("^\\{.*\\}$");
+    public static final Pattern PATH_VARIABLE_PATTERN = Pattern.compile("^\\{.*}$");
 
     /**
      * 控制器类注解的 url
@@ -56,17 +57,17 @@ public class RequestMappingAnnotationHandler {
         this.superUrl = "";
         this.mappingController = mappingController;
         this.methodMappingList.clear();
-        this.handleAnnotation();
+        this.processAnnotation();
         this.buildURLMappingMap();
     }
 
     private void buildURLMappingMap() {
-        if(CommonUtil.empty(methodMappingList)) {
+        if (CommonUtil.empty(methodMappingList)) {
             return;
         }
         Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> urlMappingMap = MethodMapping.getMethodMappingMap();
-        for(MethodMapping methodMapping : methodMappingList) {
-            if(!urlMappingMap.containsKey(methodMapping.getRequestMethod())) {
+        for (MethodMapping methodMapping : methodMappingList) {
+            if (!urlMappingMap.containsKey(methodMapping.getRequestMethod())) {
                 urlMappingMap.put(methodMapping.getRequestMethod(), methodMapping.buildMap());
                 continue;
             }
@@ -74,18 +75,18 @@ public class RequestMappingAnnotationHandler {
         }
     }
 
-    private void handleAnnotation() {
-        Class<?> clazz = this.mappingController.getClass();
-        if(AnnotationUtil.hasAnnotation(clazz, RequestMapping.class)) {
+    private void processAnnotation() {
+        Class<?> clazz = AopUtil.getSourceClass(this.mappingController);
+        if (AnnotationUtil.hasAnnotation(clazz, RequestMapping.class)) {
             this.superUrl = CommonUtil.formatURI(AnnotationUtil.findAnnotation(clazz, RequestMapping.class).value());
         }
-        this.handleMethodAnnotation();
+        this.processMethodAnnotation();
     }
 
-    private void handleMethodAnnotation() {
-        List<Method> methods = ReflectUtil.getMethods(this.mappingController.getClass());
+    private void processMethodAnnotation() {
+        List<Method> methods = ReflectUtil.getMethods(AopUtil.getSourceClass(this.mappingController));
         for (Method method : methods) {
-            if(this.existsRequestMapping(method)) {
+            if (this.existsRequestMapping(method)) {
                 MethodMapping methodMapping = MethodMapping.newURLMapping(mappingController, method);
                 this.parseRequestMappingAnnotation(methodMapping);
                 this.methodMappingList.add(methodMapping);
@@ -98,11 +99,11 @@ public class RequestMappingAnnotationHandler {
     }
 
     private RequestMapping findRequestMapping(Method method) {
-        if(AnnotationUtil.hasAnnotation(method, RequestMapping.class)) {
+        if (AnnotationUtil.hasAnnotation(method, RequestMapping.class)) {
             return AnnotationUtil.findAnnotation(method, RequestMapping.class);
         }
         for (Annotation annotation : AnnotationUtil.findAnnotations(method)) {
-            if(AnnotationUtil.hasAnnotation(annotation.annotationType(), RequestMapping.class)) {
+            if (AnnotationUtil.hasAnnotation(annotation.annotationType(), RequestMapping.class)) {
                 return new RequestMapping() {
 
                     @Override
@@ -131,7 +132,7 @@ public class RequestMappingAnnotationHandler {
         methodMapping.setUrl(superUrl + mappingPath);
         methodMapping.setRequestMethod(annotation.requestMethod());
         this.parsePathVariable(methodMapping);
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
         }
     }
@@ -139,14 +140,13 @@ public class RequestMappingAnnotationHandler {
     private void parsePathVariable(MethodMapping methodMapping) {
         List<String> paths = CommonUtil.split(methodMapping.getUrl(), "[/]");
         methodMapping.setUrlLength(paths.size());
-        if(!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
+        if (!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
             return;
         }
         for (int i = 0; i < paths.size(); i++) {
-            if(!PATH_VARIABLE_PATTERN.matcher(paths.get(i)).matches()) {
-                continue;
+            if (PATH_VARIABLE_PATTERN.matcher(paths.get(i)).matches()) {
+                methodMapping.getRestfulURLMappingIndex().put(paths.get(i).replaceAll("[{}]", ""), i);
             }
-            methodMapping.getRestfulURLMappingIndex().put(paths.get(i).replaceAll("[\\{\\}]", ""), i);
         }
         methodMapping.setRestfulUrl(true);
         methodMapping.setPaths(paths);
