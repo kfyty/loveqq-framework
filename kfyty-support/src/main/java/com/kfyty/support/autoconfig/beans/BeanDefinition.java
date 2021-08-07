@@ -28,9 +28,29 @@ public interface BeanDefinition {
     String getBeanName();
 
     /**
+     * 设置 bean name
+     */
+    void setBeanName(String beanName);
+
+    /**
      * bean 的类型
      */
     Class<?> getBeanType();
+
+    /**
+     * 设置 bean 类型
+     */
+    void setBeanType(Class<?> beanType);
+
+    /**
+     * bean 的作用域
+     */
+    String getScope();
+
+    /**
+     * 设置 bean 作用域
+     */
+    void setScope(String scope);
 
     /**
      * 是否单例

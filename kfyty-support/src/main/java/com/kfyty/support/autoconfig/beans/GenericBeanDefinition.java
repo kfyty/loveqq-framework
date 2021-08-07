@@ -2,27 +2,22 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 描述: 简单的通用 bean 定义
@@ -36,24 +31,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 @EqualsAndHashCode
 public class GenericBeanDefinition implements BeanDefinition {
     /**
-     * 工厂 bean 数量索引
-     */
-    private static final AtomicInteger FACTORY_BEAN_INDEX = new AtomicInteger(0);
-
-    /**
      * 该 bean 注册的名称
      */
-    protected final String beanName;
+    protected String beanName;
 
     /**
      * 该 bean 注册的类型
      */
-    protected final Class<?> beanType;
+    protected Class<?> beanType;
 
     /**
-     * 是否是单例
+     * bean 作用域
      */
-    protected final boolean isSingleton;
+    protected String scope;
 
     /**
      * 是否是自动装配的候选者
@@ -75,19 +65,23 @@ public class GenericBeanDefinition implements BeanDefinition {
      */
     protected static AutowiredProcessor autowiredProcessor = null;
 
+    public GenericBeanDefinition() {
+        this.setAutowireCandidate(true);
+    }
+
     public GenericBeanDefinition(Class<?> beanType) {
         this(BeanUtil.convert2BeanName(beanType), beanType);
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType) {
-        this(beanName, beanType, BeanUtil.isSingleton(beanType));
+        this(beanName, beanType, ScopeUtil.resolveScope(beanType).value());
     }
 
-    public GenericBeanDefinition(String beanName, Class<?> beanType, boolean isSingleton) {
-        this.beanName = beanName;
-        this.beanType = beanType;
-        this.isSingleton = isSingleton;
-        this.isAutowireCandidate = true;
+    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope) {
+        this();
+        this.setBeanName(beanName);
+        this.setBeanType(beanType);
+        this.setScope(scope);
     }
 
     @Override
@@ -96,13 +90,33 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public void setBeanName(String beanName) {
+        this.beanName = Objects.requireNonNull(beanName);
+    }
+
+    @Override
     public Class<?> getBeanType() {
         return this.beanType;
     }
 
     @Override
+    public void setBeanType(Class<?> beanType) {
+        this.beanType = Objects.requireNonNull(beanType);
+    }
+
+    @Override
+    public String getScope() {
+        return this.scope;
+    }
+
+    @Override
+    public void setScope(String scope) {
+        this.scope = Objects.requireNonNull(scope);
+    }
+
+    @Override
     public boolean isSingleton() {
-        return this.isSingleton;
+        return this.getScope().equals(SCOPE_SINGLETON);
     }
 
     @Override
@@ -179,74 +193,5 @@ public class GenericBeanDefinition implements BeanDefinition {
             constructorArgs.put(parameter.getType(), resolveBean);
         }
         return constructorArgs;
-    }
-
-    /***************************************** 静态方法 *****************************************/
-
-    /**
-     * 从 Class 生成一个 bean 定义
-     */
-    public static BeanDefinition from(Class<?> beanType) {
-        if (FactoryBean.class.isAssignableFrom(beanType)) {
-            return from(beanType.getName() + "@" + FACTORY_BEAN_INDEX.getAndIncrement(), beanType, BeanUtil.isSingleton(beanType));
-        }
-        return from(findBeanName(beanType), beanType, BeanUtil.isSingleton(beanType));
-    }
-
-    /**
-     * 从 Class 生成一个 bean 定义
-     */
-    public static BeanDefinition from(String beanName, Class<?> beanType, boolean isSingleton) {
-        return new GenericBeanDefinition(beanName, beanType, isSingleton);
-    }
-
-    /**
-     * 从 Bean 注解的方法生成一个 Bean 定义
-     */
-    public static BeanDefinition from(BeanDefinition source, Method beanMethod, Bean bean) {
-        MethodBeanDefinition beanDefinition = new MethodBeanDefinition(BeanUtil.getBeanName(beanMethod, bean), beanMethod.getReturnType(), source, beanMethod);
-        if(CommonUtil.notEmpty(bean.initMethod())) {
-            beanDefinition.setInitMethodName(bean.initMethod());
-        }
-        if(CommonUtil.notEmpty(bean.destroyMethod())) {
-            beanDefinition.setDestroyMethodName(bean.destroyMethod());
-        }
-        return beanDefinition;
-    }
-
-    /**
-     * 从 FactoryBean 的 bean 定义生成一个 bean 定义
-     */
-    public static BeanDefinition fromFactory(BeanDefinition factoryBeanDefinition) {
-        return new FactoryBeanDefinition(factoryBeanDefinition);
-    }
-
-    /**
-     * 获取 bean 定义的作用域
-     */
-    public static Scope getScope(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Scope.class);
-        }
-        return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Scope.class);
-    }
-
-    /**
-     * 从 bean type 解析 bean name
-     */
-    public static String findBeanName(Class<?> beanType) {
-        Component component = AnnotationUtil.findAnnotation(beanType, Component.class);
-        if (component != null && CommonUtil.notEmpty(component.value())) {
-            return component.value();
-        }
-        for (Annotation annotation : AnnotationUtil.findAnnotations(beanType)) {
-            if (AnnotationUtil.hasAnnotationElement(annotation.annotationType(), Component.class)) {
-                String beanName = ReflectUtil.invokeSimpleMethod(annotation, "value");
-                if (CommonUtil.notEmpty(beanName)) {
-                    return beanName;
-                }
-            }
-        }
-        return BeanUtil.convert2BeanName(beanType);
     }
 }

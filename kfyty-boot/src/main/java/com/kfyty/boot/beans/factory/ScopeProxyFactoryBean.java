@@ -5,9 +5,9 @@ import com.kfyty.support.autoconfig.BeanFactoryAware;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.MethodInterceptorChain;
+import com.kfyty.support.proxy.factory.DynamicProxyFactory;
+import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import net.sf.cglib.proxy.Enhancer;
 
 /**
  * 描述: 为非单例 bean 创建作用域代理
@@ -52,10 +52,8 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
 
     @Override
     public T getObject() {
-        Enhancer enhancer = new Enhancer();
-        MethodInterceptorChain interceptorChain = new MethodInterceptorChain(null);
-        enhancer.setSuperclass(this.getBeanType());
-        enhancer.setCallback(interceptorChain.addInterceptorPoint(new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition)));
-        return (T) enhancer.create();
+        Object proxy = DynamicProxyFactory.create(true).createProxy(this.getBeanType());
+        AopUtil.addProxyInterceptorPoint(proxy, new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition));
+        return (T) proxy;
     }
 }

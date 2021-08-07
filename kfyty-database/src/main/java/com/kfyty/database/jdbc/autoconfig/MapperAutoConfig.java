@@ -3,7 +3,7 @@ package com.kfyty.database.jdbc.autoconfig;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.utils.AnnotationUtil;
 
 import java.util.Set;
@@ -24,7 +24,7 @@ public class MapperAutoConfig implements ImportBeanDefine {
         return scanClasses
                 .stream()
                 .filter(e -> AnnotationUtil.hasAnnotation(e, Mapper.class))
-                .map(e -> GenericBeanDefinition.from(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e))
+                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e).getBeanDefinition())
                 .collect(Collectors.toSet());
     }
 }

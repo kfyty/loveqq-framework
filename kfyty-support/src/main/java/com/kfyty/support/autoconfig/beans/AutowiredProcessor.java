@@ -58,12 +58,12 @@ public class AutowiredProcessor {
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
-        if(targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceClass(targetBean))) {
+        if (targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceClass(targetBean))) {
             targetBean = AopUtil.getSourceTarget(targetBean);
         }
-        if(targetBean != null) {
+        if (targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("autowired bean: {} -> {} !", targetBean, bean);
             }
         }
@@ -75,13 +75,13 @@ public class AutowiredProcessor {
         for (Parameter parameter : method.getParameters()) {
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
             Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : this.findAutowiredAnnotation(method));
-            if(targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceClass(targetBean))) {
+            if (targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceClass(targetBean))) {
                 targetBean = AopUtil.getSourceTarget(targetBean);
             }
             parameters[index++] = targetBean;
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("autowired bean: {} -> {} !", parameters, bean);
         }
     }
@@ -97,19 +97,19 @@ public class AutowiredProcessor {
     public Object doResolveBean(String targetBeanName, ActualGeneric returnType, Autowired autowired) {
         Object resolveBean = null;
         Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
-        if(List.class.isAssignableFrom(returnType.getSourceType())) {
+        if (List.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new ArrayList<>(beans.values());
         }
-        if(Set.class.isAssignableFrom(returnType.getSourceType())) {
+        if (Set.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new HashSet<>(beans.values());
         }
-        if(returnType.isMapGeneric()) {
+        if (returnType.isMapGeneric()) {
             resolveBean = beans;
         }
-        if(returnType.isSimpleArray()) {
+        if (returnType.isSimpleArray()) {
             resolveBean = beans.values().toArray((Object[]) Array.newInstance(returnType.getSimpleActualType(), 0));
         }
-        if(resolveBean == null) {
+        if (resolveBean == null) {
             resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
         }
         return resolveBean;
@@ -129,6 +129,112 @@ public class AutowiredProcessor {
             return autowired;
         }
         return this.createAutowiredAnnotation(AnnotationUtil.findAnnotation(method, Resource.class), null);
+    }
+
+    private void checkResolving(String targetBeanName) {
+        if (resolving.contains(targetBeanName)) {
+            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
+        }
+    }
+
+    private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+        if (!isGeneric) {
+            this.checkResolving(targetBeanName);
+            if (!this.context.containsReference(targetBeanName)) {
+                resolving.add(targetBeanName);
+            }
+            return;
+        }
+        for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
+            this.checkResolving(beanDefinition.getBeanName());
+            if (!this.context.containsReference(beanDefinition.getBeanName())) {
+                resolving.add(beanDefinition.getBeanName());
+            }
+        }
+    }
+
+    private void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+        if (!isGeneric) {
+            resolving.remove(targetBeanName);
+        } else {
+            this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.remove(e.getBeanName()));
+        }
+    }
+
+    private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
+        Map<String, Object> beanOfType = new HashMap<>(2);
+        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType).entrySet().stream().filter(e -> e.getValue().isAutowireCandidate()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
+            if (this.context.contains(entry.getKey())) {
+                beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
+            } else if (isGeneric) {
+                this.prepareResolving(targetBeanName, targetType, true);
+                this.context.registerBeanReference(entry.getValue());
+                this.removeResolving(targetBeanName, targetType, true);
+            }
+        }
+        if (beanOfType.size() < targetBeanDefinitions.size()) {
+            try {
+                this.prepareResolving(targetBeanName, targetType, isGeneric);
+                if (isGeneric) {
+                    for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
+                        if (!beanOfType.containsKey(entry.getKey())) {
+                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue()));
+                        }
+                    }
+                } else {
+                    BeanDefinition beanDefinition = targetBeanDefinitions.size() == 1 ? targetBeanDefinitions.values().iterator().next() : targetBeanDefinitions.get(targetBeanName);
+                    if (beanDefinition == null) {
+                        if (!autowiredRequired(autowired)) {
+                            return beanOfType;
+                        }
+                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, but no bean definition found of name: {}", targetType, targetBeanName));
+                    }
+                    beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition));
+                }
+            } finally {
+                this.removeResolving(targetBeanName, targetType, isGeneric);
+            }
+        }
+        if (autowiredRequired(autowired) && beanOfType.isEmpty() || autowiredRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
+            throw new BeansException("resolve target bean failed, no bean found of name: " + targetBeanName);
+        }
+        return beanOfType;
+    }
+
+    private boolean autowiredRequired(Autowired autowired) {
+        return autowired == null || autowired.required();
+    }
+
+    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, ActualGeneric actualGeneric) {
+        Object bean = beans.get(beanName);
+        if (bean != null) {
+            return bean;
+        }
+        List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
+        for (Object value : beans.values()) {
+            SimpleGeneric generic = SimpleGeneric.from(value.getClass());
+            if (generic.size() != targetGenerics.size()) {
+                continue;
+            }
+            boolean matched = true;
+            List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
+            for (int i = 0; i < generics.size(); i++) {
+                Class<?> target = targetGenerics.get(i).get();
+                Class<?> toBeMatched = generics.get(i).get();
+                if (!Objects.equals(target, toBeMatched)) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) {
+                if (bean != null) {
+                    throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
+                }
+                bean = value;
+            }
+        }
+        return bean;
     }
 
     private Autowired createAutowiredAnnotation(Resource resource, Field field) {
@@ -151,118 +257,12 @@ public class AutowiredProcessor {
         };
     }
 
-    private void checkResolving(String targetBeanName) {
-        if (resolving.contains(targetBeanName)) {
-            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
-        }
-    }
-
-    private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
-        if(!isGeneric) {
-            this.checkResolving(targetBeanName);
-            if(!this.context.containsReference(targetBeanName)) {
-                resolving.add(targetBeanName);
-            }
-            return;
-        }
-        for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
-            this.checkResolving(beanDefinition.getBeanName());
-            if(!this.context.containsReference(beanDefinition.getBeanName())) {
-                resolving.add(beanDefinition.getBeanName());
-            }
-        }
-    }
-
-    private void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
-        if(!isGeneric) {
-            resolving.remove(targetBeanName);
-        } else {
-            this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.remove(e.getBeanName()));
-        }
-    }
-
-    private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
-        Map<String, Object> beanOfType = new HashMap<>(2);
-        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType).entrySet().stream().filter(e -> e.getValue().isAutowireCandidate()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
-            if(this.context.contains(entry.getKey())) {
-                beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
-            } else if(isGeneric) {
-                this.prepareResolving(targetBeanName, targetType, true);
-                this.context.registerBeanReference(entry.getValue());
-                this.removeResolving(targetBeanName, targetType, true);
-            }
-        }
-        if(beanOfType.size() < targetBeanDefinitions.size()) {
-            try {
-                this.prepareResolving(targetBeanName, targetType, isGeneric);
-                if(isGeneric) {
-                    for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
-                        if(!beanOfType.containsKey(entry.getKey())) {
-                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue()));
-                        }
-                    }
-                } else {
-                    BeanDefinition beanDefinition = targetBeanDefinitions.size() == 1 ? targetBeanDefinitions.values().iterator().next() : targetBeanDefinitions.get(targetBeanName);
-                    if(beanDefinition == null) {
-                        if(!autowiredRequired(autowired)) {
-                            return beanOfType;
-                        }
-                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, but no bean definition found of name: {}", targetType, targetBeanName));
-                    }
-                    beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition));
-                }
-            } finally {
-                this.removeResolving(targetBeanName, targetType, isGeneric);
-            }
-        }
-        if(autowiredRequired(autowired) && beanOfType.isEmpty() || autowiredRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            throw new BeansException("resolve target bean failed, no bean found of name: " + targetBeanName);
-        }
-        return beanOfType;
-    }
-
-    private boolean autowiredRequired(Autowired autowired) {
-        return autowired == null || autowired.required();
-    }
-
-    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, ActualGeneric actualGeneric) {
-        Object bean = beans.get(beanName);
-        if(bean != null) {
-            return bean;
-        }
-        List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
-        for (Object value : beans.values()) {
-            SimpleGeneric generic = SimpleGeneric.from(value.getClass());
-            if(generic.size() != targetGenerics.size()) {
-                continue;
-            }
-            boolean matched = true;
-            List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
-            for (int i = 0; i < generics.size(); i++) {
-                Class<?> target = targetGenerics.get(i).get();
-                Class<?> toBeMatched = generics.get(i).get();
-                if(!Objects.equals(target, toBeMatched)) {
-                    matched = false;
-                    break;
-                }
-            }
-            if(matched) {
-                if(bean != null) {
-                    throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
-                }
-                bean = value;
-            }
-        }
-        return bean;
-    }
-
     private String buildCircularDependency() {
         StringBuilder builder = new StringBuilder("┌─────┐\r\n");
         Object[] beanNames = this.resolving.toArray();
         for (int i = 0; i < beanNames.length; i++) {
             builder.append(beanNames[i]).append(" -> ").append(this.context.getBeanDefinition(beanNames[i].toString())).append("\r\n");
-            if(i < beanNames.length - 1) {
+            if (i < beanNames.length - 1) {
                 builder.append("↑     ↓\r\n");
             }
         }

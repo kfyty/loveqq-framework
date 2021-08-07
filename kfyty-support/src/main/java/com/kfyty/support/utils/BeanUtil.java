@@ -4,7 +4,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
-import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
@@ -15,6 +14,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,45 +29,50 @@ import java.util.function.BiPredicate;
  */
 @Slf4j
 public abstract class BeanUtil {
-
-    public static String convert2BeanName(Class<?> clazz) {
-        return convert2BeanName(clazz.getSimpleName());
-    }
-
-    public static String convert2BeanName(String className) {
-        if(className.length() > 1 && Character.isUpperCase(className.charAt(1))) {
-            return className;
-        }
-        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
-    }
-
+    /**
+     * 从参数对象中解析 bean name
+     * @param parameter 参数对象
+     * @return bean name
+     */
     public static String getBeanName(Parameter parameter) {
         Qualifier qualifier = AnnotationUtil.findAnnotation(parameter, Qualifier.class);
         return qualifier != null ? qualifier.value() : getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Autowired.class));
     }
 
+    /**
+     * 从方法对象以及 Bean 对象中解析 bean name
+     * @param method 方法对象
+     * @param bean Bean 注解实例
+     * @return bean name
+     */
     public static String getBeanName(Method method, Bean bean) {
         return bean != null && CommonUtil.notEmpty(bean.value()) ? bean.value() : method.getName();
     }
 
+    /**
+     * 从 class 以及 Autowired 注解中解析 bean name
+     * @param clazz class
+     * @param autowired Autowired 注解实例
+     * @return bean name
+     */
     public static String getBeanName(Class<?> clazz, Autowired autowired) {
         return autowired != null && CommonUtil.notEmpty(autowired.value()) ? autowired.value() : convert2BeanName(clazz);
     }
 
-    public static boolean isSingleton(Class<?> clazz) {
-        Scope scope = AnnotationUtil.findAnnotation(clazz, Scope.class);
-        return scope == null || BeanDefinition.SCOPE_SINGLETON.equals(scope.value());
-    }
-
-    public static boolean isSingleton(Method beanMethod) {
-        Scope scope = AnnotationUtil.findAnnotation(beanMethod, Scope.class);
-        return scope == null || BeanDefinition.SCOPE_SINGLETON.equals(scope.value());
-    }
-
+    /**
+     * 获取给定 bean 的优先级
+     * @param bean bean
+     * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
+     */
     public static int getBeanOrder(Object bean) {
         return Optional.ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE);
     }
 
+    /**
+     * 获取给定 BeanDefinition 的优先级
+     * @param beanDefinition bean 定义
+     * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
+     */
     public static int getBeanOrder(BeanDefinition beanDefinition) {
         if(beanDefinition instanceof FactoryBeanDefinition) {
             return getBeanOrder(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
@@ -83,19 +88,64 @@ public abstract class BeanUtil {
         return Order.LOWEST_PRECEDENCE;
     }
 
-    public static <S, T> T copyBean(S source, T target) {
-        return copyBean(source, target, (f, v) -> !Modifier.isFinal(f.getModifiers()));
+    /**
+     * 根据 class 对象转换为 bean name
+     * @param clazz class
+     * @return bean name
+     */
+    public static String convert2BeanName(Class<?> clazz) {
+        return convert2BeanName(clazz.getSimpleName());
     }
 
+    /**
+     * 将字符串转换为 bean name
+     * @param className string，一般为类名
+     * @return bean name
+     */
+    public static String convert2BeanName(String className) {
+        if(className.length() > 1 && Character.isUpperCase(className.charAt(1))) {
+            return className;
+        }
+        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
+    }
+
+    /**
+     * 复制 bean 属性
+     * @param source 源对象
+     * @param target 目标对象
+     * @return 目标对象
+     */
+    public static <S, T> T copyProperties(S source, T target) {
+        return copyProperties(source, target, (f, v) -> !Modifier.isFinal(f.getModifiers()));
+    }
+
+    /**
+     * 将 Map 中的数据复制到 bean 中
+     * @param map Map
+     * @param clazz 目标 bean class 类型
+     * @return 目标对象
+     */
     public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz) {
         return copyProperties(map, clazz, (f, v) -> !Modifier.isFinal(f.getModifiers()));
     }
 
+    /**
+     * 将对象的属性复制到 Map 中
+     * @param obj 目标对象
+     * @return Map
+     */
     public static Map<String, Object> copyProperties(Object obj) {
         return copyProperties(obj, (f, v) -> true);
     }
 
-    public static <S, T> T copyBean(S source, T target, BiPredicate<Field, Object> fieldValTest) {
+    /**
+     * 使用反射复制 bean 属性，允许通过属性过滤器控制
+     * @param source 源对象
+     * @param target 目标对象
+     * @param fieldValTest 属性过滤器
+     * @return 目标对象
+     */
+    public static <S, T> T copyProperties(S source, T target, BiPredicate<Field, Object> fieldValTest) {
         Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
         Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
         for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
@@ -106,7 +156,7 @@ public abstract class BeanUtil {
             Field field = targetFieldMap.get(fieldEntry.getKey());
             Object fieldValue = ReflectUtil.getFieldValue(source, fieldEntry.getValue());
             if(!fieldValTest.test(field, fieldValue)) {
-                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy bean skip field: {}", param), fieldEntry.getValue());
+                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy properties skip field: {}", param), fieldEntry.getValue());
                 continue;
             }
             ReflectUtil.setFieldValue(target, field, fieldValue);
@@ -114,6 +164,13 @@ public abstract class BeanUtil {
         return target;
     }
 
+    /**
+     * 将 Map 中的数据复制到 bean 中，允许通过属性过滤器控制
+     * @param map Map
+     * @param clazz 目标 bean class 类型
+     * @param fieldValTest 属性过滤器
+     * @return 目标对象
+     */
     public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz, BiPredicate<Field, Object> fieldValTest) {
         if(CommonUtil.empty(map) || clazz == null) {
             return null;
@@ -134,9 +191,15 @@ public abstract class BeanUtil {
         return o;
     }
 
+    /**
+     * 将对象的属性复制到 Map 中，允许通过属性过滤器控制
+     * @param obj 目标对象
+     * @param fieldValTest 属性过滤器
+     * @return Map
+     */
     public static Map<String, Object> copyProperties(Object obj, BiPredicate<Field, Object> fieldValTest) {
         if(obj == null) {
-            return new HashMap<>(2);
+            return Collections.emptyMap();
         }
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {

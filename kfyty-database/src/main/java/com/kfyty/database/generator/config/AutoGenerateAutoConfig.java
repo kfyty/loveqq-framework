@@ -11,7 +11,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -38,7 +38,8 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
     @Autowired(required = false)
     private List<GeneratorTemplate> templates;
 
-    @Lazy @Autowired(required = false)
+    @Lazy
+    @Autowired(required = false)
     private Class<? extends AbstractDatabaseMapper> databaseMapper;
 
     @Override
@@ -46,33 +47,33 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
         return scanClasses
                 .stream()
                 .filter(AbstractDatabaseMapper.class::isAssignableFrom)
-                .map(e -> GenericBeanDefinition.from(DatabaseMapperFactory.class).addConstructorArgs(Class.class, e))
+                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(DatabaseMapperFactory.class).addConstructorArgs(Class.class, e).getBeanDefinition())
                 .collect(Collectors.toSet());
     }
 
     @Override
     @SneakyThrows
     public void onCompleted(ApplicationContext applicationContext) {
-        if(this.configurationSupport == null) {
+        if (this.configurationSupport == null) {
             log.warn("generator configuration does not exist !");
             return;
         }
         GenerateSources generateSources = new GenerateSources(this.configurationSupport);
         EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);
-        if(annotation.loadTemplate()) {
+        if (annotation.loadTemplate()) {
             List<? extends GeneratorTemplate> templates = ReflectUtil.newInstance(annotation.templateEngine()).loadTemplates(annotation.templatePrefix());
             generateSources.refreshTemplate(templates);
-            if(CommonUtil.empty(templates)) {
+            if (CommonUtil.empty(templates)) {
                 log.warn("no template found for prefix: '" + annotation.templatePrefix() + "' !");
             }
         }
-        if(this.templates != null) {
+        if (this.templates != null) {
             generateSources.refreshTemplate(this.templates);
         }
-        if(databaseMapper != null) {
+        if (databaseMapper != null) {
             generateSources.getConfiguration().setDatabaseMapper(databaseMapper);
         }
-        if(!CommonUtil.empty(generateSources.getConfiguration().getTemplateList())) {
+        if (CommonUtil.notEmpty(generateSources.getConfiguration().getTemplateList())) {
             generateSources.doGenerate();
         }
     }

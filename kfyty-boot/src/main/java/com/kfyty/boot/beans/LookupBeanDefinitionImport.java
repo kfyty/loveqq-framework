@@ -7,7 +7,7 @@ import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 
@@ -35,7 +35,7 @@ public class LookupBeanDefinitionImport implements ApplicationContextAware, Impo
         return scanClasses.parallelStream()
                 .filter(e -> ReflectUtil.isAbstract(e) && this.applicationContext.doFilterComponent(e))
                 .filter(e -> ReflectUtil.getMethods(e).stream().anyMatch(m -> AnnotationUtil.hasAnnotation(m, Lookup.class)))
-                .map(e -> GenericBeanDefinition.from(LookupBeanFactoryBean.class).addConstructorArgs(Class.class, e))
+                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(LookupBeanFactoryBean.class).addConstructorArgs(Class.class, e).getBeanDefinition())
                 .collect(Collectors.toSet());
     }
 }

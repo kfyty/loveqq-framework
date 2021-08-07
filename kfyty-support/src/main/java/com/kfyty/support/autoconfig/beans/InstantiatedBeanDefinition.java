@@ -24,7 +24,7 @@ public class InstantiatedBeanDefinition extends GenericBeanDefinition {
 
     @Override
     public Object createInstance(ApplicationContext context) {
-        if(context.contains(this.getBeanName())) {
+        if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
         throw new BeansException("the bean definition does not support instantiation: " + this);

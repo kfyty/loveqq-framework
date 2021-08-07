@@ -21,7 +21,7 @@ import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -185,7 +185,7 @@ class FactoryImport implements ImportBeanDefine {
         return scanClasses
                 .stream()
                 .filter(e -> !e.equals(Factory.class) && Factory.class.isAssignableFrom(e))
-                .map(e -> GenericBeanDefinition.from(FactoryProxy.class).addConstructorArgs(Class.class, e))
+                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(FactoryProxy.class).addConstructorArgs(Class.class, e).getBeanDefinition())
                 .collect(Collectors.toSet());
     }
 }

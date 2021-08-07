@@ -1,27 +1,25 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.wrapper.AnnotationWrapper;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
 import com.kfyty.support.autoconfig.ContextRefreshCompleted;
-import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.autoconfig.beans.BeanFactory;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.wrapper.AnnotationWrapper;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -115,13 +112,13 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 this.invokeContextRefreshed();
 
                 /* 添加销毁钩子 */
-                Runtime.getRuntime().addShutdownHook(new Thread(this::processDestroy));
+                Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 
                 return this;
             } catch (Throwable throwable) {
                 log.error("k-boot started failed !");
                 try {
-                    this.processDestroy();
+                    this.close();
                 } catch (Throwable nestedThrowable) {
                     log.error("process destroy error !", nestedThrowable);
                 }
@@ -184,7 +181,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
-        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(GenericBeanDefinition::from).forEach(this::registerBeanDefinition);
+        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(e -> BeanDefinitionBuilder.genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
     }
 
     protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {
@@ -229,24 +226,5 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected void invokeContextRefreshed() {
         this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
         this.getBeanOfType(ContextRefreshCompleted.class).values().forEach(e -> e.onCompleted(this));
-    }
-
-    protected void processDestroy() {
-        log.info("destroy bean...");
-
-        this.forEach((beanName, bean) -> {
-
-            this.getBeanPostProcessors().forEach(e -> e.postProcessBeforeDestroy(bean, beanName));
-
-            if(bean instanceof DestroyBean) {
-                ((DestroyBean) bean).onDestroy();
-            }
-
-            BeanDefinition beanDefinition = this.getBeanDefinition(beanName);
-            if(beanDefinition instanceof MethodBeanDefinition) {
-                MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
-                Optional.ofNullable(methodBeanDefinition.getDestroyMethod(this)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
-            }
-        });
     }
 }

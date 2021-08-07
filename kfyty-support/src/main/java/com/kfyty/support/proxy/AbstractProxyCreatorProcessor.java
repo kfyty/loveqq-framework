@@ -28,16 +28,16 @@ public abstract class AbstractProxyCreatorProcessor implements ApplicationContex
     }
 
     public Object createProxy(Object bean, String beanName, InterceptorChainPoint interceptorChainPoint) {
-        if(AopUtil.addProxyInterceptorPoint(bean, interceptorChainPoint)) {
+        if (AopUtil.addProxyInterceptorPoint(bean, interceptorChainPoint)) {
             return bean;
         }
         BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
         Object proxy = DynamicProxyFactory.create(bean, this.applicationContext).createProxy(bean, beanDefinition);
         AopUtil.addProxyInterceptorPoint(proxy, interceptorChainPoint);
         if (AnnotationUtil.hasAnnotationElement(bean, Configuration.class)) {
-            BeanUtil.copyBean(bean, proxy);
+            BeanUtil.copyProperties(bean, proxy);
         }
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("proxy target bean: {} -> {}", bean, proxy);
         }
         return proxy;

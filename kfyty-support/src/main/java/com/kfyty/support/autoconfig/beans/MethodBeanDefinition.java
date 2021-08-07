@@ -7,6 +7,7 @@ import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,7 +49,6 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
      * bean 的初始化方法
      */
-    @Getter
     private Method initMethod;
 
     /**
@@ -60,7 +60,6 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
      * bean 的销毁方法
      */
-    @Getter
     private Method destroyMethod;
 
     public MethodBeanDefinition(Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
@@ -68,35 +67,31 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
-        this(beanName, beanType, parentDefinition, beanMethod, BeanUtil.isSingleton(beanMethod));
+        this(beanName, beanType, parentDefinition, beanMethod, ScopeUtil.resolveScope(beanMethod).value());
     }
 
-    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, boolean isSingleton) {
-        super(beanName, beanType, isSingleton);
+    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, String scope) {
+        super(beanName, beanType, scope);
         this.parentDefinition = parentDefinition;
         this.beanMethod = beanMethod;
     }
 
-    public Method getInitMethod(ApplicationContext applicationContext) {
-        if(CommonUtil.empty(this.initMethodName)) {
+    public Method getInitMethod(Object bean) {
+        if (CommonUtil.empty(this.initMethodName)) {
             return null;
         }
-        if(this.initMethod == null) {
-            Object bean = applicationContext.getBean(this.getBeanName());
+        if (this.initMethod == null) {
             this.initMethod = ReflectUtil.getMethod(bean.getClass(), this.initMethodName);
         }
         return initMethod;
     }
 
-    public Method getDestroyMethod(ApplicationContext applicationContext) {
-        if(CommonUtil.empty(this.destroyMethodName)) {
+    public Method getDestroyMethod(Object bean) {
+        if (CommonUtil.empty(this.destroyMethodName)) {
             return null;
         }
-        if(this.destroyMethod == null) {
-            Object bean = applicationContext.getBean(this.getBeanName());
-            if(bean != null) {
-                this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
-            }
+        if (this.destroyMethod == null) {
+            this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
         }
         return destroyMethod;
     }
@@ -106,16 +101,16 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
      */
     @Override
     public Object createInstance(ApplicationContext context) {
-        if(context.contains(this.getBeanName())) {
+        if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
         this.ensureAutowiredProcessor(context);
         Object parentInstance = context.registerBean(this.parentDefinition);
         Object bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, this.prepareMethodArgs());
-        if(context.contains(this.getBeanName())) {
+        if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("instantiate bean from bean method: {} !", bean);
         }
         return bean;

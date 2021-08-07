@@ -5,21 +5,22 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanFactoryAware;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
+import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.utils.ScopeUtil;
 import com.kfyty.support.wrapper.WeakKey;
 
 import java.lang.annotation.Annotation;
@@ -32,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static com.kfyty.boot.beans.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
@@ -99,25 +99,22 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(BeanDefinition beanDefinition) {
-        if(this.containsBeanDefinition(beanDefinition.getBeanName())) {
+        if (this.containsBeanDefinition(beanDefinition.getBeanName())) {
             throw new BeansException("conflicting bean definition: " + beanDefinition.getBeanName());
         }
-        if (!beanDefinition.isSingleton()) {
-            Scope scope = GenericBeanDefinition.getScope(beanDefinition);
-            if (scope != null && scope.scopeProxy()) {
-                beanDefinition.setAutowireCandidate(false);
-                this.beanDefinitions.putIfAbsent(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition);
-                beanDefinition = GenericBeanDefinition.from(ScopeProxyFactoryBean.class).addConstructorArgs(BeanDefinition.class, beanDefinition);
-            }
+        if (!beanDefinition.isSingleton() && ScopeUtil.resolveScope(beanDefinition).scopeProxy()) {
+            beanDefinition.setAutowireCandidate(false);
+            this.beanDefinitions.putIfAbsent(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition);
+            beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(ScopeProxyFactoryBean.class).addConstructorArgs(BeanDefinition.class, beanDefinition).getBeanDefinition();
         }
         this.beanDefinitions.putIfAbsent(beanDefinition.getBeanName(), beanDefinition);
         if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
-            this.registerBeanDefinition(GenericBeanDefinition.fromFactory(beanDefinition));
+            this.registerBeanDefinition(BeanDefinitionBuilder.factoryBeanDefinition(beanDefinition).getBeanDefinition());
         }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
-                this.registerBeanDefinition(GenericBeanDefinition.from(beanDefinition, method, beanAnnotation));
+                this.registerBeanDefinition(BeanDefinitionBuilder.genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
             }
         }
     }
@@ -181,7 +178,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     public <T> T getBean(Class<T> clazz) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz);
-        if(beanDefinitions.size() > 1) {
+        if (beanDefinitions.size() > 1) {
             throw new BeansException("more than one instance of type: " + clazz.getName());
         }
         return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next().getBeanName());
@@ -190,7 +187,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getBean(String name) {
-        if(this.contains(name)) {
+        if (this.contains(name)) {
             return (T) this.beanInstances.get(name);
         }
         return (T) this.registerBean(this.getBeanDefinition(name));
@@ -199,7 +196,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getBeanReference(String name) {
-        if(this.contains(name)) {
+        if (this.contains(name)) {
             this.removeBeanReference(name);
             return this.getBean(name);
         }
@@ -221,7 +218,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
         Map<String, Object> beans = new LinkedHashMap<>(2);
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
-            if(AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanType(), annotationClass)) {
+            if (AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanType(), annotationClass)) {
                 beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
             }
         }
@@ -231,17 +228,18 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     /**
      * 根据 BeanDefinition 注册一个 bean
      * 由于创建 bean 实例的过程中可能会触发代理，因此需对返回的 bean 实例做二次判断
+     *
      * @param beanDefinition BeanDefinition
      * @return bean 实例
      */
     @Override
     public Object registerBean(BeanDefinition beanDefinition) {
-        if(this.contains(beanDefinition.getBeanName())) {
+        if (this.contains(beanDefinition.getBeanName())) {
             return this.getBean(beanDefinition.getBeanName());
         }
         synchronized (this.beanInstances) {
             Object bean = this.containsReference(beanDefinition.getBeanName()) ? this.getBeanReference(beanDefinition.getBeanName()) : this.doCreateBean(beanDefinition);
-            if(!this.contains(beanDefinition.getBeanName())) {
+            if (!this.contains(beanDefinition.getBeanName())) {
                 return this.registerBean(beanDefinition.getBeanName(), bean);
             }
             return this.getBean(beanDefinition.getBeanName());
@@ -256,14 +254,14 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     public Object registerBean(String name, Object bean) {
         synchronized (this.beanInstances) {
-            if(this.contains(name)) {
+            if (this.contains(name)) {
                 throw new BeansException("conflicting bean name: " + name);
             }
-            if(!this.containsBeanDefinition(name)) {
+            if (!this.containsBeanDefinition(name)) {
                 this.registerBeanDefinition(InstantiatedBeanDefinition.from(name, bean.getClass()));
             }
             BeanDefinition beanDefinition = this.getBeanDefinition(name);
-            if(beanDefinition.isSingleton()) {
+            if (beanDefinition.isSingleton()) {
                 this.beanInstances.put(name, bean);
             }
             this.removeBeanReference(name);
@@ -277,11 +275,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Object registerBeanReference(BeanDefinition beanDefinition) {
-        if(this.containsReference(beanDefinition.getBeanName())) {
+        if (this.containsReference(beanDefinition.getBeanName())) {
             return this.getBeanReference(beanDefinition.getBeanName());
         }
         Object earlyBean = this.doCreateBean(beanDefinition);
-        if(this.containsReference(beanDefinition.getBeanName())) {
+        if (this.containsReference(beanDefinition.getBeanName())) {
             return this.getBeanReference(beanDefinition.getBeanName());
         }
         this.beanReference.put(beanDefinition.getBeanName(), earlyBean);
@@ -295,7 +293,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void replaceBean(String name, Object bean) {
-        if(bean != null && this.contains(name)) {
+        if (bean != null && this.contains(name)) {
             this.beanInstances.put(name, bean);
         }
     }
@@ -306,14 +304,31 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
-    public void forEach(BiConsumer<String, Object> bean) {
+    public void close() {
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
-            bean.accept(entry.getKey(), entry.getValue());
+            this.destroyBean(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
+    public void destroyBean(String name, Object bean) {
+        this.getBeanPostProcessors().forEach(e -> e.postProcessBeforeDestroy(bean, name));
+
+        if (bean instanceof DestroyBean) {
+            ((DestroyBean) bean).onDestroy();
+        }
+
+        BeanDefinition beanDefinition = this.getBeanDefinition(name);
+
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
+            Optional.ofNullable(methodBeanDefinition.getDestroyMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
         }
     }
 
     /**
      * 创建 bean 实例
+     *
      * @param beanDefinition bean 定义
      * @return bean
      */
@@ -321,8 +336,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     /**
      * 对 bean 执行依赖注入
+     *
      * @param beanName bean 名称
-     * @param bean bean 实例
+     * @param bean     bean 实例
      */
     public abstract void doAutowiredBean(String beanName, Object bean);
 
@@ -331,19 +347,19 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     private void invokeAwareMethod(String beanName, Object bean) {
-        if(bean instanceof BeanFactoryAware) {
+        if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(this);
         }
-        if(bean instanceof ApplicationContextAware) {
+        if (bean instanceof ApplicationContextAware) {
             ((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
         }
     }
 
     private Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean) {
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
-            if(beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
                 Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName);
-                if(newBean != null && newBean != bean) {
+                if (newBean != null && newBean != bean) {
                     bean = newBean;
                     this.replaceBean(beanName, newBean);
                 }
@@ -353,7 +369,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     private Object invokeLifecycleMethod(String beanName, Object bean) {
-        if(bean instanceof ApplicationContext) {
+        if (bean instanceof ApplicationContext) {
             return bean;
         }
         bean = this.initializingBean(beanName, bean);
@@ -365,29 +381,29 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             Object newBean = beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
-            if(newBean != null && newBean != bean) {
+            if (newBean != null && newBean != bean) {
                 bean = newBean;
                 this.replaceBean(beanName, newBean);
             }
         }
 
-        if(bean instanceof InitializingBean) {
+        if (bean instanceof InitializingBean) {
             ((InitializingBean) bean).afterPropertiesSet();
         }
 
         bean = getExposedBean(beanDefinition, bean);
 
-        if(beanDefinition instanceof MethodBeanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition) {
             final Object finalBean = bean;
             MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
-            Optional.ofNullable(methodBeanDefinition.getInitMethod(this.applicationContext)).ifPresent(e -> ReflectUtil.invokeMethod(finalBean, e));
+            Optional.ofNullable(methodBeanDefinition.getInitMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(finalBean, e));
         }
 
         bean = getExposedBean(beanDefinition, bean);
 
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);
-            if(newBean != null && newBean != bean) {
+            if (newBean != null && newBean != bean) {
                 bean = newBean;
                 this.replaceBean(beanName, newBean);
             }

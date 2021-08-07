@@ -2,7 +2,6 @@ package com.kfyty.support.autoconfig.beans;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * 描述: bean 工厂
@@ -11,7 +10,7 @@ import java.util.function.BiConsumer;
  * @date 2021/6/14 10:59
  * @email kfyty725@hotmail.com
  */
-public interface BeanFactory {
+public interface BeanFactory extends AutoCloseable {
 
     boolean contains(String name);
 
@@ -41,5 +40,5 @@ public interface BeanFactory {
 
     void removeBeanReference(String name);
 
-    void forEach(BiConsumer<String, Object> bean);
+    void destroyBean(String name, Object bean);
 }

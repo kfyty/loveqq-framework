@@ -19,6 +19,6 @@ import lombok.EqualsAndHashCode;
 public class WorkerNode extends WorkerNodeEntity {
 
     public static WorkerNode convert(WorkerNodeEntity entity) {
-        return BeanUtil.copyBean(entity, new WorkerNode());
+        return BeanUtil.copyProperties(entity, new WorkerNode());
     }
 }
