@@ -49,7 +49,7 @@ public abstract class ResultSetUtil {
         TYPE_HANDLER.put(clazz, typeHandler);
     }
 
-    public static Object processObject(ResultSet resultSet, SimpleGeneric returnType) throws Exception {
+    public static Object processObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
         if(returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
@@ -71,7 +71,7 @@ public abstract class ResultSetUtil {
         return processListMapObject(resultSet);
     }
 
-    public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+    public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
         if(CommonUtil.empty(result)) {
             return null;
@@ -82,7 +82,7 @@ public abstract class ResultSetUtil {
         return result.get(0);
     }
 
-    public static <T> Object processArrayObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+    public static <T> Object processArrayObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
         if(CommonUtil.empty(result)) {
             return Array.newInstance(clazz, 0);
@@ -94,12 +94,12 @@ public abstract class ResultSetUtil {
         return o;
     }
 
-    public static <T> Set<T> processSetObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+    public static <T> Set<T> processSetObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         return Optional.of(processListObject(resultSet, clazz)).filter(CommonUtil::notEmpty).map(HashSet::new).orElse(new HashSet<>(2));
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> List<T> processListBaseType(ResultSet resultSet, Class<T> clazz) throws Exception {
+    public static <T> List<T> processListBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException {
         if(resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process base type failed: result set is empty !"));
         }
@@ -110,7 +110,7 @@ public abstract class ResultSetUtil {
         return list;
     }
 
-    public static <T> List<T> processListObject(ResultSet resultSet, Class<T> clazz) throws Exception {
+    public static <T> List<T> processListObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         if(ReflectUtil.isBaseDataType(clazz)) {
             return processListBaseType(resultSet, clazz);
         }
@@ -143,7 +143,7 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws Exception {
+    public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
         List<V> values = processListObject(resultSet, (Class<V>) returnType.getMapValueType().get());
         if(CommonUtil.empty(values)) {
             return new HashMap<>(2);
@@ -157,7 +157,7 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws Exception {
+    public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws SQLException {
         if(resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(new HashMap<>(2), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
@@ -173,7 +173,7 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <K, V> Object processListMapObject(ResultSet resultSet) throws Exception {
+    public static <K, V> Object processListMapObject(ResultSet resultSet) throws SQLException {
         if(resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }

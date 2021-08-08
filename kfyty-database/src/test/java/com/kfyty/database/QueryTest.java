@@ -2,9 +2,11 @@ package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.kfyty.database.entity.User;
+import com.kfyty.database.jdbc.session.Configuration;
+import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.mapper.UserMapper;
-import com.kfyty.database.jdbc.SqlSessionFactory;
 import com.kfyty.database.vo.UserVo;
+import com.kfyty.support.utils.PropertiesUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class QueryTest {
     private static final String PATH = "/druid.properties";
@@ -22,10 +23,10 @@ public class QueryTest {
 
     @Before
     public void prepare() throws Exception {
-        Properties properties = new Properties();
-        properties.load(QueryTest.class.getResourceAsStream(PATH));
-        DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
-        this.userMapper = SqlSessionFactory.createProxy(dataSource, UserMapper.class);
+        DataSource dataSource = DruidDataSourceFactory.createDataSource(PropertiesUtil.load(PATH));
+        Configuration configuration = new Configuration().setDataSource(dataSource);
+        SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
+        this.userMapper = proxyFactory.createProxy(UserMapper.class);
     }
 
     @Test

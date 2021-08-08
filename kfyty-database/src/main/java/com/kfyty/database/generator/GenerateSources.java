@@ -2,7 +2,7 @@ package com.kfyty.database.generator;
 
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.config.GeneratorConfigurationSupport;
-import com.kfyty.database.jdbc.SqlSessionFactory;
+import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.GeneratorTemplate;
@@ -80,7 +80,7 @@ public class GenerateSources {
     }
 
     protected void initTableInfos() {
-        AbstractDatabaseMapper databaseMapper = SqlSessionFactory.createProxy(configuration.getDataSource(), configuration.getDatabaseMapper());
+        AbstractDatabaseMapper databaseMapper = SqlSessionProxyFactory.createProxy(configuration.getDataSource(), configuration.getDatabaseMapper());
 
         Set<String> tables = Optional.ofNullable(configuration.getTables()).orElse(new HashSet<>());
 

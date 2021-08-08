@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.autoconfig;
 
 import com.kfyty.support.autoconfig.ImportBeanDefine;
+import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
@@ -19,12 +20,17 @@ import java.util.stream.Collectors;
 @Configuration
 public class MapperAutoConfig implements ImportBeanDefine {
 
+    @Bean
+    public SqlSessionProxyFactoryBean sqlSessionProxyFactoryBean() {
+        return new SqlSessionProxyFactoryBean();
+    }
+
     @Override
     public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
         return scanClasses
                 .stream()
                 .filter(e -> AnnotationUtil.hasAnnotation(e, Mapper.class))
-                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(MapperInterfaceFactory.class).addConstructorArgs(Class.class, e).getBeanDefinition())
+                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(MapperInterfaceFactoryBean.class).addConstructorArgs(Class.class, e).getBeanDefinition())
                 .collect(Collectors.toSet());
     }
 }

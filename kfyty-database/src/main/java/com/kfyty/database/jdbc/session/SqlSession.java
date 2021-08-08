@@ -1,9 +1,14 @@
-package com.kfyty.database.jdbc;
+package com.kfyty.database.jdbc.session;
 
+import com.kfyty.database.jdbc.BaseMapper;
+import com.kfyty.database.jdbc.intercept.Interceptor;
+import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
+import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
+import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
@@ -11,23 +16,22 @@ import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.SerializableUtil;
 import com.kfyty.support.wrapper.WeakKey;
 import javafx.util.Pair;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,15 +39,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 功能描述: SqlSession
+ * 功能描述: SqlSession，仅支持通过接口代理操作数据库
  *
  * @author kfyty725@hotmail.com
  * @date 2019/6/27 16:04
+ * @see BaseMapper
  * @since JDK 1.8
  */
 @Slf4j
@@ -77,8 +83,8 @@ public class SqlSession implements InvocationHandler {
     /**
      * 数据源
      */
-    @Getter @Setter @ToString.Exclude
-    private DataSource dataSource;
+    @ToString.Exclude
+    private final Configuration configuration;
 
     /**
      * 事务
@@ -86,15 +92,47 @@ public class SqlSession implements InvocationHandler {
     @ToString.Exclude
     private Transaction transaction;
 
-    public SqlSession(Class<?> mapperClass, DataSource dataSource) {
-        this(mapperClass, dataSource, null);
+    public SqlSession(Class<?> mapperClass, Configuration configuration) {
+        this(mapperClass, configuration, null);
     }
 
-    public SqlSession(Class<?> mapperClass, DataSource dataSource, Transaction transaction) {
+    public SqlSession(Class<?> mapperClass, Configuration configuration, Transaction transaction) {
         this.mapperClass = mapperClass;
-        this.dataSource = dataSource;
+        this.configuration = configuration;
         this.transaction = transaction;
         this.providerAdapter = new ProviderAdapter();
+    }
+
+    /**
+     * 获取事务，如果没有则开启一个新的
+     *
+     * @return Transaction
+     */
+    public Transaction getTransaction() {
+        if (transaction == null) {
+            this.transaction = new JdbcTransaction(this.configuration.getDataSource());
+        }
+        return this.transaction;
+    }
+
+    private Object invokeInterceptor(Method sourceMethod, String sql, Transaction transaction, SimpleGeneric returnType, MethodParameter... params) {
+        if (CommonUtil.empty(this.configuration.getInterceptors())) {
+            return null;
+        }
+        try {
+            for (Interceptor interceptor : this.configuration.getInterceptors()) {
+                if (AnnotationUtil.hasAnnotation(sourceMethod, Execute.class) && interceptor instanceof QueryInterceptor) {
+                    continue;
+                }
+                Object retVal = interceptor.intercept(sql, transaction, returnType, params);
+                if (retVal != null) {
+                    return retVal;
+                }
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new ExecuteInterceptorException(e);
+        }
     }
 
     /**
@@ -107,26 +145,17 @@ public class SqlSession implements InvocationHandler {
      */
     private Object requestQuery(Method sourceMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) {
         checkMapKey(annotation, returnType);
-        String annotationName = annotation.annotationType().getSimpleName();
-        String methodName = Character.toLowerCase(annotationName.charAt(0)) + annotationName.substring(1);
-        String sql = this.processForEach(sourceMethod, annotation, params);
-        Map<String, Object> map = this.parseSQL(sql, params);
-        Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-        Object obj = ReflectUtil.invokeMethod(null, method, this.getTransaction(), returnType, map.get("sql"), map.get("args"));
-        this.processSubQuery(sourceMethod, annotation, obj);
-        return obj;
-    }
-
-    /**
-     * 获取事务，如果没有则开启一个新的
-     *
-     * @return Transaction
-     */
-    public Transaction getTransaction() {
-        if (transaction == null) {
-            this.transaction = new JdbcTransaction(this.dataSource);
-        }
-        return this.transaction;
+        final String sql = this.processForEach(sourceMethod, annotation, params);
+        final Pair<String, MethodParameter[]> sqlParams = this.parseSQL(sql, params);
+        return Optional
+                .ofNullable(this.invokeInterceptor(sourceMethod, sqlParams.getKey(), this.getTransaction(), returnType, sqlParams.getValue()))
+                .map(e -> this.processSubQuery(sourceMethod, annotation, e))
+                .orElseGet(() -> {
+                    String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
+                    Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
+                    Object obj = ReflectUtil.invokeMethod(null, method, this.getTransaction(), returnType, sqlParams.getKey(), sqlParams.getValue());
+                    return this.processSubQuery(sourceMethod, annotation, obj);
+                });
     }
 
     /**
@@ -201,8 +230,8 @@ public class SqlSession implements InvocationHandler {
      * @param paramField  父查询 sql 中查询出的字段名
      * @param mapperField 子查询 sql 中的 #{}/${} 参数
      * @param obj         父查询映射的结果对象
-     * @see this#processMethodParameters(Method, Object[])
      * @return MethodParameter
+     * @see this#processMethodParameters(Method, Object[])
      */
     private Map<String, MethodParameter> processMappingParameters(String[] paramField, String[] mapperField, Object obj) {
         if (CommonUtil.empty(paramField) || CommonUtil.empty(mapperField)) {
@@ -226,11 +255,12 @@ public class SqlSession implements InvocationHandler {
      * @param annotation 包含子查询的注解
      * @param obj        父查询的结果集
      */
-    private void processSubQuery(Method sourceMethod, Annotation annotation, Object obj) {
+    private Object processSubQuery(Method sourceMethod, Annotation annotation, Object obj) {
         if (annotation instanceof Query && obj != null) {
             SubQuery[] subQueries = ReflectUtil.invokeSimpleMethod(annotation, "subQuery");
             CommonUtil.consumer(obj, e -> this.processSubQuery(sourceMethod, subQueries, e), Map.Entry::getValue);
         }
+        return obj;
     }
 
     /**
@@ -324,10 +354,10 @@ public class SqlSession implements InvocationHandler {
      *
      * @param sql        sql 语句
      * @param parameters MethodParameter
-     * @see this#processMethodParameters(Method, Object[])
      * @return Map 集合，包含 sql/args
+     * @see this#processMethodParameters(Method, Object[])
      */
-    public Map<String, Object> parseSQL(String sql, Map<String, MethodParameter> parameters) {
+    public Pair<String, MethodParameter[]> parseSQL(String sql, Map<String, MethodParameter> parameters) {
         List<MethodParameter> args = new ArrayList<>();
         Map<String, List<String>> params = this.getFormalParameters(sql);
         for (Map.Entry<String, List<String>> next : params.entrySet()) {
@@ -354,10 +384,7 @@ public class SqlSession implements InvocationHandler {
                 sql = sql.replace("${" + param + "}", String.valueOf(value));
             }
         }
-        Map<String, Object> map = new HashMap<>();
-        map.put("sql", this.replaceParam(sql, params.get("#")));
-        map.put("args", args.toArray(new MethodParameter[0]));
-        return map;
+        return new Pair<>(this.replaceParam(sql, params.get("#")), args.toArray(new MethodParameter[0]));
     }
 
     /**
@@ -378,8 +405,8 @@ public class SqlSession implements InvocationHandler {
      * 将方法参数中有 @Param 注解的参数封装为 Map
      * 若 @Param 注解不存在，则直接使用 Parameter#getName()
      *
-     * @param method     方法
-     * @param args       参数数组
+     * @param method 方法
+     * @param args   参数数组
      * @return 参数 Map
      */
     public Map<String, MethodParameter> processMethodParameters(Method method, Object[] args) {

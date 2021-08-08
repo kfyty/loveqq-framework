@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 标记 bean 实例化优先级
+ * 描述: 标记优先级
  *
  * @author kfyty725
  * @date 2021/6/13 11:28

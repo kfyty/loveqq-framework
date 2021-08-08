@@ -14,7 +14,7 @@ import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARA
 import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARAM_PK;
 
 /**
- * 描述:
+ * 描述: 数据库基础操作
  *
  * @author kfyty725
  * @date 2021/6/2 16:20

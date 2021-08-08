@@ -61,6 +61,7 @@ public class JdbcTransaction implements Transaction {
             if (log.isDebugEnabled()) {
                 log.debug("Closing JDBC Connection [" + connection + "]");
             }
+            ConnectionHolder.removeCurrentConnection();
             connection.close();
             connection = null;
         }
@@ -84,6 +85,7 @@ public class JdbcTransaction implements Transaction {
         this.connection = dataSource.getConnection();
         this.autoCommit = this.connection.getAutoCommit();
         this.curAutoCommit = this.autoCommit;
+        ConnectionHolder.setCurrentConnection(this.connection);
         return this.connection;
     }
 }
