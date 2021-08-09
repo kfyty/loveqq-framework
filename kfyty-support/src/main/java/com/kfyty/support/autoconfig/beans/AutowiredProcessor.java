@@ -220,9 +220,7 @@ public class AutowiredProcessor {
             boolean matched = true;
             List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
             for (int i = 0; i < generics.size(); i++) {
-                Class<?> target = targetGenerics.get(i).get();
-                Class<?> toBeMatched = generics.get(i).get();
-                if (!Objects.equals(target, toBeMatched)) {
+                if (!Objects.equals(targetGenerics.get(i).get(), generics.get(i).get())) {
                     matched = false;
                     break;
                 }

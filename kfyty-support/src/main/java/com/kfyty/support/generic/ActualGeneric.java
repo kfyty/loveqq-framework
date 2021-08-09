@@ -42,7 +42,7 @@ public class ActualGeneric extends SimpleGeneric {
 
     protected void processActualGeneric() {
         if(this.resolveType instanceof TypeVariable) {
-            Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.actualDeclaringClass, ReflectUtil.getActualGenericIndex(this.actualDeclaringClass, this.getFirst().getTypeVariable()));
+            Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.getFirst().getTypeVariable(), this.actualDeclaringClass);
             ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "sourceType"), actualFieldType);
             ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "resolveType"), actualFieldType);
             this.genericInfo.clear();
@@ -53,7 +53,7 @@ public class ActualGeneric extends SimpleGeneric {
             if(!generic.isTypeVariable()) {
                 genericMap.put(generic, null);
             } else {
-                Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.actualDeclaringClass, ReflectUtil.getActualGenericIndex(this.actualDeclaringClass, generic.getTypeVariable()));
+                Class<?> actualFieldType = ReflectUtil.getActualGenericType(generic.getTypeVariable(), this.actualDeclaringClass);
                 genericMap.put(new Generic(actualFieldType, generic.isArray()), null);
             }
         }

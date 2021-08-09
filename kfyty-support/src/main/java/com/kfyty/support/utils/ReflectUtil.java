@@ -72,7 +72,7 @@ public abstract class ReflectUtil {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-            if(throwIfFailed) {
+            if (throwIfFailed) {
                 throw new SupportException("load class failed, class does not exist !", e);
             }
             log.error("load class failed, class does not exist: [{}]", className);
@@ -98,7 +98,7 @@ public abstract class ReflectUtil {
     }
 
     public static Class<?>[] getInterfaces(Class<?> clazz) {
-        if(!clazz.isInterface()) {
+        if (!clazz.isInterface()) {
             return clazz.getInterfaces();
         }
         Class<?>[] clazzInterfaces = clazz.getInterfaces();
@@ -109,26 +109,21 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isBaseDataType(Class<?> clazz) {
-        return clazz.isPrimitive()                          ||
-                Number.class.isAssignableFrom(clazz)        ||
-                CharSequence.class.isAssignableFrom(clazz)  ||
-                Character.class.isAssignableFrom(clazz)     ||
-                Date.class.isAssignableFrom(clazz)          ||
-                LocalTime.class.isAssignableFrom(clazz)     ||
-                LocalDate.class.isAssignableFrom(clazz)     ||
-                LocalDateTime.class.isAssignableFrom(clazz) ||
-                Timestamp.class.isAssignableFrom(clazz)     ||
-                Instant.class.isAssignableFrom(clazz);
+        return clazz.isPrimitive()                          || Number.class.isAssignableFrom(clazz)        ||
+                Character.class.isAssignableFrom(clazz)     || CharSequence.class.isAssignableFrom(clazz)  ||
+                Date.class.isAssignableFrom(clazz)          || LocalDate.class.isAssignableFrom(clazz)     ||
+                LocalTime.class.isAssignableFrom(clazz)     || LocalDateTime.class.isAssignableFrom(clazz) ||
+                Timestamp.class.isAssignableFrom(clazz)     || Instant.class.isAssignableFrom(clazz);
     }
 
     public static <T> T newInstance(Class<T> clazz) {
-        if(!isAbstract(clazz)) {
+        if (!isAbstract(clazz)) {
             return newInstance(searchSuitableConstructor(clazz));
         }
         throw new SupportException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
     }
 
-    public static <T> T newInstance(Constructor<T> constructor, Object ... args) {
+    public static <T> T newInstance(Constructor<T> constructor, Object... args) {
         try {
             makeAccessible(constructor);
             return constructor.newInstance(args);
@@ -151,19 +146,19 @@ public abstract class ReflectUtil {
     @SuppressWarnings("unchecked")
     public static <T> Constructor<T> searchSuitableConstructor(Class<T> clazz, Predicate<Constructor<T>> constructorPredicate) {
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-        if(CommonUtil.size(constructors) == 1) {
+        if (CommonUtil.size(constructors) == 1) {
             return (Constructor<T>) constructors[0];
         }
         Constructor<?> noParameterConstructor = null;
         for (Constructor<?> constructor : constructors) {
-            if(constructor.getParameterCount() == 0) {
+            if (constructor.getParameterCount() == 0) {
                 noParameterConstructor = constructor;
             }
-            if(constructorPredicate != null && constructorPredicate.test((Constructor<T>) constructor)) {
+            if (constructorPredicate != null && constructorPredicate.test((Constructor<T>) constructor)) {
                 return (Constructor<T>) constructor;
             }
         }
-        if(noParameterConstructor != null) {
+        if (noParameterConstructor != null) {
             return (Constructor<T>) noParameterConstructor;
         }
         throw new SupportException("can't find a suitable constructor !");
@@ -172,6 +167,7 @@ public abstract class ReflectUtil {
     /**
      * 获取继承的父类或父接口的泛型
      * 将会过滤掉非参数化类型的父类或者父接口
+     *
      * @param clazz 子类
      * @return 父类或父接口泛型
      */
@@ -186,6 +182,7 @@ public abstract class ReflectUtil {
      * 获取父类或父接口的泛型类型
      * 如果父类不具有泛型，则尝试获取第一个继承的父类或父接口泛型的泛型类型
      * 默认泛型索引为 0，即第一个泛型类型
+     *
      * @param clazz 子类
      */
     public static Class<?> getSuperGeneric(Class<?> clazz) {
@@ -195,7 +192,8 @@ public abstract class ReflectUtil {
     /**
      * 获取父类或父接口的泛型类型
      * 如果父类不具有泛型，则尝试获取第一个继承的父类或父接口泛型的泛型类型
-     * @param clazz 子类
+     *
+     * @param clazz        子类
      * @param genericIndex 泛型索引
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex) {
@@ -205,7 +203,8 @@ public abstract class ReflectUtil {
     /**
      * 根据父泛型匹配过滤器获取泛型类型
      * 默认泛型索引为 0，即第一个泛型类型
-     * @param clazz 子类
+     *
+     * @param clazz              子类
      * @param superGenericFilter 父类或父接口泛型匹配过滤器
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Type> superGenericFilter) {
@@ -215,9 +214,10 @@ public abstract class ReflectUtil {
     /**
      * 根据父泛型匹配过滤器获取泛型类型
      * 如果匹配的父类不具有泛型，则尝试获取第一个继承的父类或父接口泛型的泛型类型
-     * @param clazz 子类
+     *
+     * @param clazz               子类
      * @param superClassPredicate 父类类型过滤器
-     * @param genericIndex 泛型索引
+     * @param genericIndex        泛型索引
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Class<?>> superClassPredicate, int genericIndex) {
         return getSuperGeneric(clazz, superClassPredicate, genericIndex, 0, null);
@@ -225,8 +225,9 @@ public abstract class ReflectUtil {
 
     /**
      * 根据父泛型匹配过滤器获取泛型类型
-     * @param clazz 子类
-     * @param genericIndex 泛型索引
+     *
+     * @param clazz              子类
+     * @param genericIndex       泛型索引
      * @param superGenericFilter 父类或父接口泛型匹配过滤器
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, Predicate<Type> superGenericFilter) {
@@ -235,10 +236,11 @@ public abstract class ReflectUtil {
 
     /**
      * 获取父类或父接口的泛型类型
-     * @param clazz 子类
-     * @param superClassFilter 父类类型过滤器，将会一直测试 clazz.getSuperclass()，直到测试通过或者为空
-     * @param genericIndex 泛型索引，ParameterizedType.getActualTypeArguments() 返回值索引
-     * @param superGenericIndex 继承的父类或父接口泛型索引，由 getGenerics() 方法返回
+     *
+     * @param clazz              子类
+     * @param superClassFilter   父类类型过滤器，将会一直测试 clazz.getSuperclass()，直到测试通过或者为空
+     * @param genericIndex       泛型索引，ParameterizedType.getActualTypeArguments() 返回值索引
+     * @param superGenericIndex  继承的父类或父接口泛型索引，由 getGenerics() 方法返回
      * @param superGenericFilter 父类或父接口泛型匹配过滤器，将会一直测试 getGenerics()，直到测试通过。superGenericIndex < 0 且非空时有效
      * @see ReflectUtil#getGenerics(Class)
      */
@@ -272,10 +274,10 @@ public abstract class ReflectUtil {
             return (Class<?>) ((ParameterizedType) actualTypeArguments[genericIndex]).getRawType();
         }
         Type type = actualTypeArguments[genericIndex];
-        if(type instanceof TypeVariable) {
+        if (type instanceof TypeVariable) {
             for (Type generic : getGenerics(source)) {
                 try {
-                    return getActualGenericType(getActualGenericIndex(getTypeVariableName(type), generic), generic);
+                    return getActualGenericType(getTypeVariableName(type), generic);
                 } catch (SupportException e) {
                     log.warn(e.getMessage());
                 }
@@ -296,44 +298,26 @@ public abstract class ReflectUtil {
         return genericSuperclass;
     }
 
-    public static int getActualGenericIndex(Class<?> clazz, String typeVariable) {
-        return getActualGenericIndex(typeVariable, getGenericSuperclass(clazz));
+    public static Class<?> getActualGenericType(String typeVariable, Class<?> clazz) {
+        return getActualGenericType(typeVariable, getGenericSuperclass(clazz));
     }
 
-    public static Class<?> getActualGenericType(Class<?> clazz, int index) {
-        return getActualGenericType(index, getGenericSuperclass(clazz));
-    }
-
-    public static int getActualGenericIndex(String typeVariable, Type genericSuperclass) {
-        if(!(genericSuperclass instanceof ParameterizedType)) {
+    public static Class<?> getActualGenericType(String typeVariable, Type genericSuperclass) {
+        if (!(genericSuperclass instanceof ParameterizedType)) {
             throw new SupportException("unable to get the parent generic type !");
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
         TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
         for (int i = 0; i < typeParameters.length; i++) {
-            if(typeVariable.equals(typeParameters[i].getName())) {
-                return i;
+            if (typeVariable.equals(typeParameters[i].getName())) {
+                return (Class<?>) parameterizedType.getActualTypeArguments()[i];
             }
         }
         Type parent = ((ParameterizedType) genericSuperclass).getRawType();
-        if(parent instanceof Class) {
-            return getActualGenericIndex((Class<?>) parent, typeVariable);
+        if (parent instanceof Class) {
+            return getActualGenericType(typeVariable, (Class<?>) parent);
         }
-        throw new SupportException("can't find actual generic index !");
-    }
-
-    public static Class<?> getActualGenericType(int index, Type genericSuperclass) {
-        if(!(genericSuperclass instanceof ParameterizedType)) {
-            throw new SupportException("unable to get the parent generic type !");
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
-        if (index >= parameterizedType.getActualTypeArguments().length) {
-            Type parent = ((ParameterizedType) genericSuperclass).getRawType();
-            if(parent instanceof Class) {
-                return getActualGenericType((Class<?>) parent, index);
-            }
-        }
-        return (Class<?>) parameterizedType.getActualTypeArguments()[index];
+        throw new SupportException("can't find actual generic type !");
     }
 
     public static Object getFieldValue(Object obj, String fieldName) {
@@ -367,11 +351,11 @@ public abstract class ReflectUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T invokeSimpleMethod(Object obj, String methodName, Object ... args) {
+    public static <T> T invokeSimpleMethod(Object obj, String methodName, Object... args) {
         return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
     }
 
-    public static Object invokeMethod(Object obj, Method method, Object ... args) {
+    public static Object invokeMethod(Object obj, Method method, Object... args) {
         try {
             makeAccessible(method);
             return method.invoke(obj, args);
@@ -393,49 +377,49 @@ public abstract class ReflectUtil {
         return fieldCache.computeIfAbsent(new WeakKey<>(key), k -> {
             try {
                 return clazz.getDeclaredField(fieldName);
-            } catch(NoSuchFieldException e) {
+            } catch (NoSuchFieldException e) {
                 return getSuperField(clazz, fieldName, containPrivate);
             }
         });
     }
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
             return null;
         }
         Field field = getField(clazz, fieldName, containPrivate);
         return field == null || !containPrivate && Modifier.isPrivate(field.getModifiers()) ? null : field;
     }
 
-    public static Method getMethod(Class<?> clazz, String methodName, Class<?> ... parameterTypes) {
+    public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         return getMethod(clazz, methodName, false, parameterTypes);
     }
 
-    public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
+    public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
         final String key = CommonUtil.format("{}#{}({})@{}", clazz, methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
         return methodCache.computeIfAbsent(new WeakKey<>(key), k -> {
             try {
                 return clazz.getDeclaredMethod(methodName, parameterTypes);
-            } catch(NoSuchMethodException e) {
+            } catch (NoSuchMethodException e) {
                 return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
             }
         });
     }
 
-    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?> ... parameterTypes) {
-        if(clazz == null || Object.class.equals(clazz)) {
+    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
+        if (clazz == null || Object.class.equals(clazz)) {
             return null;
         }
         Predicate<Method> methodPredicate = m -> containPrivate || !Modifier.isPrivate(m.getModifiers());
-        if(clazz.getSuperclass() != null) {
+        if (clazz.getSuperclass() != null) {
             Method method = getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes);
-            if(method != null) {
+            if (method != null) {
                 return methodPredicate.test(method) ? method : null;
             }
         }
         for (Class<?> clazzInterface : clazz.getInterfaces()) {
             Method method = getMethod(clazzInterface, methodName, containPrivate, parameterTypes);
-            if(method != null) {
+            if (method != null) {
                 return methodPredicate.test(method) ? method : null;
             }
         }
@@ -444,12 +428,12 @@ public abstract class ReflectUtil {
 
     public static Method getSuperMethod(Method method) {
         Method superMethod = getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
-        if(superMethod != null) {
+        if (superMethod != null) {
             return superMethod;
         }
         for (Class<?> clazz : method.getDeclaringClass().getInterfaces()) {
             superMethod = getMethod(clazz, method.getName(), false, method.getParameterTypes());
-            if(superMethod != null) {
+            if (superMethod != null) {
                 return superMethod;
             }
         }
@@ -460,21 +444,21 @@ public abstract class ReflectUtil {
         return !Modifier.isPrivate(superMethod.getModifiers()) && superMethod.getName().equals(method.getName()) && Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
     }
 
-    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?> ... parameterTypes) {
+    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
         return getConstructor(clazz, false, parameterTypes);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?> ... parameterTypes) {
+    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
         try {
             return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
-        } catch(NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             return getSuperConstructor(clazz, containPrivate, parameterTypes);
         }
     }
 
-    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?> ... parameterTypes) {
-        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
             return null;
         }
         Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
@@ -487,7 +471,7 @@ public abstract class ReflectUtil {
 
     public static Parameter getSuperParameters(Parameter parameter) {
         Executable executable = parameter.getDeclaringExecutable();
-        if(executable instanceof Method) {
+        if (executable instanceof Method) {
             Method method = (Method) executable;
             Method superMethod = getSuperMethod(method);
             return superMethod == null ? null : superMethod.getParameters()[(int) getFieldValue(parameter, "index")];
@@ -512,7 +496,7 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
-        if(Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
             return Collections.emptyMap();
         }
         return getFieldMap(clazz, containPrivate).values().stream().filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e));
@@ -532,12 +516,12 @@ public abstract class ReflectUtil {
     }
 
     public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
-        if(clazz == null || Object.class.equals(clazz)) {
+        if (clazz == null || Object.class.equals(clazz)) {
             return Collections.emptyList();
         }
         Predicate<Method> methodPredicate = e -> containPrivate || !Modifier.isPrivate(e.getModifiers());
         List<Method> list = Arrays.stream(clazz.getInterfaces()).flatMap(e -> getMethods(e, containPrivate).stream()).filter(methodPredicate).collect(Collectors.toList());
-        if(clazz.getSuperclass() != null) {
+        if (clazz.getSuperclass() != null) {
             list.addAll(getMethods(clazz.getSuperclass(), containPrivate).stream().filter(methodPredicate).collect(Collectors.toList()));
         }
         return list;
@@ -563,15 +547,16 @@ public abstract class ReflectUtil {
 
     /**
      * 根据属性参数，解析嵌套属性的类型
-     * @param param     属性参数 eg: obj.field
-     * @param root      包含 obj 属性的对象
+     *
+     * @param param 属性参数 eg: obj.field
+     * @param root  包含 obj 属性的对象
      */
     public static Class<?> parseFieldType(String param, Class<?> root) {
         Class<?> clazz = root;
         String[] fields = param.split("\\.");
-        for(int i = 0; i < fields.length; i++) {
+        for (int i = 0; i < fields.length; i++) {
             Field field = getField(clazz, fields[i]);
-            if(i == fields.length - 1) {
+            if (i == fields.length - 1) {
                 return field.getType();
             }
             clazz = field.getType();
@@ -581,9 +566,10 @@ public abstract class ReflectUtil {
 
     /**
      * 根据属性参数，解析出 object 中对应的属性值
-     * @param param     属性参数，eg: obj.value
-     * @param obj       包含 obj 属性的对象
-     * @return          属性值
+     *
+     * @param param 属性参数，eg: obj.value
+     * @param obj   包含 obj 属性的对象
+     * @return 属性值
      */
     public static Object parseValue(String param, Object obj) {
         String[] fields = param.split("\\.");
@@ -595,21 +581,22 @@ public abstract class ReflectUtil {
 
     /**
      * 根据属性参数，将 value 设置到 obj 中，与 parseValue() 过程相反
-     * @param param     属性参数 eg: obj.field
-     * @param obj       包含 obj 属性的对象
-     * @param value     属性对象 obj 中的 field 属性的值
+     *
+     * @param param 属性参数 eg: obj.field
+     * @param obj   包含 obj 属性的对象
+     * @param value 属性对象 obj 中的 field 属性的值
      */
     public static void setNestedFieldValue(String param, Object obj, Object value) {
         Class<?> clazz = obj.getClass();
         String[] fields = param.split("\\.");
-        for(int i = 0; i < fields.length; i++) {
+        for (int i = 0; i < fields.length; i++) {
             Field field = getField(clazz, fields[i]);
-            if(i == fields.length - 1) {
+            if (i == fields.length - 1) {
                 setFieldValue(obj, field, value);
                 break;
             }
             Object fieldValue = getFieldValue(obj, field);
-            if(fieldValue != null) {
+            if (fieldValue != null) {
                 obj = fieldValue;
                 clazz = field.getType();
                 continue;
@@ -623,17 +610,17 @@ public abstract class ReflectUtil {
      * 获取泛型的原始类型
      */
     public static Class<?> getRawType(Type type) {
-        if(type instanceof Class) {
+        if (type instanceof Class) {
             Class<?> clazz = (Class<?>) type;
             return clazz.isArray() ? clazz.getComponentType() : clazz;
         }
-        if(type instanceof GenericArrayType) {
+        if (type instanceof GenericArrayType) {
             return getRawType(((GenericArrayType) type).getGenericComponentType());
         }
-        if(type instanceof ParameterizedType) {
+        if (type instanceof ParameterizedType) {
             return (Class<?>) ((ParameterizedType) type).getRawType();
         }
-        if(type instanceof WildcardType) {
+        if (type instanceof WildcardType) {
             WildcardType wildcardType = (WildcardType) type;
             return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
         }
@@ -641,7 +628,7 @@ public abstract class ReflectUtil {
     }
 
     public static String getTypeVariableName(Type type) {
-        if(type instanceof TypeVariable) {
+        if (type instanceof TypeVariable) {
             return ((TypeVariable<?>) type).getName();
         }
         throw new SupportException("unable to get the type variable !");

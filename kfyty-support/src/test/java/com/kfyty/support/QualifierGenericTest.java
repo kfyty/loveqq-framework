@@ -94,28 +94,29 @@ public class QualifierGenericTest {
         Assert.assertEquals(fromBaseT.getSourceType(), Entity.class);
         Assert.assertEquals(fromArrT.getSourceType(), Entity[].class);
         Assert.assertEquals(fromArrT.getFirst().get(), Entity.class);
-        Assert.assertEquals(fromService.getFirst().get(), Entity.class);
-        Assert.assertEquals(fromService.getSecond().get(), Integer.class);
-        Assert.assertEquals(fromBaseService.getFirst().get(), Entity.class);
-        Assert.assertEquals(fromBaseService.getSecond().get(), Integer.class);
+        Assert.assertEquals(fromService.getFirst().get(), Integer.class);
+        Assert.assertEquals(fromService.getSecond().get(), Entity.class);
+        Assert.assertEquals(fromBaseService.getFirst().get(), Integer.class);
+        Assert.assertEquals(fromBaseService.getSecond().get(), Entity.class);
         Assert.assertEquals(fromEntityClass.getSimpleActualType(), Entity.class);
     }
 }
 
 class Entity {}
-interface Base<T, K> {}
 
-class BaseController<T, K extends Integer> {
+interface Base<K, T> {}
+
+class BaseController<K, T> {
     protected T t;
     protected K k;
     protected T[] arrT;
-    protected Base<T, K> service;
+    protected Base<K, T> service;
     protected Class<T> entityClass;
 }
 
-class DefaultBase<T> extends BaseController<T, Integer> {
+class DefaultBase<T> extends BaseController<Integer, T> {
     protected T baseT;
-    protected Base<T, Integer> baseService;
+    protected Base<Integer, T> baseService;
 }
 
 class CommonBase extends DefaultBase<Entity> {}

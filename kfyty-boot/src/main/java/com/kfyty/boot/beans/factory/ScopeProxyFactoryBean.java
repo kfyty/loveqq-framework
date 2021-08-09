@@ -7,7 +7,6 @@ import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
 import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.ReflectUtil;
 
 /**
  * 描述: 为非单例 bean 创建作用域代理
@@ -31,7 +30,7 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
         this.beanName = sourceBeanDefinition.getBeanName();
         this.sourceBeanDefinition = sourceBeanDefinition;
         if (!this.beanName.startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
-            ReflectUtil.setFinalFieldValue(sourceBeanDefinition, ReflectUtil.getField(sourceBeanDefinition.getClass(), "beanName"), SCOPE_PROXY_SOURCE_PREFIX + sourceBeanDefinition.getBeanName());
+            sourceBeanDefinition.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + sourceBeanDefinition.getBeanName());
         }
     }
 
