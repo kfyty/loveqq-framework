@@ -213,7 +213,7 @@ public class AutowiredProcessor {
         }
         List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
         for (Object value : beans.values()) {
-            SimpleGeneric generic = SimpleGeneric.from(value.getClass());
+            SimpleGeneric generic = SimpleGeneric.from(AopUtil.getSourceClass(value));
             if (generic.size() != targetGenerics.size()) {
                 continue;
             }

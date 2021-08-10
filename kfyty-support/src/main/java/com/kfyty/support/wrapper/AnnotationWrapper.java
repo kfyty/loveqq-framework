@@ -72,11 +72,11 @@ public class AnnotationWrapper<T extends Annotation> {
     }
 
     public static <T extends Annotation> boolean contains(Collection<AnnotationWrapper<T>> wrappers, Annotation other) {
-        if(CommonUtil.empty(wrappers)) {
+        if (CommonUtil.empty(wrappers)) {
             return false;
         }
         for (AnnotationWrapper<T> wrapper : wrappers) {
-            if(wrapper.get().equals(other)) {
+            if (wrapper.get().equals(other)) {
                 return true;
             }
         }

@@ -91,8 +91,7 @@ public class QualifierGeneric {
     public Generic getSecond() {
         Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
         iterator.next();
-        boolean hasNext = iterator.hasNext();
-        return hasNext ? iterator.next() : null;
+        return iterator.hasNext() ? iterator.next() : null;
     }
 
     public static QualifierGeneric from(Class<?> clazz) {
@@ -112,26 +111,26 @@ public class QualifierGeneric {
     }
 
     private QualifierGeneric processGenericType(Type genericType) {
-        if(genericType == null) {
+        if (genericType == null) {
             return this;
         }
-        if(genericType instanceof Class) {
+        if (genericType instanceof Class) {
             this.processClassGenericType((Class<?>) genericType);
             return this;
         }
-        if(genericType instanceof GenericArrayType) {
+        if (genericType instanceof GenericArrayType) {
             this.processGenericArrayType((GenericArrayType) genericType);
             return this;
         }
-        if(genericType instanceof ParameterizedType) {
+        if (genericType instanceof ParameterizedType) {
             this.processParameterizedType((ParameterizedType) genericType);
             return this;
         }
-        if(genericType instanceof WildcardType) {
+        if (genericType instanceof WildcardType) {
             this.processWildcardType((WildcardType) genericType);
             return this;
         }
-        if(genericType instanceof TypeVariable) {
+        if (genericType instanceof TypeVariable) {
             this.processTypeVariable((TypeVariable<?>) genericType);
             return this;
         }
@@ -139,12 +138,12 @@ public class QualifierGeneric {
     }
 
     private void processClassGenericType(Class<?> clazz) {
-        if(clazz.isArray()) {
+        if (clazz.isArray()) {
             this.genericInfo.put(new Generic(clazz.getComponentType(), true), null);
             return;
         }
         for (Type type : ReflectUtil.getGenerics(clazz)) {
-            if(type instanceof ParameterizedType) {
+            if (type instanceof ParameterizedType) {
                 this.processParameterizedType((ParameterizedType) type, getRawType(type));
             }
         }
@@ -161,20 +160,20 @@ public class QualifierGeneric {
     private void processParameterizedType(ParameterizedType type, Class<?> superType) {
         Type[] actualTypeArguments = type.getActualTypeArguments();
         for (Type actualTypeArgument : actualTypeArguments) {
-            if(actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
+            if (actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
                 this.processClassGenericType((Class<?>) actualTypeArgument);
                 continue;
             }
-            if(actualTypeArgument instanceof TypeVariable) {
+            if (actualTypeArgument instanceof TypeVariable) {
                 this.processTypeVariable((TypeVariable<?>) actualTypeArgument);
                 continue;
             }
-            if(actualTypeArgument instanceof GenericArrayType) {
+            if (actualTypeArgument instanceof GenericArrayType) {
                 Type componentType = ((GenericArrayType) actualTypeArgument).getGenericComponentType();
                 while (componentType instanceof GenericArrayType) {
                     componentType = ((GenericArrayType) componentType).getGenericComponentType();
                 }
-                if(componentType instanceof TypeVariable) {
+                if (componentType instanceof TypeVariable) {
                     this.processTypeVariable(actualTypeArgument.getTypeName(), true, superType);
                     continue;
                 }
@@ -196,7 +195,7 @@ public class QualifierGeneric {
     }
 
     private void processTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
-        if(superType == null) {
+        if (superType == null) {
             this.genericInfo.put(new Generic(typeVariableName, isArray), null);
             return;
         }

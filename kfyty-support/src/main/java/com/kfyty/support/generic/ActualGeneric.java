@@ -41,7 +41,7 @@ public class ActualGeneric extends SimpleGeneric {
     }
 
     protected void processActualGeneric() {
-        if(this.resolveType instanceof TypeVariable) {
+        if (this.resolveType instanceof TypeVariable) {
             Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.getFirst().getTypeVariable(), this.actualDeclaringClass);
             ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "sourceType"), actualFieldType);
             ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "resolveType"), actualFieldType);
@@ -50,7 +50,7 @@ public class ActualGeneric extends SimpleGeneric {
         }
         Map<Generic, QualifierGeneric> genericMap = new LinkedHashMap<>(4);
         for (Generic generic : this.genericInfo.keySet()) {
-            if(!generic.isTypeVariable()) {
+            if (!generic.isTypeVariable()) {
                 genericMap.put(generic, null);
             } else {
                 Class<?> actualFieldType = ReflectUtil.getActualGenericType(generic.getTypeVariable(), this.actualDeclaringClass);
@@ -59,7 +59,7 @@ public class ActualGeneric extends SimpleGeneric {
         }
         this.genericInfo.clear();
         this.genericInfo.putAll(genericMap);
-        if(this.resolveType instanceof GenericArrayType) {
+        if (this.resolveType instanceof GenericArrayType) {
             ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "sourceType"), Array.newInstance(getFirst().get(), 0).getClass());
             ReflectUtil.setFinalFieldValue(this.resolveType, ReflectUtil.getField(this.resolveType.getClass(), "genericComponentType"), getFirst().get());
         }
@@ -93,7 +93,7 @@ public class ActualGeneric extends SimpleGeneric {
         ActualGeneric actualGeneric = new ActualGeneric(type, genericType);
         actualGeneric.actualDeclaringClass = clazz;
         actualGeneric.doResolve();
-        if(actualGeneric.resolveType instanceof TypeVariable || actualGeneric.getGenericInfo().keySet().stream().anyMatch(Generic::isTypeVariable)) {
+        if (actualGeneric.resolveType instanceof TypeVariable || actualGeneric.getGenericInfo().keySet().stream().anyMatch(Generic::isTypeVariable)) {
             actualGeneric.processActualGeneric();
         }
         return actualGeneric;

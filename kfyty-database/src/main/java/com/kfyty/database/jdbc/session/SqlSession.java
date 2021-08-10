@@ -81,7 +81,7 @@ public class SqlSession implements InvocationHandler {
     private final ProviderAdapter providerAdapter;
 
     /**
-     * 数据源
+     * 配置
      */
     @ToString.Exclude
     private final Configuration configuration;

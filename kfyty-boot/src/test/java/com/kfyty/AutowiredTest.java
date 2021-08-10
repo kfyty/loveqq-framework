@@ -293,7 +293,7 @@ class Entity {}
 interface Base<T, K> {}
 abstract class BaseImpl<T, K> implements Base<T, K> {}
 
-@Component
+@Configuration
 class DefaultBase extends BaseImpl<Entity, Integer> {
 
     @Bean

@@ -41,7 +41,7 @@ public class SimpleGeneric extends QualifierGeneric {
     }
 
     public boolean isSimpleArray() {
-        if(this.size() != 1) {
+        if (this.size() != 1) {
             return false;
         }
         return this.getFirst().isArray();
@@ -64,13 +64,13 @@ public class SimpleGeneric extends QualifierGeneric {
     }
 
     public Class<?> getSimpleActualType() {
-        if(!isSimpleParameterizedType()) {
+        if (!isSimpleParameterizedType()) {
             return this.sourceType;
         }
-        if(isMapGeneric()) {
+        if (isMapGeneric()) {
             return getMapValueType().get();
         }
-        if(!Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !isSimpleArray()) {
+        if (!Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !isSimpleArray()) {
             return this.sourceType;
         }
         return this.getFirst().get();

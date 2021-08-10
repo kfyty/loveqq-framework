@@ -49,6 +49,7 @@ public class TomcatConfig {
     public void addWebFilter(Filter filter) {
         this.webFilters.add(filter);
     }
+
     public void addWebListener(EventListener listener) {
         this.webListeners.add(listener);
     }
