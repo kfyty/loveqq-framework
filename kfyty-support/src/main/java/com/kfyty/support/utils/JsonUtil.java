@@ -53,4 +53,8 @@ public abstract class JsonUtil {
     public static <T> T toObject(String json, Class<T> clazz) throws IOException {
         return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
     }
+
+    public static <T> T convertValue(String str, Class<T> rawClass) {
+        return DEFAULT_OBJECT_MAPPER.convertValue(str, rawClass);
+    }
 }

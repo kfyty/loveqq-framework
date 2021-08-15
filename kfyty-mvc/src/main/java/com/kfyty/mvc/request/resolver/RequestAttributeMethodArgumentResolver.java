@@ -24,6 +24,6 @@ public class RequestAttributeMethodArgumentResolver implements HandlerMethodArgu
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
-        return request.getAttribute(AnnotationUtil.findAnnotation(parameter.getParameter(), RequestAttribute.class).value());
+        return request.getAttribute(parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), RequestAttribute.class), RequestAttribute::value));
     }
 }

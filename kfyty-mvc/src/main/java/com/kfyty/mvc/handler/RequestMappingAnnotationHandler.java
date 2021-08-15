@@ -117,6 +117,15 @@ public class RequestMappingAnnotationHandler {
                     }
 
                     @Override
+                    public String produces() {
+                        String produces = ReflectUtil.invokeSimpleMethod(annotation, "produces");
+                        if (CommonUtil.notEmpty(produces)) {
+                            return produces;
+                        }
+                        return AnnotationUtil.findAnnotation(annotation.annotationType(), RequestMapping.class).produces();
+                    }
+
+                    @Override
                     public Class<? extends Annotation> annotationType() {
                         return RequestMapping.class;
                     }
@@ -130,6 +139,7 @@ public class RequestMappingAnnotationHandler {
         RequestMapping annotation = this.findRequestMapping(methodMapping.getMappingMethod());
         String mappingPath = CommonUtil.formatURI(annotation.value());
         methodMapping.setUrl(superUrl + mappingPath);
+        methodMapping.setProduces(annotation.produces());
         methodMapping.setRequestMethod(annotation.requestMethod());
         this.parsePathVariable(methodMapping);
         if (log.isDebugEnabled()) {

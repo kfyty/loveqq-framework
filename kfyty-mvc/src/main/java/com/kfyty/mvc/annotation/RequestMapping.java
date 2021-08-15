@@ -20,4 +20,10 @@ public @interface RequestMapping {
      * @return 默认 GET 方法
      */
     RequestMethod requestMethod() default RequestMethod.GET;
+
+    /**
+     * 设置响应的 content-type
+     * @return content-type
+     */
+    String produces() default "text/plain; charset=utf-8";
 }

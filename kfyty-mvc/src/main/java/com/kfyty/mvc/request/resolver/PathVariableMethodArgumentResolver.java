@@ -30,7 +30,8 @@ public class PathVariableMethodArgumentResolver implements HandlerMethodArgument
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         Map<String, Integer> restfulURLMappingIndex = mapping.getRestfulURLMappingIndex();
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
-        Integer paramIndex = restfulURLMappingIndex.get(AnnotationUtil.findAnnotation(parameter.getParameter(), PathVariable.class).value());
-        return JsonUtil.toObject(JsonUtil.toJson(paths.get(paramIndex)), parameter.getParamType());
+        String paramName = parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
+        Integer paramIndex = restfulURLMappingIndex.get(paramName);
+        return JsonUtil.convertValue(paths.get(paramIndex), parameter.getParamType());
     }
 }

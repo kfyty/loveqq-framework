@@ -21,7 +21,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
 
     @Override
     public boolean supportsReturnType(MethodParameter returnType) {
-        if(returnType == null) {
+        if (returnType == null) {
             return false;
         }
         Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
@@ -30,7 +30,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
 
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        try(Writer out = container.getResponse().getWriter()) {
+        try (Writer out = container.getResponse().getWriter()) {
             out.write(JsonUtil.toJson(returnValue));
             out.flush();
         }

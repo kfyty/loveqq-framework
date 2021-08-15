@@ -29,6 +29,21 @@ public class MethodMapping {
     private static Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> methodMappingMap;
 
     /**
+     * URL
+     */
+    private String url;
+
+    /**
+     * url 长度
+     */
+    private Integer urlLength;
+
+    /**
+     * 请求方法
+     */
+    private RequestMethod requestMethod;
+
+    /**
      * 是否是 restful 风格 url
      */
     private boolean restfulUrl;
@@ -44,19 +59,9 @@ public class MethodMapping {
     private Map<String, Integer> restfulURLMappingIndex;
 
     /**
-     * 请求方法
+     * 响应的内容类型
      */
-    private RequestMethod requestMethod;
-
-    /**
-     * url 长度
-     */
-    private Integer urlLength;
-
-    /**
-     * URL
-     */
-    private String url;
+    private String produces;
 
     /**
      * 映射方法
@@ -92,13 +97,13 @@ public class MethodMapping {
         Map<String, MethodMapping> innerMap = new HashMap<>();
         Map<Integer, Map<String, MethodMapping>> outerMap = new HashMap<>();
         Map<Integer, Map<String, MethodMapping>> urlLengthMappingMap = MethodMapping.methodMappingMap.get(this.requestMethod);
-        if(urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.urlLength)) {
+        if (urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.urlLength)) {
             innerMap.put(this.url, this);
             outerMap.put(this.urlLength, innerMap);
             return outerMap;
         }
         Map<String, MethodMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
-        if(urlMappingMap.containsKey(this.url)) {
+        if (urlMappingMap.containsKey(this.url)) {
             throw new IllegalArgumentException(CommonUtil.format("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }
         innerMap.put(this.url, this);

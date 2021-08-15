@@ -20,10 +20,10 @@ public class StringValueHandlerMethodReturnValueProcessor implements HandlerMeth
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         String jsp = returnValue.toString();
-        if(container.getModel() != null) {
+        if (container.getModel() != null) {
             container.getModel().forEach((k, v) -> container.getRequest().setAttribute(k, v));
         }
-        if(jsp.startsWith("redirect:")) {
+        if (jsp.startsWith("redirect:")) {
             container.getResponse().sendRedirect(jsp.replace("redirect:", "") + container.getSuffix());
             return;
         }

@@ -8,7 +8,6 @@ import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JsonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 
@@ -36,41 +35,46 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         SimpleGeneric type = SimpleGeneric.from(parameter.getParameter());
-        return !MultipartFile.class.isAssignableFrom(type.getSimpleActualType()) && AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class);
+        if (MultipartFile.class.isAssignableFrom(type.getSimpleActualType())) {
+            return false;
+        }
+        if (AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class)) {
+            return true;
+        }
+        return Arrays.stream(AnnotationUtil.findAnnotations(parameter.getParameter())).noneMatch(e -> e.getClass().getName().startsWith(RequestParam.class.getPackage().getName()));
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         RequestParam annotation = AnnotationUtil.findAnnotation(parameter.getParameter(), RequestParam.class);
-        if(CommonUtil.empty(annotation.value())) {
-            return JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request)), parameter.getParamType());
+        String paramName = parameter.getParameterName(annotation, RequestParam::value);
+        String defaultValue = annotation == null ? "" : annotation.defaultValue();
+        if (ReflectUtil.isBaseDataType(parameter.getParamType())) {
+            String param = ServletUtil.getParameter(request, paramName);
+            return JsonUtil.convertValue(param != null ? param : defaultValue, parameter.getParamType());
         }
-        if(ReflectUtil.isBaseDataType(parameter.getParamType())) {
-            String param = ServletUtil.getParameter(request, annotation.value());
-            return JsonUtil.toObject(JsonUtil.toJson(param == null ? annotation.defaultValue() : param), parameter.getParamType());
+        if (Collection.class.isAssignableFrom(parameter.getParamType())) {
+            Type actualTypeArgument = ((ParameterizedType) parameter.getParameterGeneric()).getActualTypeArguments()[0];
+            return this.resolveCollectionArgument(paramName, defaultValue, (Class<?>) actualTypeArgument, request);
         }
-        if(Collection.class.isAssignableFrom(parameter.getParamType())) {
-            return this.resolveCollectionArgument(parameter, annotation, request);
+        if (parameter.getParamType().isArray()) {
+            return this.resolveArrayArgument(paramName, defaultValue, parameter.getParamType().getComponentType(), request);
         }
-        if(parameter.getParamType().isArray()) {
-            return this.resolveArrayArgument(parameter.getParamType().getComponentType(), annotation, request);
-        }
-        return JsonUtil.toObject(JsonUtil.toJson(ServletUtil.getRequestParametersMap(request, annotation.value())), parameter.getParamType());
+        return JsonUtil.toObject(ServletUtil.getRequestParametersMap(request, paramName), parameter.getParamType());
     }
 
-    private Object resolveCollectionArgument(MethodParameter parameter, RequestParam annotation, HttpServletRequest request) throws IOException {
-        Type actualTypeArgument = ((ParameterizedType) parameter.getParameterGeneric()).getActualTypeArguments()[0];
-        Object value = this.resolveArrayArgument((Class<?>) actualTypeArgument, annotation, request);
-        if(Set.class.isAssignableFrom((Class<?>) actualTypeArgument)) {
+    private Object resolveCollectionArgument(String paramName, String defaultValue, Class<?> actualType, HttpServletRequest request) throws IOException {
+        Object value = this.resolveArrayArgument(paramName, defaultValue, actualType, request);
+        if (Set.class.isAssignableFrom(actualType)) {
             return new HashSet<>(Arrays.asList((Object[]) value));
         }
         return new ArrayList<>(Arrays.asList((Object[]) value));
     }
 
-    private Object resolveArrayArgument(Class<?> componentType, RequestParam annotation, HttpServletRequest request) throws IOException {
+    private Object resolveArrayArgument(String paramName, String defaultValue, Class<?> componentType, HttpServletRequest request) throws IOException {
         Class<?> valueType = TypeFactory.rawClass(Array.newInstance(componentType, 0).getClass());
-        List<String> params = ServletUtil.getParameters(request, annotation.value());
+        List<String> params = ServletUtil.getParameters(request, paramName);
         String jsonParam = params.size() == 1 ? params.get(0) : JsonUtil.toJson(params);
-        return JsonUtil.toObject(params.isEmpty() ? annotation.defaultValue() : jsonParam, valueType);
+        return JsonUtil.toObject(params.isEmpty() ? defaultValue : jsonParam, valueType);
     }
 }

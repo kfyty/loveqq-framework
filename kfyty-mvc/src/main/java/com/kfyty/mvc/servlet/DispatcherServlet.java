@@ -25,11 +25,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Parameter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static java.util.Collections.emptyList;
 
 /**
  * 功能描述: 前端控制器
@@ -80,7 +84,6 @@ public class DispatcherServlet extends HttpServlet {
         try {
             RequestContextHolder.setCurrentRequest(req);
             ResponseContextHolder.setCurrentResponse(resp);
-            this.preparedRequestResponse(req, resp);
             this.processRequest(req, resp);
         } finally {
             RequestContextHolder.removeCurrentRequest();
@@ -107,36 +110,36 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     public void setInterceptorChains(List<HandlerInterceptor> interceptorChains) {
-        this.interceptorChains = interceptorChains;
+        this.interceptorChains = interceptorChains == null ? emptyList() : interceptorChains;
         this.interceptorChains.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     public void setArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-        this.argumentResolvers = argumentResolvers;
+        this.argumentResolvers = argumentResolvers == null ? emptyList() : argumentResolvers;
         this.argumentResolvers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     public void setReturnValueProcessors(List<HandlerMethodReturnValueProcessor> returnValueProcessors) {
-        this.returnValueProcessors = returnValueProcessors;
+        this.returnValueProcessors = returnValueProcessors == null ? emptyList() : returnValueProcessors;
         this.returnValueProcessors.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     private void prepareDefaultArgumentResolversReturnValueProcessor() throws IOException {
         Set<Class<?>> classes = PackageUtil.scanClass(HandlerMethodArgumentResolver.class);
         for (Class<?> clazz : classes) {
-            if(!clazz.equals(HandlerMethodArgumentResolver.class) && HandlerMethodArgumentResolver.class.isAssignableFrom(clazz)) {
+            if (!clazz.equals(HandlerMethodArgumentResolver.class) && HandlerMethodArgumentResolver.class.isAssignableFrom(clazz)) {
                 this.addArgumentResolver((HandlerMethodArgumentResolver) ReflectUtil.newInstance(clazz));
             }
-            if(!clazz.equals(HandlerMethodReturnValueProcessor.class) && HandlerMethodReturnValueProcessor.class.isAssignableFrom(clazz)) {
+            if (!clazz.equals(HandlerMethodReturnValueProcessor.class) && HandlerMethodReturnValueProcessor.class.isAssignableFrom(clazz)) {
                 this.addReturnProcessor((HandlerMethodReturnValueProcessor) ReflectUtil.newInstance(clazz));
             }
         }
     }
 
-    private void preparedRequestResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html; charset=utf-8");
+    private void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType(mapping.getProduces());
         ServletUtil.preparedRequestParam(request);
     }
 
@@ -149,16 +152,17 @@ public class DispatcherServlet extends HttpServlet {
                 log.error("can't match url mapping: [{}] !", request.getRequestURI());
                 return;
             }
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("matched url mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI());
             }
-            if(!this.processPreInterceptor(request, response, methodMapping)) {
+            if (!this.processPreInterceptor(request, response, methodMapping)) {
                 return;
             }
+            this.preparedRequestResponse(methodMapping, request, response);
             Object[] params = this.preparedMethodParams(request, response, methodMapping);
             Object o = ReflectUtil.invokeMethod(methodMapping.getMappingController(), methodMapping.getMappingMethod(), params);
             this.processPostInterceptor(request, response, methodMapping, o);
-            if(o != null) {
+            if (o != null) {
                 this.processReturnValue(o, new MethodParameter(methodMapping.getMappingMethod()), request, response, params);
             }
         } catch (Exception e) {
@@ -166,18 +170,15 @@ public class DispatcherServlet extends HttpServlet {
             exception = e;
             throw new ServletException(e);
         } finally {
-            if(methodMapping != null) {
+            if (methodMapping != null) {
                 this.processCompletionInterceptor(request, response, methodMapping, exception);
             }
         }
     }
 
     private boolean processPreInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if(this.interceptorChains == null) {
-            return true;
-        }
         for (HandlerInterceptor interceptor : this.interceptorChains) {
-            if(!interceptor.preHandle(request, response, handler)) {
+            if (!interceptor.preHandle(request, response, handler)) {
                 return false;
             }
         }
@@ -185,18 +186,12 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     private void processPostInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Object value) throws Exception {
-        if(this.interceptorChains == null) {
-            return;
-        }
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             interceptor.postHandle(request, response, handler, value);
         }
     }
 
     private void processCompletionInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) throws ServletException {
-        if(this.interceptorChains == null) {
-            return;
-        }
         try {
             for (HandlerInterceptor interceptor : this.interceptorChains) {
                 interceptor.afterCompletion(request, response, handler, e);
@@ -212,21 +207,17 @@ public class DispatcherServlet extends HttpServlet {
         Object[] paramValues = new Object[parameters.length];
         resolverParameters:
         for (Parameter parameter : parameters) {
-            if(HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
+            if (HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
                 paramValues[index++] = request;
                 continue;
             }
-            if(HttpServletResponse.class.isAssignableFrom(parameter.getType())) {
+            if (HttpServletResponse.class.isAssignableFrom(parameter.getType())) {
                 paramValues[index++] = response;
-                continue;
-            }
-            if(Model.class.isAssignableFrom(parameter.getType())) {
-                paramValues[index++] = new Model();
                 continue;
             }
             MethodParameter methodParameter = new MethodParameter(methodMapping.getMappingMethod(), parameter);
             for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
-                if(argumentResolver.supportsParameter(methodParameter)) {
+                if (argumentResolver.supportsParameter(methodParameter)) {
                     paramValues[index++] = argumentResolver.resolveArgument(methodParameter, methodMapping, request);
                     continue resolverParameters;
                 }
@@ -236,17 +227,12 @@ public class DispatcherServlet extends HttpServlet {
         return paramValues;
     }
 
-    private void processReturnValue(Object retValue, MethodParameter methodParameter, HttpServletRequest request, HttpServletResponse response, Object ... params) throws Exception {
+    private void processReturnValue(Object retValue, MethodParameter methodParameter, HttpServletRequest request, HttpServletResponse response, Object... params) throws Exception {
         ModelViewContainer container = new ModelViewContainer(request, response);
         container.setPrefix(prefix).setSuffix(suffix);
-        for (Object param : params) {
-            if(param != null && Model.class.isAssignableFrom(param.getClass())) {
-                container.setModel((Model) param);
-                break;
-            }
-        }
+        Arrays.stream(params).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
-            if(returnValueProcessor.supportsReturnType(methodParameter)) {
+            if (returnValueProcessor.supportsReturnType(methodParameter)) {
                 returnValueProcessor.handleReturnValue(retValue, methodParameter, container);
                 return;
             }

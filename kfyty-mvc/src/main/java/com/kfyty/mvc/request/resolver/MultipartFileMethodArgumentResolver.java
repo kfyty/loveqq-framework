@@ -34,15 +34,15 @@ public class MultipartFileMethodArgumentResolver implements HandlerMethodArgumen
     @SuppressWarnings("unchecked")
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         List<MultipartFile> files = (List<MultipartFile>) request.getAttribute(ServletUtil.CURRENT_REQUEST_FILES);
-        if(CommonUtil.empty(files) || !AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class)) {
+        if (CommonUtil.empty(files)) {
             return null;
         }
-        RequestParam annotation = AnnotationUtil.findAnnotation(parameter.getParameter(), RequestParam.class);
-        List<MultipartFile> filterFiles = files.stream().filter(e -> e.getName().equals(annotation.value())).collect(Collectors.toList());
-        if(MultipartFile.class.equals(parameter.getParamType())) {
+        String paramName = parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), RequestParam.class), RequestParam::value);
+        List<MultipartFile> filterFiles = files.stream().filter(e -> e.getName().equals(paramName)).collect(Collectors.toList());
+        if (MultipartFile.class.equals(parameter.getParamType())) {
             return filterFiles.isEmpty() ? null : filterFiles.get(0);
         }
-        if(parameter.getParamType().isArray()) {
+        if (parameter.getParamType().isArray()) {
             return filterFiles.toArray(new MultipartFile[0]);
         }
         return List.class.isAssignableFrom(parameter.getParamType()) ? filterFiles : new HashSet<>(filterFiles);

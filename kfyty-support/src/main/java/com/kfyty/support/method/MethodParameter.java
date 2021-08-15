@@ -1,11 +1,14 @@
 package com.kfyty.support.method;
 
+import com.kfyty.support.utils.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 
 /**
  * 描述: 描述方法参数，也可用于单独描述方法
@@ -104,5 +107,14 @@ public class MethodParameter {
     public MethodParameter(Method method, Parameter parameter, Object value) {
         this(method, parameter);
         this.value = value;
+    }
+
+    public String getParameterName() {
+        return this.parameter.getName();
+    }
+
+    public <A extends Annotation> String getParameterName(A annotation, Function<A, String> mapping) {
+        String declaringName = annotation == null ? null : mapping.apply(annotation);
+        return CommonUtil.notEmpty(declaringName) ? declaringName : this.getParameterName();
     }
 }
