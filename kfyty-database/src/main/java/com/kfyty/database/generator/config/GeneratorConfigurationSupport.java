@@ -16,7 +16,7 @@ public interface GeneratorConfigurationSupport {
 
     DataSource getDataSource();
 
-    default Class<? extends AbstractDatabaseMapper> dataBaseMapping() {
+    default Class<? extends AbstractDatabaseMapper> databaseMapping() {
         return null;
     }
 
@@ -30,6 +30,14 @@ public interface GeneratorConfigurationSupport {
 
     default String[] table() {
         return null;
+    }
+
+    default String tablePrefix() {
+        return "";
+    }
+
+    default boolean isRemoveTablePrefix() {
+        return false;
     }
 
     default String basePackage() {

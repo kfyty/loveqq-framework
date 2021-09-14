@@ -33,6 +33,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class CommonUtil {
     /**
+     * 可以匹配任何内容的正则表达式
+     */
+    public static final Pattern MATCH_ALL_PATTERN = Pattern.compile("([\\s\\S]*)");
+
+    /**
      * 全部大写字母或数字的正则表达式
      */
     public static final Pattern UPPER_CASE_PATTERN = Pattern.compile("[A-Z0-9]*");
@@ -227,6 +232,13 @@ public abstract class CommonUtil {
         uri = uri.trim();
         uri = uri.startsWith("/") ? uri : "/" + uri;
         return !uri.endsWith("/") ? uri : uri.substring(0, uri.length() - 1);
+    }
+
+    public static String removePrefix(String prefix, String target) {
+        if (target.startsWith(prefix)) {
+            return target.replaceFirst(prefix, "");
+        }
+        return target;
     }
 
     public static void ensureFolderExists(String path) {

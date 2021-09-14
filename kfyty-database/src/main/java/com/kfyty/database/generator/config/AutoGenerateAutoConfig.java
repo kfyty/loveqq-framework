@@ -4,6 +4,7 @@ import com.kfyty.database.generator.GenerateSources;
 import com.kfyty.database.generator.config.annotation.EnableAutoGenerate;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
+import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
@@ -36,6 +37,9 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
     private GeneratorConfigurationSupport configurationSupport;
 
     @Autowired(required = false)
+    private SqlSessionProxyFactory sqlSessionProxyFactory;
+
+    @Autowired(required = false)
     private List<GeneratorTemplate> templates;
 
     @Lazy
@@ -58,6 +62,14 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
             log.warn("generator configuration does not exist !");
             return;
         }
+        GenerateSources generateSources = this.createGenerateSources(applicationContext);
+        if (CommonUtil.notEmpty(generateSources.getConfiguration().getTemplateList())) {
+            generateSources.doGenerate();
+        }
+    }
+
+    @SneakyThrows
+    private GenerateSources createGenerateSources(ApplicationContext applicationContext) {
         GenerateSources generateSources = new GenerateSources(this.configurationSupport);
         EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);
         if (annotation.loadTemplate()) {
@@ -67,14 +79,15 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
                 log.warn("no template found for prefix: '" + annotation.templatePrefix() + "' !");
             }
         }
+        if (this.sqlSessionProxyFactory != null) {
+            generateSources.setSqlSessionProxyFactory(this.sqlSessionProxyFactory);
+        }
         if (this.templates != null) {
             generateSources.refreshTemplate(this.templates);
         }
         if (databaseMapper != null) {
             generateSources.getConfiguration().setDatabaseMapper(databaseMapper);
         }
-        if (CommonUtil.notEmpty(generateSources.getConfiguration().getTemplateList())) {
-            generateSources.doGenerate();
-        }
+        return generateSources;
     }
 }

@@ -3,7 +3,6 @@ package com.kfyty.database.jdbc.session;
 import com.kfyty.support.transaction.Transaction;
 import lombok.Getter;
 
-import javax.sql.DataSource;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
@@ -33,20 +32,6 @@ public class SqlSessionProxyFactory {
     @SuppressWarnings("unchecked")
     public <T> T createProxy(Class<T> interfaces) {
         return (T) Proxy.newProxyInstance(interfaces.getClassLoader(), new Class[]{interfaces}, new SqlSession(interfaces, this.configuration));
-    }
-
-    /**
-     * 创建接口代理对象
-     * 根据数据源和接口的快捷创建方法
-     *
-     * @param interfaces 接口 Class 对象
-     * @param <T>        泛型
-     * @return 代理对象
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T createProxy(DataSource dataSource, Class<T> interfaces) {
-        Configuration configuration = new Configuration().setDataSource(dataSource);
-        return (T) Proxy.newProxyInstance(interfaces.getClassLoader(), new Class[]{interfaces}, new SqlSession(interfaces, configuration));
     }
 
     /**

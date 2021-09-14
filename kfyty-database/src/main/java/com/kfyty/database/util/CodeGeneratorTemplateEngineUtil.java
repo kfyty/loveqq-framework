@@ -9,7 +9,6 @@ import com.kfyty.support.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,21 +40,21 @@ public abstract class CodeGeneratorTemplateEngineUtil {
      */
     private static Properties CONFIG = null;
 
-    public static Properties loadGeneratorProperties() throws IOException {
+    public static Properties loadGeneratorProperties() {
         return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, CodeGeneratorTemplateEngineUtil.class));
     }
 
-    public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) throws Exception {
+    public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) {
         String templateNames = getTemplateNames(prefix);
-        if(CommonUtil.empty(templateNames)) {
+        if (CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
         return Arrays.stream(templateNames.split(",")).map(e -> template.create(prefix, e)).collect(Collectors.toList());
     }
 
-    public static List<? extends JspTemplate> loadJspTemplates(JspTemplate template, String prefix) throws Exception {
+    public static List<? extends JspTemplate> loadJspTemplates(JspTemplate template, String prefix) {
         String templateNames = getTemplateNames(prefix);
-        if(CommonUtil.empty(templateNames)) {
+        if (CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
         String templatePath = getTemplatePath(prefix);
@@ -70,13 +69,13 @@ public abstract class CodeGeneratorTemplateEngineUtil {
 
     public static String getTemplatePath(String prefix) {
         String templatePath = TEMPLATE_BASE_PATH;
-        if(!CommonUtil.empty(prefix)) {
+        if (!CommonUtil.empty(prefix)) {
             templatePath += "/" + prefix;
         }
         return templatePath.replace(".", "/");
     }
 
-    public static String getTemplateNames(String prefix) throws IOException {
+    public static String getTemplateNames(String prefix) {
         log.debug("load template for prefix: '" + prefix + "' !");
         String key = CommonUtil.empty(prefix) ? "template" : prefix + ".template";
         return loadGeneratorProperties().getProperty(key);

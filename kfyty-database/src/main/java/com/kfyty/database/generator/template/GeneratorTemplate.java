@@ -1,5 +1,6 @@
 package com.kfyty.database.generator.template;
 
+import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.support.utils.JdbcTypeUtil;
@@ -67,6 +68,17 @@ public interface GeneratorTemplate {
      */
     default boolean sameFile() {
         return false;
+    }
+
+    /**
+     * 渲染模板
+     * @param tableInfo 数据表结构
+     * @param configuration 生成器配置
+     * @param out 输出流
+     * @throws IOException IOException
+     */
+    default void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) throws IOException {
+        this.doGenerate(tableInfo, configuration.getBasePackage(), out);
     }
 
     /**

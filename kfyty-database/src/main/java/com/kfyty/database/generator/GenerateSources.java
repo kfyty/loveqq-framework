@@ -2,6 +2,7 @@ package com.kfyty.database.generator;
 
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.config.GeneratorConfigurationSupport;
+import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
@@ -12,6 +13,7 @@ import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -25,6 +27,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.kfyty.support.utils.CommonUtil.removePrefix;
+
 /**
  * 功能描述: 生成资源
  *
@@ -37,6 +41,9 @@ public class GenerateSources {
     @Getter
     protected GeneratorConfiguration configuration;
 
+    @Setter
+    protected SqlSessionProxyFactory sqlSessionProxyFactory;
+
     protected List<? extends AbstractTableStructInfo> tableInfos;
 
     public GenerateSources() {
@@ -48,12 +55,20 @@ public class GenerateSources {
         this.refreshConfiguration(configurationSupport);
     }
 
+    public SqlSessionProxyFactory getSqlSessionProxyFactory() {
+        if (this.sqlSessionProxyFactory == null) {
+            Configuration configuration = new Configuration().setDataSource(this.configuration.getDataSource());
+            this.sqlSessionProxyFactory = new SqlSessionProxyFactory(configuration);
+        }
+        return this.sqlSessionProxyFactory;
+    }
+
     protected String initFilePath() {
         GeneratorTemplate template = configuration.currentTemplate();
         String basePackage = CommonUtil.empty(configuration.getBasePackage()) ? "" : configuration.getBasePackage() + ".";
         String classSuffix = CommonUtil.empty(template.classSuffix()) ? "" : template.classSuffix().toLowerCase();
         String packageName = basePackage + (!classSuffix.endsWith("impl") ? classSuffix : classSuffix.replace("impl", ".impl"));
-        if(CommonUtil.notEmpty(template.packageName())) {
+        if (CommonUtil.notEmpty(template.packageName())) {
             packageName = template.packageName();
         }
         String parentPath = new File(CommonUtil.notEmpty(template.filePath()) ? template.filePath() : configuration.getFilePath()).getAbsolutePath();
@@ -62,29 +77,30 @@ public class GenerateSources {
 
     protected String initDirectory(AbstractTableStructInfo info) {
         String savePath = this.initFilePath();
+        String tableName = !this.configuration.isRemoveTablePrefix() ? info.getTableName() : removePrefix(this.configuration.getTablePrefix().toLowerCase(), info.getTableName().toLowerCase());
         Optional.of(new File(savePath)).filter(e -> !e.exists()).map(File::mkdirs);
         String classSuffix = Optional.ofNullable(configuration.currentTemplate().classSuffix()).orElse("");
         String fileTypeSuffix = Optional.ofNullable(configuration.currentTemplate().fileTypeSuffix()).orElse(".java");
-        return savePath + File.separator + CommonUtil.underline2CamelCase(info.getTableName(), true) + classSuffix + fileTypeSuffix;
+        return savePath + File.separator + CommonUtil.underline2CamelCase(tableName, true) + classSuffix + fileTypeSuffix;
     }
 
     protected File initFile(AbstractTableStructInfo info) throws IOException {
         File file = new File(this.initDirectory(info));
-        if(file.exists() && !file.delete()) {
+        if (file.exists() && !file.delete()) {
             throw new IllegalStateException("delete file failed: " + file.getAbsolutePath());
         }
-        if(!file.createNewFile()) {
+        if (!file.createNewFile()) {
             throw new IllegalStateException("create file failed: " + file.getAbsolutePath());
         }
         return file;
     }
 
     protected void initTableInfos() {
-        AbstractDatabaseMapper databaseMapper = SqlSessionProxyFactory.createProxy(configuration.getDataSource(), configuration.getDatabaseMapper());
+        AbstractDatabaseMapper databaseMapper = this.getSqlSessionProxyFactory().createProxy(configuration.getDatabaseMapper());
 
         Set<String> tables = Optional.ofNullable(configuration.getTables()).orElse(new HashSet<>());
 
-        if(CommonUtil.notEmpty(configuration.getQueryTableSql())) {
+        if (CommonUtil.notEmpty(configuration.getQueryTableSql())) {
             Query annotation = AnnotationUtil.findAnnotation(ReflectUtil.getMethod(configuration.getDatabaseMapper(), "findTableList"), Query.class);
             ReflectUtil.setAnnotationValue(annotation, "value", configuration.getQueryTableSql());
             tables.addAll(databaseMapper.findTableList());
@@ -96,7 +112,7 @@ public class GenerateSources {
         for (AbstractTableStructInfo info : this.tableInfos) {
             info.setFieldInfos(databaseMapper.findFieldInfos(info.getDatabaseName(), info.getTableName()));
         }
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("initialize data base info success !");
         }
     }
@@ -124,23 +140,23 @@ public class GenerateSources {
     }
 
     public void doGenerate() throws Exception {
-        if(this.tableInfos == null) {
+        if (this.tableInfos == null) {
             this.initTableInfos();
         }
         File file = null;
         SimpleBufferedWriter out = null;
-        while(configuration.hasTemplate()) {
+        while (configuration.hasTemplate()) {
             GeneratorTemplate template = configuration.nextTemplate();
             for (AbstractTableStructInfo tableInfo : this.tableInfos) {
-                if(file == null || out == null || !template.sameFile()) {
+                if (file == null || out == null || !template.sameFile()) {
                     file = this.initFile(tableInfo);
                     out = new SimpleBufferedWriter(new FileWriter(file, template.sameFile()));
                 }
-                template.doGenerate(tableInfo, configuration.getBasePackage(), out);
+                template.doGenerate(tableInfo, configuration, out);
                 out.flush();
                 log.debug("generate resource: [{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
-            if(out != null && !template.sameFile()) {
+            if (out != null && !template.sameFile()) {
                 out.close();
                 out = null;
             }

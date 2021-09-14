@@ -1,5 +1,6 @@
 package com.kfyty.database.generator.template;
 
+import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
@@ -8,11 +9,12 @@ import com.kfyty.support.utils.JdbcTypeUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.kfyty.support.utils.CommonUtil.removePrefix;
 
 /**
  * 描述:
@@ -32,13 +34,9 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
     protected Map<Object, Object> variable;
 
     public AbstractTemplateEngine(String prefix, String template) {
-        try {
-            this.prefix = prefix;
-            this.template = template;
-            this.variable = new HashMap<>(CodeGeneratorTemplateEngineUtil.loadGeneratorProperties());
-        } catch (IOException e) {
-            log.error("init template error: ", e);
-        }
+        this.prefix = prefix;
+        this.template = template;
+        this.variable = new HashMap<>(CodeGeneratorTemplateEngineUtil.loadGeneratorProperties());
     }
 
     @Override
@@ -66,15 +64,19 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
         return o == null ? null : o.toString();
     }
 
-    public abstract List<? extends GeneratorTemplate> loadTemplates(String prefix) throws Exception;
+    public abstract List<? extends GeneratorTemplate> loadTemplates(String prefix);
 
-    protected void loadVariables(AbstractTableStructInfo tableInfo, String basePackage) {
-        variable.put("basePackage", basePackage);
+    protected String getTableClass(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration) {
+        return !configuration.isRemoveTablePrefix() ? tableInfo.getTableName() : removePrefix(configuration.getTablePrefix().toLowerCase(), tableInfo.getTableName().toLowerCase());
+    }
+
+    protected void loadVariables(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration) {
+        variable.put("basePackage", configuration.getBasePackage());
         variable.put("database", tableInfo.getDatabaseName());
         variable.put("table", tableInfo.getTableName());
         variable.put("note", tableInfo.getTableComment());
-        variable.put("className", CommonUtil.underline2CamelCase(tableInfo.getTableName(), true));
-        variable.put("classVariable", CommonUtil.underline2CamelCase(tableInfo.getTableName()));
+        variable.put("className", CommonUtil.underline2CamelCase(this.getTableClass(tableInfo, configuration), true));
+        variable.put("classVariable", CommonUtil.underline2CamelCase(this.getTableClass(tableInfo, configuration)));
         List<AbstractFieldStructInfo> fields = new ArrayList<>(tableInfo.getFieldInfos().size());
         List<AbstractFieldStructInfo> columns = new ArrayList<>(tableInfo.getFieldInfos().size());
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {

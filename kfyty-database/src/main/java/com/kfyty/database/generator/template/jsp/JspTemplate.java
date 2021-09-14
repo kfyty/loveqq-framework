@@ -1,5 +1,6 @@
 package com.kfyty.database.generator.template.jsp;
 
+import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.GeneratorTemplate;
@@ -55,22 +56,22 @@ public class JspTemplate extends AbstractTemplateEngine {
     }
 
     @Override
-    public List<? extends GeneratorTemplate> loadTemplates(String prefix) throws Exception {
+    public List<? extends GeneratorTemplate> loadTemplates(String prefix) {
         return CodeGeneratorTemplateEngineUtil.loadJspTemplates(this, prefix);
     }
 
     @Override
-    public void doGenerate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
+    public void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) throws IOException {
         this.initClass();
-        this.loadVariables(tableInfo, basePackage);
-        this.templateEngine.getConfig().clearVar().putVar(variable);
+        this.loadVariables(tableInfo, configuration);
+        this.templateEngine.getConfig().clearVar().putVar(this.variable);
         this.templateEngine.getConfig().setOut(out);
-        JstlRenderEngine render = new JstlRenderEngine(this.templateEngine, Collections.singletonList(jspClass));
+        JstlRenderEngine render = new JstlRenderEngine(this.templateEngine, Collections.singletonList(this.jspClass));
         render.doRenderTemplate();
     }
 
     protected void initClass() {
-        if(this.jspClass == null) {
+        if (this.jspClass == null) {
             try {
                 String clazz = this.classPath.replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
                 this.jspClass = ClassPool.getDefault().makeClass(new FileInputStream(clazz)).toClass();

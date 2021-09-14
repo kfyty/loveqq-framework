@@ -13,4 +13,8 @@ public @interface Table {
     String[] value() default "";
 
     String queryTableSql() default "";
+
+    String prefix() default "";
+
+    boolean removePrefix() default false;
 }

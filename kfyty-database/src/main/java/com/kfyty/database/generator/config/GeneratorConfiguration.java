@@ -4,8 +4,8 @@ import com.kfyty.database.generator.config.annotation.BasePackage;
 import com.kfyty.database.generator.config.annotation.Database;
 import com.kfyty.database.generator.config.annotation.DatabaseMapper;
 import com.kfyty.database.generator.config.annotation.FilePath;
-import com.kfyty.database.generator.config.annotation.Template;
 import com.kfyty.database.generator.config.annotation.Table;
+import com.kfyty.database.generator.config.annotation.Template;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -22,10 +22,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.kfyty.support.utils.CommonUtil.MATCH_ALL_PATTERN;
+import static java.util.Optional.ofNullable;
 
 /**
  * 功能描述: 生成配置
@@ -53,6 +55,10 @@ public class GeneratorConfiguration {
     protected Pattern tablePattern;
 
     protected String queryTableSql;
+
+    protected String tablePrefix;
+
+    protected boolean removeTablePrefix;
 
     protected String basePackage;
 
@@ -100,46 +106,51 @@ public class GeneratorConfiguration {
 
     private void initGeneratorConfigurationFromAnnotation(GeneratorConfigurationSupport configuration) {
         Class<? extends GeneratorConfigurationSupport> configurationClass = configuration.getClass();
-        this.databaseMapper = databaseMapper != null ? databaseMapper : Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, DatabaseMapper.class)).map(DatabaseMapper::value).orElse(null);
-        this.databaseName = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Database.class)).map(Database::value).orElse(null);
-        this.tables = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
-        this.tablePattern = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(Pattern.compile("([\\s\\S]*)"));
-        this.queryTableSql = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> !CommonUtil.empty(e.queryTableSql())).map(Table::queryTableSql).orElse(null);
-        this.basePackage = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, BasePackage.class)).map(BasePackage::value).orElse(null);
-        this.filePath = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, FilePath.class)).map(FilePath::value).orElse(null);
-        List<GeneratorTemplate> templateList = Optional.ofNullable(AnnotationUtil.findAnnotation(configurationClass, Template.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (GeneratorTemplate) ReflectUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(Collections.emptyList());
-        if(!CommonUtil.empty(templateList)) {
+        this.databaseMapper = this.databaseMapper != null ? this.databaseMapper : ofNullable(AnnotationUtil.findAnnotation(configurationClass, DatabaseMapper.class)).map(DatabaseMapper::value).orElse(null);
+        this.databaseName = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Database.class)).map(Database::value).orElse(null);
+        this.tables = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> CommonUtil.notEmpty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
+        this.tablePattern = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> CommonUtil.notEmpty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(MATCH_ALL_PATTERN);
+        this.queryTableSql = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).map(Table::queryTableSql).filter(CommonUtil::notEmpty).orElse(null);
+        this.tablePrefix = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).map(Table::prefix).filter(CommonUtil::notEmpty).orElse("");
+        this.removeTablePrefix = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).map(Table::removePrefix).orElse(false);
+        this.basePackage = ofNullable(AnnotationUtil.findAnnotation(configurationClass, BasePackage.class)).map(BasePackage::value).orElse(null);
+        this.filePath = ofNullable(AnnotationUtil.findAnnotation(configurationClass, FilePath.class)).map(FilePath::value).orElse(null);
+        List<GeneratorTemplate> templateList = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Template.class)).map(e -> Arrays.stream(e.value()).distinct().map(clazz -> (GeneratorTemplate) ReflectUtil.newInstance(clazz)).collect(Collectors.toList())).orElse(Collections.emptyList());
+        if (!CommonUtil.empty(templateList)) {
             this.templateList.addAll(templateList);
         }
     }
 
     private void initGeneratorConfigurationFromMethod(GeneratorConfigurationSupport configuration) {
-        this.dataSource = Optional.ofNullable(configuration.getDataSource()).orElseThrow(() -> new NullPointerException("data source is null !"));
-        if(this.databaseMapper == null) {
-            if(configuration.dataBaseMapping() != null) {
-                this.databaseMapper = configuration.dataBaseMapping();
-            } else {
-                throw new NullPointerException("database mapper is null !");
-            }
+        if ((this.dataSource = configuration.getDataSource()) == null) {
+            throw new NullPointerException("data source can't null !");
         }
-        if(CommonUtil.empty(this.templateList)) {
-            if(configuration.getTemplates() != null) {
-                this.templateList.addAll(Arrays.stream(configuration.getTemplates()).distinct().collect(Collectors.toList()));
-            } else {
-                throw new NullPointerException("templates is empty !");
-            }
+        if (this.databaseMapper == null && (this.databaseMapper = configuration.databaseMapping()) == null) {
+            throw new NullPointerException("database mapper can't null !");
         }
-        if(CommonUtil.empty(this.databaseName)) {
-            this.databaseName = Optional.ofNullable(configuration.databaseName()).orElseThrow(() -> new NullPointerException("database name is null !"));
+        if (CommonUtil.notEmpty(configuration.getTemplates())) {
+            this.templateList.addAll(Arrays.stream(configuration.getTemplates()).distinct().collect(Collectors.toList()));
         }
-        if(CommonUtil.empty(this.tables)) {
-            this.tables = Optional.ofNullable(configuration.table()).map(e -> new HashSet<>(Arrays.asList(e))).orElse(null);
+        if (CommonUtil.empty(this.databaseName)) {
+            this.databaseName = ofNullable(configuration.databaseName()).orElseThrow(() -> new NullPointerException("database name can't null !"));
         }
-        if(CommonUtil.empty(this.basePackage)) {
-            this.basePackage = Optional.ofNullable(configuration.basePackage()).orElse("");
+        if (CommonUtil.empty(this.tables)) {
+            this.tables = ofNullable(configuration.table()).map(e -> new HashSet<>(Arrays.asList(e))).orElse(null);
         }
-        if(CommonUtil.empty(this.filePath)) {
-            this.filePath = Optional.ofNullable(configuration.filePath()).orElse("");
+        if (CommonUtil.empty(this.tablePrefix)) {
+            this.removeTablePrefix = configuration.isRemoveTablePrefix();
+        }
+        if (CommonUtil.empty(this.tablePrefix)) {
+            this.tablePrefix = ofNullable(configuration.tablePrefix()).orElse("");
+        }
+        if (CommonUtil.empty(this.basePackage)) {
+            this.basePackage = ofNullable(configuration.basePackage()).orElse("");
+        }
+        if (CommonUtil.empty(this.filePath)) {
+            this.filePath = ofNullable(configuration.filePath()).orElse("");
+        }
+        if (CommonUtil.empty(this.templateList)) {
+            log.warn("generate template is empty !");
         }
     }
 }

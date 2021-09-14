@@ -1,5 +1,6 @@
 package com.kfyty.database.generator.template.freemarker;
 
+import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.database.generator.template.GeneratorTemplate;
@@ -35,15 +36,15 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
     }
 
     @Override
-    public List<? extends GeneratorTemplate> loadTemplates(String prefix) throws Exception {
+    public List<? extends GeneratorTemplate> loadTemplates(String prefix) {
         return CodeGeneratorTemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
     }
 
     @Override
-    public void doGenerate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {
+    public void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) throws IOException {
         try {
             this.initTemplate();
-            loadVariables(tableInfo, basePackage);
+            loadVariables(tableInfo, configuration);
             this.freemarkerTemplate.process(this.variable, out);
         } catch (TemplateException e) {
             log.error("generate source error !", e);
