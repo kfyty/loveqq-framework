@@ -154,12 +154,14 @@ public class GenerateSources {
                 }
                 template.doGenerate(tableInfo, configuration, out);
                 out.flush();
+                if (!template.sameFile()) {
+                    CommonUtil.close(out);
+                    out = null;
+                }
                 log.debug("generate resource: [{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
-            if (out != null && !template.sameFile()) {
-                out.close();
-                out = null;
-            }
+            CommonUtil.close(out);
+            out = null;
         }
     }
 }

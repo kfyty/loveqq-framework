@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * 描述: 生成资源自动配置
  *
@@ -41,6 +43,9 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
 
     @Autowired(required = false)
     private List<GeneratorTemplate> templates;
+
+    @Autowired(required = false)
+    private GenerateSources generateSources;
 
     @Lazy
     @Autowired(required = false)
@@ -70,7 +75,7 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
 
     @SneakyThrows
     private GenerateSources createGenerateSources(ApplicationContext applicationContext) {
-        GenerateSources generateSources = new GenerateSources(this.configurationSupport);
+        GenerateSources generateSources = ofNullable(this.generateSources).orElse(new GenerateSources()).refreshConfiguration(this.configurationSupport);
         EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);
         if (annotation.loadTemplate()) {
             List<? extends GeneratorTemplate> templates = ReflectUtil.newInstance(annotation.templateEngine()).loadTemplates(annotation.templatePrefix());

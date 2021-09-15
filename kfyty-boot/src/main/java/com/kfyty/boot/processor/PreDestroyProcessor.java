@@ -1,7 +1,8 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -16,7 +17,8 @@ import java.lang.reflect.Method;
  * @date 2021/6/7 17:14
  * @email kfyty725@hotmail.com
  */
-@Configuration
+@Component
+@Order(Integer.MIN_VALUE)
 public class PreDestroyProcessor implements BeanPostProcessor {
 
     @Override
