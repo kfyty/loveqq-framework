@@ -1,13 +1,15 @@
 package com.kfyty.database.jdbc.intercept;
 
 import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.jdbc.ConnectionHolder;
+import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.support.utils.JdbcUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
 
 /**
  * 描述: SQL 执行拦截器
@@ -20,31 +22,28 @@ import java.sql.SQLException;
 public interface Interceptor {
     /**
      * SQL 拦截方法
-     * @param sql 经过处理的 SQL 语句
+     *
+     * @param sql         经过处理的 SQL 语句
      * @param transaction 事务
-     * @param returnType 返回值类型
-     * @param params 参数
+     * @param returnType  返回值类型
+     * @param params      参数
      * @return 返回值不为空时，将作为返回结果，否则执行下一个拦截器
      */
-    default Object intercept(String sql, Transaction transaction, SimpleGeneric returnType, MethodParameter ... params) throws SQLException {
+    default Object intercept(String sql, Transaction transaction, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
         try {
-            transaction.getConnection();
             return this.intercept(sql, returnType, params);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             transaction.rollback();
-            throw new SQLException(e);
+            throw e;
         } finally {
-            if(transaction.isAutoCommit()) {
-                transaction.commit();
-                transaction.close();
-            }
+            commitTransactionIfNecessary(transaction);
         }
     }
 
-    default Object intercept(String sql, SimpleGeneric returnType, MethodParameter ... params) throws SQLException {
-        PreparedStatement ps = JdbcUtil.getPreparedStatement(ConnectionHolder.currentConnection(), sql, params);
+    default Object intercept(String sql, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
+        PreparedStatement ps = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), sql, params);
         return this.intercept(ps, returnType, params);
     }
 
-    Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter ... params) throws SQLException;
+    Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter... params) throws SQLException;
 }

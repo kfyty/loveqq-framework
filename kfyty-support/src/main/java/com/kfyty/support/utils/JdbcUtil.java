@@ -23,76 +23,69 @@ import java.util.stream.Collectors;
 public abstract class JdbcUtil {
     public static Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
-        try {
-            preparedStatement = getPreparedStatement(connection, sql, params);
-            resultSet = preparedStatement.executeQuery();
+        try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
             Object obj = ResultSetUtil.processObject(resultSet, returnType);
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("<==         total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
             }
             return obj;
-        } catch(Exception e) {
-            transaction.rollback();
-            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
-            throw new SQLException(e);
-        } finally {
-            CommonUtil.close(resultSet);
-            CommonUtil.close(preparedStatement);
-            if(transaction.isAutoCommit()) {
-                transaction.commit();
-                transaction.close();
-            }
-        }
-    }
-
-    public static int execute(Transaction transaction, String sql, MethodParameter ... params) throws SQLException {
-        Connection connection = transaction.getConnection();
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = getPreparedStatement(connection, sql, params);
-            preparedStatement.execute();
-            int updateCount = preparedStatement.getUpdateCount();
-            if(log.isDebugEnabled()) {
-                log.debug("<== affected rows: {}", updateCount);
-            }
-            return updateCount;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             transaction.rollback();
             log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
             throw e;
         } finally {
-            CommonUtil.close(preparedStatement);
-            if(transaction.isAutoCommit()) {
-                transaction.commit();
-                transaction.close();
-            }
+            commitTransactionIfNecessary(transaction);
         }
     }
 
-    public static PreparedStatement getPreparedStatement(Connection connection, String sql, MethodParameter ... params) throws SQLException {
+    public static int execute(Transaction transaction, String sql, MethodParameter... params) throws SQLException {
+        Connection connection = transaction.getConnection();
+        try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params)) {
+            preparedStatement.execute();
+            int updateCount = preparedStatement.getUpdateCount();
+            if (log.isDebugEnabled()) {
+                log.debug("<== affected rows: {}", updateCount);
+            }
+            return updateCount;
+        } catch (SQLException e) {
+            transaction.rollback();
+            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            throw e;
+        } finally {
+            commitTransactionIfNecessary(transaction);
+        }
+    }
+
+    public static PreparedStatement getPreparedStatement(Connection connection, String sql, MethodParameter... params) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        for(int i = 0; params != null && i < params.length; i++) {
+        for (int i = 0; params != null && i < params.length; i++) {
             MethodParameter parameter = params[i];
-            if(!ResultSetUtil.TYPE_HANDLER.containsKey(parameter.getParamType())) {
+            if (!ResultSetUtil.TYPE_HANDLER.containsKey(parameter.getParamType())) {
                 preparedStatement.setObject(i + 1, parameter.getValue());
                 continue;
             }
             ResultSetUtil.TYPE_HANDLER.get(parameter.getParamType()).setParameter(preparedStatement, i + 1, parameter.getValue());
         }
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("==>     preparing: {}", sql);
             log.debug("==>    parameters: {}", params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
         }
         return preparedStatement;
     }
 
-    private static Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter ... params) throws SQLException {
+    public static void commitTransactionIfNecessary(Transaction transaction) throws SQLException {
+        if (transaction.isAutoCommit()) {
+            transaction.commit();
+            CommonUtil.close(transaction);
+        }
+    }
+
+    private static Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         return query(transaction, returnType, sql, params);
     }
 
-    private static int execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter ... params) throws SQLException {
+    private static int execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter... params) throws SQLException {
         return execute(transaction, sql, params);
     }
 }

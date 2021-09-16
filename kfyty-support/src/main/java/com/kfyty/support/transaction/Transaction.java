@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * @date 2021/5/19 9:23
  * @email kfyty725@hotmail.com
  */
-public interface Transaction {
+public interface Transaction extends AutoCloseable {
     /**
      * 获取一个连接
      * @return Connection
