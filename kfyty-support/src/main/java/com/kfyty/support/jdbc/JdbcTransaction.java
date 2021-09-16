@@ -1,6 +1,7 @@
 package com.kfyty.support.jdbc;
 
 import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.transaction.TransactionIsolationLevel;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -17,53 +18,58 @@ import java.sql.SQLException;
 @Slf4j
 public class JdbcTransaction implements Transaction {
     private final DataSource dataSource;
+    private final TransactionIsolationLevel level;
 
     private Connection connection;
     private boolean autoCommit;
     private boolean curAutoCommit;
 
     public JdbcTransaction(DataSource dataSource) {
+        this(dataSource, null);
+    }
+
+    public JdbcTransaction(DataSource dataSource, TransactionIsolationLevel level) {
         this.dataSource = dataSource;
+        this.level = level;
     }
 
     @Override
     public Connection getConnection() throws SQLException {
-        if(connection != null) {
-            return connection;
+        if (this.connection != null) {
+            return this.connection;
         }
         return this.openConnection();
     }
 
     @Override
     public void commit() throws SQLException {
-        if (connection != null && !connection.getAutoCommit()) {
+        if (this.connection != null && !this.connection.getAutoCommit()) {
             if (log.isDebugEnabled()) {
-                log.debug("Committing JDBC Connection [" + connection + "]");
+                log.debug("Committing JDBC Connection [" + this.connection + "]");
             }
-            connection.commit();
+            this.connection.commit();
         }
     }
 
     @Override
     public void rollback() throws SQLException {
-        if (connection != null && !connection.getAutoCommit()) {
+        if (this.connection != null && !this.connection.getAutoCommit()) {
             if (log.isDebugEnabled()) {
-                log.debug("Rolling back JDBC Connection [" + connection + "]");
+                log.debug("Rolling back JDBC Connection [" + this.connection + "]");
             }
-            connection.rollback();
+            this.connection.rollback();
         }
     }
 
     @Override
     public void close() throws SQLException {
-        if (connection != null) {
+        if (this.connection != null) {
             this.connection.setAutoCommit(autoCommit);
             if (log.isDebugEnabled()) {
                 log.debug("Closing JDBC Connection [" + connection + "]");
             }
-            ConnectionHolder.removeCurrentConnection();
-            connection.close();
-            connection = null;
+            this.connection.close();
+            this.connection = null;
         }
     }
 
@@ -74,7 +80,7 @@ public class JdbcTransaction implements Transaction {
 
     @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
-        if(this.connection == null) {
+        if (this.connection == null) {
             this.openConnection();
         }
         this.connection.setAutoCommit(autoCommit);
@@ -85,7 +91,9 @@ public class JdbcTransaction implements Transaction {
         this.connection = dataSource.getConnection();
         this.autoCommit = this.connection.getAutoCommit();
         this.curAutoCommit = this.autoCommit;
-        ConnectionHolder.setCurrentConnection(this.connection);
+        if (this.level != null) {
+            this.connection.setTransactionIsolation(this.level.getLevel());
+        }
         return this.connection;
     }
 }

@@ -43,6 +43,11 @@ public abstract class CommonUtil {
     public static final Pattern UPPER_CASE_PATTERN = Pattern.compile("[A-Z0-9]*");
 
     /**
+     * #{}、${} 正则匹配
+     */
+    public static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
+
+    /**
      * 空对象数组
      */
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];

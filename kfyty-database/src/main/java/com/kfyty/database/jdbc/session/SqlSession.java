@@ -1,18 +1,19 @@
 package com.kfyty.database.jdbc.session;
 
 import com.kfyty.database.jdbc.BaseMapper;
-import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
+import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.JdbcTransaction;
+import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.transaction.Transaction;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -31,7 +32,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,7 +42,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static com.kfyty.support.utils.CommonUtil.PARAMETERS_PATTERN;
 
 /**
  * 功能描述: SqlSession，仅支持通过接口代理操作数据库
@@ -55,16 +56,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @ToString
 public class SqlSession implements InvocationHandler {
-    /**
-     * toString 方法
-     */
-    private static final Method TO_STRING_METHOD = ReflectUtil.getMethod(Object.class, "toString");
-
-    /**
-     * #{}、${} 正则匹配
-     */
-    private static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
-
     /**
      * 序列化的注解缓存
      */
@@ -130,7 +121,7 @@ public class SqlSession implements InvocationHandler {
                 }
             }
             return null;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new ExecuteInterceptorException(e);
         }
     }
@@ -147,15 +138,21 @@ public class SqlSession implements InvocationHandler {
         checkMapKey(annotation, returnType);
         final String sql = this.processForEach(sourceMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = this.parseSQL(sql, params);
-        return Optional
-                .ofNullable(this.invokeInterceptor(sourceMethod, sqlParams.getKey(), this.getTransaction(), returnType, sqlParams.getValue()))
-                .map(e -> this.processSubQuery(sourceMethod, annotation, e))
-                .orElseGet(() -> {
-                    String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
-                    Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-                    Object obj = ReflectUtil.invokeMethod(null, method, this.getTransaction(), returnType, sqlParams.getKey(), sqlParams.getValue());
-                    return this.processSubQuery(sourceMethod, annotation, obj);
-                });
+        final Transaction transaction = this.getTransaction();
+        try {
+            TransactionHolder.setCurrentTransaction(transaction);
+            return Optional
+                    .ofNullable(this.invokeInterceptor(sourceMethod, sqlParams.getKey(), transaction, returnType, sqlParams.getValue()))
+                    .map(e -> this.processSubQuery(sourceMethod, annotation, e))
+                    .orElseGet(() -> {
+                        String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
+                        Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
+                        Object obj = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+                        return this.processSubQuery(sourceMethod, annotation, obj);
+                    });
+        } finally {
+            TransactionHolder.removeCurrentTransaction();
+        }
     }
 
     /**
@@ -332,8 +329,8 @@ public class SqlSession implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if (method.equals(TO_STRING_METHOD)) {
-            return this.toString();
+        if (Object.class.equals(method.getDeclaringClass())) {
+            return method.invoke(this, args);
         }
         SimpleGeneric returnType = this.processReturnType(method);
         Annotation[] annotations = this.processRepeatableAnnotation(method);
