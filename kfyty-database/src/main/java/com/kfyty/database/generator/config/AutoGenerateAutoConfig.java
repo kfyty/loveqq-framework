@@ -4,11 +4,13 @@ import com.kfyty.database.generator.GenerateSources;
 import com.kfyty.database.generator.config.annotation.EnableAutoGenerate;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
+import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -39,17 +41,22 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
     private GeneratorConfigurationSupport configurationSupport;
 
     @Autowired(required = false)
-    private SqlSessionProxyFactory sqlSessionProxyFactory;
-
-    @Autowired(required = false)
     private List<GeneratorTemplate> templates;
 
     @Autowired(required = false)
     private GenerateSources generateSources;
 
+    @Autowired(required = false)
+    private SqlSessionProxyFactory sqlSessionProxyFactory;
+
     @Lazy
     @Autowired(required = false)
     private Class<? extends AbstractDatabaseMapper> databaseMapper;
+
+    @Bean
+    public QueryInterceptor fieldStructInfoInterceptor() {
+        return new FieldStructInfoInterceptor();
+    }
 
     @Override
     public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
@@ -73,7 +80,6 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
         }
     }
 
-    @SneakyThrows
     private GenerateSources createGenerateSources(ApplicationContext applicationContext) {
         GenerateSources generateSources = ofNullable(this.generateSources).orElse(new GenerateSources()).refreshConfiguration(this.configurationSupport);
         EnableAutoGenerate annotation = AnnotationUtil.findAnnotation(applicationContext.getPrimarySource(), EnableAutoGenerate.class);

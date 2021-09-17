@@ -41,9 +41,12 @@ public interface Interceptor {
     }
 
     default Object intercept(String sql, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
-        PreparedStatement ps = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), sql, params);
-        return this.intercept(ps, returnType, params);
+        try (PreparedStatement ps = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), sql, params)) {
+            return this.intercept(ps, returnType, params);
+        }
     }
 
-    Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter... params) throws SQLException;
+    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
+        return null;
+    }
 }

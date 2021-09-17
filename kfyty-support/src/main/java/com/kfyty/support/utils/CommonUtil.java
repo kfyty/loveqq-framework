@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 功能描述: 通用工具类
@@ -103,8 +104,11 @@ public abstract class CommonUtil {
         if (o == null) {
             return Collections.emptyList();
         }
-        if (o instanceof Collection || o.getClass().isArray()) {
-            return toList(o).stream().map(mapping).collect(Collectors.toList());
+        if (o instanceof Collection) {
+            return ((Collection<?>) o).stream().map(mapping).collect(Collectors.toList());
+        }
+        if (o.getClass().isArray()) {
+            return (o instanceof Object[] ? Arrays.stream((Object[]) o) : toList(o).stream()).map(mapping).collect(Collectors.toList());
         }
         if (o instanceof Map) {
             return ((Map<?, ?>) o).entrySet().stream().map(entryMapping).map(mapping).collect(Collectors.toList());
@@ -125,12 +129,7 @@ public abstract class CommonUtil {
             return new ArrayList<>((Collection<?>) value);
         }
         if (value.getClass().isArray()) {
-            int size = size(value);
-            List<Object> list = new ArrayList<>(size);
-            for (int i = 0; i < size; i++) {
-                list.add(Array.get(value, i));
-            }
-            return list;
+            return Stream.iterate(0, i -> i + 1).limit(size(value)).map(i -> Array.get(value, i)).collect(Collectors.toList());
         }
         log.error("data to list error, data is not collection or array !");
         return Collections.emptyList();

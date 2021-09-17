@@ -22,7 +22,7 @@ public class MapperInterfaceTemplate extends EntityTemplate {
     @Override
     public void initTemplateData(AbstractTableStructInfo tableInfo, String basePackage) {
         super.initTemplateData(tableInfo, basePackage);
-        this.pkInfo = tableInfo.getFieldInfos().stream().filter(AbstractFieldStructInfo::primaryKey).findFirst().orElse(null);
+        this.pkInfo = tableInfo.getFieldInfos().stream().filter(AbstractFieldStructInfo::isPrimaryKey).findFirst().orElse(null);
     }
 
     @Override

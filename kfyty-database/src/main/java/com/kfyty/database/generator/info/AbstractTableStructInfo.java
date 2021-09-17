@@ -13,8 +13,23 @@ import java.util.List;
  */
 @Data
 public class AbstractTableStructInfo {
+    /**
+     * 数据库名
+     */
     protected String databaseName;
+
+    /**
+     * 表名
+     */
     protected String tableName;
+
+    /**
+     * 表注释
+     */
     protected String tableComment;
+
+    /**
+     * 字段信息
+     */
     protected List<? extends AbstractFieldStructInfo> fieldInfos;
 }

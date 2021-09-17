@@ -11,9 +11,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public abstract class ResultSetUtil {
         try {
             Set<Class<?>> classes = PackageUtil.scanClass(TypeHandler.class);
             for (Class<?> clazz : classes) {
-                if(!clazz.equals(TypeHandler.class) && TypeHandler.class.isAssignableFrom(clazz)) {
+                if (!clazz.equals(TypeHandler.class) && TypeHandler.class.isAssignableFrom(clazz)) {
                     TypeHandler<?> typeHandler = (TypeHandler<?>) ReflectUtil.newInstance(clazz);
                     registerTypeHandler(ReflectUtil.getSuperGeneric(clazz), typeHandler);
                     typeHandler.supportTypes().forEach(e -> registerTypeHandler(e, typeHandler));
@@ -50,22 +50,22 @@ public abstract class ResultSetUtil {
     }
 
     public static Object processObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
-        if(returnType.isSimpleArray()) {
+        if (returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if(!returnType.isSimpleParameterizedType()) {
+        if (!returnType.isSimpleParameterizedType()) {
             return processSingleObject(resultSet, returnType.getSourceType());
         }
-        if(Set.class.isAssignableFrom(returnType.getSourceType())) {
+        if (Set.class.isAssignableFrom(returnType.getSourceType())) {
             return processSetObject(resultSet, returnType.getFirst().get());
         }
-        if(List.class.isAssignableFrom(returnType.getSourceType()) && !Map.class.isAssignableFrom(returnType.getFirst().get())) {
+        if (List.class.isAssignableFrom(returnType.getSourceType()) && !Map.class.isAssignableFrom(returnType.getFirst().get())) {
             return processListObject(resultSet, returnType.getFirst().get());
         }
-        if(returnType.isMapGeneric() && !CommonUtil.empty(returnType.getMapKey())) {
+        if (returnType.isMapGeneric() && !CommonUtil.empty(returnType.getMapKey())) {
             return processMapObject(resultSet, returnType);
         }
-        if(returnType.isMapGeneric()) {
+        if (returnType.isMapGeneric()) {
             return processSingleMapObject(resultSet);
         }
         return processListMapObject(resultSet);
@@ -73,10 +73,10 @@ public abstract class ResultSetUtil {
 
     public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
-        if(CommonUtil.empty(result)) {
+        if (CommonUtil.empty(result)) {
             return null;
         }
-        if(result.size() > 1) {
+        if (result.size() > 1) {
             throw new TooManyResultException("too many result found !");
         }
         return result.get(0);
@@ -84,7 +84,7 @@ public abstract class ResultSetUtil {
 
     public static <T> Object processArrayObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
-        if(CommonUtil.empty(result)) {
+        if (CommonUtil.empty(result)) {
             return Array.newInstance(clazz, 0);
         }
         Object o = Array.newInstance(clazz, result.size());
@@ -100,37 +100,37 @@ public abstract class ResultSetUtil {
 
     @SuppressWarnings("unchecked")
     public static <T> List<T> processListBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException {
-        if(resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process base type failed: result set is empty !"));
+        if (resultSet == null || !resultSet.next()) {
+            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process base type failed: result set is empty !"));
         }
         List<T> list = new ArrayList<>();
         do {
             list.add((T) extractObject(resultSet, resultSet.getMetaData().getColumnLabel(1), clazz));
-        } while(resultSet.next());
+        } while (resultSet.next());
         return list;
     }
 
     public static <T> List<T> processListObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
-        if(ReflectUtil.isBaseDataType(clazz)) {
+        if (ReflectUtil.isBaseDataType(clazz)) {
             return processListBaseType(resultSet, clazz);
         }
-        if(resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process object failed: result set is empty !"));
+        if (resultSet == null || !resultSet.next()) {
+            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process object failed: result set is empty !"));
         }
         List<T> list = new ArrayList<>();
         do {
             T o = ReflectUtil.newInstance(clazz);
             Map<String, Field> fieldMap = ReflectUtil.getFieldMap(clazz);
             ResultSetMetaData metaData = resultSet.getMetaData();
-            for(int i = 1; i <= metaData.getColumnCount(); i++) {
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
                 String fieldName = CommonUtil.underline2CamelCase(metaData.getColumnLabel(i));
                 Field field = fieldMap.get(fieldName);
-                if(field != null) {
+                if (field != null) {
                     Object value = extractObject(resultSet, metaData.getColumnLabel(i), field.getType());
                     ReflectUtil.setFieldValue(o, field, value);
                     continue;
                 }
-                if(fieldName.contains(".")) {
+                if (fieldName.contains(".")) {
                     Object value = extractObject(resultSet, metaData.getColumnLabel(i), ReflectUtil.parseFieldType(fieldName, o.getClass()));
                     ReflectUtil.setNestedFieldValue(fieldName, o, value);
                     continue;
@@ -138,15 +138,15 @@ public abstract class ResultSetUtil {
                 LogUtil.logIfWarnEnabled((logger, param) -> logger.warn("discovery column: [{}], but class:[{}] no field matching !", param), metaData.getColumnName(i), clazz);
             }
             list.add(o);
-        } while(resultSet.next());
+        } while (resultSet.next());
         return list;
     }
 
     @SuppressWarnings("unchecked")
     public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
         List<V> values = processListObject(resultSet, (Class<V>) returnType.getMapValueType().get());
-        if(CommonUtil.empty(values)) {
-            return new HashMap<>(2);
+        if (CommonUtil.empty(values)) {
+            return Collections.emptyMap();
         }
         Map<K, V> result = new HashMap<>();
         for (V value : values) {
@@ -158,15 +158,15 @@ public abstract class ResultSetUtil {
 
     @SuppressWarnings("unchecked")
     public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws SQLException {
-        if(resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(new HashMap<>(2), (logger, param) -> logger.debug("process map failed: result set is empty !"));
+        if (resultSet == null || !resultSet.next()) {
+            return LogUtil.logIfDebugEnabled(Collections.emptyMap(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
         Map<K, V> map = new HashMap<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
-        for(int i = 1; i <= metaData.getColumnCount(); i++) {
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
             map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
         }
-        if(resultSet.next()) {
+        if (resultSet.next()) {
             throw new TooManyResultException("too many result found !");
         }
         return map;
@@ -174,23 +174,23 @@ public abstract class ResultSetUtil {
 
     @SuppressWarnings("unchecked")
     public static <K, V> Object processListMapObject(ResultSet resultSet) throws SQLException {
-        if(resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(new LinkedList<>(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
+        if (resultSet == null || !resultSet.next()) {
+            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
         }
         List<Map<K, V>> result = new ArrayList<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
         do {
             Map<K, V> map = new HashMap<>();
-            for(int i = 1; i <= metaData.getColumnCount(); i++) {
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
                 map.put((K) metaData.getColumnLabel(i), (V) resultSet.getObject(metaData.getColumnLabel(i)));
             }
             result.add(map);
-        } while(resultSet.next());
+        } while (resultSet.next());
         return result;
     }
 
     public static Object extractObject(ResultSet resultSet, String column, Class<?> targetType) throws SQLException {
-        if(TYPE_HANDLER.containsKey(targetType)) {
+        if (TYPE_HANDLER.containsKey(targetType)) {
             return TYPE_HANDLER.get(targetType).getResult(resultSet, column);
         }
         return resultSet.getObject(column, targetType);
