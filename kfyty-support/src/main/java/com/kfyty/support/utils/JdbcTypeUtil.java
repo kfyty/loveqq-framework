@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class JdbcTypeUtil {
 
     public static String convert2JdbcType(String databaseType) {
-        if(databaseType.toLowerCase().contains("timestamp")) {
+        if (databaseType.toLowerCase().contains("timestamp")) {
             return "TIMESTAMP";
         }
         switch (databaseType.toLowerCase()) {
@@ -63,14 +63,14 @@ public abstract class JdbcTypeUtil {
             case "binary":
             case "varbinary":
                 return "BINARY";
-            default :
+            default:
                 log.warn("No jdbc type matched and instead of 'OTHER' !");
                 return "OTHER";
         }
     }
 
     public static String convert2JavaType(String databaseType) {
-        if(databaseType.toLowerCase().contains("timestamp")) {
+        if (databaseType.toLowerCase().contains("timestamp")) {
             return "Date";
         }
         switch (databaseType.toLowerCase()) {
@@ -96,6 +96,7 @@ public abstract class JdbcTypeUtil {
                 return "Long";
             case "tinyint":
             case "smallint":
+                return "Short";
             case "int":
             case "integer":
                 return "Integer";
@@ -113,7 +114,7 @@ public abstract class JdbcTypeUtil {
             case "binary":
             case "varbinary":
                 return "byte[]";
-            default :
+            default:
                 return null;
         }
     }

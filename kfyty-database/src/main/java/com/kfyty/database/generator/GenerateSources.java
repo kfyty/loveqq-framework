@@ -1,5 +1,6 @@
 package com.kfyty.database.generator;
 
+import com.kfyty.database.generator.config.FieldStructInfoInterceptor;
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.config.GeneratorConfigurationSupport;
 import com.kfyty.database.jdbc.session.Configuration;
@@ -57,7 +58,9 @@ public class GenerateSources {
 
     public SqlSessionProxyFactory getSqlSessionProxyFactory() {
         if (this.sqlSessionProxyFactory == null) {
-            Configuration configuration = new Configuration().setDataSource(this.configuration.getDataSource());
+            Configuration configuration = new Configuration()
+                    .setDataSource(this.configuration.getDataSource())
+                    .setInterceptors(Collections.singletonList(new FieldStructInfoInterceptor()));
             this.sqlSessionProxyFactory = new SqlSessionProxyFactory(configuration);
         }
         return this.sqlSessionProxyFactory;

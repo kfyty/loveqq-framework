@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * 描述:
+ * 描述: 查询 SQL 拦截器
  *
  * @author kfyty725
  * @date 2021/8/8 13:30
@@ -19,12 +19,20 @@ public interface QueryInterceptor extends Interceptor {
 
     @Override
     default Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
-        return this.intercept(ps, ps.executeQuery(), returnType, params);
+        try (ResultSet rs = ps.executeQuery()) {
+            return this.intercept(ps, rs, returnType, params);
+        }
     }
 
-    default Object intercept(PreparedStatement ps, ResultSet rs, SimpleGeneric returnType, MethodParameter ... params) throws SQLException {
-        return this.intercept(ps, ResultSetUtil.processObject(rs, returnType), params);
+    default Object intercept(PreparedStatement ps, ResultSet rs, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
+        return this.intercept(ps, rs, ResultSetUtil.processObject(rs, returnType), params);
     }
 
-    Object intercept(PreparedStatement ps, Object retValue, MethodParameter ... params) throws SQLException;
+    default Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, MethodParameter... params) throws SQLException {
+        return this.intercept(ps, retValue, params);
+    }
+
+    default Object intercept(PreparedStatement ps, Object retValue, MethodParameter... params) throws SQLException {
+        return retValue;
+    }
 }

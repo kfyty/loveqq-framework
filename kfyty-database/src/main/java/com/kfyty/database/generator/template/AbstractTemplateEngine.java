@@ -5,7 +5,6 @@ import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
 import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.JdbcTypeUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,13 +79,11 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
         List<AbstractFieldStructInfo> fields = new ArrayList<>(tableInfo.getFieldInfos().size());
         List<AbstractFieldStructInfo> columns = new ArrayList<>(tableInfo.getFieldInfos().size());
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
-            AbstractFieldStructInfo info = new AbstractFieldStructInfo();
-            info.setTableName(fieldInfo.getTableName());
+            AbstractFieldStructInfo info = fieldInfo.clone();
             info.setField(CommonUtil.underline2CamelCase(fieldInfo.getField()));
             info.setFieldType(this.convert2JavaType(fieldInfo.getFieldType()));
             info.setFieldComment(CommonUtil.empty(fieldInfo.getFieldComment()) ? "" : fieldInfo.getFieldComment());
-            fieldInfo.setFieldType(JdbcTypeUtil.convert2JdbcType(fieldInfo.getFieldType()));
-            if(fieldInfo.primaryKey()) {
+            if(fieldInfo.isPrimaryKey()) {
                 variable.put("pkField", info);
                 variable.put("pkColumn", fieldInfo);
                 continue;

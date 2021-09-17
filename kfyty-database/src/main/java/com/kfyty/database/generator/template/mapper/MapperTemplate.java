@@ -81,7 +81,7 @@ public class MapperTemplate extends MapperInterfaceTemplate {
         for (AbstractFieldStructInfo fieldInfo : tableInfo.getFieldInfos()) {
             String field = fieldInfo.getField();
             String classField = CommonUtil.underline2CamelCase(field, false);
-            if(fieldInfo.primaryKey()) {
+            if(fieldInfo.isPrimaryKey()) {
                 continue;
             }
             if(!"String".equals(JdbcTypeUtil.convert2JavaType(fieldInfo.getFieldType()))) {
