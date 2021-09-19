@@ -1,12 +1,12 @@
 package com.kfyty.database.jdbc.intercept;
 
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.ResultSetUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.List;
 
 /**
  * 描述: 查询 SQL 拦截器
@@ -17,22 +17,23 @@ import java.sql.SQLException;
  */
 public interface QueryInterceptor extends Interceptor {
 
-    @Override
-    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
-        try (ResultSet rs = ps.executeQuery()) {
-            return this.intercept(ps, rs, returnType, params);
-        }
+    @Order(30)
+    default Object intercept(PreparedStatement ps, ResultSet rs, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+        return chain.proceed();
     }
 
-    default Object intercept(PreparedStatement ps, ResultSet rs, SimpleGeneric returnType, MethodParameter... params) throws SQLException {
-        return this.intercept(ps, rs, ResultSetUtil.processObject(rs, returnType), params);
+    @Order(40)
+    default Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, List<MethodParameter> parameters, InterceptorChain chain) {
+        return chain.proceed();
     }
 
-    default Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, MethodParameter... params) throws SQLException {
-        return this.intercept(ps, retValue, params);
+    @Order(50)
+    default Object intercept(ResultSet rs, Object retValue, List<MethodParameter> parameters, InterceptorChain chain) {
+        return chain.proceed();
     }
 
-    default Object intercept(PreparedStatement ps, Object retValue, MethodParameter... params) throws SQLException {
-        return retValue;
+    @Order(60)
+    default Object intercept(Object retValue, List<MethodParameter> parameters, InterceptorChain chain) {
+        return chain.proceed();
     }
 }

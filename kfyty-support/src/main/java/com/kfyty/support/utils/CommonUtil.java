@@ -34,6 +34,11 @@ import java.util.stream.Stream;
 @Slf4j
 public abstract class CommonUtil {
     /**
+     * 空字符串
+     */
+    public static final String EMPTY_STRING = "";
+
+    /**
      * 可以匹配任何内容的正则表达式
      */
     public static final Pattern MATCH_ALL_PATTERN = Pattern.compile("([\\s\\S]*)");
@@ -137,7 +142,7 @@ public abstract class CommonUtil {
 
     public static String getStackTrace(Throwable throwable) {
         if (throwable == null) {
-            return "";
+            return EMPTY_STRING;
         }
         StringWriter stringWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(stringWriter, true));

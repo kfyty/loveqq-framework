@@ -3,6 +3,7 @@ package com.kfyty.support.utils;
 import javafx.util.Pair;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -82,7 +83,7 @@ public abstract class AnnotationUtil {
             if (hasAnnotation(source, annotationClass)) {
                 return true;
             }
-            if(isMetaAnnotation(source)) {
+            if (isMetaAnnotation(source)) {
                 return false;
             }
             for (Annotation annotation : findAnnotations(source)) {
@@ -353,5 +354,24 @@ public abstract class AnnotationUtil {
             }
         }
         return null;
+    }
+
+    public static Annotation[] flatRepeatableAnnotation(Annotation[] annotations) {
+        List<Annotation> flatAnnotations = new ArrayList<>(annotations.length);
+        for (Annotation annotation : annotations) {
+            Object value = null;
+            Method method = ReflectUtil.getMethod(annotation.annotationType(), "value");
+            if (method == null || !((value = ReflectUtil.invokeMethod(annotation, method)) instanceof Annotation[])) {
+                flatAnnotations.add(annotation);
+                continue;
+            }
+            Repeatable repeatable = findAnnotation(method.getReturnType().getComponentType(), Repeatable.class);
+            if (repeatable == null || !repeatable.value().equals(annotation.annotationType())) {
+                flatAnnotations.add(annotation);
+                continue;
+            }
+            flatAnnotations.addAll(Arrays.asList((Annotation[]) value));
+        }
+        return flatAnnotations.toArray(EMPTY_ANNOTATIONS);
     }
 }

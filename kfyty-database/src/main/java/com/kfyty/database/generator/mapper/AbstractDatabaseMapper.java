@@ -7,6 +7,8 @@ import com.kfyty.database.jdbc.annotation.Query;
 
 import java.util.List;
 
+import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+
 /**
  * 功能描述: 数据库映射接口
  *
@@ -15,14 +17,17 @@ import java.util.List;
  * @since JDK 1.8
  */
 public interface AbstractDatabaseMapper {
-    @Query("")
+    @Query(EMPTY_STRING)
     default List<String> findTableList() {
         return null;
     }
 
-    @Query("")
+    @Query(EMPTY_STRING)
+    AbstractTableStructInfo findTableInfo(@Param("databaseName") String dataBaseName, @Param("tableName") String tableName);
+
+    @Query(EMPTY_STRING)
     List<? extends AbstractTableStructInfo> findTableInfos(@Param("databaseName") String dataBaseName);
 
-    @Query("")
-    List<? extends AbstractFieldStructInfo> findFieldInfos(@Param("databaseName") String dataBaseName, @Param("tableName")  String tableName);
+    @Query(EMPTY_STRING)
+    List<? extends AbstractFieldStructInfo> findFieldInfos(@Param("databaseName") String dataBaseName, @Param("tableName") String tableName);
 }

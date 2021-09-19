@@ -1,14 +1,13 @@
 package com.kfyty.database.generator.config;
 
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
+import com.kfyty.database.jdbc.intercept.InterceptorChain;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.JdbcTypeUtil;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 import static com.kfyty.support.utils.CommonUtil.mapping;
 
@@ -22,7 +21,7 @@ import static com.kfyty.support.utils.CommonUtil.mapping;
 public class FieldStructInfoInterceptor implements QueryInterceptor {
 
     @Override
-    public Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, MethodParameter... params) throws SQLException {
+    public Object intercept(Object retValue, List<MethodParameter> params, InterceptorChain chain) {
         return retValue instanceof Collection ? mapping(retValue, e -> {
             if (e instanceof AbstractFieldStructInfo) {
                 AbstractFieldStructInfo info = (AbstractFieldStructInfo) e;
