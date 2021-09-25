@@ -5,6 +5,8 @@ com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.boot.processor.PreDestroyProcessor,\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
     com.kfyty.boot.processor.EventListenerAnnotationBeanPostProcessor,\
+    com.kfyty.boot.processor.MethodValidationBeanPostProcessor,\
     com.kfyty.boot.event.DefaultApplicationEventPublisher,\
     com.kfyty.boot.configuration.DefaultThreadPoolExecutor,\
+    com.kfyty.boot.configuration.ValidationAutoConfiguration,\
     com.kfyty.boot.beans.LookupBeanDefinitionImport

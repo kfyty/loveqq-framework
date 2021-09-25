@@ -24,5 +24,5 @@ public @interface BootApplication {
 
     String[] excludeNames() default {};
 
-    boolean proxyTargetClass() default true;
+    boolean proxyTargetClass() default false;
 }

@@ -22,16 +22,6 @@
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-database</artifactId>
             <version>${kfyty.utils.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.freemarker</groupId>
-                    <artifactId>freemarker</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>

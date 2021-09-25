@@ -14,7 +14,6 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-
         <aspectj.version>1.9.7</aspectj.version>
     </properties>
 
@@ -23,6 +22,12 @@
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-support</artifactId>
             <version>${kfyty.utils.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
