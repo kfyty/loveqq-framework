@@ -195,6 +195,18 @@ public abstract class AnnotationUtil {
         return findAnnotation(parameter, annotationClass) != null;
     }
 
+    public static boolean hasAnnotationElement(Parameter parameter, Class<? extends Annotation> annotationClass) {
+        if (hasAnnotation(parameter, annotationClass)) {
+            return true;
+        }
+        for (Annotation annotation : findAnnotations(parameter)) {
+            if (hasAnnotationElement(annotation.annotationType(), annotationClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Annotation[] findAnnotations(Object source) {
         return findAnnotations(source.getClass());
     }

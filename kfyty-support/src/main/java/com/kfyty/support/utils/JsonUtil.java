@@ -1,9 +1,11 @@
 package com.kfyty.support.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.kfyty.support.exception.SupportException;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -38,8 +40,12 @@ public abstract class JsonUtil {
         return configure().writer();
     }
 
-    public static String toJson(Object o) throws IOException {
-        return DEFAULT_OBJECT_MAPPER.writeValueAsString(o);
+    public static String toJson(Object o) {
+        try {
+            return DEFAULT_OBJECT_MAPPER.writeValueAsString(o);
+        } catch (JsonProcessingException e) {
+            throw new SupportException(e);
+        }
     }
 
     public static Map<String, Object> toMap(Object o) {
@@ -50,8 +56,12 @@ public abstract class JsonUtil {
         return DEFAULT_OBJECT_MAPPER.convertValue(map, clazz);
     }
 
-    public static <T> T toObject(String json, Class<T> clazz) throws IOException {
-        return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
+    public static <T> T toObject(String json, Class<T> clazz) {
+        try {
+            return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
+        } catch (IOException e) {
+            throw new SupportException(e);
+        }
     }
 
     public static <T> T convertValue(String str, Class<T> rawClass) {

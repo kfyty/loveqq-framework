@@ -13,9 +13,9 @@
         <module>kfyty-boot</module>
         <module>kfyty-database</module>
         <module>kfyty-mvc</module>
+        <module>kfyty-aop</module>
         <module>kfyty-support</module>
         <module>kfyty-boot-starter-uid-generator</module>
-        <module>kfyty-aop</module>
     </modules>
 
     <properties>
@@ -25,6 +25,9 @@
 
         <jstl.version>1.2</jstl.version>
         <servlet.api.version>4.0.0</servlet.api.version>
+        <validation.api.version>3.0.0</validation.api.version>
+        <glassfish.jakarta.el.version>4.0.2</glassfish.jakarta.el.version>
+        <hibernate.validator.version>7.0.0.Final</hibernate.validator.version>
 
         <druid.version>1.1.15</druid.version>
         <mysql.version>8.0.16</mysql.version>
@@ -41,6 +44,9 @@
 
         <compiler.plugin.version>3.8.0</compiler.plugin.version>
         <source.plugin.version>3.1.0</source.plugin.version>
+
+        <maven.source.version>8</maven.source.version>
+        <maven.target.version>8</maven.target.version>
     </properties>
 
     <build>
@@ -51,8 +57,8 @@
                 <version>${compiler.plugin.version}</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>${maven.source.version}</source>
+                    <target>${maven.target.version}</target>
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
@@ -81,16 +87,16 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.log4j12.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -120,6 +126,24 @@
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${validation.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish</groupId>
+                <artifactId>jakarta.el</artifactId>
+                <version>${glassfish.jakarta.el.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate.validator.version}</version>
             </dependency>
 
             <dependency>

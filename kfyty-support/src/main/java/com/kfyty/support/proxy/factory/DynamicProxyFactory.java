@@ -30,7 +30,7 @@ public abstract class DynamicProxyFactory {
     }
 
     public static DynamicProxyFactory create() {
-        return create(true);
+        return create(false);
     }
 
     public static DynamicProxyFactory create(boolean proxyTargetClass) {
