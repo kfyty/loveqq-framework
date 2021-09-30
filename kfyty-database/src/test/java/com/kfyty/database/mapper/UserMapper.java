@@ -32,4 +32,7 @@ public interface UserMapper extends BaseMapper<Integer, User> {
 
     @Query("select * from user")
     List<Map<String, Object>> findAllMap();
+
+    /** 动态 SQL 测试 **/
+    List<User> findLikeName(@Param("name") String name);
 }

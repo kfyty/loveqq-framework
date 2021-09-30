@@ -69,7 +69,7 @@ public class FreemarkerDynamicProvider extends AbstractDynamicProvider<Freemarke
         try {
             StringWriter sql = new StringWriter();
             template.getTemplate().process(params, sql);
-            return sql.toString().replaceAll(BLANK_LINE_PATTERN.pattern(), "");
+            return sql.toString().replaceAll(BLANK_LINE_PATTERN.pattern(), "").trim();
         } catch (TemplateException | IOException e) {
             throw new RuntimeException(e);
         }

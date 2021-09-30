@@ -7,8 +7,8 @@ import lombok.Data;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 描述: 动态 SQL 提供基础实现
@@ -39,6 +39,10 @@ public abstract class AbstractDynamicProvider<TS extends TemplateStatement> impl
     }
 
     protected Map<String, Object> processTemplateParameters(Map<String, MethodParameter> methodParameterMap) {
-        return methodParameterMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().getValue()));
+        Map<String, Object> params = new HashMap<>(methodParameterMap.size());
+        for (Map.Entry<String, MethodParameter> entry : methodParameterMap.entrySet()) {
+            params.put(entry.getKey(), entry.getValue().getValue());
+        }
+        return params;
     }
 }
