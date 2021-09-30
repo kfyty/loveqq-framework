@@ -4,6 +4,7 @@ import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
+import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
 import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.vo.UserVo;
 import com.kfyty.support.utils.PropertiesUtil;
@@ -24,7 +25,9 @@ public class QueryTest {
     @Before
     public void prepare() throws Exception {
         DataSource dataSource = DruidDataSourceFactory.createDataSource(PropertiesUtil.load(PATH));
-        Configuration configuration = new Configuration().setDataSource(dataSource);
+        FreemarkerDynamicProvider dynamicProvider = new FreemarkerDynamicProvider();
+        Configuration configuration = new Configuration().setDataSource(dataSource).setDynamicProvider(dynamicProvider, "/mapper");
+        dynamicProvider.setConfiguration(configuration);
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
         this.userMapper = proxyFactory.createProxy(UserMapper.class);
     }
@@ -47,6 +50,8 @@ public class QueryTest {
         Map<String, Object> map = this.userMapper.findMapById(UserVo.create(newUser.getId()));
         Map<String, User> userMap = this.userMapper.findUserMap();
         List<Map<String, Object>> maps = this.userMapper.findAllMap();
+        List<User> likeNull = this.userMapper.findLikeName(null);
+        List<User> likeTest = this.userMapper.findLikeName("test");
         this.userMapper.deleteByPk(newUser.getId());
         this.userMapper.deleteByPks(Collections.singletonList(newUser.getId()));
         this.userMapper.deleteAll();
@@ -61,5 +66,7 @@ public class QueryTest {
         System.out.println(map);
         System.out.println(userMap);
         System.out.println(maps);
+        System.out.println(likeNull);
+        System.out.println(likeTest);
     }
 }
