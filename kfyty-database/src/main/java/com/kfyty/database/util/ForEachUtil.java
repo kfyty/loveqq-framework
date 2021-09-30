@@ -1,56 +1,44 @@
 package com.kfyty.database.util;
 
 import com.kfyty.database.jdbc.annotation.ForEach;
+import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.CommonUtil;
 
-import java.lang.annotation.Annotation;
-import java.util.function.Function;
+import java.util.List;
+import java.util.Map;
+
+import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
 
 /**
- * 描述: 创建 ForEach 注解实例工具
+ * 描述: ForEach 注解处理工具
  *
  * @author kfyty725
- * @date 2021/7/22 18:53
+ * @date 2021/9/30 14:16
  * @email kfyty725@hotmail.com
  */
 public abstract class ForEachUtil {
 
-    public static ForEach create(String collection, String open, String separator, String close, Function<ForEach, String> sqlPart) {
-        return new ForEach() {
-
-            @Override
-            public String collection() {
-                return collection;
+    public static String processForEach(Map<String, MethodParameter> params, ForEach... forEachList) {
+        if (CommonUtil.empty(forEachList)) {
+            return EMPTY_STRING;
+        }
+        StringBuilder builder = new StringBuilder();
+        for (ForEach each : forEachList) {
+            MethodParameter parameter = params.get(each.collection());
+            List<Object> list = CommonUtil.toList(parameter.getValue());
+            builder.append(each.open());
+            for (int i = 0; i < list.size(); i++) {
+                String flag = "param_" + i + "_";
+                Object value = list.get(i);
+                builder.append(each.sqlPart().replace("#{", "#{" + flag).replace("${", "${" + flag));
+                params.put(flag + each.item(), new MethodParameter(value == null ? Object.class : value.getClass(), value));
+                if (i == list.size() - 1) {
+                    break;
+                }
+                builder.append(each.separator());
             }
-
-            @Override
-            public String item() {
-                return "item";
-            }
-
-            @Override
-            public String open() {
-                return open;
-            }
-
-            @Override
-            public String sqlPart() {
-                return sqlPart.apply(this);
-            }
-
-            @Override
-            public String separator() {
-                return separator;
-            }
-
-            @Override
-            public String close() {
-                return close;
-            }
-
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return ForEach.class;
-            }
-        };
+            builder.append(each.close());
+        }
+        return builder.toString();
     }
 }

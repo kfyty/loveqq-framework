@@ -1,5 +1,7 @@
 package com.kfyty.database.jdbc.autoconfig;
 
+import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
+import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
@@ -19,6 +21,15 @@ import java.util.stream.Collectors;
  */
 @Configuration
 public class MapperAutoConfig implements ImportBeanDefine {
+
+    @Bean
+    public DynamicProvider<?> dynamicProvider() {
+        freemarker.template.Configuration configuration = new freemarker.template.Configuration(freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
+        configuration.setDefaultEncoding("UTF-8");
+        configuration.setOutputEncoding("UTF-8");
+        configuration.setClassicCompatible(true);
+        return new FreemarkerDynamicProvider().setFreemarkerConfiguration(configuration);
+    }
 
     @Bean
     public SqlSessionProxyFactoryBean sqlSessionProxyFactoryBean() {

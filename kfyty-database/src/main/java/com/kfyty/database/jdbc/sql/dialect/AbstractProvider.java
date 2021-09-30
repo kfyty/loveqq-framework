@@ -11,6 +11,7 @@ import com.kfyty.database.jdbc.sql.DeleteProvider;
 import com.kfyty.database.jdbc.sql.InsertProvider;
 import com.kfyty.database.jdbc.sql.SelectProvider;
 import com.kfyty.database.jdbc.sql.UpdateProvider;
+import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -30,13 +31,13 @@ import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
 /**
- * 描述:
+ * 描述: 抽象 SQL 提供者，提供基础通用的 SQL, 对于非通用的将抛出异常
  *
  * @author kfyty725
  * @date 2021/7/24 19:20
  * @email kfyty725@hotmail.com
  */
-public class AbstractProvider implements InsertProvider, SelectProvider, UpdateProvider, DeleteProvider {
+public abstract class AbstractProvider implements InsertProvider, SelectProvider, UpdateProvider, DeleteProvider {
     public static final String PROVIDER_PARAM_PK = "pk";
 
     public static final String PROVIDER_PARAM_ENTITY = "entity";
@@ -68,9 +69,8 @@ public class AbstractProvider implements InsertProvider, SelectProvider, UpdateP
     public String selectByPks(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
         String baseSQL = String.format("select * from %s where %s in ", this.getTableName(entityClass.getValue()), entityClass.getKey());
-        ForEach forEach = ForEachUtil.create(PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
-        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[]{forEach});
-        return baseSQL;
+        ForEach forEach = AnnotationInstantiateUtil.createForEach(PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
+        return baseSQL + ForEachUtil.processForEach(params, forEach);
     }
 
     @Override
@@ -101,9 +101,8 @@ public class AbstractProvider implements InsertProvider, SelectProvider, UpdateP
     public String deleteByPks(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
         String baseSQL = String.format("delete from %s where %s in ", this.getTableName(entityClass.getValue()), entityClass.getKey());
-        ForEach forEach = ForEachUtil.create(PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
-        ReflectUtil.setAnnotationValue(annotation, "forEach", new ForEach[]{forEach});
-        return baseSQL;
+        ForEach forEach = AnnotationInstantiateUtil.createForEach(PROVIDER_PARAM_PK, "(", ",", ")", e -> "#{" + e.item() + "}");
+        return baseSQL + ForEachUtil.processForEach(params, forEach);
     }
 
     @Override

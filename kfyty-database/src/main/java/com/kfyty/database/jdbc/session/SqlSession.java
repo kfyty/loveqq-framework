@@ -1,12 +1,15 @@
 package com.kfyty.database.jdbc.session;
 
 import com.kfyty.database.jdbc.BaseMapper;
+import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.intercept.InterceptorChain;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
+import com.kfyty.database.util.AnnotationInstantiateUtil;
+import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.database.util.SQLParametersResolveUtil;
 import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
@@ -19,8 +22,6 @@ import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.utils.SerializableUtil;
-import com.kfyty.support.wrapper.WeakKey;
 import javafx.util.Pair;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +34,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotations;
@@ -54,11 +54,6 @@ import static com.kfyty.support.utils.CommonUtil.notEmpty;
 @Slf4j
 @ToString
 public class SqlSession implements InvocationHandler {
-    /**
-     * 序列化的注解缓存
-     */
-    private static final Map<WeakKey<Annotation>, byte[]> SERIALIZE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
-
     /**
      * mapper class
      */
@@ -89,7 +84,7 @@ public class SqlSession implements InvocationHandler {
         this.mapperClass = mapperClass;
         this.configuration = configuration;
         this.transaction = transaction;
-        this.providerAdapter = new ProviderAdapter();
+        this.providerAdapter = new ProviderAdapter(configuration);
     }
 
     /**
@@ -119,7 +114,7 @@ public class SqlSession implements InvocationHandler {
             return method.invoke(this, args);
         }
         SimpleGeneric returnType = this.processReturnType(method);
-        Annotation[] annotations = AnnotationUtil.flatRepeatableAnnotation(findAnnotations(method));
+        Annotation[] annotations = this.processAnnotation(method);
         Map<String, MethodParameter> methodParameter = SQLParametersResolveUtil.processMethodParameters(method, args);
         if (annotations.length == 1) {
             return this.requestExecuteSQL(method, annotations[0], returnType, methodParameter);
@@ -151,17 +146,16 @@ public class SqlSession implements InvocationHandler {
      * @param annotation   注解
      * @return SQL
      */
-    private Pair<String, Annotation> getSQL(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    private String resolveSQLByAnnotation(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
         Class<?> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
         if (!provider.equals(void.class)) {
-            annotation = SerializableUtil.clone(annotation, SERIALIZE_CACHE);
-            return new Pair<>(this.providerAdapter.doProvide(this.mapperClass, sourceMethod, annotation, params), annotation);
+            return this.providerAdapter.doProvide(provider, this.mapperClass, sourceMethod, annotation, params);
         }
         String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
         if (CommonUtil.empty(sql)) {
             throw new IllegalArgumentException("SQL statement is empty !");
         }
-        return new Pair<>(sql, annotation);
+        return sql;
     }
 
     /**
@@ -172,29 +166,9 @@ public class SqlSession implements InvocationHandler {
      * @return 拼接完毕的 sql
      */
     private String processForEach(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        Pair<String, Annotation> sqlPair = getSQL(sourceMethod, annotation, params);
-        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(sqlPair.getValue(), "forEach");
-        if (CommonUtil.empty(forEachList)) {
-            return sqlPair.getKey();
-        }
-        StringBuilder builder = new StringBuilder();
-        for (ForEach each : forEachList) {
-            MethodParameter parameter = params.get(each.collection());
-            List<Object> list = CommonUtil.toList(parameter.getValue());
-            builder.append(each.open());
-            for (int i = 0; i < list.size(); i++) {
-                String flag = "param_" + i + "_";
-                Object value = list.get(i);
-                builder.append(each.sqlPart().replace("#{", "#{" + flag).replace("${", "${" + flag));
-                params.put(flag + each.item(), new MethodParameter(value == null ? Object.class : value.getClass(), value));
-                if (i == list.size() - 1) {
-                    break;
-                }
-                builder.append(each.separator());
-            }
-            builder.append(each.close());
-        }
-        return sqlPair.getKey() + builder;
+        String sql = resolveSQLByAnnotation(sourceMethod, annotation, params);
+        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(annotation, "forEach");
+        return sql + ForEachUtil.processForEach(params, forEachList);
     }
 
     /**
@@ -248,6 +222,23 @@ public class SqlSession implements InvocationHandler {
             return simpleGeneric;
         }
         throw new IllegalArgumentException("parse return type failed !");
+    }
+
+    /**
+     * 处理方法上的注解
+     *
+     * @param method 代理方法
+     * @return 注解数组
+     */
+    private Annotation[] processAnnotation(Method method) {
+        Predicate<Annotation> annotationFilter = e -> e.annotationType().equals(Query.class) || e.annotationType().equals(Execute.class);
+        Annotation[] annotations = Arrays.stream(AnnotationUtil.flatRepeatableAnnotation(findAnnotations(method))).filter(annotationFilter).toArray(Annotation[]::new);
+        if (CommonUtil.notEmpty(annotations)) {
+            return annotations;
+        }
+        String id = this.configuration.getDynamicProvider().resolveTemplateStatementId(this.mapperClass, method);
+        String labelType = this.configuration.getTemplateStatements().get(id).getLabelType();
+        return new Annotation[]{AnnotationInstantiateUtil.createDynamicByLabelType(labelType)};
     }
 
     /**

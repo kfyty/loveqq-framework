@@ -5,7 +5,8 @@
 项目支持，包含一些通用工具类、泛型推断工具、jdbc 访问工具、bean 封装工具、包读取工具、json 转换工具以及自动配置接口、自动配置注解等
 
 ## kfyty-database
-数据库访问工具，实现了注解式 jdbc 访问。内置代码生成器和默认生成模板，支持 java 编程模板、freemarker 模板以及 jsp 模板（需要 k-jte 支持），或者自定义模板引擎。
+数据库访问工具，基于代理实现了接口式 jdbc 访问，支持注解编写 SQL 或者基于模板引擎(如：freemarker) 的动态 SQL；
+内置代码生成器和默认生成模板，支持 java 编程模板、freemarker 模板以及 jsp 模板（需要 k-jte 支持），或者自定义模板引擎。
 
 ## kfyty-mvc
 注解式 mvc，支持嵌入式 tomcat、文件上传接口、 restful 风格 url 解析匹配等。
