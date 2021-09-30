@@ -2,6 +2,7 @@ package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
 import lombok.extern.slf4j.Slf4j;
+import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,20 +10,26 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * 功能描述: 通用工具类
@@ -37,6 +44,11 @@ public abstract class CommonUtil {
      * 空字符串
      */
     public static final String EMPTY_STRING = "";
+
+    /**
+     * 空行的正则表达式
+     */
+    public static final Pattern BLANK_LINE_PATTERN = Pattern.compile("(?m)^\\s*$" + System.lineSeparator());
 
     /**
      * 可以匹配任何内容的正则表达式
@@ -107,7 +119,7 @@ public abstract class CommonUtil {
 
     public static <T> List<T> mapping(Object o, Function<Object, T> mapping, Function<Map.Entry<?, ?>, Object> entryMapping) {
         if (o == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
         if (o instanceof Collection) {
             return ((Collection<?>) o).stream().map(mapping).collect(Collectors.toList());
@@ -118,7 +130,7 @@ public abstract class CommonUtil {
         if (o instanceof Map) {
             return ((Map<?, ?>) o).entrySet().stream().map(entryMapping).map(mapping).collect(Collectors.toList());
         }
-        return Collections.singletonList(mapping.apply(o));
+        return singletonList(mapping.apply(o));
     }
 
     public static List<String> split(String source, String pattern) {
@@ -130,17 +142,24 @@ public abstract class CommonUtil {
     }
 
     public static List<Object> toList(Object value) {
+        return toList(value, entry -> entry);
+    }
+
+    public static List<Object> toList(Object value, Function<Map.Entry<?, ?>, Object> entryMapping) {
         if (value instanceof Collection) {
             return new ArrayList<>((Collection<?>) value);
         }
         if (value.getClass().isArray()) {
             return Stream.iterate(0, i -> i + 1).limit(size(value)).map(i -> Array.get(value, i)).collect(Collectors.toList());
         }
-        log.error("data to list error, data is not collection or array !");
-        return Collections.emptyList();
+        if (value instanceof Map) {
+            return ((Map<?, ?>) value).entrySet().stream().map(entryMapping).collect(Collectors.toList());
+        }
+        log.error("data to list error, data is not collection, array or map !");
+        return emptyList();
     }
 
-    public static String getStackTrace(Throwable throwable) {
+    public static String buildStackTrace(Throwable throwable) {
         if (throwable == null) {
             return EMPTY_STRING;
         }
@@ -250,10 +269,44 @@ public abstract class CommonUtil {
         return target;
     }
 
+    public static String resolveAttribute(Element element, String name) {
+        return resolveAttribute(element, name, null);
+    }
+
+    public static String resolveAttribute(Element element, String name, Supplier<RuntimeException> emptyException) {
+        String attribute = element.getAttribute(name);
+        if (emptyException != null && CommonUtil.empty(attribute)) {
+            throw emptyException.get();
+        }
+        return attribute;
+    }
+
     public static void ensureFolderExists(String path) {
         File file = new File(path);
         if (!file.exists() && !file.mkdirs()) {
             throw new SupportException("ensure folder exists failed !");
+        }
+    }
+
+    public static List<File> scanFiles(String path) {
+        return scanFiles(path, e -> true);
+    }
+
+    public static List<File> scanFiles(String path, Predicate<File> filePredicate) {
+        return scanFiles(path, filePredicate, Thread.currentThread().getContextClassLoader());
+    }
+
+    public static List<File> scanFiles(String path, Predicate<File> filePredicate, ClassLoader classLoader) {
+        try {
+            URL root = Objects.requireNonNull(classLoader.getResource(""));
+            File file = new File(root.getPath() + path);
+            if (file.isFile()) {
+                return filePredicate.test(file) ? singletonList(file) : emptyList();
+            }
+            File[] files = file.listFiles();
+            return files == null ? emptyList() : Arrays.stream(files).filter(File::isFile).filter(filePredicate).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new SupportException(e);
         }
     }
 

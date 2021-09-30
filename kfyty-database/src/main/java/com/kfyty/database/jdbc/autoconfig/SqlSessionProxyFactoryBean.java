@@ -3,6 +3,7 @@ package com.kfyty.database.jdbc.autoconfig;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
+import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
@@ -26,6 +27,9 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
     private DataSource dataSource;
 
     @Autowired(required = false)
+    private DynamicProvider<?> dynamicProvider;
+
+    @Autowired(required = false)
     private List<Interceptor> interceptors;
 
     @Override
@@ -38,6 +42,10 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
         Configuration configuration = new Configuration()
                 .setDataSource(this.getDataSource())
                 .setInterceptors(this.getInterceptors());
+        if (this.dynamicProvider != null) {
+            this.dynamicProvider.setConfiguration(configuration);
+            configuration.setDynamicProvider(dynamicProvider);
+        }
         return new SqlSessionProxyFactory(configuration);
     }
 
