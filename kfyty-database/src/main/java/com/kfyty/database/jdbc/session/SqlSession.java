@@ -142,14 +142,14 @@ public class SqlSession implements InvocationHandler {
     /**
      * 从注解上获取 SQL
      *
-     * @param sourceMethod mapper 方法
+     * @param mapperMethod mapper 方法
      * @param annotation   注解
      * @return SQL
      */
-    private String resolveSQLByAnnotation(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    private String resolveSQLByAnnotation(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
         Class<?> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
         if (!provider.equals(void.class)) {
-            return this.providerAdapter.doProvide(provider, this.mapperClass, sourceMethod, annotation, params);
+            return this.providerAdapter.doProvide(provider, this.mapperClass, mapperMethod, annotation, params);
         }
         String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
         if (CommonUtil.empty(sql)) {
@@ -165,8 +165,8 @@ public class SqlSession implements InvocationHandler {
      * @param params     参数
      * @return 拼接完毕的 sql
      */
-    private String processForEach(Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        String sql = resolveSQLByAnnotation(sourceMethod, annotation, params);
+    private String processForEach(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
+        String sql = resolveSQLByAnnotation(mapperMethod, annotation, params);
         ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(annotation, "forEach");
         return sql + ForEachUtil.processForEach(params, forEachList);
     }
@@ -177,10 +177,10 @@ public class SqlSession implements InvocationHandler {
      * @param annotation 包含子查询的注解
      * @param obj        父查询的结果集
      */
-    private Object processSubQuery(Method sourceMethod, Annotation annotation, Object obj) {
+    private Object processSubQuery(Method mapperMethod, Annotation annotation, Object obj) {
         if (annotation instanceof Query && obj != null) {
             SubQuery[] subQueries = ReflectUtil.invokeSimpleMethod(annotation, "subQuery");
-            CommonUtil.consumer(obj, e -> this.processSubQuery(sourceMethod, subQueries, e), Map.Entry::getValue);
+            CommonUtil.consumer(obj, e -> this.processSubQuery(mapperMethod, subQueries, e), Map.Entry::getValue);
         }
         return obj;
     }
@@ -191,13 +191,13 @@ public class SqlSession implements InvocationHandler {
      * @param subQueries 子查询注解
      * @param obj        父查询映射的结果对象，若是集合，则为其中的每一个对象
      */
-    private void processSubQuery(Method sourceMethod, SubQuery[] subQueries, Object obj) {
+    private void processSubQuery(Method mapperMethod, SubQuery[] subQueries, Object obj) {
         if (notEmpty(subQueries)) {
             for (SubQuery subQuery : subQueries) {
                 Field returnField = ReflectUtil.getField(obj.getClass(), subQuery.returnField());
                 Map<String, MethodParameter> params = SQLParametersResolveUtil.resolveMappingParameters(subQuery.paramField(), subQuery.mapperField(), obj);
                 SimpleGeneric returnType = SimpleGeneric.from(returnField);
-                ReflectUtil.setFieldValue(obj, returnField, this.requestExecuteSQL(sourceMethod, subQuery, returnType, params));
+                ReflectUtil.setFieldValue(obj, returnField, this.requestExecuteSQL(mapperMethod, subQuery, returnType, params));
             }
         }
     }
@@ -249,9 +249,9 @@ public class SqlSession implements InvocationHandler {
      * @param params     参数
      * @return 返回值
      */
-    private Object requestExecuteSQL(Method sourceMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) {
+    private Object requestExecuteSQL(Method mapperMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) {
         checkMapKey(annotation, returnType);
-        final String sql = this.processForEach(sourceMethod, annotation, params);
+        final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
         final Transaction transaction = this.getTransaction();
         final Supplier<Object> retValueSupplier = () -> {
@@ -262,9 +262,9 @@ public class SqlSession implements InvocationHandler {
         try {
             TransactionHolder.setCurrentTransaction(transaction);
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
-                return this.processSubQuery(sourceMethod, annotation, this.invokeInterceptorChain(sourceMethod, sqlParams, returnType, retValueSupplier));
+                return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(mapperMethod, annotation, sqlParams, returnType, retValueSupplier));
             }
-            return this.processSubQuery(sourceMethod, annotation, retValueSupplier.get());
+            return this.processSubQuery(mapperMethod, annotation, retValueSupplier.get());
         } finally {
             TransactionHolder.removeCurrentTransaction();
         }
@@ -273,14 +273,14 @@ public class SqlSession implements InvocationHandler {
     /**
      * 执行 SQL 拦截器链
      *
-     * @param sourceMethod 接口方法
+     * @param mapperMethod 接口方法
      * @param sqlParams    SQL 相关参数
      * @param returnType   返回值泛型
      * @return 执行结果
      */
-    private Object invokeInterceptorChain(Method sourceMethod, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType, Supplier<Object> retValue) {
+    private Object invokeInterceptorChain(Method mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType, Supplier<Object> retValue) {
         Iterator<Map.Entry<Method, Interceptor>> iterator = this.configuration.getInterceptorMethodChain().entrySet().iterator();
-        InterceptorChain chain = new InterceptorChain(sourceMethod, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator, retValue);
+        InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator, retValue);
         try {
             return chain.proceed();
         } finally {

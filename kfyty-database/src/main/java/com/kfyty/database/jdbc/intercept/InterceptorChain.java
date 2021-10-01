@@ -10,6 +10,7 @@ import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.ResultSetUtil;
 import com.kfyty.support.wrapper.WrapperValue;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.sql.PreparedStatement;
@@ -21,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -33,6 +33,7 @@ import static java.util.Optional.ofNullable;
  */
 public class InterceptorChain {
     private final Method mapperMethod;
+    private final Annotation annotation;
     private final WrapperValue<String> sql;
     private final SimpleGeneric returnType;
     private final List<MethodParameter> methodParameters;
@@ -43,8 +44,9 @@ public class InterceptorChain {
     private ResultSet resultSet;
     private Object retValue;
 
-    public InterceptorChain(Method method, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors, Supplier<Object> sourceReturnValueSupplier) {
+    public InterceptorChain(Method method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors, Supplier<Object> sourceReturnValueSupplier) {
         this.mapperMethod = method;
+        this.annotation = annotation;
         this.sql = new WrapperValue<>(sql);
         this.returnType = returnType;
         this.methodParameters = new ArrayList<>(methodParameters);
@@ -65,7 +67,7 @@ public class InterceptorChain {
             return ofNullable(this.retValue).orElseGet(this.sourceReturnValueSupplier);
         }
         Map.Entry<Method, Interceptor> interceptor = this.interceptors.next();
-        if (interceptor.getValue() instanceof QueryInterceptor && hasAnnotationElement(this.mapperMethod, Execute.class)) {
+        if (interceptor.getValue() instanceof QueryInterceptor && this.annotation.annotationType().equals(Execute.class)) {
             return this.proceed();
         }
         return this.retValue = ReflectUtil.invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
@@ -75,41 +77,47 @@ public class InterceptorChain {
         Parameter[] parameters = method.getParameters();
         Object[] paramValues = new Object[method.getParameterCount()];
         for (byte i = 0, size = (byte) parameters.length; i < size; i++) {
-            Class<?> parameterType = parameters[i].getType();
-            if (WrapperValue.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this.sql;
-                continue;
+            paramValues[i] = this.doBindParameter(parameters[i]);
+            if (paramValues[i] == null) {
+                throw new IllegalArgumentException("interceptor parameter bind failed of parameter: " + parameters[i]);
             }
-            if (SimpleGeneric.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this.returnType;
-                continue;
-            }
-            if (List.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this.methodParameters;
-                continue;
-            }
-            if (PreparedStatement.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this.preparePreparedStatement();
-                continue;
-            }
-            if (ResultSet.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this.prepareResultSet();
-                continue;
-            }
-            if (InterceptorChain.class.isAssignableFrom(parameterType)) {
-                paramValues[i] = this;
-                continue;
-            }
-            if (Object.class.equals(parameterType)) {
-                paramValues[i] = this.prepareReturnValue();
-                continue;
-            }
-            throw new IllegalArgumentException("interceptor parameter bind failed of parameter: " + parameters[i]);
         }
         return paramValues;
     }
 
-    private PreparedStatement preparePreparedStatement() {
+    protected Object doBindParameter(Parameter parameter) {
+        Class<?> parameterType = parameter.getType();
+        if (Method.class.equals(parameterType)) {
+            return this.mapperMethod;
+        }
+        if (Annotation.class.isAssignableFrom(parameterType)) {
+            return this.annotation;
+        }
+        if (WrapperValue.class.isAssignableFrom(parameterType)) {
+            return this.sql;
+        }
+        if (SimpleGeneric.class.isAssignableFrom(parameterType)) {
+            return this.returnType;
+        }
+        if (List.class.isAssignableFrom(parameterType)) {
+            return this.methodParameters;
+        }
+        if (PreparedStatement.class.isAssignableFrom(parameterType)) {
+            return this.preparePreparedStatement();
+        }
+        if (ResultSet.class.isAssignableFrom(parameterType)) {
+            return this.prepareResultSet();
+        }
+        if (Object.class.equals(parameterType)) {
+            return this.prepareReturnValue();
+        }
+        if (InterceptorChain.class.isAssignableFrom(parameterType)) {
+            return this;
+        }
+        return null;
+    }
+
+    protected PreparedStatement preparePreparedStatement() {
         if (this.preparedStatement == null) {
             try {
                 this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(new MethodParameter[0]));
@@ -120,7 +128,7 @@ public class InterceptorChain {
         return this.preparedStatement;
     }
 
-    private ResultSet prepareResultSet() {
+    protected ResultSet prepareResultSet() {
         if (this.resultSet == null) {
             try {
                 this.resultSet = this.preparePreparedStatement().executeQuery();
@@ -131,7 +139,7 @@ public class InterceptorChain {
         return this.resultSet;
     }
 
-    private Object prepareReturnValue() {
+    protected Object prepareReturnValue() {
         if (this.retValue == null) {
             try {
                 this.retValue = ResultSetUtil.processObject(this.prepareResultSet(), this.returnType);
