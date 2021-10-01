@@ -30,15 +30,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.support.utils.CommonUtil.notEmpty;
@@ -254,17 +253,17 @@ public class SqlSession implements InvocationHandler {
         final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
         final Transaction transaction = this.getTransaction();
-        final Supplier<Object> retValueSupplier = () -> {
+        final Function<Pair<String, MethodParameter[]>, Object> retValueSupplier = sqlPair -> {
             String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
             Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-            return ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+            return ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlPair.getKey(), sqlPair.getValue());
         };
         try {
             TransactionHolder.setCurrentTransaction(transaction);
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
                 return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(mapperMethod, annotation, sqlParams, returnType, retValueSupplier));
             }
-            return this.processSubQuery(mapperMethod, annotation, retValueSupplier.get());
+            return this.processSubQuery(mapperMethod, annotation, retValueSupplier.apply(sqlParams));
         } finally {
             TransactionHolder.removeCurrentTransaction();
         }
@@ -278,22 +277,10 @@ public class SqlSession implements InvocationHandler {
      * @param returnType   返回值泛型
      * @return 执行结果
      */
-    private Object invokeInterceptorChain(Method mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType, Supplier<Object> retValue) {
+    private Object invokeInterceptorChain(Method mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType, Function<Pair<String, MethodParameter[]>, Object> retValue) {
         Iterator<Map.Entry<Method, Interceptor>> iterator = this.configuration.getInterceptorMethodChain().entrySet().iterator();
-        InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator, retValue);
-        try {
+        try (InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator, retValue)) {
             return chain.proceed();
-        } finally {
-            try {
-                CommonUtil.close(chain.getPreparedStatement());
-                CommonUtil.close(chain.getResultSet());
-            } finally {
-                try {
-                    JdbcUtil.commitTransactionIfNecessary(TransactionHolder.currentTransaction());
-                } catch (SQLException e) {
-                    log.error("try commit transaction error !", e);
-                }
-            }
         }
     }
 }
