@@ -5,10 +5,13 @@ import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.ResultSetUtil;
 import com.kfyty.support.wrapper.WrapperValue;
+import javafx.util.Pair;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -20,8 +23,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
+import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -31,20 +35,21 @@ import static java.util.Optional.ofNullable;
  * @date 2021/9/19 11:12
  * @email kfyty725@hotmail.com
  */
-public class InterceptorChain {
+@Slf4j
+public class InterceptorChain implements AutoCloseable {
     private final Method mapperMethod;
     private final Annotation annotation;
     private final WrapperValue<String> sql;
     private final SimpleGeneric returnType;
     private final List<MethodParameter> methodParameters;
     private final Iterator<Map.Entry<Method, Interceptor>> interceptors;
-    private final Supplier<Object> sourceReturnValueSupplier;
+    private final Function<Pair<String, MethodParameter[]>, Object> sourceReturnValueSupplier;
 
     private PreparedStatement preparedStatement;
     private ResultSet resultSet;
     private Object retValue;
 
-    public InterceptorChain(Method method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors, Supplier<Object> sourceReturnValueSupplier) {
+    public InterceptorChain(Method method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors, Function<Pair<String, MethodParameter[]>, Object> sourceReturnValueSupplier) {
         this.mapperMethod = method;
         this.annotation = annotation;
         this.sql = new WrapperValue<>(sql);
@@ -64,13 +69,27 @@ public class InterceptorChain {
 
     public Object proceed() {
         if (!this.interceptors.hasNext()) {
-            return ofNullable(this.retValue).orElseGet(this.sourceReturnValueSupplier);
+            return ofNullable(this.retValue).orElseGet(() -> this.sourceReturnValueSupplier.apply(new Pair<>(this.sql.get(), this.methodParameters.toArray(new MethodParameter[0]))));
         }
         Map.Entry<Method, Interceptor> interceptor = this.interceptors.next();
         if (interceptor.getValue() instanceof QueryInterceptor && this.annotation.annotationType().equals(Execute.class)) {
             return this.proceed();
         }
         return this.retValue = ReflectUtil.invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
+    }
+
+    @Override
+    public void close() {
+        try {
+            CommonUtil.close(this.getPreparedStatement());
+            CommonUtil.close(this.getResultSet());
+        } finally {
+            try {
+                commitTransactionIfNecessary(TransactionHolder.currentTransaction());
+            } catch (SQLException e) {
+                log.error("try commit transaction error !", e);
+            }
+        }
     }
 
     protected Object[] bindInterceptorParameters(Method method) {
