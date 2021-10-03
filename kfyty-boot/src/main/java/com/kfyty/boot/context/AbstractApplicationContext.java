@@ -10,12 +10,14 @@ import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.Order;
+import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
+import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -65,6 +67,9 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void afterRefresh() {
+        if (this.autowiredCapableSupport == null) {
+            throw new BeansException("no bean instance found of type: " + AutowiredCapableSupport.class);
+        }
         this.autowiredCapableSupport.doAutowiredLazy();
     }
 

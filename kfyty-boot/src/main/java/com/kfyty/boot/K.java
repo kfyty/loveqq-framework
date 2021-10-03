@@ -65,6 +65,7 @@ public class K {
     }
 
     public ApplicationContext run() {
+        log.info("Boot loading...");
         long start = System.currentTimeMillis();
         this.prepareScanBean(Collections.singleton(primarySource.getPackage().getName()));
         this.prepareScanAutoConfigFactories();
