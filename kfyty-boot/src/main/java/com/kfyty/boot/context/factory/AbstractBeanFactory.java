@@ -223,7 +223,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             return this.getBean(beanDefinition.getBeanName());
         }
         synchronized (this.beanInstances) {
-            Object bean = ofNullable(this.beanReference.remove(beanDefinition.getBeanName())).orElse(this.doCreateBean(beanDefinition));
+            Object bean = ofNullable(this.beanReference.remove(beanDefinition.getBeanName())).orElseGet(() -> this.doCreateBean(beanDefinition));
             if (!this.contains(beanDefinition.getBeanName())) {
                 return this.registerBean(beanDefinition.getBeanName(), bean);
             }
