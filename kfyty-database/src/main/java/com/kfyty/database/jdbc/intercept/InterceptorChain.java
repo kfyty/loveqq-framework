@@ -10,7 +10,6 @@ import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.ResultSetUtil;
 import com.kfyty.support.wrapper.WrapperValue;
-import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -23,10 +22,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
-import static java.util.Optional.ofNullable;
 
 /**
  * 描述: SQL 执行拦截器链
@@ -37,26 +34,28 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 public class InterceptorChain implements AutoCloseable {
-    private final Method mapperMethod;
+    private final MethodParameter mapperMethod;
     private final Annotation annotation;
     private final WrapperValue<String> sql;
     private final SimpleGeneric returnType;
     private final List<MethodParameter> methodParameters;
     private final Iterator<Map.Entry<Method, Interceptor>> interceptors;
-    private final Function<Pair<String, MethodParameter[]>, Object> sourceReturnValueSupplier;
 
     private PreparedStatement preparedStatement;
     private ResultSet resultSet;
     private Object retValue;
 
-    public InterceptorChain(Method method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors, Function<Pair<String, MethodParameter[]>, Object> sourceReturnValueSupplier) {
+    public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
         this.mapperMethod = method;
         this.annotation = annotation;
         this.sql = new WrapperValue<>(sql);
         this.returnType = returnType;
         this.methodParameters = new ArrayList<>(methodParameters);
         this.interceptors = interceptors;
-        this.sourceReturnValueSupplier = sourceReturnValueSupplier;
+    }
+
+    public MethodParameter getMapperMethod() {
+        return mapperMethod;
     }
 
     public PreparedStatement getPreparedStatement() {
@@ -67,9 +66,17 @@ public class InterceptorChain implements AutoCloseable {
         return resultSet;
     }
 
+    public void setPreparedStatement(PreparedStatement preparedStatement) {
+        this.preparedStatement = preparedStatement;
+    }
+
+    public void setRetValue(Object retValue) {
+        this.retValue = retValue;
+    }
+
     public Object proceed() {
         if (!this.interceptors.hasNext()) {
-            return ofNullable(this.retValue).orElseGet(() -> this.sourceReturnValueSupplier.apply(new Pair<>(this.sql.get(), this.methodParameters.toArray(new MethodParameter[0]))));
+            return this.processChainResult();
         }
         Map.Entry<Method, Interceptor> interceptor = this.interceptors.next();
         if (interceptor.getValue() instanceof QueryInterceptor && this.annotation.annotationType().equals(Execute.class)) {
@@ -106,7 +113,7 @@ public class InterceptorChain implements AutoCloseable {
 
     protected Object doBindParameter(Parameter parameter) {
         Class<?> parameterType = parameter.getType();
-        if (Method.class.equals(parameterType)) {
+        if (MethodParameter.class.equals(parameterType)) {
             return this.mapperMethod;
         }
         if (Annotation.class.isAssignableFrom(parameterType)) {
@@ -167,5 +174,21 @@ public class InterceptorChain implements AutoCloseable {
             }
         }
         return this.retValue;
+    }
+
+    protected Object processChainResult() {
+        if (this.retValue != null) {
+            return this.retValue;
+        }
+        try {
+            this.preparePreparedStatement().execute();
+            this.retValue = this.preparePreparedStatement().getUpdateCount();
+            if (log.isDebugEnabled()) {
+                log.debug("<== affected rows: {}", this.retValue);
+            }
+            return this.retValue;
+        } catch (SQLException e) {
+            throw new ExecuteInterceptorException(e);
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
+import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.intercept.InterceptorChain;
 import com.kfyty.database.jdbc.sql.ProviderAdapter;
@@ -30,13 +31,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotations;
@@ -253,17 +254,16 @@ public class SqlSession implements InvocationHandler {
         final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
         final Transaction transaction = this.getTransaction();
-        final Function<Pair<String, MethodParameter[]>, Object> retValueSupplier = sqlPair -> {
-            String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
-            Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-            return ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlPair.getKey(), sqlPair.getValue());
-        };
         try {
             TransactionHolder.setCurrentTransaction(transaction);
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
-                return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(mapperMethod, annotation, sqlParams, returnType, retValueSupplier));
+                MethodParameter method = new MethodParameter(mapperMethod, params.values().stream().map(MethodParameter::getValue).toArray());
+                return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(method, annotation, sqlParams, returnType));
             }
-            return this.processSubQuery(mapperMethod, annotation, retValueSupplier.apply(sqlParams));
+            String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
+            Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
+            Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+            return this.processSubQuery(mapperMethod, annotation, retValue);
         } finally {
             TransactionHolder.removeCurrentTransaction();
         }
@@ -277,10 +277,17 @@ public class SqlSession implements InvocationHandler {
      * @param returnType   返回值泛型
      * @return 执行结果
      */
-    private Object invokeInterceptorChain(Method mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType, Function<Pair<String, MethodParameter[]>, Object> retValue) {
+    private Object invokeInterceptorChain(MethodParameter mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType) {
         Iterator<Map.Entry<Method, Interceptor>> iterator = this.configuration.getInterceptorMethodChain().entrySet().iterator();
-        try (InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator, retValue)) {
+        try (InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator)) {
             return chain.proceed();
+        } catch (Exception e) {
+            try {
+                TransactionHolder.currentTransaction().rollback();
+                return null;
+            } catch (SQLException ex) {
+                throw new ExecuteInterceptorException(ex);
+            }
         }
     }
 }

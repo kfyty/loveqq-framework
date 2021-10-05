@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.session;
 
 import com.kfyty.database.jdbc.intercept.Interceptor;
+import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.support.autoconfig.annotation.Order;
@@ -38,6 +39,7 @@ public class Configuration {
     public static final String MAPPER_NAMESPACE = "namespace";
     public static final String MAPPER_STATEMENT_ID = "id";
     public static final String INTERCEPTOR_METHOD_NAME = "intercept";
+    private static final QueryInterceptor DEFAULT_INTERCEPTOR = new QueryInterceptor() {};
 
     private DataSource dataSource;
     private DynamicProvider<?> dynamicProvider;
@@ -120,16 +122,19 @@ public class Configuration {
     }
 
     private void processInterceptorMethodChain() {
-        if (this.interceptors == null) {
+        if (CommonUtil.empty(this.interceptors)) {
             this.interceptorMethodChain = Collections.emptyMap();
             return;
+        }
+        if (this.interceptors.stream().noneMatch(e -> e instanceof QueryInterceptor)) {
+            this.addInterceptor(DEFAULT_INTERCEPTOR);
         }
         this.interceptorMethodChain = new TreeMap<>(
                 Comparator.comparing((Method e) -> AnnotationUtil.findAnnotation(e, Order.class).value())
                         .thenComparing((Method e) -> ofNullable(AnnotationUtil.findAnnotation(e.getDeclaringClass(), Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE))
         );
         for (Interceptor interceptor : this.interceptors) {
-            List<Method> methods = ReflectUtil.getMethods(interceptor.getClass()).stream().filter(e -> INTERCEPTOR_METHOD_NAME.equals(e.getName()) && !e.isDefault() && AnnotationUtil.hasAnnotation(e, Order.class)).collect(Collectors.toList());
+            List<Method> methods = ReflectUtil.getMethods(interceptor.getClass()).stream().filter(e -> INTERCEPTOR_METHOD_NAME.equals(e.getName()) && AnnotationUtil.hasAnnotation(e, Order.class)).distinct().collect(Collectors.toList());
             for (Method method : methods) {
                 this.interceptorMethodChain.put(method, interceptor);
             }
