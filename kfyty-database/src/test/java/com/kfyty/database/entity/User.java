@@ -1,13 +1,14 @@
 package com.kfyty.database.entity;
 
+import com.kfyty.database.jdbc.annotation.TableId;
 import lombok.Data;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Random;
 
 @Data
 public class User implements Comparable<User> {
+    @TableId
     private Integer id;
     private String username;
     private Date createTime;
@@ -15,7 +16,6 @@ public class User implements Comparable<User> {
 
     public static User create() {
         User user = new User();
-        user.setId(new Random().nextInt(9999));
         user.setUsername("test");
         user.setCreateTime(new Date());
         user.setImage("hello".getBytes(StandardCharsets.UTF_8));

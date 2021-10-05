@@ -2,6 +2,7 @@ package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.kfyty.database.entity.User;
+import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
@@ -26,7 +27,10 @@ public class QueryTest {
     public void prepare() throws Exception {
         DataSource dataSource = DruidDataSourceFactory.createDataSource(PropertiesUtil.load(PATH));
         FreemarkerDynamicProvider dynamicProvider = new FreemarkerDynamicProvider();
-        Configuration configuration = new Configuration().setDataSource(dataSource).setDynamicProvider(dynamicProvider, "/mapper");
+        Configuration configuration = new Configuration()
+                .setDataSource(dataSource)
+                .addInterceptor(new GeneratedKeysInterceptor())
+                .setDynamicProvider(dynamicProvider, "/mapper");
         dynamicProvider.setConfiguration(configuration);
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
         this.userMapper = proxyFactory.createProxy(UserMapper.class);

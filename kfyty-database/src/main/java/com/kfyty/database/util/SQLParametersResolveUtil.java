@@ -14,6 +14,7 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -39,7 +40,7 @@ public abstract class SQLParametersResolveUtil {
      */
     public static Map<String, MethodParameter> processMethodParameters(Method method, Object[] args) {
         Parameter[] parameters = method.getParameters();
-        Map<String, MethodParameter> params = new HashMap<>();
+        Map<String, MethodParameter> params = new LinkedHashMap<>();
         for (int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             Param annotation = AnnotationUtil.findAnnotation(parameter, Param.class);

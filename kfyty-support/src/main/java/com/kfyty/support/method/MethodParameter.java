@@ -76,7 +76,11 @@ public class MethodParameter {
         this.source = source;
     }
 
-    public MethodParameter(Object source, Method method, Object ... methodArgs) {
+    public MethodParameter(Method method, Object... methodArgs) {
+        this(null, method, methodArgs);
+    }
+
+    public MethodParameter(Object source, Method method, Object... methodArgs) {
         this(source, method);
         this.methodArgs = methodArgs;
     }
@@ -90,8 +94,9 @@ public class MethodParameter {
 
     /**
      * 仅使用参数类型和参数值构造，一般用于后续使用
+     *
      * @param paramType 参数类型
-     * @param value 参数值
+     * @param value     参数值
      */
     public MethodParameter(Class<?> paramType, Object value) {
         this.paramType = paramType;
@@ -100,9 +105,10 @@ public class MethodParameter {
 
     /**
      * 使用声明方法、原参数对象和参数值构造
-     * @param method 声明方法
+     *
+     * @param method    声明方法
      * @param parameter 原参数对象
-     * @param value 参数值
+     * @param value     参数值
      */
     public MethodParameter(Method method, Parameter parameter, Object value) {
         this(method, parameter);
