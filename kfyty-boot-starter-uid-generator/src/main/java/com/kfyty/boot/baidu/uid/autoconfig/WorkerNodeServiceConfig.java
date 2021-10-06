@@ -21,7 +21,10 @@ public class WorkerNodeServiceConfig implements WorkerNodeService {
 
     @Override
     public int addWorkNode(WorkerNodeEntity workerNodeEntity) {
-        return this.workerNodeMapper.insert(WorkerNode.convert(workerNodeEntity));
+        WorkerNode workerNode = WorkerNode.convert(workerNodeEntity);
+        int retValue = this.workerNodeMapper.insert(workerNode);
+        workerNodeEntity.setId(workerNode.getId());
+        return retValue;
     }
 
     @Override
