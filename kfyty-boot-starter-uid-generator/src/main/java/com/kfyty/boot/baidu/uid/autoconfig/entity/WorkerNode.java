@@ -1,6 +1,7 @@
 package com.kfyty.boot.baidu.uid.autoconfig.entity;
 
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
+import com.kfyty.database.jdbc.annotation.TableId;
 import com.kfyty.database.jdbc.annotation.TableName;
 import com.kfyty.support.utils.BeanUtil;
 import lombok.Data;
@@ -17,6 +18,8 @@ import lombok.EqualsAndHashCode;
 @TableName("worker_node")
 @EqualsAndHashCode(callSuper = true)
 public class WorkerNode extends WorkerNodeEntity {
+    @TableId
+    private long id;
 
     public static WorkerNode convert(WorkerNodeEntity entity) {
         return BeanUtil.copyProperties(entity, new WorkerNode());

@@ -5,6 +5,7 @@ import com.baidu.fsg.uid.impl.CachedUidGenerator;
 import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import com.baidu.fsg.uid.worker.WorkerIdAssigner;
 import com.kfyty.boot.baidu.uid.autoconfig.mapper.WorkerNodeMapper;
+import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
@@ -19,6 +20,11 @@ import com.kfyty.support.autoconfig.annotation.Import;
 @Configuration
 @Import(config = {WorkerNodeServiceConfig.class, WorkerNodeMapper.class})
 public class UidGeneratorAutoConfig {
+
+    @Bean
+    public GeneratedKeysInterceptor generatedKeysInterceptor() {
+        return new GeneratedKeysInterceptor();
+    }
 
     @Bean
     public WorkerIdAssigner disposableWorkerIdAssigner() {
