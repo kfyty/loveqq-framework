@@ -4,6 +4,7 @@ import com.kfyty.boot.proxy.MethodValidationInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
+import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -29,15 +30,8 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
     private Validator validator;
 
     @Override
-    public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        if (!this.canValidate(AopUtil.getSourceClass(bean))) {
-            return null;
-        }
-        return this.createProxy(bean, beanName, new MethodValidationInterceptorProxy(this.validator));
-    }
-
-    private boolean canValidate(Class<?> clazz) {
-        for (Method method : ReflectUtil.getMethods(clazz)) {
+    public boolean canCreateProxy(Object bean, String beanName) {
+        for (Method method : ReflectUtil.getMethods(AopUtil.getSourceClass(bean))) {
             if (AnnotationUtil.hasAnnotation(method, Valid.class) || AnnotationUtil.hasAnnotationElement(method, Constraint.class)) {
                 return true;
             }
@@ -46,5 +40,10 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
             }
         }
         return false;
+    }
+
+    @Override
+    public InterceptorChainPoint createProxyPoint() {
+        return new MethodValidationInterceptorProxy(this.validator);
     }
 }

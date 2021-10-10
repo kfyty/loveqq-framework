@@ -7,6 +7,7 @@ import com.kfyty.mvc.proxy.ControllerExceptionAdviceInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
+import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -34,16 +35,10 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
     private List<Class<? extends Annotation>> controllerAdviceAnnotations;
 
     @Override
-    public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        this.prepareControllerAdviceCondition();
-        if (!this.canCreateProxy(AopUtil.getSourceClass(bean))) {
-            return null;
-        }
-        return this.createProxy(bean, beanName, new ControllerExceptionAdviceInterceptorProxy(this.applicationContext));
-    }
-
     @SuppressWarnings("unchecked")
-    private boolean canCreateProxy(Class<?> sourceClass) {
+    public boolean canCreateProxy(Object bean, String beanName) {
+        this.prepareControllerAdviceCondition();
+        Class<?> sourceClass = AopUtil.getSourceClass(bean);
         String beanPackage = sourceClass.getPackage().getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if (beanPackage.startsWith(basePackage)) {
@@ -51,6 +46,11 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
             }
         }
         return AnnotationUtil.hasAnyAnnotationElement(sourceClass, this.controllerAdviceAnnotations.toArray(new Class[0]));
+    }
+
+    @Override
+    public InterceptorChainPoint createProxyPoint() {
+        return new ControllerExceptionAdviceInterceptorProxy(this.applicationContext);
     }
 
     private void prepareControllerAdviceCondition() {

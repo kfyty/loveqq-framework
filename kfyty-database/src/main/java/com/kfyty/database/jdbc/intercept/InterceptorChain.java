@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.kfyty.support.utils.CommonUtil.size;
 import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
 
 /**
@@ -44,6 +45,7 @@ public class InterceptorChain implements AutoCloseable {
     private PreparedStatement preparedStatement;
     private ResultSet resultSet;
     private Object retValue;
+    private boolean hasRet;
 
     public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
         this.mapperMethod = method;
@@ -72,6 +74,7 @@ public class InterceptorChain implements AutoCloseable {
 
     public void setRetValue(Object retValue) {
         this.retValue = retValue;
+        this.hasRet = true;
     }
 
     public Object proceed() {
@@ -166,9 +169,12 @@ public class InterceptorChain implements AutoCloseable {
     }
 
     protected Object prepareReturnValue() {
-        if (this.retValue == null) {
+        if (!this.hasRet) {
             try {
-                this.retValue = ResultSetUtil.processObject(this.prepareResultSet(), this.returnType);
+                this.setRetValue(ResultSetUtil.processObject(this.prepareResultSet(), this.returnType));
+                if (log.isDebugEnabled()) {
+                    log.debug("<==         total: {} [{}]", size(this.retValue), this.retValue == null ? null : this.retValue.getClass());
+                }
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }
@@ -177,12 +183,12 @@ public class InterceptorChain implements AutoCloseable {
     }
 
     protected Object processChainResult() {
-        if (this.retValue != null) {
+        if (this.hasRet) {
             return this.retValue;
         }
         try {
             this.preparePreparedStatement().execute();
-            this.retValue = this.preparePreparedStatement().getUpdateCount();
+            this.setRetValue(this.preparePreparedStatement().getUpdateCount());
             if (log.isDebugEnabled()) {
                 log.debug("<== affected rows: {}", this.retValue);
             }

@@ -27,6 +27,22 @@ public abstract class AbstractProxyCreatorProcessor implements ApplicationContex
         this.applicationContext = applicationContext;
     }
 
+    @Override
+    public Object postProcessAfterInstantiation(Object bean, String beanName) {
+        if (this.canCreateProxy(bean, beanName)) {
+            return this.createProxy(bean, beanName, this.createProxyPoint());
+        }
+        return null;
+    }
+
+    public boolean canCreateProxy(Object bean, String beanName) {
+        return false;
+    }
+
+    public InterceptorChainPoint createProxyPoint() {
+        return null;
+    }
+
     public Object createProxy(Object bean, String beanName, InterceptorChainPoint interceptorChainPoint) {
         if (AopUtil.addProxyInterceptorPoint(bean, interceptorChainPoint)) {
             return bean;
