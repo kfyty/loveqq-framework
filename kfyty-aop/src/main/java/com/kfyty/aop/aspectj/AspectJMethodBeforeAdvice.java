@@ -17,12 +17,12 @@ public class AspectJMethodBeforeAdvice extends AbstractAspectJAdvice implements 
 
     @Override
     public void before(Method method, Object[] args, Object target) throws Throwable {
-        this.invokeAdviceMethod(this.getJoinPoint(), null, null);
+        this.invokeAdviceMethod(method, this.getJoinPoint(), null, null);
     }
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        this.before(methodProxy.getMethod(), methodProxy.getArguments(), methodProxy.getSource());
+        this.before(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource());
         return chain.proceed(methodProxy);
     }
 }

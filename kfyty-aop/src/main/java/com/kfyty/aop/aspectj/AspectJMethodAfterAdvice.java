@@ -17,7 +17,7 @@ public class AspectJMethodAfterAdvice extends AbstractAspectJAdvice implements M
 
     @Override
     public void after(Method method, Object[] args, Object target) throws Throwable {
-        this.invokeAdviceMethod(this.getJoinPoint(), null, null);
+        this.invokeAdviceMethod(method, this.getJoinPoint(), null, null);
     }
 
     @Override
@@ -25,7 +25,7 @@ public class AspectJMethodAfterAdvice extends AbstractAspectJAdvice implements M
         try {
             return chain.proceed(methodProxy);
         } finally {
-            this.after(methodProxy.getMethod(), methodProxy.getArguments(), methodProxy.getSource());
+            this.after(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource());
         }
     }
 }

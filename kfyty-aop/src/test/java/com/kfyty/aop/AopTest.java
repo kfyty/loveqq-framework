@@ -12,6 +12,8 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.annotation.Retention;
@@ -20,7 +22,7 @@ import java.util.List;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 描述:
+ * 描述: Aop 单独使用测试
  *
  * @author kfyty725
  * @date 2021/8/2 10:56
@@ -41,7 +43,8 @@ public class AopTest {
 }
 
 @Retention(RUNTIME)
-@interface Log {}
+@interface Log {
+}
 
 interface Service {
     int doService(int index);
@@ -60,27 +63,39 @@ class ServiceImpl implements Service {
 @Slf4j
 @Aspect
 class LogAspect {
+    private int result = 1;
 
-    @Before(value = "@annotation(com.kfyty.aop.Log)")
-    public void before(JoinPoint joinPoint) throws Throwable {
-        log.debug("invoke before");
+    @Pointcut("@annotation(com.kfyty.aop.Log)")
+    public void pointcut() {
+
     }
 
-    @Around(value = "@annotation(com.kfyty.aop.Log) && args(a,..)")
+    @Before(value = "@annotation(logA) && args(a,..)", argNames = "joinPoint,logA,a")
+    public void before(JoinPoint joinPoint, Log logA, int a) throws Throwable {
+        log.debug("invoke before");
+        Assert.assertSame(2, result);
+    }
+
+    @Around(value = "@annotation(com.kfyty.aop.Log) && args(a,..)", argNames = "joinPoint,a")
     public Object around(ProceedingJoinPoint joinPoint, int a) throws Throwable {
         log.debug("invoke around start...");
+        Assert.assertSame(a, result++);
         Object retValue = joinPoint.proceed();
         log.debug("invoke around end, and return value: {}", retValue);
+        Assert.assertEquals(retValue, result);
         return retValue;
     }
 
-    @AfterReturning(value = "@annotation(com.kfyty.aop.Log) && args(index,..)", returning = "retValue", argNames = "joinPoint,index,retValue")
+    @AfterReturning(value = "execution(* com.kfyty.aop.*.*(..)) && args(index,..)", returning = "retValue", argNames = "joinPoint,index,retValue")
     public void afterReturning(JoinPoint joinPoint, int index, int retValue) throws Throwable {
         log.debug("invoke after returning, and return value: {}", retValue);
+        Assert.assertSame(index, 1);
+        Assert.assertSame(retValue, result);
     }
 
-    @After(value = "@annotation(com.kfyty.aop.Log)")
+    @After(value = "pointcut()")
     public void after() throws Throwable {
         log.debug("invoke after");
+        Assert.assertSame(2, result);
     }
 }

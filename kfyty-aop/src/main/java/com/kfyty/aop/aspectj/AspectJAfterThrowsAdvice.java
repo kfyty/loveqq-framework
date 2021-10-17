@@ -19,7 +19,7 @@ public class AspectJAfterThrowsAdvice extends AbstractAspectJAdvice implements T
 
     @Override
     public void afterThrowing(Method method, Object[] args, Object target, Throwable throwable) {
-        this.invokeAdviceMethod(this.getJoinPoint(), null, throwable);
+        this.invokeAdviceMethod(method, this.getJoinPoint(), null, throwable);
     }
 
     @Override
@@ -27,7 +27,7 @@ public class AspectJAfterThrowsAdvice extends AbstractAspectJAdvice implements T
         try {
             return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
-            this.afterThrowing(methodProxy.getMethod(), methodProxy.getArguments(), methodProxy.getSource(), throwable);
+            this.afterThrowing(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource(), throwable);
             throw throwable;
         }
     }

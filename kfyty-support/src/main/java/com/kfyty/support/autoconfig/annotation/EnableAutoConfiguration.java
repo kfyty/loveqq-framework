@@ -17,8 +17,8 @@ import java.lang.annotation.Target;
 @ComponentFilter(annotations = Component.class)
 public @interface EnableAutoConfiguration {
     /**
-     * 排除 k.factories 中的配置类，被排除的类的一切嵌套配置将不会被加载
-     * 如果需要排除非 k.factories 中的类，请使用 ComponentScan#excludeFilter
+     * 排除 k.factories 中的配置类，被排除的类的一切嵌套配置将不会被加载，前提是没有被自动扫描到，否则无效
+     * 如果需要排除非 k.factories 中的类，请使用 {@link ComponentScan#excludeFilter()}
      */
     Class<?>[] exclude() default {};
 

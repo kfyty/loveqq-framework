@@ -114,37 +114,37 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public String getName() {
-            return methodProxyWrapper.getMethod().getName();
+            return this.getMethod().getName();
         }
 
         @Override
         public int getModifiers() {
-            return methodProxyWrapper.getMethod().getModifiers();
+            return this.getMethod().getModifiers();
         }
 
         @Override
         public Class<?> getDeclaringType() {
-            return methodProxyWrapper.getMethod().getDeclaringClass();
+            return this.getMethod().getDeclaringClass();
         }
 
         @Override
         public String getDeclaringTypeName() {
-            return methodProxyWrapper.getMethod().getDeclaringClass().getName();
+            return this.getMethod().getDeclaringClass().getName();
         }
 
         @Override
         public Class<?> getReturnType() {
-            return methodProxyWrapper.getMethod().getReturnType();
+            return this.getMethod().getReturnType();
         }
 
         @Override
         public Method getMethod() {
-            return methodProxyWrapper.getMethod();
+            return methodProxyWrapper.getSourceTargetMethod();
         }
 
         @Override
         public Class<?>[] getParameterTypes() {
-            return methodProxyWrapper.getMethod().getParameterTypes();
+            return this.getMethod().getParameterTypes();
         }
 
         @Override
@@ -157,7 +157,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public Class<?>[] getExceptionTypes() {
-            return methodProxyWrapper.getMethod().getExceptionTypes();
+            return this.getMethod().getExceptionTypes();
         }
 
         @Override
