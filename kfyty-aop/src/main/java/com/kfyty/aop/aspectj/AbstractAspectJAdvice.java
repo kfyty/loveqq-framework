@@ -2,13 +2,15 @@ package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.Pointcut;
 import com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy;
+import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.support.proxy.InterceptorChainPoint;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.aopalliance.aop.Advice;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.weaver.tools.JoinPointMatch;
+import org.aspectj.weaver.tools.PointcutParameter;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -17,6 +19,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
+
 /**
  * 描述: 通知基础实现
  *
@@ -24,7 +28,8 @@ import java.util.function.Function;
  * @date 2021/7/30 16:33
  * @email kfyty725@hotmail.com
  */
-@Getter @Setter
+@Getter
+@Setter
 public abstract class AbstractAspectJAdvice implements Advice, InterceptorChainPoint {
     /**
      * 切面名称，一般为 bean name
@@ -76,8 +81,8 @@ public abstract class AbstractAspectJAdvice implements Advice, InterceptorChainP
         this.onSetPointcut();
     }
 
-    protected Object invokeAdviceMethod(JoinPoint joinPoint, Object returnValue, Throwable ex) {
-        Object[] parameters = this.bindAdviceMethodParameters(joinPoint, returnValue, ex);
+    protected Object invokeAdviceMethod(Method method, JoinPoint joinPoint, Object returnValue, Throwable ex) {
+        Object[] parameters = this.bindAdviceMethodParameters(method, joinPoint, returnValue, ex);
         return this.invokeAdviceMethod(parameters);
     }
 
@@ -98,40 +103,44 @@ public abstract class AbstractAspectJAdvice implements Advice, InterceptorChainP
     protected void onSetPointcut(AspectJExpressionPointcut pointcut) {
         this.aspectAdviceMethod = pointcut.getAspectMethod();
         this.aspectAdviceMethodArgNameIndex = new LinkedHashMap<>();
-        for (int i = 0; i < pointcut.getArgNames().length; i++) {
-            this.aspectAdviceMethodArgNameIndex.put(pointcut.getArgNames()[i], i);
+        String[] argNames = AspectJAnnotationUtil.findArgNames(this.aspectAdviceMethod);
+        for (int i = 0; i < argNames.length; i++) {
+            this.aspectAdviceMethodArgNameIndex.put(argNames[i], i);
         }
     }
 
-    /**
-     * 仅支持简单的参数绑定，且编译时需要 -parameters 参数支持
-     */
-    protected Object[] bindAdviceMethodParameters(JoinPoint joinPoint, Object returnValue, Throwable throwable) {
+    protected Object[] bindAdviceMethodParameters(Method method, JoinPoint joinPoint, Object returnValue, Throwable throwable) {
         if (this.aspectAdviceMethod.getParameterCount() == 0) {
-            return CommonUtil.EMPTY_OBJECT_ARRAY;
+            return EMPTY_OBJECT_ARRAY;
         }
         Parameter[] parameters = this.aspectAdviceMethod.getParameters();
-        Object[] arguments = new Object[parameters.length];
+        Object[] arguments = new Object[this.aspectAdviceMethod.getParameterCount()];
+        JoinPointMatch joinPointMatch = this.pointcut.getMethodMatcher().getShadowMatch(method).matchesJoinPoint(joinPoint.getThis(), joinPoint.getTarget(), joinPoint.getArgs());
+        for (PointcutParameter parameterBinding : joinPointMatch.getParameterBindings()) {
+            arguments[this.aspectAdviceMethodArgNameIndex.get(parameterBinding.getName())] = parameterBinding.getBinding();
+        }
         for (int i = 0; i < parameters.length; i++) {
-            Parameter parameter = parameters[i];
-            if (JoinPoint.class.isAssignableFrom(parameter.getType())) {
-                arguments[i] = joinPoint;
-                continue;
+            if (arguments[i] == null) {
+                arguments[i] = this.bindAdviceMethodParameter(parameters[i], joinPoint, returnValue, throwable);
             }
-            String parameterName = parameter.getName();
-            if (Objects.equals(this.returning, parameterName)) {
-                arguments[i] = returnValue;
-                continue;
-            }
-            if (Objects.equals(this.throwing, parameterName)) {
-                arguments[i] = throwable;
-            }
-            Integer parameterIndex = this.aspectAdviceMethodArgNameIndex.get(parameterName);
-            if (parameterIndex == null) {
-                throw new IllegalArgumentException("The parameter index does not exist of: " + parameterName + ", please use java8 and add -parameters to compile the parameters and recompile, or check whether the pointcut expression is correct !");
-            }
-            arguments[i] = joinPoint.getArgs()[parameterIndex];
         }
         return arguments;
+    }
+
+    protected Object bindAdviceMethodParameter(Parameter parameter, JoinPoint joinPoint, Object returnValue, Throwable throwable) {
+        if (JoinPoint.class.isAssignableFrom(parameter.getType())) {
+            return joinPoint;
+        }
+        if (JoinPoint.StaticPart.class.isAssignableFrom(parameter.getType())) {
+            return joinPoint.getStaticPart();
+        }
+        String parameterName = parameter.getName();
+        if (Objects.equals(this.returning, parameterName)) {
+            return returnValue;
+        }
+        if (Objects.equals(this.throwing, parameterName)) {
+            return throwable;
+        }
+        throw new IllegalStateException("parameter binding failed, please add -parameters to compile the parameters and recompile, or check whether the pointcut expression is correct !");
     }
 }

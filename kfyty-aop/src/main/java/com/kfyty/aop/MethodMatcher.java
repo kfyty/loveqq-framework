@@ -1,5 +1,7 @@
 package com.kfyty.aop;
 
+import org.aspectj.weaver.tools.ShadowMatch;
+
 import java.lang.reflect.Method;
 
 /**
@@ -10,5 +12,8 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 public interface MethodMatcher {
+
+    ShadowMatch getShadowMatch(Method method);
+
     boolean matches(Method method, Class<?> targetClass);
 }

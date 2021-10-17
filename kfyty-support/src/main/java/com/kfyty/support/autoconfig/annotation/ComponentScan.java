@@ -15,10 +15,19 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentScan {
-
+    /**
+     * 需要扫描的基础包名
+     */
     String[] value() default {};
 
+    /**
+     * 需要自动生成 Bean 定义的过滤条件
+     */
     ComponentFilter includeFilter() default @ComponentFilter();
 
+    /**
+     * 不自动生成 Bean 定义的过滤条件
+     * 该条件不支持排除该 Class 上通过 {@link Import} 导入的嵌套配置
+     */
     ComponentFilter excludeFilter() default @ComponentFilter();
 }

@@ -21,8 +21,10 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 描述: aspectj 表达式切入点
@@ -54,6 +56,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
     private final String expression;
     private final String[] argNames;
     private final Class<?>[] parameterTypes;
+    private final Map<Method, ShadowMatch> shadowMatchCache;
 
     public AspectJExpressionPointcut(Class<?> aspectClass, Method aspectMethod) {
         this.aspectClass = aspectClass;
@@ -61,6 +64,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
         this.expression = Optional.ofNullable(AspectJAnnotationUtil.findAspectExpression(this.aspectMethod)).orElseThrow(() -> new IllegalArgumentException("pointcut expression can't empty"));
         this.argNames = this.buildArgumentNames();
         this.parameterTypes = this.buildParameterTypes();
+        this.shadowMatchCache = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -74,12 +78,18 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
     }
 
     @Override
+    public ShadowMatch getShadowMatch(Method method) {
+        return this.shadowMatchCache.computeIfAbsent(method, k -> {
+            PointcutParser pointcutParser = PointcutParser.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(SUPPORTED_PRIMITIVES, this.aspectClass.getClassLoader());
+            PointcutParameter[] pointcutParameters = this.buildPointcutParameters(pointcutParser);
+            PointcutExpression pointcutExpression = pointcutParser.parsePointcutExpression(this.getExpression(), this.aspectClass, pointcutParameters);
+            return pointcutExpression.matchesMethodExecution(method);
+        });
+    }
+
+    @Override
     public boolean matches(Method method, Class<?> targetClass) {
-        PointcutParser pointcutParser = PointcutParser.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(SUPPORTED_PRIMITIVES, this.aspectClass.getClassLoader());
-        PointcutParameter[] pointcutParameters = this.buildPointcutParameters(pointcutParser);
-        PointcutExpression pointcutExpression = pointcutParser.parsePointcutExpression(this.getExpression(), this.aspectClass, pointcutParameters);
-        ShadowMatch shadowMatch = pointcutExpression.matchesMethodExecution(method);
-        return shadowMatch.alwaysMatches();
+        return this.getShadowMatch(method).alwaysMatches();
     }
 
     private String[] buildArgumentNames() {
