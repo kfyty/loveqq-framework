@@ -136,7 +136,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
-        return this.getBeanDefinitions().get(beanName);
+        return ofNullable(this.getBeanDefinitions().get(beanName)).orElseThrow(() -> new BeansException("no such bean definition found of name: " + beanName));
     }
 
     @Override
@@ -162,7 +162,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     public BeanDefinition getBeanDefinition(String beanName, Class<?> beanType) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(beanType);
-        return beanDefinitions.size() == 1 ? beanDefinitions.values().iterator().next() : beanDefinitions.get(beanName);
+        return beanDefinitions.size() == 1 ? beanDefinitions.values().iterator().next() : this.getBeanDefinition(beanName);
     }
 
     @Override

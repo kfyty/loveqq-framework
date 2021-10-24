@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
-import com.kfyty.support.utils.BeanUtil;
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.resolveBeanName;
 
 /**
  * 描述: factory bean
@@ -12,7 +12,7 @@ import com.kfyty.support.utils.BeanUtil;
 public interface FactoryBean<T> {
 
     default String getBeanName() {
-        return BeanUtil.convert2BeanName(this.getBeanType());
+        return resolveBeanName(this.getClass());
     }
 
     Class<?> getBeanType();
