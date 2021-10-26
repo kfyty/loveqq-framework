@@ -295,6 +295,12 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
             this.destroyBean(entry.getKey(), entry.getValue());
         }
+        this.beanDefinitions.clear();
+        this.beanInstances.clear();
+        this.beanReference.clear();
+        this.beanPostProcessors.clear();
+        this.beanDefinitionsForType.clear();
+        this.applicationContext = null;
     }
 
     @Override

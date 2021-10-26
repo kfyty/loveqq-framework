@@ -59,6 +59,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected ApplicationEventPublisher applicationEventPublisher;
 
     protected void beforeRefresh() {
+        this.close();
         this.registerDefaultBean();
     }
 
@@ -160,6 +161,12 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     public void registerEventListener(ApplicationListener<?> applicationListener) {
         this.applicationEventPublisher.registerEventListener(applicationListener);
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        this.applicationEventPublisher = null;
     }
 
     /**

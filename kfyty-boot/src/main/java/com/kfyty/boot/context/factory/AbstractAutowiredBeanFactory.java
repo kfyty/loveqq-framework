@@ -30,4 +30,10 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         }
         this.autowiredCapableSupport.doAutowiredBean(bean);
     }
+
+    @Override
+    public void close() {
+        super.close();
+        this.autowiredCapableSupport = null;
+    }
 }
