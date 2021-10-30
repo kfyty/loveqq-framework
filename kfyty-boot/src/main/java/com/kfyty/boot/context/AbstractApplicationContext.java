@@ -49,6 +49,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
             .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
             .thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e));
 
+    private final Thread shutdownHook = new Thread(this::close);
+
     protected String[] commanderArgs;
     protected Class<?> primarySource;
     protected Set<Class<?>> scanClasses;
@@ -61,6 +63,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected void beforeRefresh() {
         this.close();
         this.registerDefaultBean();
+        Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
     }
 
     protected void onRefresh() {
@@ -118,7 +121,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 this.invokeContextRefreshed();
 
                 /* 添加销毁钩子 */
-                Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+                Runtime.getRuntime().addShutdownHook(shutdownHook);
 
                 return this;
             } catch (Throwable throwable) {
