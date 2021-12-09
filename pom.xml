@@ -21,7 +21,7 @@
 
     <properties>
         <cglib.version>3.3.0</cglib.version>
-        <jackson.version>2.9.10.5</jackson.version>
+        <jackson.version>2.9.10.8</jackson.version>
         <freemarker.version>2.3.30</freemarker.version>
 
         <jstl.version>1.2</jstl.version>
