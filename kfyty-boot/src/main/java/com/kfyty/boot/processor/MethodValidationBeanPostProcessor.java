@@ -2,7 +2,6 @@ package com.kfyty.boot.processor;
 
 import com.kfyty.boot.proxy.MethodValidationInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -24,7 +23,6 @@ import java.util.Arrays;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
 public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProcessor {
     @Autowired
     private Validator validator;

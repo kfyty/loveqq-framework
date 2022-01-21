@@ -6,7 +6,6 @@ com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
     com.kfyty.boot.processor.AsyncMethodBeanPostProcessor,\
     com.kfyty.boot.processor.LookupMethodBeanPostProcessor,\
-    com.kfyty.boot.processor.MethodValidationBeanPostProcessor,\
     com.kfyty.boot.processor.EventListenerAnnotationBeanPostProcessor,\
     com.kfyty.boot.event.DefaultApplicationEventPublisher,\
     com.kfyty.boot.configuration.DefaultThreadPoolExecutor,\

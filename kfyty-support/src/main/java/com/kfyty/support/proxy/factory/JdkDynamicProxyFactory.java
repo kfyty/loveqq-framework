@@ -17,7 +17,8 @@ import java.lang.reflect.Proxy;
 public class JdkDynamicProxyFactory extends DynamicProxyFactory {
 
     @Override
-    public Object createProxy(Object source, Class<?> targetClass, Class<?>[] argTypes, Object[] argValues) {
-        return Proxy.newProxyInstance(targetClass.getClassLoader(), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source));
+    @SuppressWarnings("unchecked")
+    public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
+        return (T) Proxy.newProxyInstance(targetClass.getClassLoader(), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source));
     }
 }

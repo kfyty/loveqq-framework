@@ -4,12 +4,13 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
 
+import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 import static com.kfyty.support.utils.CommonUtil.EMPTY_CLASS_ARRAY;
 import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
+import static com.kfyty.support.utils.ReflectUtil.hasAnyInterfaces;
 
 /**
  * 描述: 动态代理工厂，用于创建代理对象
@@ -22,10 +23,10 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 public abstract class DynamicProxyFactory {
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
-        if (!ReflectUtil.hasAnyInterfaces(bean.getClass()) || AnnotationUtil.hasAnnotationElement(bean, Configuration.class)) {
+        if (!hasAnyInterfaces(bean.getClass()) || hasAnnotationElement(bean, Configuration.class)) {
             return create(true);
         }
-        BootApplication annotation = AnnotationUtil.findAnnotation(context.getPrimarySource(), BootApplication.class);
+        BootApplication annotation = findAnnotation(context.getPrimarySource(), BootApplication.class);
         return annotation == null ? create() : create(annotation.proxyTargetClass());
     }
 
@@ -37,25 +38,26 @@ public abstract class DynamicProxyFactory {
         return !proxyTargetClass ? new JdkDynamicProxyFactory() : new CglibDynamicProxyFactory();
     }
 
-    public Object createProxy(Object source) {
+    public <T> T createProxy(T source) {
         return createProxy(source, EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY);
     }
 
-    public Object createProxy(Class<?> targetClass) {
+    public <T> T createProxy(Class<T> targetClass) {
         return createProxy(targetClass, EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY);
     }
 
-    public Object createProxy(Object source, BeanDefinition beanDefinition) {
+    public <T> T createProxy(T source, BeanDefinition beanDefinition) {
         return createProxy(source, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
     }
 
-    public Object createProxy(Object source, Class<?>[] argTypes, Object[] argValues) {
-        return createProxy(source, source.getClass(), argTypes, argValues);
+    public <T> T createProxy(T source, Class<?>[] argTypes, Object[] argValues) {
+        //noinspection unchecked
+        return createProxy(source, (Class<T>) source.getClass(), argTypes, argValues);
     }
 
-    public Object createProxy(Class<?> targetClass, Class<?>[] argTypes, Object[] argValues) {
+    public <T> T createProxy(Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
         return createProxy(null, targetClass, argTypes, argValues);
     }
 
-    public abstract Object createProxy(Object source, Class<?> targetClass, Class<?>[] argTypes, Object[] argValues);
+    public abstract <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues);
 }
