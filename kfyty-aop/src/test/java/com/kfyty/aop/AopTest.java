@@ -33,9 +33,8 @@ public class AopTest {
 
     @Test
     public void aopTest() {
-        Service service = new ServiceImpl();
         LogAspect logAspect = new LogAspect();
-        Service proxy = (Service) DynamicProxyFactory.create().createProxy(service);
+        Service proxy = DynamicProxyFactory.create().createProxy(new ServiceImpl());
         List<Advisor> advisors = new AspectJAdvisorCreator().createAdvisor(e -> logAspect, LogAspect.class);
         AopUtil.addProxyInterceptorPoint(proxy, new AspectMethodInterceptorProxy(advisors));
         log.info("do service return value: {}", proxy.doService(1));

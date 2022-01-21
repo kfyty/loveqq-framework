@@ -1,5 +1,6 @@
 package com.kfyty.boot.configuration;
 
+import com.kfyty.boot.processor.MethodValidationBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import jakarta.validation.Validation;
@@ -24,5 +25,10 @@ public class ValidationAutoConfiguration {
     @Bean
     public Validator validator() {
         return this.validatorFactory().getValidator();
+    }
+
+    @Bean
+    public MethodValidationBeanPostProcessor methodValidationBeanPostProcessor() {
+        return new MethodValidationBeanPostProcessor();
     }
 }
