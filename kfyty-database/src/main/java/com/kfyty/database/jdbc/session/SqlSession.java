@@ -284,7 +284,7 @@ public class SqlSession implements InvocationHandler {
         } catch (Exception e) {
             try {
                 TransactionHolder.currentTransaction().rollback();
-                return null;
+                throw e;
             } catch (SQLException ex) {
                 throw new ExecuteInterceptorException(ex);
             }
