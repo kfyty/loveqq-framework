@@ -16,6 +16,7 @@ public interface AutowiredCapableSupport {
     /**
      * 对 bean 执行依赖注入
      * 懒加载的 bean 可跳过
+     *
      * @param bean bean 实例
      */
     void doAutowiredBean(Object bean);

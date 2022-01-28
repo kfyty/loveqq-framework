@@ -71,7 +71,7 @@ public abstract class JdbcTypeUtil {
 
     public static String convert2JavaType(String databaseType) {
         if (databaseType.toLowerCase().contains("timestamp")) {
-            return "Date";
+            return "LocalDateTime";
         }
         switch (databaseType.toLowerCase()) {
             case "bit":
@@ -108,7 +108,7 @@ public abstract class JdbcTypeUtil {
             case "date":
             case "datetime":
             case "datetime2":
-                return "Date";
+                return "LocalDateTime";
             case "blob":
             case "longblob":
             case "binary":

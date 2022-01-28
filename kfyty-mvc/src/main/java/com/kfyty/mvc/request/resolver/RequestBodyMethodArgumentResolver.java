@@ -1,6 +1,6 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.mvc.annotation.RequestBody;
+import com.kfyty.mvc.annotation.bind.RequestBody;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.util.ServletUtil;
 import com.kfyty.support.method.MethodParameter;

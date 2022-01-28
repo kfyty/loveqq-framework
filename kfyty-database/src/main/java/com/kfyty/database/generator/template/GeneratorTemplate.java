@@ -18,6 +18,7 @@ import java.util.Optional;
 public interface GeneratorTemplate {
     /**
      * 将数据库数据类型转换为 java 类型
+     *
      * @param databaseType 数据库数据类型
      * @return java 类型
      */
@@ -30,6 +31,7 @@ public interface GeneratorTemplate {
     /**
      * 类名后缀 eg: Service、ServiceImpl
      * 该后缀可能会参与计算最终包名与最终保存路径
+     *
      * @return 类名后缀
      */
     default String classSuffix() {
@@ -38,6 +40,7 @@ public interface GeneratorTemplate {
 
     /**
      * 文件后缀
+     *
      * @return 默认 .java
      */
     default String fileTypeSuffix() {
@@ -47,6 +50,7 @@ public interface GeneratorTemplate {
     /**
      * 该模板应用的包名
      * 若返回无效值，则依据 basePackage + classSuffix() 进行计算
+     *
      * @return 包名 eg: com.kfyty
      */
     default String packageName() {
@@ -56,6 +60,7 @@ public interface GeneratorTemplate {
     /**
      * 该模板保存的路径
      * 若返回无效值，则依据 GeneratorConfiguration.filePath + packageName() 进行计算
+     *
      * @return 磁盘路径
      */
     default String filePath() {
@@ -64,6 +69,7 @@ public interface GeneratorTemplate {
 
     /**
      * 是否输出到同一个文件
+     *
      * @return 默认 false
      */
     default boolean sameFile() {
@@ -72,9 +78,10 @@ public interface GeneratorTemplate {
 
     /**
      * 渲染模板
-     * @param tableInfo 数据表结构
+     *
+     * @param tableInfo     数据表结构
      * @param configuration 生成器配置
-     * @param out 输出流
+     * @param out           输出流
      * @throws IOException IOException
      */
     default void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) throws IOException {
@@ -83,9 +90,10 @@ public interface GeneratorTemplate {
 
     /**
      * 渲染模板
-     * @param tableInfo 数据表结构
+     *
+     * @param tableInfo   数据表结构
      * @param basePackage 基础包名
-     * @param out 输出流
+     * @param out         输出流
      * @throws IOException IOException
      */
     default void doGenerate(AbstractTableStructInfo tableInfo, String basePackage, SimpleBufferedWriter out) throws IOException {

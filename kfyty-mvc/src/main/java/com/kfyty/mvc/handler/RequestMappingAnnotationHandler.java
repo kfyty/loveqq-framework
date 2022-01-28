@@ -108,7 +108,7 @@ public class RequestMappingAnnotationHandler {
 
                     @Override
                     public String value() {
-                        return ReflectUtil.invokeSimpleMethod(annotation, "value");
+                        return ReflectUtil.invokeMethod(annotation, "value");
                     }
 
                     @Override
@@ -118,7 +118,7 @@ public class RequestMappingAnnotationHandler {
 
                     @Override
                     public String produces() {
-                        String produces = ReflectUtil.invokeSimpleMethod(annotation, "produces");
+                        String produces = ReflectUtil.invokeMethod(annotation, "produces");
                         if (CommonUtil.notEmpty(produces)) {
                             return produces;
                         }

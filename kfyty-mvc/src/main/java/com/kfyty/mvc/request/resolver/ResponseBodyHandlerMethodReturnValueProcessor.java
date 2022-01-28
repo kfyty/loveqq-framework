@@ -1,6 +1,6 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.mvc.annotation.ResponseBody;
+import com.kfyty.mvc.annotation.bind.ResponseBody;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.method.MethodParameter;

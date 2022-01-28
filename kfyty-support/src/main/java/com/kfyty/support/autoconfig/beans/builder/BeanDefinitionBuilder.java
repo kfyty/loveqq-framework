@@ -121,7 +121,7 @@ public class BeanDefinitionBuilder {
         }
         for (Annotation annotation : AnnotationUtil.findAnnotations(beanType)) {
             if (AnnotationUtil.hasAnnotationElement(annotation.annotationType(), Component.class)) {
-                String beanName = ReflectUtil.invokeSimpleMethod(annotation, "value");
+                String beanName = ReflectUtil.invokeMethod(annotation, "value");
                 if (CommonUtil.notEmpty(beanName)) {
                     return beanName;
                 }

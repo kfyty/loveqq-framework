@@ -1,5 +1,7 @@
 package com.kfyty.mvc.annotation;
 
+import com.kfyty.mvc.annotation.bind.ResponseBody;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

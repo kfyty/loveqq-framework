@@ -65,9 +65,9 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
             if (annotation == null) {
                 annotation = AnnotationUtil.findAnnotation(adviceBeanDefinition.getBeanType(), RestControllerAdvice.class);
             }
-            this.controllerAdviceAnnotations.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "annotations")));
-            this.controllerAdviceBasePackages.addAll(Arrays.asList(ReflectUtil.invokeSimpleMethod(annotation, "basePackages")));
-            this.controllerAdviceBasePackages.addAll(Arrays.stream((Class<?>[]) ReflectUtil.invokeSimpleMethod(annotation, "basePackageClasses")).map(e -> e.getPackage().getName()).collect(Collectors.toList()));
+            this.controllerAdviceAnnotations.addAll(Arrays.asList(ReflectUtil.invokeMethod(annotation, "annotations")));
+            this.controllerAdviceBasePackages.addAll(Arrays.asList(ReflectUtil.invokeMethod(annotation, "basePackages")));
+            this.controllerAdviceBasePackages.addAll(Arrays.stream((Class<?>[]) ReflectUtil.invokeMethod(annotation, "basePackageClasses")).map(e -> e.getPackage().getName()).collect(Collectors.toList()));
         }
         if (CommonUtil.notEmpty(controllerBeanDefinitionAdvices) && CommonUtil.empty(this.controllerAdviceAnnotations) && CommonUtil.empty(this.controllerAdviceBasePackages)) {
             this.controllerAdviceAnnotations.add(Controller.class);

@@ -5,6 +5,7 @@ import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -17,6 +18,7 @@ import java.lang.reflect.Parameter;
  * @email kfyty725@hotmail.com
  */
 @Getter
+@ToString(exclude = "context")
 public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
     private final String beanName;
     private final Method listenerMethod;

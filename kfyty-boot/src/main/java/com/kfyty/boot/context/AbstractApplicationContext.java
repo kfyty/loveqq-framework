@@ -4,20 +4,18 @@ import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
-import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
-import com.kfyty.support.exception.BeansException;
+import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -71,15 +69,13 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void afterRefresh() {
-        if (this.autowiredCapableSupport == null) {
-            throw new BeansException("no bean instance found of type: " + AutowiredCapableSupport.class);
-        }
-        this.autowiredCapableSupport.doAutowiredLazy();
+        super.doAutowiredLazy();
+        this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
     }
 
     protected void registerDefaultBean() {
-        this.registerBean(ApplicationContext.class, this);
         this.registerBean(BeanFactory.class, this);
+        this.registerBean(ApplicationContext.class, this);
     }
 
     @Override
@@ -117,11 +113,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 /* 子类扩展 */
                 this.afterRefresh();
 
-                /* 回调 Context 刷新后的接口 */
-                this.invokeContextRefreshed();
-
                 /* 添加销毁钩子 */
                 Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+                /* 发布刷新完成事件 */
+                this.publishEvent(new ContextRefreshedEvent(this));
 
                 return this;
             } catch (Throwable throwable) {
@@ -129,7 +125,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 try {
                     this.close();
                 } catch (Throwable nestedThrowable) {
-                    log.error("process destroy error !", nestedThrowable);
+                    log.error("close application context error !", nestedThrowable);
                 }
                 throw throwable;
             }
@@ -236,10 +232,5 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 this.registerBean(beanDefinition);
             }
         }
-    }
-
-    protected void invokeContextRefreshed() {
-        this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
-        this.getBeanOfType(ContextRefreshCompleted.class).values().forEach(e -> e.onCompleted(this));
     }
 }

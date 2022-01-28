@@ -1,4 +1,4 @@
-package com.kfyty.mvc.annotation;
+package com.kfyty.mvc.annotation.bind;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

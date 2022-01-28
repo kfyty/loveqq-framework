@@ -7,14 +7,15 @@ import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
+import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -36,7 +37,7 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 @Configuration
-public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshCompleted {
+public class AutoGenerateAutoConfig implements ImportBeanDefine {
     @Autowired(required = false)
     private GeneratorConfigurationSupport configurationSupport;
 
@@ -67,14 +68,14 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine, ContextRefreshC
                 .collect(Collectors.toSet());
     }
 
-    @Override
     @SneakyThrows
-    public void onCompleted(ApplicationContext applicationContext) {
+    @EventListener
+    public void onContextRefreshed(ContextRefreshedEvent event) {
         if (this.configurationSupport == null) {
             log.warn("generator configuration does not exist !");
             return;
         }
-        GenerateSources generateSources = this.createGenerateSources(applicationContext);
+        GenerateSources generateSources = this.createGenerateSources(event.getSource());
         if (CommonUtil.notEmpty(generateSources.getConfiguration().getTemplateList())) {
             generateSources.doGenerate();
         }

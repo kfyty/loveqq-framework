@@ -7,13 +7,14 @@ import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
 import com.kfyty.mvc.tomcat.TomcatWebServer;
-import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.event.ApplicationListener;
+import com.kfyty.support.event.ContextRefreshedEvent;
 
 import javax.servlet.Filter;
 import javax.servlet.ServletContext;
@@ -32,7 +33,7 @@ import java.util.Optional;
  */
 @Configuration
 @Import(config = WebSocketAutoConfig.class)
-public class TomcatAutoConfig implements ContextRefreshCompleted, DestroyBean {
+public class TomcatAutoConfig implements DestroyBean, ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -73,7 +74,7 @@ public class TomcatAutoConfig implements ContextRefreshCompleted, DestroyBean {
     }
 
     @Override
-    public void onCompleted(ApplicationContext applicationContext) {
+    public void onApplicationEvent(ContextRefreshedEvent event) {
         WebServer server = this.applicationContext.getBean(WebServer.class);
         if(server != null) {
             server.start();
@@ -82,6 +83,8 @@ public class TomcatAutoConfig implements ContextRefreshCompleted, DestroyBean {
 
     @Override
     public void onDestroy() {
-        Optional.ofNullable(this.applicationContext).map(e -> e.getBean(WebServer.class)).ifPresent(WebServer::stop);
+        Optional.ofNullable(this.applicationContext)
+                .map(e -> e.getBean(WebServer.class))
+                .ifPresent(WebServer::stop);
     }
 }

@@ -3,7 +3,6 @@ package com.kfyty.async;
 import com.kfyty.boot.K;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
-import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.annotation.Async;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
@@ -11,6 +10,7 @@ import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
+import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.junit.Assert;
@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @email kfyty725@hotmail.com
  */
 @BootApplication
-public class AsyncTest implements ContextAfterRefreshed, ContextRefreshCompleted {
+public class AsyncTest implements ContextAfterRefreshed {
     int[] async = new int[2];
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger index = new AtomicInteger(0);
@@ -46,9 +46,9 @@ public class AsyncTest implements ContextAfterRefreshed, ContextRefreshCompleted
         this.async[index.getAndIncrement()] = 1;
     }
 
-    @Override
     @SneakyThrows
-    public void onCompleted(ApplicationContext applicationContext) {
+    @EventListener
+    public void onContextRefreshed(ContextRefreshedEvent event) {
         latch.await();
         Assert.assertEquals(this.async[0], 1);
         Assert.assertEquals(this.async[1], 2);

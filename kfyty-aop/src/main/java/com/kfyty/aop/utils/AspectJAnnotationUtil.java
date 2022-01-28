@@ -42,7 +42,7 @@ public abstract class AspectJAnnotationUtil {
     public static String[] findArgNames(Method method) {
         Annotation annotation = findAspectAnnotation(method);
         if (annotation != null) {
-            String argNames = ReflectUtil.invokeSimpleMethod(annotation, "argNames");
+            String argNames = ReflectUtil.invokeMethod(annotation, "argNames");
             if (CommonUtil.notEmpty(argNames)) {
                 return Arrays.stream(argNames.split(",")).map(String::trim).toArray(String[]::new);
             }
@@ -70,7 +70,7 @@ public abstract class AspectJAnnotationUtil {
         if (aspectAnnotation == null) {
             return null;
         }
-        String expression = ReflectUtil.invokeSimpleMethod(aspectAnnotation, "value");
+        String expression = ReflectUtil.invokeMethod(aspectAnnotation, "value");
         if (CommonUtil.empty(expression)) {
             Method pointcut = ReflectUtil.getMethod(aspectAnnotation.annotationType(), "pointcut");
             if (pointcut != null) {
