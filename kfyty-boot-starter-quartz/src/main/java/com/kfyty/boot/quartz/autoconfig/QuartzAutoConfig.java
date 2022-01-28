@@ -1,5 +1,6 @@
 package com.kfyty.boot.quartz.autoconfig;
 
+import com.kfyty.boot.quartz.exception.ScheduledException;
 import com.kfyty.boot.quartz.processor.ScheduledAnnotationBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
@@ -32,7 +33,7 @@ public class QuartzAutoConfig {
         try {
             return schedulerFactory.getScheduler();
         } catch (SchedulerException e) {
-            throw new RuntimeException("failed to get scheduler !", e);
+            throw new ScheduledException("failed to get scheduler !", e);
         }
     }
 }

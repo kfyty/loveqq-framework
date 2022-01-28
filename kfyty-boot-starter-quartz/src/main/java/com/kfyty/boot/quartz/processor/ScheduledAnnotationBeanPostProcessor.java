@@ -1,13 +1,14 @@
 package com.kfyty.boot.quartz.processor;
 
 import com.kfyty.boot.quartz.annotation.Scheduled;
+import com.kfyty.boot.quartz.exception.ScheduledException;
 import com.kfyty.boot.quartz.task.ScheduledTask;
-import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.ContextRefreshCompleted;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.EventListener;
+import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -34,8 +35,10 @@ import static com.kfyty.boot.quartz.autoconfig.QuartzAutoConfig.TASK_METHOD_KEY;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, ContextRefreshCompleted, DestroyBean {
+public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, DestroyBean {
     private static final String TRIGGER_GROUP_SUFFIX = "$$Trigger";
+
+    private boolean hasTask;
 
     @Autowired
     private Scheduler scheduler;
@@ -47,20 +50,26 @@ public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, 
     }
 
     @Override
-    public void onCompleted(ApplicationContext applicationContext) {
+    public void onDestroy() {
         try {
-            this.scheduler.start();
+            if (this.hasTask) {
+                this.scheduler.shutdown(true);
+            }
         } catch (SchedulerException e) {
-            throw new RuntimeException("failed to start the scheduled task !", e);
+            throw new ScheduledException("failed to close the scheduled task !", e);
         }
     }
 
-    @Override
-    public void onDestroy() {
+    @EventListener
+    public void onContextRefreshed(ContextRefreshedEvent event) {
         try {
-            this.scheduler.shutdown(true);
+            if (this.hasTask) {
+                this.scheduler.start();
+            } else {
+                this.scheduler.shutdown();
+            }
         } catch (SchedulerException e) {
-            throw new RuntimeException("failed to close the scheduled task !", e);
+            throw new ScheduledException("failed to start the scheduled task !", e);
         }
     }
 
@@ -84,9 +93,10 @@ public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, 
                         .withSchedule(CronScheduleBuilder.cronSchedule(scheduled.cron()))
                         .build();
                 this.scheduler.scheduleJob(jobDetail, trigger);
+                this.hasTask = true;
             }
         } catch (SchedulerException e) {
-            throw new RuntimeException("failed to parse the scheduled task !", e);
+            throw new ScheduledException("failed to parse the scheduled task !", e);
         }
     }
 }

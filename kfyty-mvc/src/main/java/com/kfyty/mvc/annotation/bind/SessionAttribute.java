@@ -1,11 +1,12 @@
-package com.kfyty.mvc.annotation;
+package com.kfyty.mvc.annotation.bind;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface ResponseBody {
+public @interface SessionAttribute {
+    String value() default "";
 }

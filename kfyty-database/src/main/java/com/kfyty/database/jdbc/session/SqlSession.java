@@ -136,7 +136,7 @@ public class SqlSession implements InvocationHandler {
         if (!(annotation instanceof Query || annotation instanceof SubQuery)) {
             return;
         }
-        returnType.setMapKey(ReflectUtil.invokeSimpleMethod(annotation, "key"));
+        returnType.setMapKey(ReflectUtil.invokeMethod(annotation, "key"));
     }
 
     /**
@@ -147,11 +147,11 @@ public class SqlSession implements InvocationHandler {
      * @return SQL
      */
     private String resolveSQLByAnnotation(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        Class<?> provider = ReflectUtil.invokeSimpleMethod(annotation, "provider");
+        Class<?> provider = ReflectUtil.invokeMethod(annotation, "provider");
         if (!provider.equals(void.class)) {
             return this.providerAdapter.doProvide(provider, this.mapperClass, mapperMethod, annotation, params);
         }
-        String sql = ReflectUtil.invokeSimpleMethod(annotation, "value");
+        String sql = ReflectUtil.invokeMethod(annotation, "value");
         if (CommonUtil.empty(sql)) {
             throw new IllegalArgumentException("SQL statement is empty !");
         }
@@ -167,7 +167,7 @@ public class SqlSession implements InvocationHandler {
      */
     private String processForEach(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
         String sql = resolveSQLByAnnotation(mapperMethod, annotation, params);
-        ForEach[] forEachList = ReflectUtil.invokeSimpleMethod(annotation, "forEach");
+        ForEach[] forEachList = ReflectUtil.invokeMethod(annotation, "forEach");
         return sql + ForEachUtil.processForEach(params, forEachList);
     }
 
@@ -179,7 +179,7 @@ public class SqlSession implements InvocationHandler {
      */
     private Object processSubQuery(Method mapperMethod, Annotation annotation, Object obj) {
         if (annotation instanceof Query && obj != null) {
-            SubQuery[] subQueries = ReflectUtil.invokeSimpleMethod(annotation, "subQuery");
+            SubQuery[] subQueries = ReflectUtil.invokeMethod(annotation, "subQuery");
             CommonUtil.consumer(obj, e -> this.processSubQuery(mapperMethod, subQueries, e), Map.Entry::getValue);
         }
         return obj;

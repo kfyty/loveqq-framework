@@ -1,7 +1,7 @@
 package com.kfyty.mvc.request.resolver;
 
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.kfyty.mvc.annotation.RequestParam;
+import com.kfyty.mvc.annotation.bind.RequestParam;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
@@ -41,7 +41,7 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
         if (AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestParam.class)) {
             return true;
         }
-        return Arrays.stream(AnnotationUtil.findAnnotations(parameter.getParameter())).noneMatch(e -> e.getClass().getName().startsWith(RequestParam.class.getPackage().getName()));
+        return Arrays.stream(AnnotationUtil.findAnnotations(parameter.getParameter())).noneMatch(e -> e.annotationType().getName().startsWith(RequestParam.class.getPackage().getName()));
     }
 
     @Override

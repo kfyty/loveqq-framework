@@ -6,6 +6,7 @@ import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -25,6 +26,7 @@ import java.lang.reflect.Method;
  */
 @Slf4j
 @Configuration
+@Order(Order.HIGHEST_PRECEDENCE + 200)
 public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcessor {
     @Autowired
     private ApplicationContext context;
@@ -53,9 +55,7 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
         for (Class<? extends ApplicationEvent<?>> eventType : eventTypes) {
             EventListenerAnnotationListener annotationListener = new EventListenerAnnotationListener(beanName, listenerMethod, eventType, this.context);
             this.applicationEventPublisher.registerEventListener(annotationListener);
-            if (log.isDebugEnabled()) {
-                log.debug("register annotation event listener: {}", annotationListener);
-            }
+            log.info("register annotation event listener: {}", annotationListener);
         }
     }
 

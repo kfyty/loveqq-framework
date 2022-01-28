@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import static com.kfyty.support.utils.ReflectUtil.getMethod;
 import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
-import static com.kfyty.support.utils.ReflectUtil.invokeSimpleMethod;
 import static com.kfyty.support.utils.ReflectUtil.newInstance;
 import static java.util.Optional.ofNullable;
 
@@ -77,7 +76,7 @@ public class ProviderAdapter {
             return this.configuration.getDynamicProvider().doProvide(mapperClass, sourceMethod, annotation, params);
         }
         Object provider = DialectProvider.class.isAssignableFrom(providerClass) ? getDialect() : newInstance(providerClass);
-        String methodName = ofNullable(invokeSimpleMethod(annotation, "method")).map(e -> (String) e).filter(CommonUtil::notEmpty).orElse(sourceMethod.getName());
+        String methodName = ofNullable(invokeMethod(annotation, "method")).map(e -> (String) e).filter(CommonUtil::notEmpty).orElse(sourceMethod.getName());
         Method method = getMethod(provider.getClass(), methodName, Class.class, Method.class, annotation.annotationType(), Map.class);
         return (String) invokeMethod(provider, method, mapperClass, sourceMethod, annotation, params);
     }

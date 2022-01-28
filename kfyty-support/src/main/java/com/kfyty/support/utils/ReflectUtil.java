@@ -1,6 +1,8 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
+import com.kfyty.support.wrapper.Function3;
+import com.kfyty.support.wrapper.Function4;
 import com.kfyty.support.wrapper.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,8 +34,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 反射工具
@@ -44,6 +49,21 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class ReflectUtil {
+    /**
+     * 属性缓存 key 生成器
+     */
+    private static final Function3<String, Class<?>, String, Boolean> fieldCacheKeyGenerator = (clazz, fieldName, containPrivate) -> clazz.getName() + "#" + fieldName + "@" + containPrivate;
+
+    /**
+     * 方法缓存 key 生成器
+     */
+    public static final Function4<String, Class<?>, String, Class<?>[], Boolean> methodCacheKeyGenerator = (clazz, methodName, parameterTypes, containPrivate) -> CommonUtil.format("{}#{}({})@{}", clazz.getName(), methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
+
+    /**
+     * 所有属性/方法缓存 key 生成器
+     */
+    public static final BiFunction<Class<?>, Boolean, String> fieldsMethodsCacheKeyGenerator = (clazz, containPrivate) -> clazz.getName() + "@" + containPrivate;
+
     /**
      * 属性缓存
      */
@@ -63,6 +83,8 @@ public abstract class ReflectUtil {
      * 所有方法缓存
      */
     private static final Map<WeakKey<String>, List<Method>> methodsCache = Collections.synchronizedMap(new WeakHashMap<>());
+
+    /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
     public static Class<?> load(String className) {
         return load(className, true);
@@ -94,7 +116,7 @@ public abstract class ReflectUtil {
     }
 
     public static boolean hasAnyInterfaces(Class<?> clazz) {
-        return getInterfaces(clazz).length > 0;
+        return clazz.isInterface() || clazz.getInterfaces().length > 0;
     }
 
     public static Class<?>[] getInterfaces(Class<?> clazz) {
@@ -108,13 +130,33 @@ public abstract class ReflectUtil {
         return interfaces;
     }
 
-    public static boolean isBaseDataType(Class<?> clazz) {
-        return clazz.isPrimitive()                          || Number.class.isAssignableFrom(clazz)        ||
-                Character.class.isAssignableFrom(clazz)     || CharSequence.class.isAssignableFrom(clazz)  ||
-                Date.class.isAssignableFrom(clazz)          || LocalDate.class.isAssignableFrom(clazz)     ||
-                LocalTime.class.isAssignableFrom(clazz)     || LocalDateTime.class.isAssignableFrom(clazz) ||
-                Timestamp.class.isAssignableFrom(clazz)     || Instant.class.isAssignableFrom(clazz);
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) {
+        Map memberValues = (Map) ReflectUtil.getFieldValue(Proxy.getInvocationHandler(annotation), "memberValues");
+        memberValues.put(annotationField, value);
     }
+
+    public static void makeAccessible(Field field) {
+        if ((!Modifier.isPublic(field.getModifiers()) || !Modifier.isPublic(field.getDeclaringClass().getModifiers()) || Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
+            field.setAccessible(true);
+        }
+    }
+
+    public static void makeAccessible(Executable executable) {
+        if ((!Modifier.isPublic(executable.getModifiers()) || !Modifier.isPublic(executable.getDeclaringClass().getModifiers())) && !executable.isAccessible()) {
+            executable.setAccessible(true);
+        }
+    }
+
+    public static boolean isBaseDataType(Class<?> clazz) {
+        return clazz.isPrimitive() || Number.class.isAssignableFrom(clazz) ||
+                Character.class.isAssignableFrom(clazz) || CharSequence.class.isAssignableFrom(clazz) ||
+                Date.class.isAssignableFrom(clazz) || LocalDate.class.isAssignableFrom(clazz) ||
+                LocalTime.class.isAssignableFrom(clazz) || LocalDateTime.class.isAssignableFrom(clazz) ||
+                Timestamp.class.isAssignableFrom(clazz) || Instant.class.isAssignableFrom(clazz);
+    }
+
+    /*--------------------------------------------- 创建实例相关方法 ---------------------------------------------*/
 
     public static <T> T newInstance(Class<T> clazz) {
         if (!isAbstract(clazz)) {
@@ -127,6 +169,8 @@ public abstract class ReflectUtil {
         try {
             makeAccessible(constructor);
             return constructor.newInstance(args);
+        } catch (SupportException e) {
+            throw e;
         } catch (Exception e) {
             throw new SupportException(e);
         }
@@ -164,6 +208,207 @@ public abstract class ReflectUtil {
         throw new SupportException("can't find a suitable constructor !");
     }
 
+    /*----------------------------------------- 构造器/属性/方法相关方法 -----------------------------------------*/
+
+    public static Object getFieldValue(Object obj, String fieldName) {
+        return getFieldValue(obj, getField(obj.getClass(), fieldName));
+    }
+
+    public static void setFieldValue(Object obj, Field field, Object value) {
+        try {
+            makeAccessible(field);
+            field.set(obj, value);
+        } catch (Exception e) {
+            throw new SupportException(e);
+        }
+    }
+
+    public static void setFinalFieldValue(Object obj, Field field, Object value) {
+        int modifiers = field.getModifiers();
+        Field modifiersField = ReflectUtil.getField(Field.class, "modifiers");
+        setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
+        setFieldValue(obj, field, value);
+        setFieldValue(field, modifiersField, modifiers);
+    }
+
+    public static Object getFieldValue(Object obj, Field field) {
+        try {
+            makeAccessible(field);
+            return field.get(obj);
+        } catch (Exception e) {
+            throw new SupportException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeMethod(Object obj, String methodName, Object... args) {
+        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
+    }
+
+    public static Object invokeMethod(Object obj, Method method, Object... args) {
+        try {
+            makeAccessible(method);
+            return method.invoke(obj, args);
+        } catch (SupportException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SupportException(e);
+        }
+    }
+
+    public static Field getField(Class<?> clazz, String fieldName) {
+        final String fieldMapKey = fieldsMethodsCacheKeyGenerator.apply(clazz, true);
+        return ofNullable(fieldMapCache.get(new WeakKey<>(fieldMapKey)))
+                .map(e -> e.get(fieldName))
+                .orElseGet(() -> getField(clazz, fieldName, true));
+    }
+
+    public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
+        final String key = fieldCacheKeyGenerator.apply(clazz, fieldName, containPrivate);
+        return fieldCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                return getSuperField(clazz, fieldName, containPrivate);
+            }
+        });
+    }
+
+    public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return null;
+        }
+        Field field = getField(clazz, fieldName, containPrivate);
+        return field == null || !containPrivate && Modifier.isPrivate(field.getModifiers()) ? null : field;
+    }
+
+    public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
+        return getMethod(clazz, methodName, false, parameterTypes);
+    }
+
+    public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
+        final String key = methodCacheKeyGenerator.apply(clazz, methodName, parameterTypes, containPrivate);
+        return methodCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            try {
+                return clazz.getDeclaredMethod(methodName, parameterTypes);
+            } catch (NoSuchMethodException e) {
+                return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
+            }
+        });
+    }
+
+    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
+        if (clazz == null || Object.class.equals(clazz)) {
+            return null;
+        }
+        final Predicate<Method> methodPredicate = m -> containPrivate || !Modifier.isPrivate(m.getModifiers());
+        return ofNullable(clazz.getSuperclass())
+                .map(e -> getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes))
+                .filter(methodPredicate)
+                .orElseGet(() -> {
+                    for (Class<?> clazzInterface : clazz.getInterfaces()) {
+                        Method method = getMethod(clazzInterface, methodName, containPrivate, parameterTypes);
+                        if (method != null) {
+                            return methodPredicate.test(method) ? method : null;
+                        }
+                    }
+                    return null;
+                });
+    }
+
+    public static Method getSuperMethod(Method method) {
+        return getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
+    }
+
+    public static boolean isSuperMethod(Method superMethod, Method method) {
+        return !Modifier.isPrivate(superMethod.getModifiers()) && superMethod.getName().equals(method.getName()) && Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
+    }
+
+    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
+        return getConstructor(clazz, false, parameterTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
+        try {
+            return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return getSuperConstructor(clazz, containPrivate, parameterTypes);
+        }
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return null;
+        }
+        Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
+        return constructor == null || !containPrivate && Modifier.isPrivate(constructor.getModifiers()) ? null : constructor;
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
+        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
+    }
+
+    public static Parameter getSuperParameters(Parameter parameter) {
+        Executable executable = parameter.getDeclaringExecutable();
+        if (executable instanceof Method) {
+            Method method = (Method) executable;
+            Method superMethod = getSuperMethod(method);
+            return superMethod == null ? null : superMethod.getParameters()[(int) getFieldValue(parameter, "index")];
+        }
+        Constructor<?> constructor = (Constructor<?>) executable;
+        Constructor<?> superConstructor = getSuperConstructor(constructor);
+        return superConstructor == null ? null : superConstructor.getParameters()[(int) getFieldValue(parameter, "index")];
+    }
+
+    public static Map<String, Field> getFieldMap(Class<?> clazz) {
+        return getFieldMap(clazz, true);
+    }
+
+    public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
+        final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
+        return fieldMapCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            Map<String, Field> map = new HashMap<>();
+            map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
+            getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
+            return map;
+        });
+    }
+
+    public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
+        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+            return Collections.emptyMap();
+        }
+        return getFieldMap(clazz, containPrivate).values().stream().filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e));
+    }
+
+    public static List<Method> getMethods(Class<?> clazz) {
+        return getMethods(clazz, false);
+    }
+
+    public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
+        final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
+        return methodsCache.computeIfAbsent(new WeakKey<>(key), k -> {
+            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
+            list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
+            return list;
+        });
+    }
+
+    public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
+        if (clazz == null || Object.class.equals(clazz)) {
+            return Collections.emptyList();
+        }
+        Predicate<Method> methodPredicate = e -> containPrivate || !Modifier.isPrivate(e.getModifiers());
+        List<Method> list = Arrays.stream(clazz.getInterfaces()).flatMap(e -> getMethods(e, containPrivate).stream()).filter(methodPredicate).collect(Collectors.toList());
+        if (clazz.getSuperclass() != null) {
+            list.addAll(getMethods(clazz.getSuperclass(), containPrivate).stream().filter(methodPredicate).collect(Collectors.toList()));
+        }
+        return list;
+    }
+
+    /*--------------------------------------------- 父类泛型相关方法 ---------------------------------------------*/
+
     /**
      * 获取继承的父类或父接口的泛型
      * 将会过滤掉非参数化类型的父类或者父接口
@@ -173,7 +418,7 @@ public abstract class ReflectUtil {
      */
     public static List<Type> getGenerics(Class<?> clazz) {
         List<Type> superGenericType = new ArrayList<>(4);
-        Optional.ofNullable(clazz.getGenericSuperclass()).filter(e -> !(e instanceof Class)).ifPresent(superGenericType::add);
+        ofNullable(clazz.getGenericSuperclass()).filter(e -> !(e instanceof Class)).ifPresent(superGenericType::add);
         superGenericType.addAll(Arrays.stream(clazz.getGenericInterfaces()).filter(e -> !(e instanceof Class)).collect(Collectors.toList()));
         return superGenericType;
     }
@@ -320,230 +565,7 @@ public abstract class ReflectUtil {
         throw new SupportException("can't find actual generic type !");
     }
 
-    public static Object getFieldValue(Object obj, String fieldName) {
-        return getFieldValue(obj, getField(obj.getClass(), fieldName));
-    }
-
-    public static void setFieldValue(Object obj, Field field, Object value) {
-        try {
-            makeAccessible(field);
-            field.set(obj, value);
-        } catch (Exception e) {
-            throw new SupportException(e);
-        }
-    }
-
-    public static void setFinalFieldValue(Object obj, Field field, Object value) {
-        int modifiers = field.getModifiers();
-        Field modifiersField = ReflectUtil.getField(Field.class, "modifiers");
-        setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
-        setFieldValue(obj, field, value);
-        setFieldValue(field, modifiersField, modifiers);
-    }
-
-    public static Object getFieldValue(Object obj, Field field) {
-        try {
-            makeAccessible(field);
-            return field.get(obj);
-        } catch (Exception e) {
-            throw new SupportException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeSimpleMethod(Object obj, String methodName, Object... args) {
-        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
-    }
-
-    public static Object invokeMethod(Object obj, Method method, Object... args) {
-        try {
-            makeAccessible(method);
-            return method.invoke(obj, args);
-        } catch (Exception e) {
-            throw new SupportException(e);
-        }
-    }
-
-    public static Field getField(Class<?> clazz, String fieldName) {
-        final String fieldMapKey = clazz.getName() + "@" + true;
-        return Optional
-                .ofNullable(fieldMapCache.get(new WeakKey<>(fieldMapKey)))
-                .map(e -> e.get(fieldName))
-                .orElseGet(() -> getField(clazz, fieldName, true));
-    }
-
-    public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        final String key = clazz.getName() + "#" + fieldName + "@" + containPrivate;
-        return fieldCache.computeIfAbsent(new WeakKey<>(key), k -> {
-            try {
-                return clazz.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                return getSuperField(clazz, fieldName, containPrivate);
-            }
-        });
-    }
-
-    public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            return null;
-        }
-        Field field = getField(clazz, fieldName, containPrivate);
-        return field == null || !containPrivate && Modifier.isPrivate(field.getModifiers()) ? null : field;
-    }
-
-    public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
-        return getMethod(clazz, methodName, false, parameterTypes);
-    }
-
-    public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
-        final String key = CommonUtil.format("{}#{}({})@{}", clazz, methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
-        return methodCache.computeIfAbsent(new WeakKey<>(key), k -> {
-            try {
-                return clazz.getDeclaredMethod(methodName, parameterTypes);
-            } catch (NoSuchMethodException e) {
-                return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
-            }
-        });
-    }
-
-    public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
-        if (clazz == null || Object.class.equals(clazz)) {
-            return null;
-        }
-        Predicate<Method> methodPredicate = m -> containPrivate || !Modifier.isPrivate(m.getModifiers());
-        if (clazz.getSuperclass() != null) {
-            Method method = getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes);
-            if (method != null) {
-                return methodPredicate.test(method) ? method : null;
-            }
-        }
-        for (Class<?> clazzInterface : clazz.getInterfaces()) {
-            Method method = getMethod(clazzInterface, methodName, containPrivate, parameterTypes);
-            if (method != null) {
-                return methodPredicate.test(method) ? method : null;
-            }
-        }
-        return null;
-    }
-
-    public static Method getSuperMethod(Method method) {
-        Method superMethod = getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
-        if (superMethod != null) {
-            return superMethod;
-        }
-        for (Class<?> clazz : method.getDeclaringClass().getInterfaces()) {
-            superMethod = getMethod(clazz, method.getName(), false, method.getParameterTypes());
-            if (superMethod != null) {
-                return superMethod;
-            }
-        }
-        return null;
-    }
-
-    public static boolean isSuperMethod(Method superMethod, Method method) {
-        return !Modifier.isPrivate(superMethod.getModifiers()) && superMethod.getName().equals(method.getName()) && Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
-    }
-
-    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
-        return getConstructor(clazz, false, parameterTypes);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
-        try {
-            return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
-        } catch (NoSuchMethodException e) {
-            return getSuperConstructor(clazz, containPrivate, parameterTypes);
-        }
-    }
-
-    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            return null;
-        }
-        Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
-        return constructor == null || !containPrivate && Modifier.isPrivate(constructor.getModifiers()) ? null : constructor;
-    }
-
-    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
-        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
-    }
-
-    public static Parameter getSuperParameters(Parameter parameter) {
-        Executable executable = parameter.getDeclaringExecutable();
-        if (executable instanceof Method) {
-            Method method = (Method) executable;
-            Method superMethod = getSuperMethod(method);
-            return superMethod == null ? null : superMethod.getParameters()[(int) getFieldValue(parameter, "index")];
-        }
-        Constructor<?> constructor = (Constructor<?>) executable;
-        Constructor<?> superConstructor = getSuperConstructor(constructor);
-        return superConstructor == null ? null : superConstructor.getParameters()[(int) getFieldValue(parameter, "index")];
-    }
-
-    public static Map<String, Field> getFieldMap(Class<?> clazz) {
-        return getFieldMap(clazz, true);
-    }
-
-    public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
-        final String key = clazz.getName() + "@" + containPrivate;
-        return fieldMapCache.computeIfAbsent(new WeakKey<>(key), k -> {
-            Map<String, Field> map = new HashMap<>();
-            map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
-            getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
-            return map;
-        });
-    }
-
-    public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
-            return Collections.emptyMap();
-        }
-        return getFieldMap(clazz, containPrivate).values().stream().filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e));
-    }
-
-    public static List<Method> getMethods(Class<?> clazz) {
-        return getMethods(clazz, false);
-    }
-
-    public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
-        final String key = clazz + "@" + containPrivate;
-        return methodsCache.computeIfAbsent(new WeakKey<>(key), k -> {
-            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
-            list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
-            return list;
-        });
-    }
-
-    public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
-        if (clazz == null || Object.class.equals(clazz)) {
-            return Collections.emptyList();
-        }
-        Predicate<Method> methodPredicate = e -> containPrivate || !Modifier.isPrivate(e.getModifiers());
-        List<Method> list = Arrays.stream(clazz.getInterfaces()).flatMap(e -> getMethods(e, containPrivate).stream()).filter(methodPredicate).collect(Collectors.toList());
-        if (clazz.getSuperclass() != null) {
-            list.addAll(getMethods(clazz.getSuperclass(), containPrivate).stream().filter(methodPredicate).collect(Collectors.toList()));
-        }
-        return list;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) {
-        Map memberValues = (Map) ReflectUtil.getFieldValue(Proxy.getInvocationHandler(annotation), "memberValues");
-        memberValues.put(annotationField, value);
-    }
-
-    public static void makeAccessible(Field field) {
-        if ((!Modifier.isPublic(field.getModifiers()) || !Modifier.isPublic(field.getDeclaringClass().getModifiers()) || Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
-            field.setAccessible(true);
-        }
-    }
-
-    public static void makeAccessible(Executable executable) {
-        if ((!Modifier.isPublic(executable.getModifiers()) || !Modifier.isPublic(executable.getDeclaringClass().getModifiers())) && !executable.isAccessible()) {
-            executable.setAccessible(true);
-        }
-    }
+    /*--------------------------------------------- 其他方法 ---------------------------------------------*/
 
     /**
      * 根据属性参数，解析嵌套属性的类型
@@ -574,7 +596,7 @@ public abstract class ReflectUtil {
     public static Object parseValue(String param, Object obj) {
         String[] fields = param.split("\\.");
         for (String field : fields) {
-            obj = ReflectUtil.getFieldValue(obj, field);
+            obj = getFieldValue(obj, field);
         }
         return obj;
     }
@@ -601,7 +623,7 @@ public abstract class ReflectUtil {
                 clazz = field.getType();
                 continue;
             }
-            setFieldValue(obj, field, (obj = ReflectUtil.newInstance(field.getType())));
+            setFieldValue(obj, field, (obj = newInstance(field.getType())));
             clazz = field.getType();
         }
     }
