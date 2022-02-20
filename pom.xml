@@ -14,6 +14,7 @@
         <module>kfyty-database</module>
         <module>kfyty-mvc</module>
         <module>kfyty-aop</module>
+        <module>kfyty-sdk</module>
         <module>kfyty-support</module>
         <module>kfyty-boot-starter-uid-generator</module>
         <module>kfyty-boot-starter-quartz</module>
@@ -21,7 +22,7 @@
 
     <properties>
         <cglib.version>3.3.0</cglib.version>
-        <jackson.version>2.9.10.5</jackson.version>
+        <jackson.version>2.12.5</jackson.version>
         <freemarker.version>2.3.30</freemarker.version>
 
         <jstl.version>1.2</jstl.version>
