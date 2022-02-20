@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>kfyty-utils</artifactId>
+        <groupId>com.kfyty</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>kfyty-sdk</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
+        <aspectj.version>1.9.7</aspectj.version>
+
+        <spring.version>5.3.3</spring.version>
+        <hutool.version>5.7.0</hutool.version>
+        <fastjson.version>1.2.76</fastjson.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>kfyty-support</artifactId>
+            <version>${kfyty.utils.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>cglib</groupId>
+                    <artifactId>cglib</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-jcl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-http</artifactId>
+            <version>${hutool.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${fastjson.version}</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>
