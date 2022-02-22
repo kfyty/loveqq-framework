@@ -215,9 +215,25 @@ public abstract class ReflectUtil {
     }
 
     public static void setFieldValue(Object obj, Field field, Object value) {
+        setFieldValue(obj, field, value, true);
+    }
+
+    public static void setFieldValue(Object obj, Field field, Object value, boolean useSetter) {
         try {
-            makeAccessible(field);
-            field.set(obj, value);
+            if (!useSetter) {
+                makeAccessible(field);
+                field.set(obj, value);
+                return;
+            }
+            String methodName = "set" + (field.getName().length() == 1 ? field.getName().toUpperCase() : Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1));
+            Method method = getMethod(obj.getClass(), methodName, field.getType());
+            if (method == null) {
+                setFieldValue(obj, field, value, false);
+                return;
+            }
+            invokeMethod(obj, method, value);
+        } catch (SupportException e) {
+            throw e;
         } catch (Exception e) {
             throw new SupportException(e);
         }

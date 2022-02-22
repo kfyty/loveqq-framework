@@ -10,18 +10,17 @@ import com.kfyty.sdk.api.core.exception.BaseApiException;
 import com.kfyty.sdk.api.core.http.AbstractHttpRequest;
 import com.kfyty.sdk.api.core.http.HttpResponse;
 import com.kfyty.sdk.api.core.utils.ParameterUtil;
+import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ResolvableType;
 
 import java.util.List;
 import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.springframework.core.ResolvableType.NONE;
 
 /**
  * 描述: api 基础实现，封装了模板代码及扩展接口
@@ -76,12 +75,7 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
      */
     @SuppressWarnings("unchecked")
     public Class<R> resolveResponseGeneric() {
-        ResolvableType superType = ResolvableType.forInstance(this).getSuperType();
-        while (superType != NONE && superType.getGeneric(1).resolve() == null) {
-            superType = superType.getSuperType();
-        }
-        return ofNullable((Class<R>) superType.getGeneric(1).resolve())
-                .orElseThrow(() -> new ApiException("failed to resolve the parent generic type !"));
+        return (Class<R>) ReflectUtil.getSuperGeneric(this.getClass(), 1);
     }
 
     /**

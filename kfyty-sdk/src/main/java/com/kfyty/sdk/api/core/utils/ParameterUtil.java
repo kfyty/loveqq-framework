@@ -5,10 +5,7 @@ import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.support.utils.ReflectUtil;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -64,15 +61,5 @@ public abstract class ParameterUtil {
             s = s.replace(matcher.group(), String.valueOf(params.get(key)));
         }
         return s;
-    }
-
-    public static void setFieldValueWithSetter(Object target, Field field, Object value) {
-        String methodName = "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1);
-        Method method = ReflectionUtils.findMethod(target.getClass(), methodName, field.getType());
-        if (method != null) {
-            ReflectionUtils.invokeMethod(method, target, value);
-            return;
-        }
-        ReflectionUtils.setField(field, target, value);
     }
 }
