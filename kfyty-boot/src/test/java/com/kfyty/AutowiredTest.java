@@ -131,7 +131,7 @@ abstract class InterImpl<T> implements Inter {
     protected T t;
 
     @Resource
-    public void setT(T t) {
+    public void setTT(T t) {
         Assert.assertSame(this.t, t);
     }
 }
@@ -315,7 +315,7 @@ class BaseController<T, K> {
     protected Base<T, K> service;
 
     @Autowired
-    public void setService(Base<T, K> service) {
+    public void setServiceT(Base<T, K> service) {
         Assert.assertSame(this.service, service);
     }
 }
