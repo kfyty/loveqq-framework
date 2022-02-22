@@ -55,7 +55,14 @@ public @interface Parameter {
     boolean header() default false;
 
     /**
-     * 参数校验后，是否忽略放入请求参数或者请求头
+     * 是否是 cookie 参数
+     *
+     * @return 默认 false
+     */
+    boolean cookie() default false;
+
+    /**
+     * 参数校验后，是否忽略放入请求参数或者请求头或者cookie
      *
      * @return 默认 false
      */

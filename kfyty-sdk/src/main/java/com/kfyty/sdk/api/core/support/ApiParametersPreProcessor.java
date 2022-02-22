@@ -5,18 +5,15 @@ import com.kfyty.sdk.api.core.ApiPreProcessor;
 import com.kfyty.sdk.api.core.ParameterProvider;
 import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.utils.ParameterUtil;
-import org.springframework.util.ReflectionUtils;
+import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.kfyty.sdk.api.core.utils.ParameterUtil.resolveParameters;
-import static com.kfyty.sdk.api.core.utils.ParameterUtil.setFieldValueWithSetter;
-import static org.springframework.util.ReflectionUtils.doWithFields;
-import static org.springframework.util.ReflectionUtils.getField;
-import static org.springframework.util.ReflectionUtils.makeAccessible;
 
 /**
  * 描述: {@link Parameter} 前置处理器
@@ -26,34 +23,26 @@ import static org.springframework.util.ReflectionUtils.makeAccessible;
  * @email kfyty725@hotmail.com
  */
 public class ApiParametersPreProcessor implements ApiPreProcessor {
-    /**
-     * 默认的属性过滤器
-     */
-    private static final ReflectionUtils.FieldFilter DEFAULT_FIELD_FILTER = field -> field.isAnnotationPresent(Parameter.class);
 
     @Override
     public void preProcessor(AbstractApi<?, ?> api) {
-        doWithFields(api.getClass(), new ParameterProcessFieldCallback(api), DEFAULT_FIELD_FILTER);
-    }
-
-    private static class ParameterProcessFieldCallback implements ReflectionUtils.FieldCallback {
-        private final AbstractApi<?, ?> api;
-
-        private ParameterProcessFieldCallback(AbstractApi<?, ?> api) {
-            this.api = Objects.requireNonNull(api);
-        }
-
-        @Override
-        public void doWith(Field field) throws IllegalArgumentException {
-            makeAccessible(field);
-            Object value = getField(field, api);
+        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(api.getClass()).entrySet()) {
+            Field field = entry.getValue();
+            if (!AnnotationUtil.hasAnnotation(field, Parameter.class)) {
+                continue;
+            }
+            Object value = ReflectUtil.getFieldValue(api, field);
             Parameter parameter = field.getAnnotation(Parameter.class);
-            Optional<Object> optional = resolveParameters(parameter, value, this.getParameterProviderSupplier(field, value));
+            Optional<Object> optional = resolveParameters(parameter, value, this.getParameterProviderSupplier(api, field, value));
             if (!optional.isPresent() || parameter.ignored()) {
                 return;
             }
             if (parameter.header()) {
                 api.addHeader(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
+                return;
+            }
+            if (parameter.cookie()) {
+                api.addCookie(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
                 return;
             }
             if (parameter.query()) {
@@ -66,18 +55,18 @@ public class ApiParametersPreProcessor implements ApiPreProcessor {
             }
             api.addFormData(parameter.value(), optional.get());
         }
+    }
 
-        @SuppressWarnings("unchecked")
-        private Supplier<Object> getParameterProviderSupplier(Field field, Object value) {
-            return () -> {
-                ParameterProviderRegistry registry = api.getConfiguration().getParameterProviderRegistry();
-                ParameterProvider provider = registry.getParameterProvider((Class<? extends AbstractApi<?, ?>>) api.getClass(), field.getName());
-                Object providerValue = provider == null ? null : provider.provide(api);
-                if (value == null && providerValue != null) {
-                    setFieldValueWithSetter(api, field, providerValue);
-                }
-                return providerValue;
-            };
-        }
+    @SuppressWarnings("unchecked")
+    private Supplier<Object> getParameterProviderSupplier(AbstractApi<?, ?> api, Field field, Object value) {
+        return () -> {
+            ParameterProviderRegistry registry = api.getConfiguration().getParameterProviderRegistry();
+            ParameterProvider provider = registry.getParameterProvider((Class<? extends AbstractApi<?, ?>>) api.getClass(), field.getName());
+            Object providerValue = provider == null ? null : provider.provide(api);
+            if (value == null && providerValue != null) {
+                ReflectUtil.setFieldValue(api, field, providerValue);
+            }
+            return providerValue;
+        };
     }
 }
