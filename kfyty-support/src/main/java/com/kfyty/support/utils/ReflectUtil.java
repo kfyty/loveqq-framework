@@ -38,6 +38,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.kfyty.support.utils.CommonUtil.getGetter;
+import static com.kfyty.support.utils.CommonUtil.getSetter;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -169,10 +171,8 @@ public abstract class ReflectUtil {
         try {
             makeAccessible(constructor);
             return constructor.newInstance(args);
-        } catch (SupportException e) {
-            throw e;
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -225,17 +225,14 @@ public abstract class ReflectUtil {
                 field.set(obj, value);
                 return;
             }
-            String methodName = "set" + (field.getName().length() == 1 ? field.getName().toUpperCase() : Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1));
-            Method method = getMethod(obj.getClass(), methodName, field.getType());
+            Method method = getMethod(obj.getClass(), getSetter(field.getName()), field.getType());
             if (method == null) {
                 setFieldValue(obj, field, value, false);
                 return;
             }
             invokeMethod(obj, method, value);
-        } catch (SupportException e) {
-            throw e;
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -248,11 +245,20 @@ public abstract class ReflectUtil {
     }
 
     public static Object getFieldValue(Object obj, Field field) {
+        return getFieldValue(obj, field, true);
+    }
+
+    public static Object getFieldValue(Object obj, Field field, boolean useGetter) {
         try {
-            makeAccessible(field);
-            return field.get(obj);
+            if (!useGetter) {
+                makeAccessible(field);
+                return field.get(obj);
+            }
+            return ofNullable(getMethod(obj.getClass(), getGetter(field.getName())))
+                    .map(method -> invokeMethod(obj, method))
+                    .orElseGet(() -> getFieldValue(obj, field, false));
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -265,10 +271,8 @@ public abstract class ReflectUtil {
         try {
             makeAccessible(method);
             return method.invoke(obj, args);
-        } catch (SupportException e) {
-            throw e;
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 

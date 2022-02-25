@@ -6,8 +6,6 @@ import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -102,6 +100,14 @@ public abstract class CommonUtil {
         return 1;
     }
 
+    public static String getGetter(String name) {
+        return "get" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
+    }
+
+    public static String getSetter(String name) {
+        return "set" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
+    }
+
     public static void consumer(Object o, Consumer<Object> consumer) {
         consumer(o, consumer, entry -> entry);
     }
@@ -159,15 +165,6 @@ public abstract class CommonUtil {
         return emptyList();
     }
 
-    public static String buildStackTrace(Throwable throwable) {
-        if (throwable == null) {
-            return EMPTY_STRING;
-        }
-        StringWriter stringWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(stringWriter, true));
-        return stringWriter.toString();
-    }
-
     public static void sleep(long time) {
         sleep(time, TimeUnit.MILLISECONDS);
     }
@@ -176,7 +173,7 @@ public abstract class CommonUtil {
         try {
             timeUnit.sleep(time);
         } catch (InterruptedException e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -190,7 +187,7 @@ public abstract class CommonUtil {
         try {
             ((AutoCloseable) obj).close();
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -306,7 +303,7 @@ public abstract class CommonUtil {
             File[] files = file.listFiles();
             return files == null ? emptyList() : Arrays.stream(files).filter(File::isFile).filter(filePredicate).collect(Collectors.toList());
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -327,7 +324,7 @@ public abstract class CommonUtil {
             out.flush();
             close(out);
         } catch (Exception e) {
-            throw new SupportException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 }
