@@ -23,7 +23,7 @@ public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor
 
     @Override
     public boolean canCreateProxy(Object bean, String beanName) {
-        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        Class<?> sourceClass = AopUtil.getTargetClass(bean);
         return !ReflectUtil.isAbstract(this.applicationContext.getBeanDefinition(beanName).getBeanType()) && ReflectUtil.getMethods(sourceClass).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class));
     }
 

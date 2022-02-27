@@ -29,7 +29,7 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
 
     @Override
     public boolean canCreateProxy(Object bean, String beanName) {
-        for (Method method : ReflectUtil.getMethods(AopUtil.getSourceClass(bean))) {
+        for (Method method : ReflectUtil.getMethods(AopUtil.getTargetClass(bean))) {
             if (AnnotationUtil.hasAnnotation(method, Valid.class) || AnnotationUtil.hasAnnotationElement(method, Constraint.class)) {
                 return true;
             }

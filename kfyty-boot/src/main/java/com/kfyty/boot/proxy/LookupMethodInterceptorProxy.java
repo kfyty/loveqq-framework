@@ -32,7 +32,7 @@ public class LookupMethodInterceptorProxy implements InterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Method method = methodProxy.getSourceTargetMethod();
+        Method method = methodProxy.getTargetMethod();
         Lookup annotation = AnnotationUtil.findAnnotation(method, Lookup.class);
         if(annotation == null) {
             return chain.proceed(methodProxy);

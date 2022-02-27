@@ -23,7 +23,7 @@ public class PreDestroyProcessor implements BeanPostProcessor {
 
     @Override
     public void postProcessBeforeDestroy(Object bean, String beanName) {
-        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        Class<?> sourceClass = AopUtil.getTargetClass(bean);
         for (Method method : ReflectUtil.getMethods(sourceClass)) {
             if(AnnotationUtil.hasAnnotation(method, PreDestroy.class)) {
                 ReflectUtil.invokeMethod(bean, method);

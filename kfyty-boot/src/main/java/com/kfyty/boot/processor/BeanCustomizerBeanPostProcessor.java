@@ -37,7 +37,7 @@ public class BeanCustomizerBeanPostProcessor implements ApplicationContextAware,
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
         this.prepareBeanCustomizer();
-        List<BeanCustomizer<Object>> beanCustomizers = this.beanCustomizerMap.get(AopUtil.getSourceClass(bean));
+        List<BeanCustomizer<Object>> beanCustomizers = this.beanCustomizerMap.get(AopUtil.getTargetClass(bean));
         if (beanCustomizers != null) {
             beanCustomizers.forEach(e -> e.customize(bean));
         }

@@ -27,7 +27,7 @@ public class AspectJAfterThrowsAdvice extends AbstractAspectJAdvice implements T
         try {
             return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
-            this.afterThrowing(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource(), throwable);
+            this.afterThrowing(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget(), throwable);
             throw throwable;
         }
     }

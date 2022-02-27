@@ -80,7 +80,7 @@ public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, 
                 if ((scheduled = AnnotationUtil.findAnnotation(method, Scheduled.class)) == null) {
                     continue;
                 }
-                JobKey jobKey = new JobKey(method.getName(), AopUtil.getSourceClass(bean).getName());
+                JobKey jobKey = new JobKey(method.getName(), AopUtil.getTargetClass(bean).getName());
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put(TASK_BEAN_KEY, bean);
                 jobDataMap.put(TASK_METHOD_KEY, method);

@@ -55,7 +55,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
     @Override
     public Object getTarget() {
-        return this.methodProxyWrapper.getSource();
+        return this.methodProxyWrapper.getTarget();
     }
 
     @Override
@@ -139,7 +139,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public Method getMethod() {
-            return methodProxyWrapper.getSourceTargetMethod();
+            return methodProxyWrapper.getTargetMethod();
         }
 
         @Override
@@ -224,10 +224,10 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public Class<?> getWithinType() {
-            if (methodProxyWrapper.getSource() == null) {
+            if (methodProxyWrapper.getTarget() == null) {
                 throw new UnsupportedOperationException("No source location joinpoint available: target is null");
             }
-            return methodProxyWrapper.getSource().getClass();
+            return methodProxyWrapper.getTarget().getClass();
         }
 
         @Override

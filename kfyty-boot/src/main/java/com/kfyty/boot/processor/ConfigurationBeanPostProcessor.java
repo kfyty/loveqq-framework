@@ -23,7 +23,7 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
 
     @Override
     public boolean canCreateProxy(Object bean, String beanName) {
-        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        Class<?> sourceClass = AopUtil.getTargetClass(bean);
         return AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class);
     }
 

@@ -32,7 +32,7 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Method method = methodProxy.getSourceTargetMethod();
+        Method method = methodProxy.getTargetMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if (annotation == null || !ScopeUtil.isSingleton(method)) {
             return chain.proceed(methodProxy);

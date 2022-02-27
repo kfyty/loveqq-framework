@@ -30,8 +30,8 @@ public class MethodValidationInterceptorProxy implements InterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Object target = methodProxy.getSourceTarget();
-        Method method = methodProxy.getSourceTargetMethod();
+        Object target = methodProxy.getTarget();
+        Method method = methodProxy.getTargetMethod();
         this.beforeValid(target, method, methodProxy.getArguments());
         Object retValue = chain.proceed(methodProxy);
         this.afterValid(target, method, retValue);
