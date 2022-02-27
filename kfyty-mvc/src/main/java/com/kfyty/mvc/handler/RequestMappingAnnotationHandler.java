@@ -76,7 +76,7 @@ public class RequestMappingAnnotationHandler {
     }
 
     private void processAnnotation() {
-        Class<?> clazz = AopUtil.getSourceClass(this.mappingController);
+        Class<?> clazz = AopUtil.getTargetClass(this.mappingController);
         if (AnnotationUtil.hasAnnotation(clazz, RequestMapping.class)) {
             this.superUrl = CommonUtil.formatURI(AnnotationUtil.findAnnotation(clazz, RequestMapping.class).value());
         }
@@ -84,7 +84,7 @@ public class RequestMappingAnnotationHandler {
     }
 
     private void processMethodAnnotation() {
-        List<Method> methods = ReflectUtil.getMethods(AopUtil.getSourceClass(this.mappingController));
+        List<Method> methods = ReflectUtil.getMethods(AopUtil.getTargetClass(this.mappingController));
         for (Method method : methods) {
             if (this.existsRequestMapping(method)) {
                 MethodMapping methodMapping = MethodMapping.newURLMapping(mappingController, method);

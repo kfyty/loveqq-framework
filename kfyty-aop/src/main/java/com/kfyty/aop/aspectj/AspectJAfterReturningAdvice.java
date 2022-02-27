@@ -25,7 +25,7 @@ public class AspectJAfterReturningAdvice extends AbstractAspectJAdvice implement
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object retValue = chain.proceed(methodProxy);
-        this.afterReturning(retValue, methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource());
+        this.afterReturning(retValue, methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget());
         return retValue;
     }
 

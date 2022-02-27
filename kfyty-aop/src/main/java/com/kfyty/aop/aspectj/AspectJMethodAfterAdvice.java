@@ -25,7 +25,7 @@ public class AspectJMethodAfterAdvice extends AbstractAspectJAdvice implements M
         try {
             return chain.proceed(methodProxy);
         } finally {
-            this.after(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource());
+            this.after(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget());
         }
     }
 }

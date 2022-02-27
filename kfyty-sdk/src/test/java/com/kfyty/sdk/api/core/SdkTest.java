@@ -2,7 +2,6 @@ package com.kfyty.sdk.api.core;
 
 import com.kfyty.sdk.api.core.api.BaiduSearchApi;
 import com.kfyty.sdk.api.core.config.ApiConfiguration;
-import org.junit.Test;
 
 /**
  * 描述:
@@ -13,7 +12,7 @@ import org.junit.Test;
  */
 public class SdkTest {
 
-    @Test
+//    @Test
     public void test() {
         ApiConfiguration
                 .getGlobalConfiguration()

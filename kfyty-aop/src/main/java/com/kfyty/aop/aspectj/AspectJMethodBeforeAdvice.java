@@ -22,7 +22,7 @@ public class AspectJMethodBeforeAdvice extends AbstractAspectJAdvice implements 
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        this.before(methodProxy.getSourceTargetMethod(), methodProxy.getArguments(), methodProxy.getSource());
+        this.before(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget());
         return chain.proceed(methodProxy);
     }
 }

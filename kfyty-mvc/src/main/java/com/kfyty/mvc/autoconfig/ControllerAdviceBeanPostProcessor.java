@@ -38,7 +38,7 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
     @SuppressWarnings("unchecked")
     public boolean canCreateProxy(Object bean, String beanName) {
         this.prepareControllerAdviceCondition();
-        Class<?> sourceClass = AopUtil.getSourceClass(bean);
+        Class<?> sourceClass = AopUtil.getTargetClass(bean);
         String beanPackage = sourceClass.getPackage().getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if (beanPackage.startsWith(basePackage)) {

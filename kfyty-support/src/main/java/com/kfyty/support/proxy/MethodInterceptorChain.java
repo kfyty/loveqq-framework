@@ -57,7 +57,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
 
     @Override
     protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
-        if (methodProxy.getSourceTargetMethod().getDeclaringClass().equals(Object.class)) {
+        if (methodProxy.getTargetMethod().getDeclaringClass().equals(Object.class)) {
             return methodProxy.invoke();
         }
         final MethodInterceptorChain currentChain = currentChain();
@@ -65,7 +65,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
             return currentChain.proceed(methodProxy);
         }
         try {
-            MethodInterceptorChain newCurrentChain = new MethodInterceptorChain(this.getSource(), this.chainPoints);
+            MethodInterceptorChain newCurrentChain = new MethodInterceptorChain(this.getTarget(), this.chainPoints);
             newCurrentChain.intercepting = methodProxy;
             CURRENT_INTERCEPTOR_CHAIN.set(newCurrentChain);
             return newCurrentChain.proceed(methodProxy);

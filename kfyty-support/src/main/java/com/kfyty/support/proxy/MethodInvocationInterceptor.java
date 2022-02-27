@@ -14,24 +14,24 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 public abstract class MethodInvocationInterceptor implements InvocationHandler, MethodInterceptor {
-    protected final Object source;
+    protected final Object target;
 
-    public MethodInvocationInterceptor(Object source) {
-        this.source = source;
+    public MethodInvocationInterceptor(Object target) {
+        this.target = target;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.source, proxy, method, args));
+        return this.process(new MethodProxyWrapper(this.target, proxy, method, args));
     }
 
     @Override
     public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.source, proxy, method, args, methodProxy));
+        return this.process(new MethodProxyWrapper(this.target, proxy, method, args, methodProxy));
     }
 
-    public Object getSource() {
-        return this.source;
+    public Object getTarget() {
+        return this.target;
     }
 
     protected abstract Object process(MethodProxyWrapper methodProxy) throws Throwable;

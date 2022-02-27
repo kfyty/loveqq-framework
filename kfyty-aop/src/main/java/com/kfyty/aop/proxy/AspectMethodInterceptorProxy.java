@@ -49,7 +49,7 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     protected MethodInvocationProceedingJoinPoint buildMethodInvocationProceedingJoinPoint(MethodProxyWrapper methodProxy, MethodInterceptorChain chain, List<InterceptorChainPoint> advices) {
-        MethodInterceptorChain aopChain = new MethodInterceptorChain(chain.getSource(), advices);
+        MethodInterceptorChain aopChain = new MethodInterceptorChain(chain.getTarget(), advices);
         MethodInvocationProceedingJoinPoint joinPoint = new MethodInvocationProceedingJoinPoint(methodProxy, aopChain);
         aopChain.addInterceptorPoint(0, new ExposeInvocationInterceptorProxy(joinPoint))
                 .addInterceptorPoint(advices.size() + 1, new AopInterceptorChainBridgeProxy(chain));
@@ -77,7 +77,7 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
         for (Advisor advisor : this.advisors) {
             if (advisor instanceof PointcutAdvisor) {
                 MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();
-                if (methodMatcher.matches(methodProxy.getSourceTargetMethod(), methodProxy.getSourceClass())) {
+                if (methodMatcher.matches(methodProxy.getTargetMethod(), methodProxy.getTargetClass())) {
                     filteredAdvisors.add(advisor);
                 }
             }

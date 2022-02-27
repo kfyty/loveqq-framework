@@ -70,9 +70,9 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     private Async findAsyncAnnotation(MethodProxyWrapper methodProxy) {
-        Async annotation = AnnotationUtil.findAnnotation(methodProxy.getSourceTargetMethod(), Async.class);
+        Async annotation = AnnotationUtil.findAnnotation(methodProxy.getTargetMethod(), Async.class);
         if(annotation == null) {
-            annotation = AnnotationUtil.findAnnotation(methodProxy.getSource(), Async.class);
+            annotation = AnnotationUtil.findAnnotation(methodProxy.getTarget(), Async.class);
         }
         return annotation;
     }

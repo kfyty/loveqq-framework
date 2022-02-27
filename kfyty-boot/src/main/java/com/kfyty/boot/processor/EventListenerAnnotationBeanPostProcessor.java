@@ -36,7 +36,7 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        Class<?> beanClass = AopUtil.getSourceClass(bean);
+        Class<?> beanClass = AopUtil.getTargetClass(bean);
         for (Method method : ReflectUtil.getMethods(beanClass)) {
             if(AnnotationUtil.hasAnnotation(method, EventListener.class)) {
                 Method listenerMethod = this.ensureListenerMethod(bean, method);

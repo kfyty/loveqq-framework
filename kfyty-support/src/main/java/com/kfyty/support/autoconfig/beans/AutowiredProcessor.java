@@ -58,8 +58,8 @@ public class AutowiredProcessor {
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), annotation);
         Object targetBean = this.doResolveBean(beanName, actualGeneric, annotation);
-        if (targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getSourceClass(targetBean))) {
-            targetBean = AopUtil.getSourceTarget(targetBean);
+        if (targetBean != null && AopUtil.isJdkProxy(targetBean) && field.getType().equals(AopUtil.getTargetClass(targetBean))) {
+            targetBean = AopUtil.getTarget(targetBean);
         }
         if (targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
@@ -75,8 +75,8 @@ public class AutowiredProcessor {
         for (Parameter parameter : method.getParameters()) {
             Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
             Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), autowired != null ? autowired : this.findAutowiredAnnotation(method));
-            if (targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getSourceClass(targetBean))) {
-                targetBean = AopUtil.getSourceTarget(targetBean);
+            if (targetBean != null && AopUtil.isJdkProxy(targetBean) && parameter.getType().equals(AopUtil.getTargetClass(targetBean))) {
+                targetBean = AopUtil.getTarget(targetBean);
             }
             parameters[index++] = targetBean;
         }
@@ -213,7 +213,7 @@ public class AutowiredProcessor {
         }
         List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
         for (Object value : beans.values()) {
-            SimpleGeneric generic = SimpleGeneric.from(AopUtil.getSourceClass(value));
+            SimpleGeneric generic = SimpleGeneric.from(AopUtil.getTargetClass(value));
             if (generic.size() != targetGenerics.size()) {
                 continue;
             }
