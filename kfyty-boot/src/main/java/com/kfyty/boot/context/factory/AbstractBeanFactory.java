@@ -233,7 +233,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Object registerBean(Class<?> clazz, Object bean) {
-        return this.registerBean(BeanUtil.convert2BeanName(clazz), bean);
+        return this.registerBean(BeanUtil.getBeanName(clazz), bean);
     }
 
     @Override
@@ -260,7 +260,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void replaceBean(Class<?> clazz, Object bean) {
-        this.replaceBean(BeanUtil.convert2BeanName(clazz), bean);
+        this.replaceBean(BeanUtil.getBeanName(clazz), bean);
     }
 
     @Override
@@ -317,6 +317,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
             ofNullable(methodBeanDefinition.getDestroyMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
         }
+
+        this.beanReference.remove(name);
+        this.beanInstances.remove(name);
     }
 
     /**

@@ -130,6 +130,6 @@ public class BeanDefinitionBuilder {
         if (FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(beanType.getName())) {
             return beanType.getName();
         }
-        return BeanUtil.convert2BeanName(beanType);
+        return BeanUtil.getBeanName(beanType);
     }
 }

@@ -24,7 +24,7 @@ public interface AdvisorCreator {
     }
 
     default List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, Class<?> ... aspectClasses) {
-        return this.createAdvisor(aspectMapping, Arrays.stream(aspectClasses).map(e -> new Pair<String, Class<?>>(BeanUtil.convert2BeanName(e), e)).collect(Collectors.toList()));
+        return this.createAdvisor(aspectMapping, Arrays.stream(aspectClasses).map(e -> new Pair<String, Class<?>>(BeanUtil.getBeanName(e), e)).collect(Collectors.toList()));
     }
 
     default List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, List<Pair<String, Class<?>>> namedAspectClasses) {
