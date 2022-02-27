@@ -37,7 +37,7 @@ public class LookupMethodInterceptorProxy implements InterceptorChainPoint {
         if(annotation == null) {
             return chain.proceed(methodProxy);
         }
-        String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.convert2BeanName(method.getReturnType());
+        String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.getBeanName(method.getReturnType());
         return this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(method), AnnotationUtil.findAnnotation(method, Autowired.class));
     }
 }

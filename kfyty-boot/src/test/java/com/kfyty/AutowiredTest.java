@@ -98,7 +98,7 @@ class Config {
     @Bean
     public Bean2 bean2(Bean1 bean1, Bean3 bean3, Inter1 inter1, List<Inter> inters, Inter[] interArr) {
         Assert.assertNotNull(test);
-        Map<String, Inter> interMap = Arrays.stream(interArr).collect(Collectors.toMap(k -> BeanUtil.convert2BeanName(k.getClass()), Function.identity()));
+        Map<String, Inter> interMap = Arrays.stream(interArr).collect(Collectors.toMap(k -> BeanUtil.getBeanName(k.getClass()), Function.identity()));
         Assert.assertSame(bean1, test.bean1());
         Assert.assertSame(bean3, this.bean3(inter1, interMap));
         Assert.assertSame(bean3, this.bean3(inter1, interMap));

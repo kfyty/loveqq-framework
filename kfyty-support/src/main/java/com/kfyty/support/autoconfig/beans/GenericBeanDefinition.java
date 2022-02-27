@@ -70,7 +70,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public GenericBeanDefinition(Class<?> beanType) {
-        this(BeanUtil.convert2BeanName(beanType), beanType);
+        this(BeanUtil.getBeanName(beanType), beanType);
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType) {

@@ -63,7 +63,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     private Method destroyMethod;
 
     public MethodBeanDefinition(Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
-        this(BeanUtil.convert2BeanName(beanType), beanType, parentDefinition, beanMethod);
+        this(BeanUtil.getBeanName(beanType), beanType, parentDefinition, beanMethod);
     }
 
     public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {

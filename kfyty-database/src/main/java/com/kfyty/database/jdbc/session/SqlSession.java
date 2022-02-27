@@ -260,7 +260,7 @@ public class SqlSession implements InvocationHandler {
                 MethodParameter method = new MethodParameter(mapperMethod, params.values().stream().map(MethodParameter::getValue).toArray());
                 return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(method, annotation, sqlParams, returnType));
             }
-            String methodName = BeanUtil.convert2BeanName(annotation.annotationType());
+            String methodName = BeanUtil.getBeanName(annotation.annotationType());
             Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
             Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             return this.processSubQuery(mapperMethod, annotation, retValue);
