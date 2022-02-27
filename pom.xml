@@ -46,13 +46,44 @@
 
         <compiler.plugin.version>3.8.0</compiler.plugin.version>
         <source.plugin.version>3.1.0</source.plugin.version>
+        <jar.plugin.version>3.1.1</jar.plugin.version>
+        <dependency.plugin.version>3.1.1</dependency.plugin.version>
 
         <maven.source.version>8</maven.source.version>
         <maven.target.version>8</maven.target.version>
+
+        <boot-lib-dir>boot-lib</boot-lib-dir>
+        <boot-lib-output>../${boot-lib-dir}</boot-lib-output>
+        <boot-main-output>${boot-lib-output}/..</boot-main-output>
+        <boot-main-class></boot-main-class>
     </properties>
 
     <build>
+        <!-- 打包资源文件，默认的配置无法打包 webapp -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/webapp</directory>
+            </resource>
+        </resources>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${source.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -67,14 +98,34 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>${source.plugin.version}</version>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${jar.plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>${boot-lib-dir}/</classpathPrefix>
+                            <mainClass>${boot-main-class}</mainClass>
+                        </manifest>
+                    </archive>
+                    <outputDirectory>${project.build.directory}/${boot-main-output}</outputDirectory>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${dependency.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${boot-lib-output}</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
