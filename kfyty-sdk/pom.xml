@@ -14,9 +14,7 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-        <aspectj.version>1.9.7</aspectj.version>
 
-        <spring.version>5.3.3</spring.version>
         <hutool.version>5.7.0</hutool.version>
         <fastjson.version>1.2.76</fastjson.version>
     </properties>

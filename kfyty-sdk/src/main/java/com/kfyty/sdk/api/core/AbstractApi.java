@@ -159,6 +159,15 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
         }
     }
 
+    /**
+     * 返回重试的装饰 api
+     *
+     * @return 重试 api
+     */
+    public ApiRetryDecorate<T, R> retried() {
+        return ApiRetryDecorate.of(this);
+    }
+
     protected byte[] executeInternal() {
         return this.getConfiguration().getRequestExecutor().execute(this);
     }
