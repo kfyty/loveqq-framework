@@ -32,6 +32,6 @@ public class PathVariableMethodArgumentResolver implements HandlerMethodArgument
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         String paramName = parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
         Integer paramIndex = restfulURLMappingIndex.get(paramName);
-        return JsonUtil.convertValue(paths.get(paramIndex), parameter.getParamType());
+        return JsonUtil.convert(paths.get(paramIndex), parameter.getParamType());
     }
 }
