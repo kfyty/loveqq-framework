@@ -2,6 +2,7 @@ package com.kfyty.support.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -24,8 +25,12 @@ public abstract class JsonUtil {
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
 
     static {
-        configure().setTimeZone(TimeZone.getDefault());
-        configureWriter().with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+        configure()
+                .setTimeZone(TimeZone.getDefault())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        configureWriter()
+                .with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
     public static ObjectMapper configure() {
