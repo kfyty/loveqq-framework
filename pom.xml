@@ -53,7 +53,7 @@
         <maven.target.version>8</maven.target.version>
 
         <boot-lib-dir>boot-lib</boot-lib-dir>
-        <boot-lib-output>../${boot-lib-dir}</boot-lib-output>
+        <boot-lib-output>${boot-lib-dir}</boot-lib-output>
         <boot-main-output>${boot-lib-output}/..</boot-main-output>
         <boot-main-class></boot-main-class>
     </properties>
