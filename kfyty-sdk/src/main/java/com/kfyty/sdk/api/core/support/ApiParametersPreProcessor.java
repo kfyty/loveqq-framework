@@ -35,23 +35,23 @@ public class ApiParametersPreProcessor implements ApiPreProcessor {
             Parameter parameter = field.getAnnotation(Parameter.class);
             Optional<Object> optional = resolveParameters(parameter, value, this.getParameterProviderSupplier(api, field, value));
             if (!optional.isPresent() || parameter.ignored()) {
-                return;
+                continue;
             }
             if (parameter.header()) {
                 api.addHeader(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
-                return;
+                continue;
             }
             if (parameter.cookie()) {
                 api.addCookie(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
-                return;
+                continue;
             }
             if (parameter.query()) {
                 api.addQuery(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
-                return;
+                continue;
             }
             if (api.method().equalsIgnoreCase("GET")) {
                 api.addFormData(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
-                return;
+                continue;
             }
             api.addFormData(parameter.value(), optional.get());
         }
