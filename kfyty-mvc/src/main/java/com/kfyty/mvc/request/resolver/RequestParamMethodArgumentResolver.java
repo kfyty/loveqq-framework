@@ -51,7 +51,7 @@ public class RequestParamMethodArgumentResolver implements HandlerMethodArgument
         String defaultValue = annotation == null ? "" : annotation.defaultValue();
         if (ReflectUtil.isBaseDataType(parameter.getParamType())) {
             String param = ServletUtil.getParameter(request, paramName);
-            return JsonUtil.convertValue(param != null ? param : defaultValue, parameter.getParamType());
+            return JsonUtil.convert(param != null ? param : defaultValue, parameter.getParamType());
         }
         if (Collection.class.isAssignableFrom(parameter.getParamType())) {
             Type actualTypeArgument = ((ParameterizedType) parameter.getParameterGeneric()).getActualTypeArguments()[0];
