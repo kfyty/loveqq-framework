@@ -52,9 +52,7 @@
         <maven.source.version>8</maven.source.version>
         <maven.target.version>8</maven.target.version>
 
-        <boot-lib-dir>boot-lib</boot-lib-dir>
-        <boot-lib-output>${boot-lib-dir}</boot-lib-output>
-        <boot-main-output>${boot-lib-output}/..</boot-main-output>
+        <boot-lib-output>boot-lib</boot-lib-output>
         <boot-main-class></boot-main-class>
     </properties>
 
@@ -104,11 +102,10 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <classpathPrefix>${boot-lib-dir}/</classpathPrefix>
+                            <classpathPrefix>${boot-lib-output}/</classpathPrefix>
                             <mainClass>${boot-main-class}</mainClass>
                         </manifest>
                     </archive>
-                    <outputDirectory>${project.build.directory}/${boot-main-output}</outputDirectory>
                 </configuration>
             </plugin>
 
