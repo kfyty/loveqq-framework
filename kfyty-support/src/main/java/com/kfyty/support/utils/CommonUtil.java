@@ -309,6 +309,9 @@ public abstract class CommonUtil {
     }
 
     public static void close(Object obj) {
+        if (obj == null) {
+            return;
+        }
         if (!(obj instanceof AutoCloseable)) {
             throw new SupportException("can't close !");
         }
