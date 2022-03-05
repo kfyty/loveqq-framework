@@ -14,5 +14,40 @@
 ## kfyty-aop
 集成 AspectJ 实现注解式 aop，可单独运行，也可结合 kfyty-boot 自动运行。 
 
+## kfyty-sdk
+用于快速封装 sdk，只需编写请求及响应模型，支持拦截器，易于拓展。
+
 ## kfyty-boot
 注解式 ioc、自动装配、异步事件、动态代理、spi 等。
+```xml
+<dependency>
+    <groupId>com.kfyty</groupId>
+    <artifactId>kfyty-boot</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+```java
+package com.kfyty.demo;
+
+import com.kfyty.boot.K;
+import com.kfyty.support.autoconfig.annotation.Async;
+import com.kfyty.support.autoconfig.annotation.BootApplication;
+import com.kfyty.support.autoconfig.annotation.EventListener;
+import com.kfyty.support.event.ContextRefreshedEvent;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@BootApplication
+public class Main {
+
+    public static void main(String[] args) {
+        K.run(Main.class, args);
+    }
+
+    @Async
+    @EventListener
+    public void onStarted(ContextRefreshedEvent event) {
+        log.info("started succeed !");
+    }
+}
+```
