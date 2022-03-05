@@ -41,7 +41,7 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
     @Override
     public String classSuffix() {
         String suffix = template.substring(0, template.indexOf("."));
-        return suffix.endsWith("_NoSu") ? "" : CommonUtil.underline2CamelCase(suffix, true);
+        return suffix.endsWith("_NoSu") ? "" : suffix;
     }
 
     @Override

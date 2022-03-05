@@ -2,14 +2,11 @@ package com.kfyty.sdk.api.core.utils;
 
 import com.kfyty.sdk.api.core.ParameterConverter;
 import com.kfyty.sdk.api.core.annotation.Parameter;
-import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.support.utils.ReflectUtil;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 
 import static cn.hutool.core.text.CharSequenceUtil.isBlank;
 import static cn.hutool.core.text.CharSequenceUtil.isNotBlank;
@@ -52,14 +49,5 @@ public abstract class ParameterUtil {
             return value.toString();
         }
         return ReflectUtil.newInstance(parameter.converter()).doConvert(value);
-    }
-
-    public static String processVariable(String s, Map<String, Object> params) {
-        Matcher matcher = ApiConstants.PARAMETERS_PATTERN.matcher(s);
-        while (matcher.find()) {
-            String key = matcher.group().replaceAll("[{}]", "");
-            s = s.replace(matcher.group(), String.valueOf(params.get(key)));
-        }
-        return s;
     }
 }

@@ -9,7 +9,7 @@ import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.exception.BaseApiException;
 import com.kfyty.sdk.api.core.http.AbstractHttpRequest;
 import com.kfyty.sdk.api.core.http.HttpResponse;
-import com.kfyty.sdk.api.core.utils.ParameterUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -86,7 +86,7 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
      */
     public String processURIVariable(String uri) {
         Objects.requireNonNull(uri);
-        return ParameterUtil.processVariable(uri, this.formData());
+        return CommonUtil.processPlaceholder(uri, this.formData());
     }
 
     @Override
