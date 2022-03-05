@@ -1,7 +1,5 @@
 package com.kfyty.sdk.api.core.constant;
 
-import java.util.regex.Pattern;
-
 /**
  * 描述: api 常量
  *
@@ -10,11 +8,6 @@ import java.util.regex.Pattern;
  * @email kfyty725@hotmail.com
  */
 public interface ApiConstants {
-    /**
-     * {} 正则匹配
-     */
-    Pattern PARAMETERS_PATTERN = Pattern.compile("(\\{.*?})");
-
     /**
      * 默认连接超时时间
      */

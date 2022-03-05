@@ -15,19 +15,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
 
 /**
  * 功能描述: 通用工具类
@@ -57,6 +58,11 @@ public abstract class CommonUtil {
      * 全部大写字母或数字的正则表达式
      */
     public static final Pattern UPPER_CASE_PATTERN = Pattern.compile("[A-Z0-9]*");
+
+    /**
+     * {} 正则匹配
+     */
+    public static final Pattern SIMPLE_PARAMETERS_PATTERN = Pattern.compile("(\\{.*?})");
 
     /**
      * #{}、${} 正则匹配
@@ -165,32 +171,6 @@ public abstract class CommonUtil {
         return emptyList();
     }
 
-    public static void sleep(long time) {
-        sleep(time, TimeUnit.MILLISECONDS);
-    }
-
-    public static void sleep(long time, TimeUnit timeUnit) {
-        try {
-            timeUnit.sleep(time);
-        } catch (InterruptedException e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
-    public static void close(Object obj) {
-        if (obj == null) {
-            return;
-        }
-        if (!(obj instanceof AutoCloseable)) {
-            throw new SupportException("can't close !");
-        }
-        try {
-            ((AutoCloseable) obj).close();
-        } catch (Exception e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
     public static String underline2CamelCase(String s) {
         return underline2CamelCase(s, false);
     }
@@ -248,9 +228,18 @@ public abstract class CommonUtil {
         int paramIndex = 0;
         StringBuilder sb = new StringBuilder(s);
         while ((index = sb.indexOf("{}", index)) != -1) {
-            sb.replace(index, index + 2, Optional.ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
+            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
         }
         return sb.toString();
+    }
+
+    public static String processPlaceholder(String s, Map<String, Object> params) {
+        Matcher matcher = SIMPLE_PARAMETERS_PATTERN.matcher(s);
+        while (matcher.find()) {
+            String key = matcher.group().replaceAll("[{}]", "");
+            s = s.replace(matcher.group(), String.valueOf(params.get(key)));
+        }
+        return s;
     }
 
     public static String formatURI(String uri) {
@@ -302,6 +291,29 @@ public abstract class CommonUtil {
             }
             File[] files = file.listFiles();
             return files == null ? emptyList() : Arrays.stream(files).filter(File::isFile).filter(filePredicate).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    public static void sleep(long time) {
+        sleep(time, TimeUnit.MILLISECONDS);
+    }
+
+    public static void sleep(long time, TimeUnit timeUnit) {
+        try {
+            timeUnit.sleep(time);
+        } catch (InterruptedException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    public static void close(Object obj) {
+        if (!(obj instanceof AutoCloseable)) {
+            throw new SupportException("can't close !");
+        }
+        try {
+            ((AutoCloseable) obj).close();
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

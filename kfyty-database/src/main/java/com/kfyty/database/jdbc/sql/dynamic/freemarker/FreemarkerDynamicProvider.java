@@ -3,6 +3,7 @@ package com.kfyty.database.jdbc.sql.dynamic.freemarker;
 import com.kfyty.database.jdbc.mapping.freemarker.FreemarkerTemplateStatement;
 import com.kfyty.database.jdbc.sql.dynamic.AbstractDynamicProvider;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ExceptionUtil;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.Data;
@@ -60,7 +61,7 @@ public class FreemarkerDynamicProvider extends AbstractDynamicProvider<Freemarke
             }
             return templateStatements;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
@@ -71,7 +72,7 @@ public class FreemarkerDynamicProvider extends AbstractDynamicProvider<Freemarke
             template.getTemplate().process(params, sql);
             return sql.toString().replaceAll(BLANK_LINE_PATTERN.pattern(), "").trim();
         } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+            throw ExceptionUtil.wrap(e);
         }
     }
 
