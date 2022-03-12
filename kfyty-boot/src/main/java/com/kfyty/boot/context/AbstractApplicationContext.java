@@ -89,6 +89,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     @Override
+    public String[] getCommandLineArgs() {
+        return this.commanderArgs;
+    }
+
+    @Override
     public ApplicationContext refresh() {
         synchronized (this) {
             try {

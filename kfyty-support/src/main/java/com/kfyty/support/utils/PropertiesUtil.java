@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static com.kfyty.support.utils.CommonUtil.PLACEHOLDER_PATTERN;
+import static com.kfyty.support.utils.CommonUtil.format;
 
 /**
  * 描述: 读取 properties 配置文件工具，支持 import 其他配置文件，支持 ${} 进行引用
@@ -17,56 +20,58 @@ import java.util.regex.Pattern;
  * @email kfyty725@hotmail.com
  */
 public abstract class PropertiesUtil {
-    public static final String IMPORT_KEY = "__import__";
-    public static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("(\\$\\{.*?})");
+    public static final String IMPORT_KEY = "k.config.include";
 
     public static Properties load(String path) {
-        return load(path, PropertiesUtil.class);
+        return load(path, PropertiesUtil.class.getClassLoader());
     }
 
     public static Properties load(InputStream stream) {
-        return load(stream, PropertiesUtil.class);
-    }
-
-    public static Properties load(String path, Class<?> clazz) {
-        return load(clazz.getResourceAsStream(path), clazz, null);
+        return load(stream, PropertiesUtil.class.getClassLoader());
     }
 
     public static Properties load(String path, ClassLoader classLoader) {
-        return load(classLoader.getResourceAsStream(path), null, classLoader);
+        return load(path, classLoader, PropertiesUtil::include);
     }
 
-    public static Properties load(InputStream stream, Class<?> clazz) {
-        return load(stream, clazz, null);
+    public static Properties load(String path, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
+        return load(classLoader.getResourceAsStream(path), classLoader, after);
+    }
+
+    public static void include(Properties properties, ClassLoader classLoader) {
+        String imports = (String) properties.get(IMPORT_KEY);
+        if (CommonUtil.notEmpty(imports)) {
+            CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
+        }
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            String value = entry.getValue().toString();
+            Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
+            while (matcher.find()) {
+                do {
+                    String key = matcher.group().replaceAll("[${}]", "");
+                    if (!properties.containsKey(key)) {
+                        throw new IllegalArgumentException(format("placeholder parameter [${{}}] does not exist !", key));
+                    }
+                    value = value.replace(matcher.group(), properties.get(key).toString());
+                } while (matcher.find());
+                matcher = PLACEHOLDER_PATTERN.matcher(value);
+            }
+            properties.setProperty(entry.getKey().toString(), value);
+        }
     }
 
     public static Properties load(InputStream stream, ClassLoader classLoader) {
-        return load(stream, null, classLoader);
+        return load(stream, classLoader, PropertiesUtil::include);
     }
 
-    private static Properties load(InputStream stream, Class<?> clazz, ClassLoader classLoader) {
+    public static Properties load(InputStream stream, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
         try {
             Properties properties = new Properties();
+            if (stream == null) {
+                return properties;
+            }
             properties.load(stream);
-            String imports = (String) properties.get(IMPORT_KEY);
-            if (CommonUtil.notEmpty(imports)) {
-                CommonUtil.split(imports, ",", true).stream().map(e -> clazz != null ? load(e, clazz) : load(e, classLoader)).forEach(properties::putAll);
-            }
-            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                String value = entry.getValue().toString();
-                Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
-                while (matcher.find()) {
-                    do {
-                        String key = matcher.group().replaceAll("[${}]", "");
-                        if (!properties.containsKey(key)) {
-                            throw new IllegalArgumentException(CommonUtil.format("placeholder parameter [${{}}] does not exist !", key));
-                        }
-                        value = value.replace(matcher.group(), properties.get(key).toString());
-                    } while (matcher.find());
-                    matcher = PLACEHOLDER_PATTERN.matcher(value);
-                }
-                properties.setProperty(entry.getKey().toString(), value);
-            }
+            after.accept(properties, classLoader);
             return properties;
         } catch (IOException e) {
             throw new SupportException("load properties failed !", e);

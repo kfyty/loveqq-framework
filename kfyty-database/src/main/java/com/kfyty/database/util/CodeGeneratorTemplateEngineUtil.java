@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -28,7 +27,7 @@ public abstract class CodeGeneratorTemplateEngineUtil {
     /**
      * 代码生成器配置文件路径
      */
-    private final static String CONFIG_PATH = "/code-generator.properties";
+    private final static String CONFIG_PATH = "code-generator.properties";
 
     /**
      * 代码生成器模板基础路径
@@ -41,7 +40,7 @@ public abstract class CodeGeneratorTemplateEngineUtil {
     private static Properties CONFIG = null;
 
     public static Properties loadGeneratorProperties() {
-        return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, CodeGeneratorTemplateEngineUtil.class));
+        return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, CodeGeneratorTemplateEngineUtil.class.getClassLoader()));
     }
 
     public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) {
@@ -49,7 +48,7 @@ public abstract class CodeGeneratorTemplateEngineUtil {
         if (CommonUtil.empty(templateNames)) {
             return Collections.emptyList();
         }
-        return Arrays.stream(templateNames.split(",")).map(e -> template.create(prefix, e)).collect(Collectors.toList());
+        return CommonUtil.split(templateNames, ",").stream().map(e -> template.create(prefix, e)).collect(Collectors.toList());
     }
 
     public static List<? extends JspTemplate> loadJspTemplates(JspTemplate template, String prefix) {
@@ -58,7 +57,7 @@ public abstract class CodeGeneratorTemplateEngineUtil {
             return Collections.emptyList();
         }
         String templatePath = getTemplatePath(prefix);
-        List<File> jspFiles = Arrays.stream(templateNames.split(",")).flatMap(e -> new JstlTemplateEngineConfig(templatePath + "/" + e).getJspFiles().stream()).collect(Collectors.toList());
+        List<File> jspFiles = CommonUtil.split(templateNames, ",").stream().flatMap(e -> new JstlTemplateEngineConfig(templatePath + "/" + e).getJspFiles().stream()).collect(Collectors.toList());
         List<JspTemplate> jspTemplates = new ArrayList<>(jspFiles.size());
         List<String> classes = new JstlTemplateEngine(new JstlTemplateEngineConfig(getTemplatePath(prefix), jspFiles)).compile();
         for (int i = 0; i < classes.size(); i++) {

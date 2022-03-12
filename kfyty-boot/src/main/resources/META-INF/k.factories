@@ -1,4 +1,6 @@
 com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.boot.context.DefaultPropertiesContext,\
+    com.kfyty.boot.processor.ValueAnnotationBeanPostProcessor,\
     com.kfyty.boot.processor.AutowiredAnnotationBeanPostProcessor,\
     com.kfyty.boot.processor.PostConstructProcessor,\
     com.kfyty.boot.processor.BeanCustomizerBeanPostProcessor,\

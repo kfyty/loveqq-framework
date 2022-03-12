@@ -26,10 +26,9 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void doAutowiredBean(String beanName, Object bean) {
-        if (bean instanceof ApplicationContext) {
-            return;
+        if (!(bean instanceof ApplicationContext)) {
+            this.autowiredCapableSupport.doAutowiredBean(bean);
         }
-        this.autowiredCapableSupport.doAutowiredBean(bean);
     }
 
     public void doAutowiredLazy() {

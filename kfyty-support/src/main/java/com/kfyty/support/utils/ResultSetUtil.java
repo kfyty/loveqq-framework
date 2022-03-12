@@ -33,7 +33,7 @@ public abstract class ResultSetUtil {
     static final Map<Class<?>, TypeHandler<?>> TYPE_HANDLER = new HashMap<>();
 
     static {
-        PackageUtil.scanInstance(TypeHandler.class, clazz -> !clazz.equals(TypeHandler.class) && TypeHandler.class.isAssignableFrom(clazz))
+        PackageUtil.scanInstance(TypeHandler.class)
                 .forEach(e -> {
                     TypeHandler<?> typeHandler = (TypeHandler<?>) e;
                     typeHandler.supportTypes().forEach(type -> registerTypeHandler(type, typeHandler));

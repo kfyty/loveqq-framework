@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public class QueryTest {
-    private static final String PATH = "/druid.properties";
+    private static final String PATH = "druid.properties";
 
     private UserMapper userMapper;
 

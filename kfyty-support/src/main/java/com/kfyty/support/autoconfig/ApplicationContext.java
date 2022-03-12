@@ -15,6 +15,8 @@ public interface ApplicationContext extends BeanDefinitionRegistry, BeanFactory,
 
     Class<?> getPrimarySource();
 
+    String[] getCommandLineArgs();
+
     boolean doFilterComponent(Class<?> clazz);
 
     ApplicationContext refresh();

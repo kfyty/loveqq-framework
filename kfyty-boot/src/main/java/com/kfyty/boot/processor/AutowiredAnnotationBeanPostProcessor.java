@@ -14,6 +14,7 @@ import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
+import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +57,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
         this.doAutowiredBeanField(sourceClass, sourceTarget);
         this.doAutowiredBeanMethod(sourceClass, sourceTarget);
         if (AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class)) {
-            this.doAutowiredBeanField(sourceClass, bean);
-            this.doAutowiredBeanMethod(sourceClass, bean);
+            BeanUtil.copyProperties(sourceTarget, bean);
         }
     }
 

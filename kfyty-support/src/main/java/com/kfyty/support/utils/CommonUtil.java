@@ -65,6 +65,11 @@ public abstract class CommonUtil {
     public static final Pattern SIMPLE_PARAMETERS_PATTERN = Pattern.compile("(\\{.*?})");
 
     /**
+     * ${} 正则匹配
+     */
+    public static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("(\\$\\{.*?})");
+
+    /**
      * #{}、${} 正则匹配
      */
     public static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
