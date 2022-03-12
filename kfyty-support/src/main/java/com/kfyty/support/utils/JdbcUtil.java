@@ -1,6 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.generic.SimpleGeneric;
+import com.kfyty.support.jdbc.type.TypeHandler;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+
+import static com.kfyty.support.utils.ResultSetUtil.getTypeHandler;
 
 /**
  * 功能描述: jdbc 工具
@@ -62,15 +65,17 @@ public abstract class JdbcUtil {
         return getPreparedStatement(connection, sql, JdbcUtil::preparedStatement, params);
     }
 
-    public static PreparedStatement getPreparedStatement(Connection connection, String sql, BiFunction<Connection, String, PreparedStatement> preparedStatementFactory, MethodParameter... params) throws SQLException {
+    @SuppressWarnings("unchecked")
+    public static <T> PreparedStatement getPreparedStatement(Connection connection, String sql, BiFunction<Connection, String, PreparedStatement> preparedStatementFactory, MethodParameter... params) throws SQLException {
         PreparedStatement preparedStatement = preparedStatementFactory.apply(connection, sql);
         for (int i = 0; params != null && i < params.length; i++) {
             MethodParameter parameter = params[i];
-            if (!ResultSetUtil.TYPE_HANDLER.containsKey(parameter.getParamType())) {
-                preparedStatement.setObject(i + 1, parameter.getValue());
+            TypeHandler<T> typeHandler = (TypeHandler<T>) getTypeHandler(parameter.getParamType());
+            if (typeHandler != null) {
+                typeHandler.setParameter(preparedStatement, i + 1, (T) parameter.getValue());
                 continue;
             }
-            ResultSetUtil.TYPE_HANDLER.get(parameter.getParamType()).setParameter(preparedStatement, i + 1, parameter.getValue());
+            preparedStatement.setObject(i + 1, parameter.getValue());
         }
         if (log.isDebugEnabled()) {
             log.debug("==>     preparing: {}", sql);

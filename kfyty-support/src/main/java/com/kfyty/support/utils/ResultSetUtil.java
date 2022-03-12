@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.kfyty.support.utils.ReflectUtil.getSuperGeneric;
+
 /**
  * 功能描述: result set 工具
  *
@@ -31,18 +33,21 @@ public abstract class ResultSetUtil {
     static final Map<Class<?>, TypeHandler<?>> TYPE_HANDLER = new HashMap<>();
 
     static {
-        try {
-            Set<Class<?>> classes = PackageUtil.scanClass(TypeHandler.class);
-            for (Class<?> clazz : classes) {
-                if (!clazz.equals(TypeHandler.class) && TypeHandler.class.isAssignableFrom(clazz)) {
-                    TypeHandler<?> typeHandler = (TypeHandler<?>) ReflectUtil.newInstance(clazz);
-                    registerTypeHandler(ReflectUtil.getSuperGeneric(clazz), typeHandler);
-                    typeHandler.supportTypes().forEach(e -> registerTypeHandler(e, typeHandler));
-                }
-            }
-        } catch (Exception e) {
-            log.error("scan type handler failed !", e);
-        }
+        PackageUtil.scanInstance(TypeHandler.class, clazz -> !clazz.equals(TypeHandler.class) && TypeHandler.class.isAssignableFrom(clazz))
+                .forEach(e -> {
+                    TypeHandler<?> typeHandler = (TypeHandler<?>) e;
+                    typeHandler.supportTypes().forEach(type -> registerTypeHandler(type, typeHandler));
+                    registerTypeHandler(typeHandler);
+                });
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> TypeHandler<T> getTypeHandler(Class<T> clazz) {
+        return (TypeHandler<T>) TYPE_HANDLER.get(clazz);
+    }
+
+    public static void registerTypeHandler(TypeHandler<?> typeHandler) {
+        registerTypeHandler(getSuperGeneric(typeHandler.getClass()), typeHandler);
     }
 
     public static void registerTypeHandler(Class<?> clazz, TypeHandler<?> typeHandler) {
@@ -190,8 +195,9 @@ public abstract class ResultSetUtil {
     }
 
     public static Object extractObject(ResultSet resultSet, String column, Class<?> targetType) throws SQLException {
-        if (TYPE_HANDLER.containsKey(targetType)) {
-            return TYPE_HANDLER.get(targetType).getResult(resultSet, column);
+        TypeHandler<?> typeHandler = getTypeHandler(targetType);
+        if (typeHandler != null) {
+            return typeHandler.getResult(resultSet, column);
         }
         return resultSet.getObject(column, targetType);
     }

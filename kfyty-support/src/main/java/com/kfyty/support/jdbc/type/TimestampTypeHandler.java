@@ -16,7 +16,7 @@ import java.sql.Types;
 public class TimestampTypeHandler implements TypeHandler<Timestamp> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Timestamp parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Timestamp parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.TIMESTAMP);
         } else {

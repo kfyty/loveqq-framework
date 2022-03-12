@@ -19,11 +19,7 @@ public interface TypeHandler<T> {
         return Collections.emptyList();
     }
 
-    default void setParameter(PreparedStatement ps, int i, Object parameter) throws SQLException {
-        this.doSetParameter(ps, i, (T) parameter);
-    }
-
-    void doSetParameter(PreparedStatement ps, int i, T parameter) throws SQLException;
+    void setParameter(PreparedStatement ps, int i, T parameter) throws SQLException;
 
     T getResult(ResultSet rs, String columnName) throws SQLException;
 }

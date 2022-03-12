@@ -22,7 +22,7 @@ public class LongTypeHandler implements TypeHandler<Long> {
     }
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Long parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Long parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.BIGINT);
         } else {

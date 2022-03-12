@@ -22,7 +22,7 @@ public class ShortTypeHandler implements TypeHandler<Short> {
     }
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Short parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Short parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.SMALLINT);
         } else {

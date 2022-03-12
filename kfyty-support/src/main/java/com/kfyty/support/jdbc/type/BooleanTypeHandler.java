@@ -22,7 +22,7 @@ public class BooleanTypeHandler implements TypeHandler<Boolean> {
     }
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Boolean parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Boolean parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.BOOLEAN);
         } else {

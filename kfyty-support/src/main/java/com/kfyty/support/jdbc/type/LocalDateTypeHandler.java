@@ -18,7 +18,7 @@ import java.time.ZoneId;
 public class LocalDateTypeHandler implements TypeHandler<LocalDate> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, LocalDate parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, LocalDate parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.JAVA_OBJECT);
         } else {

@@ -22,7 +22,7 @@ public class DoubleTypeHandler implements TypeHandler<Double> {
     }
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Double parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Double parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.DOUBLE);
         } else {

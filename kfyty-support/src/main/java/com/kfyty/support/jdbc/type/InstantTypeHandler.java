@@ -17,7 +17,7 @@ import java.time.Instant;
 public class InstantTypeHandler implements TypeHandler<Instant> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Instant parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Instant parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.TIMESTAMP);
         } else {

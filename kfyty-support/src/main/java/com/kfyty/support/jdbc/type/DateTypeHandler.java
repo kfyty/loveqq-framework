@@ -17,7 +17,7 @@ import java.util.Date;
 public class DateTypeHandler implements TypeHandler<Date> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Date parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Date parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.DATE);
         } else {
