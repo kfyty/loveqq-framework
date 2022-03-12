@@ -1,7 +1,7 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor {
 
     @Override

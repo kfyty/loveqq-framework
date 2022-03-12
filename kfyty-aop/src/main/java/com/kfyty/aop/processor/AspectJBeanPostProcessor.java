@@ -3,10 +3,10 @@ package com.kfyty.aop.processor;
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
-import com.kfyty.aop.proxy.AspectMethodInterceptorProxy;
 import com.kfyty.aop.aspectj.creator.AdvisorCreator;
+import com.kfyty.aop.proxy.AspectMethodInterceptorProxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.utils.BeanUtil;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
     /**
      * 切面

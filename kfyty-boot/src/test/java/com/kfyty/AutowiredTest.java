@@ -19,6 +19,7 @@ import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.annotation.Service;
+import com.kfyty.support.autoconfig.annotation.Value;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
@@ -53,6 +54,9 @@ import java.util.stream.Collectors;
 @BootApplication(proxyTargetClass = false)
 @ComponentScan(excludeFilter = @ComponentFilter(classes = WebMvcAutoConfigListener.class))
 public class AutowiredTest {
+    @Value("${id}")
+    private Integer id;
+
     @Autowired
     private AutowiredTest  autowiredTest;
 

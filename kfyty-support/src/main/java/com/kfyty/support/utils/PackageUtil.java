@@ -37,6 +37,10 @@ public abstract class PackageUtil {
         return scanClass(mainClass.getPackage().getName());
     }
 
+    public static <T> List<T> scanInstance(Class<T> mainClass) {
+        return scanInstance(mainClass.getPackage().getName(), clazz -> !clazz.equals(mainClass) && mainClass.isAssignableFrom(clazz));
+    }
+
     public static <T> List<T> scanInstance(Class<T> mainClass, Predicate<Class<?>> scanFilter) {
         return scanInstance(mainClass.getPackage().getName(), scanFilter);
     }

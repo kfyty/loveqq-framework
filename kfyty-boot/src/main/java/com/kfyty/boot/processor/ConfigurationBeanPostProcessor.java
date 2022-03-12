@@ -1,6 +1,7 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.boot.proxy.BeanMethodInterceptorProxy;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcessor {
 

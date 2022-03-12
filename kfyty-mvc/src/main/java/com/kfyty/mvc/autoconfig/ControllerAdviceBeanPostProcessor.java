@@ -4,7 +4,7 @@ import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.annotation.ControllerAdvice;
 import com.kfyty.mvc.annotation.RestControllerAdvice;
 import com.kfyty.mvc.proxy.ControllerExceptionAdviceInterceptorProxy;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProcessor {
     private List<String> controllerAdviceBasePackages;
     private List<Class<? extends Annotation>> controllerAdviceAnnotations;
