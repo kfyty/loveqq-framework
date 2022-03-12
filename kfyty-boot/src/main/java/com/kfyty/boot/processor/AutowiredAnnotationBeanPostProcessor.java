@@ -52,12 +52,12 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
 
     @Override
     public void doAutowiredBean(Object bean) {
-        Object sourceTarget = AopUtil.getTarget(bean);
-        Class<?> sourceClass = AopUtil.getTargetClass(bean);
-        this.doAutowiredBeanField(sourceClass, sourceTarget);
-        this.doAutowiredBeanMethod(sourceClass, sourceTarget);
-        if (AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class)) {
-            BeanUtil.copyProperties(sourceTarget, bean);
+        Object target = AopUtil.getTarget(bean);
+        Class<?> targetClass = target.getClass();
+        this.doAutowiredBeanField(targetClass, target);
+        this.doAutowiredBeanMethod(targetClass, target);
+        if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
+            BeanUtil.copyProperties(target, bean);
         }
     }
 
