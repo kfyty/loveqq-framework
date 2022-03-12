@@ -53,18 +53,19 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
 
     @Override
     public void loadProperties() {
-        PropertiesUtil.load(DEFAULT_PROPERTIES_LOCATION, Thread.currentThread().getContextClassLoader(), (p, c) -> {
-            String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
-            for (int i = 0; i < commandLineArgs.length; i++) {
-                String key = commandLineArgs[i];
-                if (key.startsWith("--")) {
-                    if (i == commandLineArgs.length - 1) {
-                        throw new IllegalArgumentException("please set property value of key: " + key);
-                    }
-                    p.put(key.replace("--", ""), commandLineArgs[i + 1]);
-                    i++;
+        String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
+        for (int i = 0; i < commandLineArgs.length; i++) {
+            String key = commandLineArgs[i];
+            if (key.startsWith("--")) {
+                if (i == commandLineArgs.length - 1) {
+                    throw new IllegalArgumentException("please set property value of key: " + key);
                 }
+                this.propertySources.put(key.replace("--", ""), commandLineArgs[i + 1]);
+                i++;
             }
+        }
+        PropertiesUtil.load(DEFAULT_PROPERTIES_LOCATION, Thread.currentThread().getContextClassLoader(), (p, c) -> {
+            p.putAll(this.propertySources);
             PropertiesUtil.include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {
                 this.propertySources.put(entry.getKey().toString(), entry.getValue().toString());

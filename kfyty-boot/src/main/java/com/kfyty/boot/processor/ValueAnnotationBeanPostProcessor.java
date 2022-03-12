@@ -9,6 +9,7 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Value;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +43,9 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             }
             String key = annotation.value().replaceAll("[${}]", "");
             Object property = this.propertyContext.getProperty(key, field.getType());
+            if (property == null && CommonUtil.empty(annotation.defaultValue())) {
+                throw new IllegalArgumentException("parameter does not exist: " + key);
+            }
             ReflectUtil.setFieldValue(bean, field, property != null ? property : convert(annotation.defaultValue(), field.getType()));
         }
         return null;
