@@ -22,7 +22,7 @@ public class ByteTypeHandler implements TypeHandler<Byte> {
     }
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, Byte parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, Byte parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.BIT);
         } else {

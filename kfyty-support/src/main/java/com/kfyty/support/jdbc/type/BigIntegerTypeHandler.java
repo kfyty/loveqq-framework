@@ -17,7 +17,7 @@ import java.sql.Types;
 public class BigIntegerTypeHandler implements TypeHandler<BigInteger> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, BigInteger parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, BigInteger parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.DECIMAL);
         } else {

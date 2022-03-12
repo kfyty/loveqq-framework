@@ -15,7 +15,7 @@ import java.sql.Types;
 public class StringTypeHandler implements TypeHandler<String> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, String parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, String parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.VARCHAR);
         } else {

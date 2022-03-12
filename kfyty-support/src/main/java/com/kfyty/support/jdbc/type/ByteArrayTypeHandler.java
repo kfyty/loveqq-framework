@@ -15,7 +15,7 @@ import java.sql.Types;
 public class ByteArrayTypeHandler implements TypeHandler<byte[]> {
 
     @Override
-    public void doSetParameter(PreparedStatement ps, int i, byte[] parameter) throws SQLException {
+    public void setParameter(PreparedStatement ps, int i, byte[] parameter) throws SQLException {
         if(parameter == null) {
             ps.setNull(i, Types.BINARY);
         } else {
