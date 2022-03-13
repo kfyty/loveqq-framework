@@ -34,8 +34,27 @@ public abstract class PropertiesUtil {
         return load(path, classLoader, PropertiesUtil::include);
     }
 
+    public static Properties load(InputStream stream, ClassLoader classLoader) {
+        return load(stream, classLoader, PropertiesUtil::include);
+    }
+
     public static Properties load(String path, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
         return load(classLoader.getResourceAsStream(path), classLoader, after);
+    }
+
+    public static Properties load(InputStream stream, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
+        try {
+            Properties properties = new Properties();
+            if (stream == null) {
+                return properties;
+            }
+            properties.load(stream);
+            after.accept(properties, classLoader);
+            processPlaceholder(properties);
+            return properties;
+        } catch (IOException e) {
+            throw new SupportException("load properties failed !", e);
+        }
     }
 
     public static void include(Properties properties, ClassLoader classLoader) {
@@ -43,6 +62,9 @@ public abstract class PropertiesUtil {
         if (CommonUtil.notEmpty(imports)) {
             CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
         }
+    }
+
+    public static void processPlaceholder(Properties properties) {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String value = entry.getValue().toString();
             Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
@@ -57,24 +79,6 @@ public abstract class PropertiesUtil {
                 matcher = PLACEHOLDER_PATTERN.matcher(value);
             }
             properties.setProperty(entry.getKey().toString(), value);
-        }
-    }
-
-    public static Properties load(InputStream stream, ClassLoader classLoader) {
-        return load(stream, classLoader, PropertiesUtil::include);
-    }
-
-    public static Properties load(InputStream stream, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
-        try {
-            Properties properties = new Properties();
-            if (stream == null) {
-                return properties;
-            }
-            properties.load(stream);
-            after.accept(properties, classLoader);
-            return properties;
-        } catch (IOException e) {
-            throw new SupportException("load properties failed !", e);
         }
     }
 }
