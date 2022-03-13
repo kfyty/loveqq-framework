@@ -68,7 +68,7 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
             p.putAll(this.propertySources);
             PropertiesUtil.include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                this.propertySources.put(entry.getKey().toString(), entry.getValue().toString());
+                this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
             }
         });
     }
