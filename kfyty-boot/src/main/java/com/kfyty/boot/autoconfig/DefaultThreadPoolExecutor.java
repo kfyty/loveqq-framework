@@ -1,4 +1,4 @@
-package com.kfyty.boot.configuration;
+package com.kfyty.boot.autoconfig;
 
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Component;

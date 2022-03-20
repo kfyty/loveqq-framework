@@ -7,17 +7,16 @@ import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.exception.SupportException;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.ExceptionUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
@@ -48,8 +47,8 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
         if (this.dispatcherServlet != null && this.exceptionHandlerMap != null) {
             return;
         }
-        this.dispatcherServlet = this.applicationContext.getBean(DispatcherServlet.class);
         this.exceptionHandlerMap = new HashMap<>();
+        this.dispatcherServlet = this.applicationContext.getBean(DispatcherServlet.class);
         Collection<Object> controllerAdviceBeans = this.applicationContext.getBeanWithAnnotation(ControllerAdvice.class).values();
         for (Object adviceBean : controllerAdviceBeans) {
             for (Method method : ReflectUtil.getMethods(adviceBean.getClass())) {
@@ -76,23 +75,13 @@ public class ControllerExceptionAdviceInterceptorProxy implements InterceptorCha
             this.ensureInitExceptionHandler();
             return chain.proceed(methodProxy);
         } catch (Throwable throwable) {
-            MethodParameter controllerExceptionAdvice = this.findControllerExceptionAdvice(this.obtainThrowable(throwable));
+            MethodParameter controllerExceptionAdvice = this.findControllerExceptionAdvice(ExceptionUtil.unwrap(throwable));
             if(controllerExceptionAdvice != null) {
                 this.processControllerAdvice(controllerExceptionAdvice, throwable);
                 return null;
             }
             throw throwable;
         }
-    }
-
-    private Throwable obtainThrowable(Throwable throwable) {
-        if (throwable instanceof SupportException) {
-            throwable = throwable.getCause();
-            if (throwable instanceof InvocationTargetException) {
-                throwable = Optional.ofNullable(((InvocationTargetException) throwable).getTargetException()).orElse(throwable);
-            }
-        }
-        return throwable;
     }
 
     private MethodParameter findControllerExceptionAdvice(Throwable throwable) {

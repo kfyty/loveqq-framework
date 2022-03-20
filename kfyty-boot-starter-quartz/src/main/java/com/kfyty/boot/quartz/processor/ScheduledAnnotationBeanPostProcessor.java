@@ -6,7 +6,7 @@ import com.kfyty.boot.quartz.task.ScheduledTask;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -34,7 +34,7 @@ import static com.kfyty.boot.quartz.autoconfig.QuartzAutoConfig.TASK_METHOD_KEY;
  * @date 2021/10/17 20:09
  * @email kfyty725@hotmail.com
  */
-@Configuration
+@Component
 public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, DestroyBean {
     private static final String TRIGGER_GROUP_SUFFIX = "$$Trigger";
 

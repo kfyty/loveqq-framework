@@ -3,9 +3,10 @@ package com.kfyty.aop.processor;
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
+import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.aop.aspectj.creator.AdvisorCreator;
 import com.kfyty.aop.proxy.AspectMethodInterceptorProxy;
-import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
@@ -33,32 +34,46 @@ import java.util.stream.Collectors;
 @Component
 public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
     /**
-     * 切面
+     * 是否已解析切面配置
      */
-    private List<Advisor> aspectAdvisor;
+    private boolean hasResolveAspect;
 
     /**
      * advisor 创建器
      */
+    @Autowired
     private AdvisorCreator advisorCreator;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        super.setApplicationContext(applicationContext);
-        this.advisorCreator = applicationContext.getBean(AdvisorCreator.class);
-    }
+    /**
+     * 切面
+     */
+    @Autowired(required = false)
+    private List<Advisor> aspectAdvisor;
+
+    /**
+     * 通知适配器
+     */
+    @Autowired(required = false)
+    private List<AdviceInterceptorPointAdapter> adviceInterceptorPointAdapters;
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         Class<?> beanClass = this.applicationContext.getBeanDefinition(beanName).getBeanType();
-        List<Advisor> advisors = this.findAdvisor(beanClass);
+        List<Advisor> advisors = this.findAvailableAdvisor(beanClass);
         if (CommonUtil.empty(advisors)) {
             return null;
         }
-        return this.createProxy(bean, beanName, new AspectMethodInterceptorProxy(advisors));
+        return this.createProxy(bean, beanName, new AspectMethodInterceptorProxy(advisors, this.adviceInterceptorPointAdapters));
     }
 
-    protected List<Advisor> findAdvisor(Class<?> beanClass) {
+    /**
+     * 查找该 bean class 中是否有方法适合 Advisor
+     * 查找到存在一个方法适合即可返回，在代理中再搜索全部
+     *
+     * @param beanClass bean class
+     * @return Advisor
+     */
+    protected List<Advisor> findAvailableAdvisor(Class<?> beanClass) {
         this.prepareAspectJAnnotationAdvisor();
         List<Advisor> advisors = new ArrayList<>();
         List<Method> methods = ReflectUtil.getMethods(beanClass);
@@ -76,11 +91,14 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
         return advisors;
     }
 
+    /**
+     * 解析 @Aspect 注解的 Bean 为 Advisor
+     */
     protected void prepareAspectJAnnotationAdvisor() {
-        if (this.aspectAdvisor != null) {
+        if (this.hasResolveAspect) {
             return;
         }
-        this.aspectAdvisor = new ArrayList<>();
+        this.hasResolveAspect = true;
         List<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class).values().stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
         for (BeanDefinition beanDefinition : aspectJAnnotationBeanDefinition) {
             Pair<String, Class<?>> namesAspectClass = new Pair<>(beanDefinition.getBeanName(), beanDefinition.getBeanType());

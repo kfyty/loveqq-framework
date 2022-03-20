@@ -1,6 +1,6 @@
 package com.kfyty.boot.context.factory;
 
-import com.kfyty.boot.beans.factory.ScopeProxyFactoryBean;
+import com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanFactoryAware;
@@ -34,7 +34,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.kfyty.boot.beans.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
+import static com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
 import static java.util.Optional.ofNullable;
 
 /**

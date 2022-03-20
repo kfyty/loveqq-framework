@@ -4,7 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanCustomizer;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
@@ -23,7 +23,7 @@ import java.util.Map;
  * @date 2021/6/7 17:14
  * @email kfyty725@hotmail.com
  */
-@Configuration
+@Component
 @Order(Order.HIGHEST_PRECEDENCE)
 public class BeanCustomizerBeanPostProcessor implements ApplicationContextAware, BeanPostProcessor {
     private ApplicationContext applicationContext;

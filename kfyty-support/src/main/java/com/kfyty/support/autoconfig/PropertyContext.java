@@ -14,6 +14,13 @@ public interface PropertyContext {
     void loadProperties();
 
     /**
+     * 读取配置文件
+     *
+     * @param path 配置文件路径
+     */
+    void loadProperties(String path);
+
+    /**
      * 是否包含属性值
      *
      * @param key 属性 key

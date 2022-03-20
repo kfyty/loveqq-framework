@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import static com.kfyty.boot.configuration.DefaultThreadPoolExecutor.DEFAULT_THREAD_POOL_EXECUTOR;
+import static com.kfyty.boot.autoconfig.DefaultThreadPoolExecutor.DEFAULT_THREAD_POOL_EXECUTOR;
 
 /**
  * 描述: async 注解代理，优先级必须设为最高，否则若其他拦截代理使用了 ThreadLocal 会失效
