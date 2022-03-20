@@ -4,7 +4,7 @@ import com.kfyty.boot.event.EventListenerAnnotationListener;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.event.ApplicationEvent;
@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 @Order(Order.HIGHEST_PRECEDENCE + 200)
 public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcessor {
     @Autowired

@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.kfyty.support.utils.CommonUtil.split;
+
 /**
  * 描述:
  *
@@ -53,18 +55,22 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
 
     @Override
     public void loadProperties() {
+        this.loadProperties(DEFAULT_PROPERTIES_LOCATION);
+    }
+
+    @Override
+    public void loadProperties(String path) {
         String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
-        for (int i = 0; i < commandLineArgs.length; i++) {
-            String key = commandLineArgs[i];
+        for (String key : commandLineArgs) {
             if (key.startsWith("--")) {
-                if (i == commandLineArgs.length - 1) {
+                List<String> split = split(key.replace("--", ""), "=");
+                if (split.size() < 2) {
                     throw new IllegalArgumentException("please set property value of key: " + key);
                 }
-                this.propertySources.put(key.replace("--", ""), commandLineArgs[i + 1]);
-                i++;
+                this.propertySources.put(split.get(0), split.get(1));
             }
         }
-        PropertiesUtil.load(DEFAULT_PROPERTIES_LOCATION, Thread.currentThread().getContextClassLoader(), (p, c) -> {
+        PropertiesUtil.load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
             p.putAll(this.propertySources);
             PropertiesUtil.include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {

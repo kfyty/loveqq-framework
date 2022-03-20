@@ -45,4 +45,8 @@ public abstract class ExceptionUtil {
         }
         return new SupportException(throwable);
     }
+
+    public static Throwable unwrap(Throwable throwable) {
+        return wrap(throwable).getCause();
+    }
 }

@@ -1,6 +1,6 @@
-package com.kfyty.boot.beans;
+package com.kfyty.boot.autoconfig;
 
-import com.kfyty.boot.beans.factory.LookupBeanFactoryBean;
+import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.ImportBeanDefine;

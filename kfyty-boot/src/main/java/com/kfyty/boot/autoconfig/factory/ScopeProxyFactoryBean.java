@@ -1,4 +1,4 @@
-package com.kfyty.boot.beans.factory;
+package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.ScopeProxyInterceptorProxy;
 import com.kfyty.support.autoconfig.BeanFactoryAware;

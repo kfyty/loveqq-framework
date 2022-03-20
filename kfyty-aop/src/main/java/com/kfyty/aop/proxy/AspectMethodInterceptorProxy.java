@@ -4,6 +4,7 @@ import com.kfyty.aop.Advisor;
 import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
 import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
+import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.proxy.InterceptorChainPoint;
@@ -32,10 +33,12 @@ import java.util.Map;
 @Order(Order.HIGHEST_PRECEDENCE)
 public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
     private final List<Advisor> advisors;
+    private final List<AdviceInterceptorPointAdapter> adapters;
     private final Map<Method, List<InterceptorChainPoint>> advisorPointCache;
 
-    public AspectMethodInterceptorProxy(List<Advisor> advisors) {
+    public AspectMethodInterceptorProxy(List<Advisor> advisors, List<AdviceInterceptorPointAdapter> adapters) {
         this.advisors = advisors;
+        this.adapters = adapters;
         this.advisorPointCache = new HashMap<>();
     }
 
@@ -60,12 +63,17 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
         return this.advisorPointCache.computeIfAbsent(methodProxy.getMethod(), k -> {
             List<Advisor> advisors = this.findAdvisors(methodProxy);
             List<InterceptorChainPoint> adviceChainPoint = new ArrayList<>();
+            next:
             for (Advisor advisor : advisors) {
                 Advice advice = advisor.getAdvice();
-                if (advice instanceof InterceptorChainPoint) {
-                    adviceChainPoint.add((InterceptorChainPoint) advice);
+                for (AdviceInterceptorPointAdapter adapter : this.adapters) {
+                    InterceptorChainPoint point = adapter.adapt(advice);
+                    if (point != null) {
+                        adviceChainPoint.add(point);
+                        continue next;
+                    }
                 }
-                // other advice types can be adapted
+                throw new IllegalStateException("no suitable adapter for advice: " + advice);
             }
             adviceChainPoint.sort(this.getAdviceChainPointsComparator());
             return Collections.unmodifiableList(adviceChainPoint);

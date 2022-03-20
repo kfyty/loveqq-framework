@@ -1,5 +1,6 @@
 package com.kfyty.aop;
 
+import com.kfyty.aop.aspectj.adapter.DefaultAdviceInterceptorPointAdapter;
 import com.kfyty.aop.proxy.AspectMethodInterceptorProxy;
 import com.kfyty.aop.aspectj.creator.AspectJAdvisorCreator;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
@@ -17,6 +18,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.annotation.Retention;
+import java.util.Collections;
 import java.util.List;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -36,7 +38,7 @@ public class AopTest {
         LogAspect logAspect = new LogAspect();
         Service proxy = DynamicProxyFactory.create().createProxy(new ServiceImpl());
         List<Advisor> advisors = new AspectJAdvisorCreator().createAdvisor(e -> logAspect, LogAspect.class);
-        AopUtil.addProxyInterceptorPoint(proxy, new AspectMethodInterceptorProxy(advisors));
+        AopUtil.addProxyInterceptorPoint(proxy, new AspectMethodInterceptorProxy(advisors, Collections.singletonList(new DefaultAdviceInterceptorPointAdapter())));
         log.info("do service return value: {}", proxy.doService(1));
     }
 }
