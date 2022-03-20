@@ -3,6 +3,7 @@ package com.kfyty.support.generic;
 import com.kfyty.support.exception.SupportException;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.lang.reflect.Field;
@@ -28,6 +29,7 @@ import static com.kfyty.support.utils.ReflectUtil.getTypeVariableName;
  * @email kfyty725@hotmail.com
  */
 @Getter
+@EqualsAndHashCode
 public class QualifierGeneric {
     /**
      * 源类型
