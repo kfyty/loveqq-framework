@@ -264,7 +264,8 @@ public abstract class ReflectUtil {
 
     @SuppressWarnings("unchecked")
     public static <T> T invokeMethod(Object obj, String methodName, Object... args) {
-        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName), args);
+        Class<?>[] classes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
+        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName, classes), args);
     }
 
     public static Object invokeMethod(Object obj, Method method, Object... args) {

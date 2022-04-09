@@ -49,7 +49,7 @@ public class K {
 
     private ApplicationContextFactory applicationContextFactory;
 
-    public K(Class<?> clazz, String ... args) {
+    public K(Class<?> clazz, String... args) {
         Objects.requireNonNull(clazz);
         this.primarySource = clazz;
         this.commanderArgs = args;
@@ -75,7 +75,7 @@ public class K {
         return applicationContext;
     }
 
-    public static ApplicationContext run(Class<?> clazz, String ... args) {
+    public static ApplicationContext run(Class<?> clazz, String... args) {
         return new K(clazz, args).run();
     }
 
@@ -92,21 +92,24 @@ public class K {
     @SneakyThrows
     private void prepareScanBean(Set<String> basePackages) {
         for (String basePackage : basePackages) {
-            PackageUtil.scanClass(basePackage).forEach(this::processScanBean);
+            PackageUtil.scanClass(basePackage).forEach(e -> this.processScanBean(e, false));
         }
     }
 
     private void prepareScanAutoConfigFactories() {
         Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
         for (String className : factories) {
-            if(!this.excludeQualifierAutoConfigNames.contains(className)) {
-                Optional.ofNullable(ReflectUtil.load(className, false)).ifPresent(this::processScanBean);
+            if (!this.excludeQualifierAutoConfigNames.contains(className)) {
+                Optional.ofNullable(ReflectUtil.load(className, false)).ifPresent(e -> this.processScanBean(e, true));
             }
         }
     }
 
-    private void processScanBean(Class<?> clazz) {
-        if(this.scanClasses.contains(clazz) || AnnotationUtil.isAnnotation(clazz)) {
+    private void processScanBean(Class<?> clazz, boolean autoconfig) {
+        if (this.scanClasses.contains(clazz) || AnnotationUtil.isAnnotation(clazz)) {
+            return;
+        }
+        if (!autoconfig && FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(clazz.getName())) {
             return;
         }
         this.scanClasses.add(clazz);
@@ -115,13 +118,13 @@ public class K {
             if (componentScan != null) {
                 this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
             }
-            this.processAutoConfiguration(clazz, null);
+            this.processAutoConfiguration(clazz, null, autoconfig);
         }
     }
 
-    private void processAutoConfiguration(Class<?> clazz, AnnotationWrapper<?> wrapper) {
-        if(AnnotationUtil.hasAnnotation(clazz, Import.class)) {
-            Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(this::processScanBean);
+    private void processAutoConfiguration(Class<?> clazz, AnnotationWrapper<?> wrapper, boolean autoconfig) {
+        if (AnnotationUtil.hasAnnotation(clazz, Import.class)) {
+            Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(e -> this.processScanBean(e, autoconfig));
         }
         Object declaring = wrapper == null ? clazz : wrapper.getDeclaring();
         this.processComponentFilter(declaring, true, AnnotationUtil.findAnnotation(clazz, ComponentFilter.class));
@@ -137,22 +140,22 @@ public class K {
             excludeQualifierAutoConfigNames.addAll(Arrays.asList(e.excludeNames()));
             excludeQualifierAutoConfigNames.addAll(Arrays.stream(e.exclude()).map(Class::getName).collect(Collectors.toList()));
         });
-        if(!AnnotationUtil.isMetaAnnotation(clazz)) {
+        if (!AnnotationUtil.isMetaAnnotation(clazz)) {
             for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(clazz)) {
-                this.processAutoConfiguration(nestedAnnotation.annotationType(), new AnnotationWrapper<>(declaring, nestedAnnotation));
+                this.processAutoConfiguration(nestedAnnotation.annotationType(), new AnnotationWrapper<>(declaring, nestedAnnotation), autoconfig);
             }
         }
     }
 
     private void processComponentFilter(Object declaring, boolean isInclude, ComponentFilter componentFilter) {
-        if(componentFilter == null || CommonUtil.empty(componentFilter.value()) && CommonUtil.empty(componentFilter.classes()) && CommonUtil.empty(componentFilter.annotations())) {
+        if (componentFilter == null || CommonUtil.empty(componentFilter.value()) && CommonUtil.empty(componentFilter.classes()) && CommonUtil.empty(componentFilter.annotations())) {
             return;
         }
         AnnotationWrapper<ComponentFilter> filter = new AnnotationWrapper<>(declaring, componentFilter);
-        if(isInclude && !AnnotationWrapper.contains(this.includeFilterAnnotations, componentFilter)) {
+        if (isInclude && !AnnotationWrapper.contains(this.includeFilterAnnotations, componentFilter)) {
             includeFilterAnnotations.add(filter);
         }
-        if(!isInclude && !AnnotationWrapper.contains(this.excludeFilterAnnotations, componentFilter)) {
+        if (!isInclude && !AnnotationWrapper.contains(this.excludeFilterAnnotations, componentFilter)) {
             excludeFilterAnnotations.add(filter);
         }
     }

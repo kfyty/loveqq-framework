@@ -109,6 +109,12 @@ abstract class A implements InitializingBean, CommandLineRunner {
 }
 
 @Component
+abstract class LookupBean {
+    @Lookup
+    public abstract B b();
+}
+
+@Component
 @ComponentScan(excludeFilter = @ComponentFilter(classes = C.class))
 class B {}
 
