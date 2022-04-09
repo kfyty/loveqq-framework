@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.kfyty.support.utils.CommonUtil.split;
-
 /**
  * 描述:
  *
@@ -63,11 +61,11 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
         String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
         for (String key : commandLineArgs) {
             if (key.startsWith("--")) {
-                List<String> split = split(key.replace("--", ""), "=");
-                if (split.size() < 2) {
+                int index = key.indexOf('=');
+                if (index == -1) {
                     throw new IllegalArgumentException("please set property value of key: " + key);
                 }
-                this.propertySources.put(split.get(0), split.get(1));
+                this.propertySources.put(key.substring(2, index), key.substring(index + 1));
             }
         }
         PropertiesUtil.load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
