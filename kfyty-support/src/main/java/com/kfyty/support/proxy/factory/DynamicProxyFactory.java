@@ -46,10 +46,6 @@ public abstract class DynamicProxyFactory {
         return createProxy(targetClass, EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY);
     }
 
-    public <T> T createProxy(T source, BeanDefinition beanDefinition) {
-        return createProxy(source, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
-    }
-
     public <T> T createProxy(T source, Class<?>[] argTypes, Object[] argValues) {
         //noinspection unchecked
         return createProxy(source, (Class<T>) source.getClass(), argTypes, argValues);
@@ -58,6 +54,8 @@ public abstract class DynamicProxyFactory {
     public <T> T createProxy(Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
         return createProxy(null, targetClass, argTypes, argValues);
     }
+
+    public abstract  <T> T createProxy(T source, BeanDefinition beanDefinition);
 
     public abstract <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues);
 }

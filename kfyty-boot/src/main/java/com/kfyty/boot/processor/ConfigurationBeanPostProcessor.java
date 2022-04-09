@@ -7,7 +7,6 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcessor {
 
     @Override
-    public boolean canCreateProxy(Object bean, String beanName) {
-        Class<?> sourceClass = AopUtil.getTargetClass(bean);
-        return AnnotationUtil.hasAnnotationElement(sourceClass, Configuration.class);
+    public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
+        return AnnotationUtil.hasAnnotationElement(beanType, Configuration.class);
     }
 
     @Override

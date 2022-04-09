@@ -1,5 +1,6 @@
 package com.kfyty.support.proxy.factory;
 
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -20,6 +21,11 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 @NoArgsConstructor
 public class CglibDynamicProxyFactory extends DynamicProxyFactory {
     public static final Callback[] EMPTY_CGLIB_CALLBACK_ARRAY = new Callback[0];
+
+    @Override
+    public <T> T createProxy(T source, BeanDefinition beanDefinition) {
+        return createProxy(source, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
+    }
 
     @Override
     public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {

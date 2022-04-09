@@ -14,9 +14,11 @@ import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * 描述: 事件发布器默认实现
@@ -30,6 +32,16 @@ import java.util.List;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, ApplicationEventPublisher {
     /**
+     * 父类泛型过滤器
+     */
+    private static final Predicate<Type> SUPER_GENERIC_FILTER = type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class);
+
+    /**
+     * 上下文是否刷新完成
+     */
+    private boolean isRefreshed = false;
+
+    /**
      * 注册的事件监听器
      */
     private final List<ApplicationListener> applicationListeners = new ArrayList<>();
@@ -38,11 +50,6 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
      * 过早发布的事件
      */
     private final List<ApplicationEvent<?>> earlyPublishedEvent = new LinkedList<>();
-
-    /**
-     * 上下文是否刷新完成
-     */
-    private boolean isRefreshed = false;
 
     @Lazy
     @Autowired(required = false)
@@ -53,7 +60,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         this.isRefreshed = true;
-        if(CommonUtil.notEmpty(this.earlyPublishedEvent)) {
+        if (CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();
         }
@@ -64,17 +71,19 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
      */
     @Override
     public void publishEvent(ApplicationEvent<?> event) {
-        if(!isRefreshed) {
+        if (!isRefreshed) {
             this.earlyPublishedEvent.add(event);
             return;
         }
         for (ApplicationListener applicationListener : this.applicationListeners) {
+            Class<?> listenerType = null;
             Class<?> listenerClass = AopUtil.getTargetClass(applicationListener);
-            Class<?> listenerType = ReflectUtil.getSuperGeneric(listenerClass, type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class));
-            if(applicationListener instanceof EventListenerAnnotationListener) {
+            if (applicationListener instanceof EventListenerAnnotationListener) {
                 listenerType = ((EventListenerAnnotationListener) applicationListener).getListenerType();
+            } else {
+                listenerType = ReflectUtil.getSuperGeneric(listenerClass, SUPER_GENERIC_FILTER);
             }
-            if(listenerType.equals(Object.class) || listenerType.equals(event.getClass())) {
+            if (listenerType.equals(Object.class) || listenerType.equals(event.getClass())) {
                 applicationListener.onApplicationEvent(event);
             }
         }

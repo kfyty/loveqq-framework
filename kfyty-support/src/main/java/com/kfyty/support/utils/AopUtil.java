@@ -24,6 +24,7 @@ import static java.util.Optional.ofNullable;
  */
 public abstract class AopUtil {
     private static final String CGLIB_CLASS_SEPARATOR = "$$EnhancerByCGLIB$$";
+
     private static final String CGLIB_PROXY_CALLBACK_FIELD = "CGLIB$CALLBACK_";
 
     /**
@@ -101,6 +102,27 @@ public abstract class AopUtil {
     }
 
     /**
+     * 获取接口中声明的方法
+     *
+     * @param bean   bean 可能是代理
+     * @param method 方法
+     * @return 接口中声明的方法
+     */
+    public static Method getInterfaceMethod(Object bean, Method method) {
+        if (!isJdkProxy(bean)) {
+            return method;
+        }
+        while (!method.getDeclaringClass().isInterface()) {
+            Method superMethod = ReflectUtil.getSuperMethod(method);
+            if (superMethod == null) {
+                break;
+            }
+            method = superMethod;
+        }
+        return method;
+    }
+
+    /**
      * 向给定的 bean 中添加代理拦截点
      *
      * @param bean                  代理 bean
@@ -108,10 +130,18 @@ public abstract class AopUtil {
      * @return true if success
      */
     public static boolean addProxyInterceptorPoint(Object bean, InterceptorChainPoint interceptorChainPoint) {
-        if (!isProxy(bean)) {
+        if (isCglibProxy(bean)) {
+            getProxyInterceptorChain(bean).addInterceptorPoint(interceptorChainPoint);
+            return true;
+        }
+        if (!isJdkProxy(bean)) {
             return false;
         }
-        getProxyInterceptorChain(bean).addInterceptorPoint(interceptorChainPoint);
+        InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
+        if (!(invocationHandler instanceof MethodInterceptorChain)) {
+            return false;
+        }
+        ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(interceptorChainPoint);
         return true;
     }
 

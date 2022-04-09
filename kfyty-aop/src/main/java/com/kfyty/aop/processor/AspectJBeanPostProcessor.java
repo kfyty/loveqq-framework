@@ -58,7 +58,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        Class<?> beanClass = this.applicationContext.getBeanDefinition(beanName).getBeanType();
+        Class<?> beanClass = this.getBeanDefinition(beanName).getBeanType();
         List<Advisor> advisors = this.findAvailableAdvisor(beanClass);
         if (CommonUtil.empty(advisors)) {
             return null;

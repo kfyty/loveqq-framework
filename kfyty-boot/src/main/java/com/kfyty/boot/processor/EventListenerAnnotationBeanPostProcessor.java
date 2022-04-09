@@ -39,7 +39,7 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
         Class<?> beanClass = AopUtil.getTargetClass(bean);
         for (Method method : ReflectUtil.getMethods(beanClass)) {
             if(AnnotationUtil.hasAnnotation(method, EventListener.class)) {
-                Method listenerMethod = this.ensureListenerMethod(bean, method);
+                Method listenerMethod = AopUtil.getInterfaceMethod(bean, method);
                 this.createEventListener(beanName, listenerMethod, AnnotationUtil.findAnnotation(method, EventListener.class));
             }
         }
@@ -57,22 +57,5 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
             this.applicationEventPublisher.registerEventListener(annotationListener);
             log.info("register annotation event listener: {}", annotationListener);
         }
-    }
-
-    /**
-     * 如果是 jdk 代理，则需要获取到接口中的方法对象，否则反射执行失败
-     */
-    private Method ensureListenerMethod(Object bean, Method method) {
-        if (!AopUtil.isJdkProxy(bean)) {
-            return method;
-        }
-        while (!method.getDeclaringClass().isInterface()) {
-            Method superMethod = ReflectUtil.getSuperMethod(method);
-            if (superMethod == null) {
-                break;
-            }
-            method = superMethod;
-        }
-        return method;
     }
 }
