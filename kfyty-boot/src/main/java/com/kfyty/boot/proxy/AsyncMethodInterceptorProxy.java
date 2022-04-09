@@ -9,6 +9,7 @@ import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
@@ -25,6 +26,7 @@ import static com.kfyty.boot.autoconfig.DefaultThreadPoolExecutor.DEFAULT_THREAD
  * @date 2021/6/26 11:38
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 @Order(Integer.MIN_VALUE)
 public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
     private final ApplicationContext context;
@@ -36,11 +38,11 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
         Async annotation = this.findAsyncAnnotation(methodProxy);
-        if(annotation == null) {
+        if (annotation == null) {
             return chain.proceed(methodProxy);
         }
         Object executor = this.context.getBean(CommonUtil.notEmpty(annotation.value()) ? annotation.value() : DEFAULT_THREAD_POOL_EXECUTOR);
-        if(!(executor instanceof ExecutorService)) {
+        if (!(executor instanceof ExecutorService)) {
             throw new IllegalStateException("The target executor is not an instance of ExecutorService: " + executor);
         }
         Callable<?> task = () -> {
@@ -48,6 +50,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
                 Object retValue = chain.proceed(methodProxy);
                 return retValue instanceof Future ? ((Future<?>) retValue).get() : null;
             } catch (Throwable throwable) {
+                log.error("execute async method error: {}", throwable.getMessage(), throwable);
                 throw new AsyncMethodException(throwable);
             }
         };
@@ -71,7 +74,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
 
     private Async findAsyncAnnotation(MethodProxyWrapper methodProxy) {
         Async annotation = AnnotationUtil.findAnnotation(methodProxy.getTargetMethod(), Async.class);
-        if(annotation == null) {
+        if (annotation == null) {
             annotation = AnnotationUtil.findAnnotation(methodProxy.getTarget(), Async.class);
         }
         return annotation;

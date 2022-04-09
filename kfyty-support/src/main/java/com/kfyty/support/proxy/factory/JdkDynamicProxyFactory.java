@@ -1,5 +1,6 @@
 package com.kfyty.support.proxy.factory;
 
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,12 @@ import java.lang.reflect.Proxy;
  */
 @NoArgsConstructor
 public class JdkDynamicProxyFactory extends DynamicProxyFactory {
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T createProxy(T source, BeanDefinition beanDefinition) {
+        return this.createProxy(source, (Class<T>) source.getClass(), null, null);
+    }
 
     @Override
     @SuppressWarnings("unchecked")

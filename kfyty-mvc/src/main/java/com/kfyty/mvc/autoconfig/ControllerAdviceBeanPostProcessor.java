@@ -9,7 +9,6 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -36,16 +35,15 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean canCreateProxy(Object bean, String beanName) {
+    public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
         this.prepareControllerAdviceCondition();
-        Class<?> sourceClass = AopUtil.getTargetClass(bean);
-        String beanPackage = sourceClass.getPackage().getName();
+        String beanPackage = beanType.getPackage().getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if (beanPackage.startsWith(basePackage)) {
                 return true;
             }
         }
-        return AnnotationUtil.hasAnyAnnotationElement(sourceClass, this.controllerAdviceAnnotations.toArray(new Class[0]));
+        return AnnotationUtil.hasAnyAnnotationElement(beanType, this.controllerAdviceAnnotations.toArray(new Class[0]));
     }
 
     @Override

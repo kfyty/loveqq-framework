@@ -5,7 +5,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import jakarta.validation.Constraint;
 import jakarta.validation.Valid;
@@ -28,8 +27,8 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
     private Validator validator;
 
     @Override
-    public boolean canCreateProxy(Object bean, String beanName) {
-        for (Method method : ReflectUtil.getMethods(AopUtil.getTargetClass(bean))) {
+    public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
+        for (Method method : ReflectUtil.getMethods(beanType)) {
             if (AnnotationUtil.hasAnnotation(method, Valid.class) || AnnotationUtil.hasAnnotationElement(method, Constraint.class)) {
                 return true;
             }
