@@ -20,6 +20,8 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.kfyty.support.utils.ReflectUtil.newInstance;
+
 /**
  * 描述: 创建 bean 定义
  *
@@ -64,10 +66,9 @@ public class BeanDefinitionBuilder {
     public BeanDefinition getBeanDefinition() {
         this.validate();
         if (FactoryBean.class.isAssignableFrom(this.beanDefinition.getBeanType())) {
-            FactoryBean<?> factoryBean = (FactoryBean<?>) ReflectUtil.newInstance(this.beanDefinition.getBeanType(), this.defaultConstructorArgs);
-            String factoryBeanName = this.beanDefinition.getBeanType().getName() + "$$FactoryBean$$" + factoryBean.getBeanName();
-            this.beanDefinition.setBeanName(factoryBeanName);
-            FactoryBeanDefinition.addSnapFactoryBeanCache(factoryBeanName, factoryBean);
+            FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.defaultConstructorArgs);
+            this.beanDefinition.setBeanName(FactoryBeanDefinition.FACTORY_BEAN_PREFIX + factoryBean.getBeanName());
+            FactoryBeanDefinition.addSnapFactoryBeanCache(this.beanDefinition.getBeanName(), factoryBean);
         }
         return this.beanDefinition;
     }

@@ -1,7 +1,6 @@
 package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.wrapper.WeakKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import static com.kfyty.support.utils.ReflectUtil.newInstance;
 
 /**
  * 描述: FactoryBean 类型的 bean 定义所衍生的 bean 定义
@@ -23,6 +24,11 @@ import java.util.WeakHashMap;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class FactoryBeanDefinition extends GenericBeanDefinition {
+    /**
+     * FactoryBean<T> 本身的 bean name 前缀
+     */
+    public static final String FACTORY_BEAN_PREFIX = "&";
+
     /**
      * 临时 FactoryBean 对象缓存，用于获取目标 bean 定义信息
      */
@@ -65,7 +71,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     public static FactoryBean<?> getSnapFactoryBean(BeanDefinition beanDefinition) {
-        return snapFactoryBeanCache.computeIfAbsent(new WeakKey<>(beanDefinition.getBeanName()), k -> (FactoryBean<?>) ReflectUtil.newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
+        return snapFactoryBeanCache.computeIfAbsent(new WeakKey<>(beanDefinition.getBeanName()), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
     }
 
     public static void addSnapFactoryBeanCache(String beanName, FactoryBean<?> factoryBean) {
