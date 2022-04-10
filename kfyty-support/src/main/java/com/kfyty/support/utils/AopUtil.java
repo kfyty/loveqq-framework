@@ -88,14 +88,14 @@ public abstract class AopUtil {
     }
 
     /**
-     * 获取代理目标中声明的方法
+     * 获取代理目标中声明的方法, 如果代理目标是 jdk 代理, 则直接返回
      *
      * @param targetClass 原目标类型
      * @param method      可能是代理方法或接口中的方法
      * @return 获取原目标中声明的方法
      */
     public static Method getTargetMethod(Class<?> targetClass, Method method) {
-        if (method.getDeclaringClass().equals(targetClass)) {
+        if (Proxy.isProxyClass(targetClass) || method.getDeclaringClass().equals(targetClass)) {
             return method;
         }
         return ofNullable(getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);

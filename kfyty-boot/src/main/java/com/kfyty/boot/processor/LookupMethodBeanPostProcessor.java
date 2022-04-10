@@ -10,7 +10,7 @@ import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 描述:
+ * 描述: 处理非抽象 bean
  *
  * @author kfyty725
  * @date 2021/6/13 17:27
@@ -22,7 +22,7 @@ public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return ReflectUtil.getMethods(beanType).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class));
+        return !ReflectUtil.isAbstract(this.getBeanDefinition(beanName).getBeanType()) && ReflectUtil.getMethods(beanType).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Lookup.class));
     }
 
     @Override

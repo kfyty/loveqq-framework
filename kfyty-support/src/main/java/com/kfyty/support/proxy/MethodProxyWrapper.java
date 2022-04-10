@@ -1,7 +1,6 @@
 package com.kfyty.support.proxy;
 
 import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
@@ -9,6 +8,9 @@ import lombok.Getter;
 import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
+
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.support.utils.AopUtil.isJdkProxy;
 
 /**
  * 描述: 方法代理包装
@@ -59,11 +61,12 @@ public class MethodProxyWrapper {
     }
 
     public Object getTarget() {
-        return this.target != null ? this.target : this.proxy;
+        return this.target == null ? this.proxy : this.target;
     }
 
     public Class<?> getTargetClass() {
-        return this.getTarget().getClass();
+        Object target = this.getTarget();
+        return isJdkProxy(target) ? this.getTargetMethod().getDeclaringClass() : target.getClass();
     }
 
     public Method getTargetMethod() {
@@ -71,7 +74,7 @@ public class MethodProxyWrapper {
     }
 
     public Object invoke() throws Throwable {
-        if (this.target == null || AnnotationUtil.hasAnnotationElement(this.target, Configuration.class)) {
+        if (this.target == null || hasAnnotationElement(this.target, Configuration.class)) {
             return this.methodProxy.invokeSuper(this.proxy, this.arguments);
         }
         return ReflectUtil.invokeMethod(this.target, this.method, this.arguments);
