@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.support.utils.AopUtil.isJdkProxy;
 import static com.kfyty.support.utils.CommonUtil.EMPTY_CLASS_ARRAY;
 import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 import static com.kfyty.support.utils.ReflectUtil.hasAnyInterfaces;
@@ -23,6 +24,9 @@ import static com.kfyty.support.utils.ReflectUtil.hasAnyInterfaces;
 public abstract class DynamicProxyFactory {
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
+        if (isJdkProxy(bean)) {
+            return create();
+        }
         if (!hasAnyInterfaces(bean.getClass()) || hasAnnotationElement(bean, Configuration.class)) {
             return create(true);
         }
