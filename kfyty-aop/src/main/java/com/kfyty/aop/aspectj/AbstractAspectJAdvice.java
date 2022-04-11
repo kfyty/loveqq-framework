@@ -3,7 +3,6 @@ package com.kfyty.aop.aspectj;
 import com.kfyty.aop.Pointcut;
 import com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
-import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +29,7 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
  */
 @Getter
 @Setter
-public abstract class AbstractAspectJAdvice implements Advice, InterceptorChainPoint {
+public abstract class AbstractAspectJAdvice implements Advice {
     /**
      * 切面名称，一般为 bean name
      */

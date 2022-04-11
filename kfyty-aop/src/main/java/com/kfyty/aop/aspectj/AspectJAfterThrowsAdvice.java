@@ -1,8 +1,6 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.ThrowsAdvice;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
 import com.kfyty.support.utils.AnnotationUtil;
 import org.aspectj.lang.annotation.AfterThrowing;
 
@@ -20,16 +18,6 @@ public class AspectJAfterThrowsAdvice extends AbstractAspectJAdvice implements T
     @Override
     public void afterThrowing(Method method, Object[] args, Object target, Throwable throwable) {
         this.invokeAdviceMethod(method, this.getJoinPoint(), null, throwable);
-    }
-
-    @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        try {
-            return chain.proceed(methodProxy);
-        } catch (Throwable throwable) {
-            this.afterThrowing(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget(), throwable);
-            throw throwable;
-        }
     }
 
     @Override
