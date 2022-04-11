@@ -3,7 +3,7 @@ package com.kfyty.aop.aspectj.creator;
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.aop.aspectj.AspectJExpressionPointcut;
-import com.kfyty.aop.aspectj.AspectJPointcutAdvisor;
+import com.kfyty.aop.support.DefaultPointcutAdvisor;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -41,7 +41,7 @@ public class AspectJAdvisorCreator implements AdvisorCreator {
                     AbstractAspectJAdvice aspectJAdvice = AspectJAnnotationUtil.resolveAspectFor(aspectAnnotationType);
                     aspectJAdvice.setAspectBean(namedAspectClass.getKey(), aspectMapping);
                     aspectJAdvice.setPointcut(aspectJExpressionPointcut);
-                    advisors.add(new AspectJPointcutAdvisor(aspectJExpressionPointcut, aspectJAdvice));
+                    advisors.add(new DefaultPointcutAdvisor(aspectJExpressionPointcut, aspectJAdvice));
                 }
             }
         }

@@ -1,8 +1,6 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.MethodAfterAdvice;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
 
 import java.lang.reflect.Method;
 
@@ -18,14 +16,5 @@ public class AspectJMethodAfterAdvice extends AbstractAspectJAdvice implements M
     @Override
     public void after(Method method, Object[] args, Object target) throws Throwable {
         this.invokeAdviceMethod(method, this.getJoinPoint(), null, null);
-    }
-
-    @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        try {
-            return chain.proceed(methodProxy);
-        } finally {
-            this.after(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget());
-        }
     }
 }

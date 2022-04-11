@@ -1,8 +1,6 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.MethodRoundAdvice;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -20,10 +18,5 @@ public class AspectJMethodRoundAdvice extends AbstractAspectJAdvice implements M
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         Signature signature = pjp.getSignature();
         return this.invokeAdviceMethod(((MethodSignature) signature).getMethod(), pjp, null, null);
-    }
-
-    @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        return this.around((ProceedingJoinPoint) this.getJoinPoint());
     }
 }

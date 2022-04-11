@@ -1,21 +1,21 @@
-package com.kfyty.aop.aspectj;
+package com.kfyty.aop.support;
 
 import com.kfyty.aop.Pointcut;
 import com.kfyty.aop.PointcutAdvisor;
 import org.aopalliance.aop.Advice;
 
 /**
- * 描述: aspectJ 注解实现
+ * 描述: 默认实现
  *
  * @author kfyty725
  * @date 2021/7/30 12:36
  * @email kfyty725@hotmail.com
  */
-public class AspectJPointcutAdvisor implements PointcutAdvisor {
+public class DefaultPointcutAdvisor implements PointcutAdvisor {
     private final Pointcut pointcut;
-    private final AbstractAspectJAdvice advice;
+    private final Advice advice;
 
-    public AspectJPointcutAdvisor(Pointcut pointcut, AbstractAspectJAdvice advice) {
+    public DefaultPointcutAdvisor(Pointcut pointcut, Advice advice) {
         this.pointcut = pointcut;
         this.advice = advice;
     }
