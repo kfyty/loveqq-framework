@@ -20,14 +20,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.kfyty.support.utils.AopUtil.getTargetClass;
 import static com.kfyty.support.utils.AopUtil.isJdkProxy;
@@ -165,9 +165,14 @@ public class AutowiredProcessor {
     }
 
     private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, Autowired autowired) {
-        Map<String, Object> beanOfType = new HashMap<>(2);
-        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType).entrySet().stream().filter(e -> e.getValue().isAutowireCandidate()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
+        Map<String, Object> beanOfType = new LinkedHashMap<>(2);
+        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType);
+        for (Iterator<Map.Entry<String, BeanDefinition>> i = targetBeanDefinitions.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, BeanDefinition> entry = i.next();
+            if (!entry.getValue().isAutowireCandidate()) {
+                i.remove();
+                continue;
+            }
             if (this.context.contains(entry.getKey())) {
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
             } else if (isGeneric) {
