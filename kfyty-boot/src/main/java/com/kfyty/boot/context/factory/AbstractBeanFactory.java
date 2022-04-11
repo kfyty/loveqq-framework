@@ -27,11 +27,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
@@ -141,19 +143,20 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return this.beanDefinitionsForType.computeIfAbsent(new WeakKey<>(beanType), k -> this.getBeanDefinitions().entrySet()
-                .parallelStream()
-                .filter(e -> beanType.isAssignableFrom(e.getValue().getBeanType()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
-                    throw new IllegalStateException("duplicate key " + k2);
-                }, LinkedHashMap::new)));
+        return this.beanDefinitionsForType.computeIfAbsent(new WeakKey<>(beanType), k -> this.getBeanDefinitions(e -> beanType.isAssignableFrom(e.getValue().getBeanType())));
     }
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass) {
+        return this.getBeanDefinitions(e -> AnnotationUtil.hasAnnotationElement(e.getValue().getBeanType(), annotationClass));
+    }
+
+    @Override
+    public Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate) {
         return this.getBeanDefinitions().entrySet()
-                .parallelStream()
-                .filter(e -> AnnotationUtil.hasAnnotationElement(e.getValue().getBeanType(), annotationClass))
+                .stream()
+                .filter(beanDefinitionPredicate)
+                .sorted(Comparator.comparing(e -> BeanUtil.getBeanOrder(e.getValue())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
                     throw new IllegalStateException("duplicate key " + k2);
                 }, LinkedHashMap::new));

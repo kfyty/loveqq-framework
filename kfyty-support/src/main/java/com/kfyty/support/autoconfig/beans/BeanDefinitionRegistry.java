@@ -2,6 +2,7 @@ package com.kfyty.support.autoconfig.beans;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * 描述: bean 注册
@@ -23,6 +24,8 @@ public interface BeanDefinitionRegistry {
     Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);
 
     Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass);
+
+    Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate);
 
     BeanDefinition getBeanDefinition(String beanName);
 

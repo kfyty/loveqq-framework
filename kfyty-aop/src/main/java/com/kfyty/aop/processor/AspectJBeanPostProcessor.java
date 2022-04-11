@@ -10,7 +10,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import javafx.util.Pair;
@@ -19,9 +18,8 @@ import org.aspectj.lang.annotation.Aspect;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 描述: 切面处理器
@@ -99,7 +97,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
             return;
         }
         this.hasResolveAspect = true;
-        List<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class).values().stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+        Collection<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class).values();
         for (BeanDefinition beanDefinition : aspectJAnnotationBeanDefinition) {
             Pair<String, Class<?>> namesAspectClass = new Pair<>(beanDefinition.getBeanName(), beanDefinition.getBeanType());
             List<Advisor> advisors = this.advisorCreator.createAdvisor(e -> this.applicationContext.getBean(e.getAspectName()), namesAspectClass);
