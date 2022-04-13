@@ -4,6 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.MethodProxyWrapper;
@@ -12,6 +13,9 @@ import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ScopeUtil;
 
 import java.lang.reflect.Method;
+
+import static com.kfyty.support.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
+import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: bean 注解代理
@@ -37,7 +41,8 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
         if (annotation == null || !ScopeUtil.isSingleton(method)) {
             return chain.proceed(methodProxy);
         }
-        String beanName = BeanUtil.getBeanName(method, annotation);
+        String beanNamePrefix = FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING;
+        String beanName = beanNamePrefix + BeanUtil.getBeanName(method, annotation);
         if (this.context.contains(beanName)) {
             return this.context.getBean(beanName);
         }
