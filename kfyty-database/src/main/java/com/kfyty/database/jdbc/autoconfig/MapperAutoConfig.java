@@ -32,7 +32,7 @@ public class MapperAutoConfig implements ImportBeanDefine {
     }
 
     @Bean
-    public SqlSessionProxyFactoryBean sqlSessionProxyFactoryBean() {
+    public SqlSessionProxyFactoryBean sqlSessionProxyFactory() {
         return new SqlSessionProxyFactoryBean();
     }
 

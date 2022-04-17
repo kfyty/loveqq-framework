@@ -9,6 +9,7 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
@@ -48,6 +49,10 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanDefinitionRegistry, BeanFactory {
+    protected static final Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
+            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
+            .thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e));
+
     /**
      * bean 定义
      */
@@ -157,7 +162,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         return this.getBeanDefinitions().entrySet()
                 .stream()
                 .filter(beanDefinitionPredicate)
-                .sorted(Comparator.comparing(e -> BeanUtil.getBeanOrder(e.getValue())))
+                .sorted((b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
                     throw new IllegalStateException("duplicate key " + k2);
                 }, LinkedHashMap::new));
