@@ -47,7 +47,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
-        super(temp.getBeanName(), temp.getBeanType(), temp.isSingleton() ? SCOPE_SINGLETON : SCOPE_PROTOTYPE);
+        super(factoryBeanDefinition.getBeanName().substring(1), temp.getBeanType(), temp.isSingleton() ? SCOPE_SINGLETON : SCOPE_PROTOTYPE);
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 

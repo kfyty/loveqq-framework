@@ -7,6 +7,7 @@ import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
@@ -32,6 +33,7 @@ import java.util.Optional;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@Order(0)
 public class ControllerExceptionAdviceInterceptorProxy implements InterceptorChainPoint {
     private DispatcherServlet dispatcherServlet;
     private Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap;

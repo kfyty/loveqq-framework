@@ -20,6 +20,8 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.kfyty.support.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
+import static com.kfyty.support.autoconfig.beans.FactoryBeanDefinition.addSnapFactoryBeanCache;
 import static com.kfyty.support.utils.ReflectUtil.newInstance;
 
 /**
@@ -66,9 +68,7 @@ public class BeanDefinitionBuilder {
     public BeanDefinition getBeanDefinition() {
         this.validate();
         if (FactoryBean.class.isAssignableFrom(this.beanDefinition.getBeanType())) {
-            FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.defaultConstructorArgs);
-            this.beanDefinition.setBeanName(FactoryBeanDefinition.FACTORY_BEAN_PREFIX + factoryBean.getBeanName());
-            FactoryBeanDefinition.addSnapFactoryBeanCache(this.beanDefinition.getBeanName(), factoryBean);
+            this.beanDefinition.setBeanName(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName());
         }
         return this.beanDefinition;
     }
@@ -85,6 +85,13 @@ public class BeanDefinitionBuilder {
         }
         if (CommonUtil.notEmpty(this.defaultConstructorArgs)) {
             this.defaultConstructorArgs.forEach(this.beanDefinition::addConstructorArgs);
+        }
+        if (FactoryBean.class.isAssignableFrom(this.beanDefinition.getBeanType())) {
+            if (!(this.beanDefinition instanceof MethodBeanDefinition) && this.beanDefinition.getBeanName().equals(resolveBeanName(this.beanDefinition.getBeanType()))) {
+                FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.defaultConstructorArgs);
+                this.setBeanName(resolveBeanName(factoryBean.getBeanType()));
+                addSnapFactoryBeanCache(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName(), factoryBean);
+            }
         }
     }
 

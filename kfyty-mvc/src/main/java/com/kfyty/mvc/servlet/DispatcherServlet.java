@@ -30,10 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 /**
  * 功能描述: 前端控制器
@@ -69,8 +69,8 @@ public class DispatcherServlet extends HttpServlet {
         try {
             super.init();
             log.info("initialize DispatcherServlet...");
-            prefix = Optional.ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(prefix);
-            suffix = Optional.ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(suffix);
+            prefix = ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(prefix);
+            suffix = ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(suffix);
             this.prepareDefaultArgumentResolversReturnValueProcessor();
             log.info("initialize DispatcherServlet success !");
         } catch (Exception e) {
