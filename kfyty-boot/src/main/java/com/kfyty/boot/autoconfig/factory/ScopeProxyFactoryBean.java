@@ -19,17 +19,15 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
     /**
      * 作用域代理原 bean 名称前缀
      */
-    public static final String SCOPE_PROXY_SOURCE_PREFIX = "scope.proxy.source.";
+    public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
 
     private BeanFactory beanFactory;
 
-    private final String beanName;
     private final BeanDefinition sourceBeanDefinition;
 
     public ScopeProxyFactoryBean(BeanDefinition sourceBeanDefinition) {
-        this.beanName = sourceBeanDefinition.getBeanName();
         this.sourceBeanDefinition = sourceBeanDefinition;
-        if (!this.beanName.startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
+        if (!sourceBeanDefinition.getBeanName().startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
             sourceBeanDefinition.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + sourceBeanDefinition.getBeanName());
         }
     }
@@ -40,16 +38,12 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
     }
 
     @Override
-    public String getBeanName() {
-        return this.beanName;
-    }
-
-    @Override
     public Class<?> getBeanType() {
         return this.sourceBeanDefinition.getBeanType();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T getObject() {
         Object proxy = DynamicProxyFactory.create(true).createProxy(this.getBeanType());
         AopUtil.addProxyInterceptorPoint(proxy, new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition));

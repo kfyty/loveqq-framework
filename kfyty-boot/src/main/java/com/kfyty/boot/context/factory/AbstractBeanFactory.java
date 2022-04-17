@@ -15,12 +15,10 @@ import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.exception.BeansException;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.utils.ScopeUtil;
 import com.kfyty.support.wrapper.WeakKey;
 
 import java.lang.annotation.Annotation;
@@ -37,6 +35,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.support.utils.ScopeUtil.resolveScope;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -104,19 +105,19 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if (this.containsBeanDefinition(beanDefinition.getBeanName())) {
             throw new BeansException("conflicting bean definition: " + beanDefinition.getBeanName());
         }
-        if (!beanDefinition.isSingleton() && ScopeUtil.resolveScope(beanDefinition).scopeProxy()) {
+        if (!beanDefinition.isSingleton() && resolveScope(beanDefinition).scopeProxy()) {
             beanDefinition.setAutowireCandidate(false);
             this.beanDefinitions.putIfAbsent(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition);
-            beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(ScopeProxyFactoryBean.class).addConstructorArgs(BeanDefinition.class, beanDefinition).getBeanDefinition();
+            beanDefinition = genericBeanDefinition(ScopeProxyFactoryBean.class).setBeanName(beanDefinition.getBeanName()).addConstructorArgs(BeanDefinition.class, beanDefinition).getBeanDefinition();
         }
         this.beanDefinitions.putIfAbsent(beanDefinition.getBeanName(), beanDefinition);
         if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
-            this.registerBeanDefinition(BeanDefinitionBuilder.factoryBeanDefinition(beanDefinition).getBeanDefinition());
+            this.registerBeanDefinition(factoryBeanDefinition(beanDefinition).getBeanDefinition());
         }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
-                this.registerBeanDefinition(BeanDefinitionBuilder.genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
+                this.registerBeanDefinition(genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
             }
         }
     }
