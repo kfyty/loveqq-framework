@@ -5,19 +5,14 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
 import com.kfyty.support.autoconfig.ImportBeanDefine;
-import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
-import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.wrapper.AnnotationWrapper;
 import javafx.util.Pair;
@@ -25,14 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 
 /**
  * 描述: 上下文基础实现
@@ -43,10 +36,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
-    private static final Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
-            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
-            .thenComparing(e -> BeanUtil.getBeanOrder((BeanDefinition) e));
-
     private final Thread shutdownHook = new Thread(this::close);
 
     protected String[] commanderArgs;
@@ -191,7 +180,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
             if (Arrays.asList(componentFilter.classes()).contains(beanClass)) {
                 return new Pair<>(isInclude, componentFilterWrapper);
             }
-            if (Arrays.stream(componentFilter.annotations()).anyMatch(e -> AnnotationUtil.hasAnnotationElement(beanClass, e))) {
+            if (Arrays.stream(componentFilter.annotations()).anyMatch(e -> hasAnnotationElement(beanClass, e))) {
                 return new Pair<>(isInclude, componentFilterWrapper);
             }
         }
@@ -199,34 +188,27 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
-        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(e -> BeanDefinitionBuilder.genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
+        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(e -> genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
     }
 
     protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {
-        Set<BeanDefinition> importBeanDefines = this.getBeanDefinitions().values().stream().filter(e -> ImportBeanDefine.class.isAssignableFrom(e.getBeanType())).sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toCollection(LinkedHashSet::new));
-        for (BeanDefinition importBeanDefine : importBeanDefines) {
+        Map<String, BeanDefinition> importBeanDefines = this.getBeanDefinitions(e -> ImportBeanDefine.class.isAssignableFrom(e.getValue().getBeanType()));
+        for (BeanDefinition importBeanDefine : importBeanDefines.values()) {
             ImportBeanDefine bean = (ImportBeanDefine) this.registerBean(importBeanDefine);
             bean.doImport(scanClasses).forEach(this::registerBeanDefinition);
         }
     }
 
     protected void registerBeanPostProcessors() {
-        this.getBeanDefinitions().values()
-                .stream()
-                .filter(e -> BeanPostProcessor.class.isAssignableFrom(e.getBeanType()))
-                .sorted(BEAN_DEFINITION_COMPARATOR)
-                .forEach(e -> this.registerBeanPostProcessors((BeanPostProcessor) this.registerBean(e)));
+        Map<String, BeanDefinition> beanPostProcessors = this.getBeanDefinitions(e -> BeanPostProcessor.class.isAssignableFrom(e.getValue().getBeanType()));
+        for (BeanDefinition beanDefinition : beanPostProcessors.values()) {
+            this.registerBeanPostProcessors((BeanPostProcessor) this.registerBean(beanDefinition));
+        }
     }
 
     protected void sortBeanDefinition() {
         synchronized (this.getBeanDefinitions()) {
-            Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions();
-            Map<String, BeanDefinition> sortBeanDefinition = beanDefinitions.values()
-                    .stream()
-                    .sorted(BEAN_DEFINITION_COMPARATOR)
-                    .collect(Collectors.toMap(BeanDefinition::getBeanName, Function.identity(), (k1, k2) -> {
-                        throw new IllegalStateException("duplicate key " + k2);
-                    }, LinkedHashMap::new));
+            Map<String, BeanDefinition> sortBeanDefinition = this.getBeanDefinitions(e -> true);
             beanDefinitions.clear();
             beanDefinitions.putAll(sortBeanDefinition);
         }
