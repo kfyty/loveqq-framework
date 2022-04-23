@@ -4,18 +4,21 @@ import javafx.util.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.util.Optional.ofNullable;
@@ -70,29 +73,53 @@ public abstract class AnnotationUtil {
     /* ------------------------------------------ 处理对象注解 ------------------------------------------ */
 
     public static boolean hasAnnotation(Object source, Class<? extends Annotation> annotation) {
-        return hasAnnotation(source.getClass(), annotation);
+        return findAnnotation(source, annotation) != null;
     }
 
     public static boolean hasAnnotationElement(Object source, Class<? extends Annotation> annotation) {
-        return hasAnnotationElement(source.getClass(), annotation);
+        return findAnnotationElement(source, annotation) != null;
     }
 
     @SafeVarargs
     public static boolean hasAnyAnnotation(Object source, Class<? extends Annotation>... annotations) {
-        return hasAnyAnnotation(source.getClass(), annotations);
+        return Arrays.stream(annotations).anyMatch(e -> hasAnnotation(source, e));
     }
 
     @SafeVarargs
     public static boolean hasAnyAnnotationElement(Object source, Class<? extends Annotation>... annotations) {
-        return hasAnyAnnotationElement(source.getClass(), annotations);
+        return Arrays.stream(annotations).anyMatch(e -> hasAnnotationElement(source, e));
     }
 
     public static <T extends Annotation> T findAnnotation(Object source, Class<T> annotationClass) {
-        return findAnnotation(source.getClass(), annotationClass);
+        if (source instanceof Class) {
+            return findAnnotation((Class<?>) source, annotationClass);
+        }
+        if (source instanceof Constructor) {
+            return findAnnotation((Constructor<?>) source, annotationClass);
+        }
+        if (source instanceof Field) {
+            return findAnnotation((Field) source, annotationClass);
+        }
+        if (source instanceof Method) {
+            return findAnnotation((Method) source, annotationClass);
+        }
+        return source instanceof Parameter ? findAnnotation((Parameter) source, annotationClass) : findAnnotation(source.getClass(), annotationClass);
     }
 
     public static Annotation[] findAnnotations(Object source) {
-        return findAnnotations(source.getClass());
+        if (source instanceof Class) {
+            return findAnnotations((Class<?>) source);
+        }
+        if (source instanceof Constructor) {
+            return findAnnotations((Constructor<?>) source);
+        }
+        if (source instanceof Field) {
+            return findAnnotations((Field) source);
+        }
+        if (source instanceof Method) {
+            return findAnnotations((Method) source);
+        }
+        return source instanceof Parameter ? findAnnotations((Parameter) source) : findAnnotations(source.getClass());
     }
 
     /* ------------------------------------------ Class<?> 注解 ------------------------------------------ */
@@ -312,35 +339,21 @@ public abstract class AnnotationUtil {
     /* ------------------------------------------ 获取注解元素 ------------------------------------------ */
 
     public static <T extends Annotation> T findAnnotationElement(Object source, Class<T> annotationClass) {
+        if (source instanceof AnnotatedElement) {
+            return findAnnotationElement((AnnotatedElement) source, annotationClass);
+        }
         return findAnnotationElement(source.getClass(), annotationClass);
     }
 
-    public static <T extends Annotation> T findAnnotationElement(Class<?> source, Class<T> annotationClass) {
-        if (source == null) {
+    public static <T extends Annotation> T findAnnotationElement(AnnotatedElement annotatedElement, Class<T> annotationClass) {
+        if (annotatedElement == null) {
             return null;
         }
-        T annotation = findAnnotation(source, annotationClass);
-        if (annotation != null || isMetaAnnotation(source)) {
+        T annotation = findAnnotation(annotatedElement, annotationClass);
+        if (annotation != null || annotatedElement instanceof Class && isMetaAnnotation((Class<?>) annotatedElement)) {
             return annotation;
         }
-        for (Annotation nestedAnnotation : findAnnotations(source)) {
-            annotation = findAnnotationElement(nestedAnnotation.annotationType(), annotationClass);
-            if (annotation != null) {
-                return annotation;
-            }
-        }
-        return null;
-    }
-
-    public static <T extends Annotation> T findAnnotationElement(Executable executable, Class<T> annotationClass) {
-        if (executable == null) {
-            return null;
-        }
-        T annotation = executable instanceof Method ? findAnnotation((Method) executable, annotationClass) : findAnnotation((Constructor<?>) executable, annotationClass);
-        if (annotation != null) {
-            return annotation;
-        }
-        Annotation[] nestedAnnotations = executable instanceof Method ? findAnnotations((Method) executable) : findAnnotations((Constructor<?>) executable);
+        Annotation[] nestedAnnotations = findAnnotations(annotatedElement);
         for (Annotation nestedAnnotation : nestedAnnotations) {
             annotation = findAnnotationElement(nestedAnnotation.annotationType(), annotationClass);
             if (annotation != null) {
@@ -348,6 +361,24 @@ public abstract class AnnotationUtil {
             }
         }
         return null;
+    }
+
+    public static Annotation[] findAnnotationElements(AnnotatedElement annotatedElement, Predicate<Annotation> annotationTest) {
+        Annotation[] declareAnnotations = findAnnotations(annotatedElement);
+        if (CommonUtil.empty(declareAnnotations)) {
+            return EMPTY_ANNOTATIONS;
+        }
+        Set<Annotation> annotations = new LinkedHashSet<>();
+        for (Annotation annotation : declareAnnotations) {
+            if (isMetaAnnotation(annotation.annotationType())) {
+                continue;
+            }
+            if (annotationTest.test(annotation)) {
+                annotations.add(annotation);
+            }
+            annotations.addAll(Arrays.asList(findAnnotationElements(annotation.annotationType(), annotationTest)));
+        }
+        return annotations.toArray(EMPTY_ANNOTATIONS);
     }
 
     /* ------------------------------------------ 私有方法 ------------------------------------------ */

@@ -2,13 +2,19 @@ package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.annotation.Controller;
 import com.kfyty.mvc.handler.RequestMappingAnnotationHandler;
+import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
+import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
+import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 /**
  * 描述: mvc 自动配置
@@ -19,15 +25,31 @@ import javax.annotation.PostConstruct;
  */
 @Configuration
 @Import(config = ControllerAdviceBeanPostProcessor.class)
-public class WebMvcAutoConfig implements ApplicationContextAware {
+public class WebMvcAutoConfig {
+    @Autowired
     private ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext context) {
-        this.applicationContext = context;
+    @Autowired(required = false)
+    private List<HandlerInterceptor> interceptorChain;
+
+    @Autowired(required = false)
+    private List<HandlerMethodArgumentResolver> argumentResolvers;
+
+    @Autowired(required = false)
+    private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DispatcherServlet dispatcherServlet() {
+        DispatcherServlet dispatcherServlet = new DispatcherServlet();
+        this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
+        this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
+        this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
+        return dispatcherServlet;
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public RequestMappingAnnotationHandler requestMappingAnnotationHandler() {
         return new RequestMappingAnnotationHandler();
     }

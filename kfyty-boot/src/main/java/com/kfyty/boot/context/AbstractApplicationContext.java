@@ -9,11 +9,13 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
+import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
+import com.kfyty.support.autoconfig.condition.ConditionContext;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationEventPublisher;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.wrapper.AnnotationWrapper;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.kfyty.support.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.support.utils.ReflectUtil.isAbstract;
 
 /**
  * 描述: 上下文基础实现
@@ -188,7 +192,14 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
-        scanClasses.stream().filter(e -> !ReflectUtil.isAbstract(e) && this.doFilterComponent(e)).map(e -> genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
+        scanClasses.stream().filter(e -> !isAbstract(e) && this.doFilterComponent(e)).map(e -> genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
+        Map<String, ConditionalBeanDefinition> conditionalBeanDefinition = CommonUtil.sort(this.getConditionalBeanDefinition(), (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
+        ConditionContext conditionContext = new ConditionContext(this, conditionalBeanDefinition);
+        for (ConditionalBeanDefinition value : conditionalBeanDefinition.values()) {
+            if (!conditionContext.shouldSkip(value) && !value.isRegistered()) {
+                this.registerBeanDefinition(value.getBeanName(), value.getBeanDefinition());
+            }
+        }
     }
 
     protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {

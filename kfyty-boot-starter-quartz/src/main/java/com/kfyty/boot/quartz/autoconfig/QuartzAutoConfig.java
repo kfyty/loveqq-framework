@@ -5,6 +5,7 @@ import com.kfyty.boot.quartz.processor.ScheduledAnnotationBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
@@ -24,11 +25,13 @@ public class QuartzAutoConfig {
     public static final String TASK_METHOD_KEY = "__TASK_METHOD_KEY__";
 
     @Bean
+    @ConditionalOnMissingBean
     public SchedulerFactory schedulerFactory() {
         return new StdSchedulerFactory();
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public Scheduler scheduler(SchedulerFactory schedulerFactory) {
         try {
             return schedulerFactory.getScheduler();

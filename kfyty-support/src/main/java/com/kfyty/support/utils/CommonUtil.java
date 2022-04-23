@@ -12,6 +12,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +31,7 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * 功能描述: 通用工具类
@@ -174,6 +177,19 @@ public abstract class CommonUtil {
         }
         log.error("data to list error, data is not collection, array or map !");
         return emptyList();
+    }
+
+    public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
+        Map<K, V> sorted = unsortedMap
+                .entrySet()
+                .stream()
+                .sorted(comparator)
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
+                    throw new IllegalStateException("duplicate key " + k2);
+                }, LinkedHashMap::new));
+        unsortedMap.clear();
+        unsortedMap.putAll(sorted);
+        return unsortedMap;
     }
 
     public static String underline2CamelCase(String s) {

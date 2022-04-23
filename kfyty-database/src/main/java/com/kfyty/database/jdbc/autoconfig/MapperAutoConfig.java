@@ -7,6 +7,7 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.support.utils.AnnotationUtil;
 
 import java.util.Set;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class MapperAutoConfig implements ImportBeanDefine {
 
     @Bean
+    @ConditionalOnMissingBean
     public DynamicProvider<?> dynamicProvider() {
         freemarker.template.Configuration configuration = new freemarker.template.Configuration(freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
         configuration.setDefaultEncoding("UTF-8");
@@ -32,6 +34,7 @@ public class MapperAutoConfig implements ImportBeanDefine {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public SqlSessionProxyFactoryBean sqlSessionProxyFactory() {
         return new SqlSessionProxyFactoryBean();
     }
