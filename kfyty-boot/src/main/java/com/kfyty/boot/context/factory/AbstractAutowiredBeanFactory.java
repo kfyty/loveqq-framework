@@ -4,8 +4,19 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
+import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.support.autoconfig.condition.annotation.Conditional;
 import com.kfyty.support.exception.BeansException;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static java.util.Collections.synchronizedMap;
 
 /**
  * 描述: 支持依赖注入的 bean 工厂
@@ -16,8 +27,40 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
-    @Autowired
+    /**
+     * 条件 BeanDefinition
+     */
+    private final Map<String, ConditionalBeanDefinition> conditionBeanMap = synchronizedMap(new LinkedHashMap<>());
+
+    /**
+     * 自动注入能力支持
+     */
+    @Autowired(AutowiredCapableSupport.BEAN_NAME)
     protected AutowiredCapableSupport autowiredCapableSupport;
+
+    @Override
+    public void resolveConditionBeanDefinitionRegistry(String name, BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            ConditionalBeanDefinition parentConditionalBeanDefinition = conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
+            if (parentConditionalBeanDefinition != null || hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Conditional.class)) {
+                this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
+                return;
+            }
+        }
+        if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
+            if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
+                super.registerBeanDefinition(name, beanDefinition);
+                BeanDefinition factoryBeanDefinition = factoryBeanDefinition(beanDefinition).getBeanDefinition();
+                name = factoryBeanDefinition.getBeanName();
+                beanDefinition = factoryBeanDefinition;
+            }
+            this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
+            return;
+        }
+        if (!conditionBeanMap.containsKey(name)) {
+            super.registerBeanDefinition(name, beanDefinition);
+        }
+    }
 
     @Override
     public Object doCreateBean(BeanDefinition beanDefinition) {
@@ -42,5 +85,16 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     public void close() {
         super.close();
         this.autowiredCapableSupport = null;
+    }
+
+    protected Map<String, ConditionalBeanDefinition> getConditionalBeanDefinition() {
+        return this.conditionBeanMap;
+    }
+
+    protected void registerConditionalBeanDefinition(String name, ConditionalBeanDefinition conditionalBeanDefinition) {
+        if (this.conditionBeanMap.containsKey(name)) {
+            throw new BeansException("conflicting conditional bean definition: " + conditionalBeanDefinition.getBeanName());
+        }
+        this.conditionBeanMap.putIfAbsent(name, conditionalBeanDefinition);
     }
 }

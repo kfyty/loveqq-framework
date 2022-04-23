@@ -6,6 +6,8 @@ import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 
 import javax.servlet.ServletContext;
 import javax.websocket.server.ServerEndpoint;
@@ -18,11 +20,13 @@ import javax.websocket.server.ServerEndpoint;
  * @email kfyty725@hotmail.com
  */
 @Configuration
+@ConditionalOnBean(ServletContext.class)
 public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
     private ApplicationContext applicationContext;
 
     @Bean
+    @ConditionalOnMissingBean
     public ServerEndpointExporter serverEndpointExporter(ServletContext servletContext) {
         return new ServerEndpointExporter(servletContext);
     }

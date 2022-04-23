@@ -1,10 +1,7 @@
 package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.WebServer;
-import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
-import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.mvc.tomcat.TomcatConfig;
 import com.kfyty.mvc.tomcat.TomcatWebServer;
 import com.kfyty.support.autoconfig.ApplicationContext;
@@ -13,6 +10,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
 
@@ -21,7 +19,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebListener;
 import java.util.EventListener;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,35 +29,19 @@ import java.util.Optional;
  * @email kfyty725@hotmail.com
  */
 @Configuration
+@ConditionalOnMissingBean(WebServer.class)
 @Import(config = WebSocketAutoConfig.class)
 public class TomcatAutoConfig implements DestroyBean, ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Autowired(required = false)
-    private List<HandlerInterceptor> interceptorChain;
-
-    @Autowired(required = false)
-    private List<HandlerMethodArgumentResolver> argumentResolvers;
-
-    @Autowired(required = false)
-    private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
-
     @Bean
+    @ConditionalOnMissingBean
     public TomcatConfig tomcatConfig() {
         TomcatConfig config = new TomcatConfig(applicationContext.getPrimarySource());
         applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
         applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
         return config;
-    }
-
-    @Bean
-    public DispatcherServlet dispatcherServlet() {
-        DispatcherServlet dispatcherServlet = new DispatcherServlet();
-        this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
-        this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
-        this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
-        return dispatcherServlet;
     }
 
     @Bean

@@ -1,6 +1,7 @@
 package com.kfyty.support.autoconfig.beans;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -15,9 +16,19 @@ public interface BeanDefinitionRegistry {
 
     void registerBeanDefinition(BeanDefinition beanDefinition);
 
+    void registerBeanDefinition(String name, BeanDefinition beanDefinition);
+
+    void registerBeanDefinition(String name, BeanDefinition beanDefinition, boolean resolveCondition);
+
     boolean containsBeanDefinition(String beanName);
 
     void removeBeanDefinition(String beanName);
+
+    List<String> getBeanDefinitionNames(Class<?> beanType);
+
+    BeanDefinition getBeanDefinition(String beanName);
+
+    BeanDefinition getBeanDefinition(String beanName, Class<?> beanType);
 
     Map<String, BeanDefinition> getBeanDefinitions();
 
@@ -26,8 +37,4 @@ public interface BeanDefinitionRegistry {
     Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass);
 
     Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate);
-
-    BeanDefinition getBeanDefinition(String beanName);
-
-    BeanDefinition getBeanDefinition(String beanName, Class<?> beanType);
 }

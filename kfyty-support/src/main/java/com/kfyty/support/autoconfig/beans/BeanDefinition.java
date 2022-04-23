@@ -1,8 +1,14 @@
 package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 
+import java.util.Comparator;
 import java.util.Map;
+
+import static com.kfyty.support.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
+import static com.kfyty.support.autoconfig.annotation.Order.LOWEST_PRECEDENCE;
+import static com.kfyty.support.utils.BeanUtil.getBeanOrder;
 
 /**
  * 描述: bean 定义
@@ -12,6 +18,13 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 public interface BeanDefinition {
+    /**
+     * BeanDefinition 排序比较器
+     */
+    Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
+            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? HIGHEST_PRECEDENCE : LOWEST_PRECEDENCE)
+            .thenComparing(e -> getBeanOrder((BeanDefinition) e));
+
     /**
      * 单例作用域
      */
