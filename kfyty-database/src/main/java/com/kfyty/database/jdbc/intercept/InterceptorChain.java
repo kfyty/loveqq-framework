@@ -7,7 +7,6 @@ import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
-import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.utils.ResultSetUtil;
 import com.kfyty.support.wrapper.WrapperValue;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +24,7 @@ import java.util.Map;
 
 import static com.kfyty.support.utils.CommonUtil.size;
 import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
+import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
 
 /**
  * 描述: SQL 执行拦截器链
@@ -85,7 +85,7 @@ public class InterceptorChain implements AutoCloseable {
         if (interceptor.getValue() instanceof QueryInterceptor && this.annotation.annotationType().equals(Execute.class)) {
             return this.proceed();
         }
-        return this.retValue = ReflectUtil.invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
+        return this.retValue = invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
     }
 
     @Override
@@ -107,9 +107,6 @@ public class InterceptorChain implements AutoCloseable {
         Object[] paramValues = new Object[method.getParameterCount()];
         for (byte i = 0, size = (byte) parameters.length; i < size; i++) {
             paramValues[i] = this.doBindParameter(parameters[i]);
-            if (paramValues[i] == null) {
-                throw new IllegalArgumentException("interceptor parameter bind failed of parameter: " + parameters[i]);
-            }
         }
         return paramValues;
     }
@@ -143,7 +140,7 @@ public class InterceptorChain implements AutoCloseable {
         if (InterceptorChain.class.isAssignableFrom(parameterType)) {
             return this;
         }
-        return null;
+        throw new IllegalArgumentException("interceptor parameter bind failed of parameter: " + parameter);
     }
 
     protected PreparedStatement preparePreparedStatement() {
