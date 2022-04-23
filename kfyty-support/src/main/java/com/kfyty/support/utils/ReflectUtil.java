@@ -220,7 +220,7 @@ public abstract class ReflectUtil {
 
     public static void setFieldValue(Object obj, Field field, Object value, boolean useSetter) {
         try {
-            if (!useSetter) {
+            if (obj == null || !useSetter) {
                 makeAccessible(field);
                 field.set(obj, value);
                 return;
@@ -250,7 +250,7 @@ public abstract class ReflectUtil {
 
     public static Object getFieldValue(Object obj, Field field, boolean useGetter) {
         try {
-            if (!useGetter) {
+            if (obj == null || !useGetter) {
                 makeAccessible(field);
                 return field.get(obj);
             }
