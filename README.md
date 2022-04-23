@@ -18,7 +18,7 @@
 用于快速封装 sdk，只需编写请求及响应模型，支持拦截器，易于拓展。
 
 ## kfyty-boot
-注解式 ioc、自动装配、异步事件、动态代理、spi 等。
+注解式 ioc、自动装配、条件注解、异步事件、动态代理、spi 等。
 ```xml
 <dependency>
     <groupId>com.kfyty</groupId>
