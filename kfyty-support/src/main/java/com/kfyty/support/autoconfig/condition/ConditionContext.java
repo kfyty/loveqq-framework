@@ -1,7 +1,7 @@
 package com.kfyty.support.autoconfig.condition;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
+import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.support.utils.CommonUtil;
@@ -26,9 +26,9 @@ import static com.kfyty.support.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_
 @Data
 public class ConditionContext {
     /**
-     * BeanDefinitionRegistry
+     * BeanFactory
      */
-    private final BeanDefinitionRegistry beanDefinitionRegistry;
+    private final BeanFactory beanFactory;
 
     /**
      * 条件 BeanDefinition
@@ -50,8 +50,8 @@ public class ConditionContext {
      */
     private final Set<String> skippedCondition;
 
-    public ConditionContext(ApplicationContext beanDefinitionRegistry, Map<String, ConditionalBeanDefinition> conditionBeanMap) {
-        this.beanDefinitionRegistry = beanDefinitionRegistry;
+    public ConditionContext(ApplicationContext beanFactory, Map<String, ConditionalBeanDefinition> conditionBeanMap) {
+        this.beanFactory = beanFactory;
         this.conditionBeanMap = conditionBeanMap;
         this.resolvedCondition = new HashSet<>();
         this.matchedCondition = new HashSet<>();
@@ -102,7 +102,7 @@ public class ConditionContext {
                     if (this.shouldSkip(nestedCondition)) {
                         this.skippedCondition.add(conditionBeanName);                               // 依赖条件不成立，该条件也不成立
                     } else {                                                                        // 更新 bean 定义缓存，用于二次条件校验
-                        this.beanDefinitionRegistry.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition.getBeanDefinition());
+                        this.beanFactory.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition.getBeanDefinition());
                         nestedCondition.setRegistered(true);
                     }
                 }

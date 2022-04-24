@@ -49,7 +49,7 @@ import static java.util.Optional.ofNullable;
  * @date 2021/7/3 10:36
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanDefinitionRegistry, BeanFactory {
+public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanFactory {
     /**
      * bean 定义
      */

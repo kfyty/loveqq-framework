@@ -1,6 +1,6 @@
 package com.kfyty.support.autoconfig.condition;
 
-import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
+import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.wrapper.AnnotationWrapper;
 
 /**
@@ -14,14 +14,14 @@ public abstract class AbstractCondition implements Condition {
 
     @Override
     public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
-        BeanDefinitionRegistry beanDefinitionRegistry = context.getBeanDefinitionRegistry();
+        BeanFactory beanFactory = context.getBeanFactory();
         for (String conditionName : this.conditionNames(metadata)) {
-            if (!beanDefinitionRegistry.containsBeanDefinition(conditionName)) {
+            if (!beanFactory.containsBeanDefinition(conditionName)) {
                 return false;
             }
         }
         for (Class<?> conditionType : this.conditionTypes(metadata)) {
-            if (beanDefinitionRegistry.getBeanDefinitionNames(conditionType).isEmpty()) {
+            if (beanFactory.getBeanDefinitionNames(conditionType).isEmpty()) {
                 return false;
             }
         }
