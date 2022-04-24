@@ -1,6 +1,5 @@
 package com.kfyty.boot.context.factory;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -69,9 +68,13 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void doAutowiredBean(String beanName, Object bean) {
-        if (!(bean instanceof ApplicationContext)) {
-            this.autowiredCapableSupport.doAutowiredBean(bean);
+        if (this == bean) {
+            return;
         }
+        if (this.autowiredCapableSupport == null) {
+            this.getBean(AutowiredCapableSupport.class);
+        }
+        this.autowiredCapableSupport.doAutowiredBean(bean);
     }
 
     public void doAutowiredLazy() {

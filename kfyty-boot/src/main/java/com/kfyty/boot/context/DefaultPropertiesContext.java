@@ -2,6 +2,7 @@ package com.kfyty.boot.context;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
+import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.PropertyContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Component;
@@ -22,7 +23,7 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 @Component
-public class DefaultPropertiesContext implements PropertyContext, ApplicationContextAware {
+public class DefaultPropertiesContext implements PropertyContext, ApplicationContextAware, InitializingBean {
     private static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
@@ -104,5 +105,10 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
             return defaultValue;
         }
         return ConverterUtil.convert(property, targetType);
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        this.loadProperties();
     }
 }

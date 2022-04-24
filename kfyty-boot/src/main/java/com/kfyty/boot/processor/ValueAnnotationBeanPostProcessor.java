@@ -1,6 +1,5 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.PropertyContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
@@ -31,7 +30,7 @@ import static com.kfyty.support.utils.ReflectUtil.setFieldValue;
 @Slf4j
 @Component
 @Order(Order.HIGHEST_PRECEDENCE)
-public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor, InitializingBean {
+public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
     private PropertyContext propertyContext;
 
@@ -56,10 +55,5 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             BeanUtil.copyProperties(target, bean);
         }
         return null;
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        this.propertyContext.loadProperties();
     }
 }
