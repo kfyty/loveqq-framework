@@ -49,8 +49,8 @@ public abstract class PropertiesUtil {
                 return properties;
             }
             properties.load(stream);
-            after.accept(properties, classLoader);
             processPlaceholder(properties);
+            after.accept(properties, classLoader);
             return properties;
         } catch (IOException e) {
             throw new SupportException("load properties failed !", e);
