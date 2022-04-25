@@ -25,7 +25,7 @@ import static java.util.Collections.unmodifiableList;
  *
  * @author kun.zhang
  * @date 2022/4/23 16:41
- * @email kun.zhang@sumwhy.com
+ * @email kfyty725@hotmail.com
  */
 @Getter
 @EqualsAndHashCode(exclude = {"conditionDeclares", "registered"}, callSuper = true)

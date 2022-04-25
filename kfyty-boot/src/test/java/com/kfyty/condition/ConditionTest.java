@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author kun.zhang
  * @date 2022/4/23 11:06
- * @email kun.zhang@sumwhy.com
+ * @email kfyty725@hotmail.com
  */
 @Component
 public class ConditionTest {
