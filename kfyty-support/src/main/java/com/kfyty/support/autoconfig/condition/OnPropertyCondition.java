@@ -2,6 +2,7 @@ package com.kfyty.support.autoconfig.condition;
 
 import com.kfyty.support.autoconfig.PropertyContext;
 import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.wrapper.AnnotationWrapper;
 
 import java.util.Objects;
@@ -30,6 +31,9 @@ public class OnPropertyCondition implements Condition {
 
     protected String obtainPropertyKey(ConditionalOnProperty conditional) {
         String prefix = ofNullable(conditional.prefix()).orElse("");
+        if (CommonUtil.empty(prefix)) {
+            return conditional.value();
+        }
         return prefix.endsWith(".") ? prefix + conditional.value() : prefix + "." + conditional.value();
     }
 }
