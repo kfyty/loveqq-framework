@@ -28,16 +28,16 @@ import javax.servlet.ServletContextListener;
 public class WebMvcAutoConfigListener implements ServletContextListener {
     private static final String BASE_PACKAGE_PARAM_NAME = "basePackage";
 
-    private ApplicationContext applicationContext;
+    private volatile ApplicationContext applicationContext;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        if(this.applicationContext == null) {
-            synchronized (this) {
-                if(this.applicationContext == null) {
+        if (this.applicationContext == null) {
+            synchronized (WebMvcAutoConfigListener.class) {
+                if (this.applicationContext == null) {
                     String basePackage = sce.getServletContext().getInitParameter(BASE_PACKAGE_PARAM_NAME);
                     ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
-                    ReflectUtil.setAnnotationValue(annotation, "value", new String[] {basePackage});
+                    ReflectUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
                     this.applicationContext = K.run(WebMvcAutoConfigListener.class);
                 }
             }
