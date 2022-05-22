@@ -10,6 +10,7 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
@@ -29,7 +30,6 @@ import java.util.Optional;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@ConditionalOnMissingBean(WebServer.class)
 @Import(config = WebSocketAutoConfig.class)
 public class TomcatAutoConfig implements DestroyBean, ApplicationListener<ContextRefreshedEvent> {
     @Autowired
@@ -37,6 +37,7 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnBean(TomcatWebServer.class)
     public TomcatConfig tomcatConfig() {
         TomcatConfig config = new TomcatConfig(applicationContext.getPrimarySource());
         applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
@@ -45,11 +46,13 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public TomcatWebServer tomcatWebServer(TomcatConfig config, DispatcherServlet dispatcherServlet) {
         return new TomcatWebServer(config, dispatcherServlet);
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public ServletContext servletContext(TomcatWebServer webServer) {
         return webServer.getServletContext();
     }
@@ -57,7 +60,7 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         WebServer server = this.applicationContext.getBean(WebServer.class);
-        if(server != null) {
+        if (server != null) {
             server.start();
         }
     }
