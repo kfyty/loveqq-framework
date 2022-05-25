@@ -13,10 +13,6 @@ import com.kfyty.support.autoconfig.ApplicationContext;
  */
 public class ApplicationContextFactory {
 
-    public ApplicationContext create() {
-        return new DefaultApplicationContext();
-    }
-
     public ApplicationContext create(K boot) {
         return new DefaultApplicationContext(boot);
     }
