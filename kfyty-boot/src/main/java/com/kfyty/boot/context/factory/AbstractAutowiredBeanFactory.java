@@ -87,6 +87,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     @Override
     public void close() {
         super.close();
+        this.conditionBeanMap.clear();
         this.autowiredCapableSupport = null;
     }
 
