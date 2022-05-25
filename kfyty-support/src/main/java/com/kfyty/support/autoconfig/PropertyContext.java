@@ -1,5 +1,7 @@
 package com.kfyty.support.autoconfig;
 
+import java.util.Map;
+
 /**
  * 描述: 配置文件解析器
  *
@@ -19,6 +21,13 @@ public interface PropertyContext {
      * @param path 配置文件路径
      */
     void loadProperties(String path);
+
+    /**
+     * 获取所有属性
+     *
+     * @return 全部属性
+     */
+    Map<String, String> getProperties();
 
     /**
      * 是否包含属性值

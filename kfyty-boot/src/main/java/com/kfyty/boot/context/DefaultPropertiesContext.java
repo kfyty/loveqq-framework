@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.unmodifiableMap;
+
 /**
  * 描述:
  *
@@ -54,21 +56,12 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
 
     @Override
     public void loadProperties() {
+        this.loadCommandLineProperties();
         this.loadProperties(DEFAULT_PROPERTIES_LOCATION);
     }
 
     @Override
     public void loadProperties(String path) {
-        String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
-        for (String key : commandLineArgs) {
-            if (key.startsWith("--")) {
-                int index = key.indexOf('=');
-                if (index == -1) {
-                    throw new IllegalArgumentException("please set property value of key: " + key);
-                }
-                this.propertySources.put(key.substring(2, index), key.substring(index + 1));
-            }
-        }
         PropertiesUtil.load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
             p.putAll(this.propertySources);
             PropertiesUtil.include(p, c);
@@ -76,6 +69,11 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
                 this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
             }
         });
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        return unmodifiableMap(this.propertySources);
     }
 
     @Override
@@ -110,5 +108,18 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
     @Override
     public void afterPropertiesSet() {
         this.loadProperties();
+    }
+
+    private void loadCommandLineProperties() {
+        String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
+        for (String key : commandLineArgs) {
+            if (key.startsWith("--")) {
+                int index = key.indexOf('=');
+                if (index == -1) {
+                    throw new IllegalArgumentException("please set property value of key: " + key);
+                }
+                this.propertySources.put(key.substring(2, index), key.substring(index + 1));
+            }
+        }
     }
 }

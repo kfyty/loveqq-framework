@@ -1,6 +1,5 @@
 package com.kfyty.support.autoconfig;
 
-import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.event.ApplicationEventPublisher;
 
@@ -11,7 +10,7 @@ import com.kfyty.support.event.ApplicationEventPublisher;
  * @date 2021/5/21 17:44
  * @email kfyty725@hotmail.com
  */
-public interface ApplicationContext extends BeanDefinitionRegistry, BeanFactory, ApplicationEventPublisher {
+public interface ApplicationContext extends BeanFactory, ApplicationEventPublisher {
 
     Class<?> getPrimarySource();
 
