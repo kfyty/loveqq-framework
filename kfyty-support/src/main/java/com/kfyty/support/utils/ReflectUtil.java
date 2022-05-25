@@ -24,15 +24,24 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -163,6 +172,24 @@ public abstract class ReflectUtil {
     public static <T> T newInstance(Class<T> clazz) {
         if (!isAbstract(clazz)) {
             return newInstance(searchSuitableConstructor(clazz));
+        }
+        if (SortedSet.class.isAssignableFrom(clazz)) {
+            return (T) new TreeSet<>();
+        }
+        if (Set.class.isAssignableFrom(clazz)) {
+            return (T) new HashSet<>();
+        }
+        if (Queue.class.isAssignableFrom(clazz)) {
+            return (T) new ArrayDeque<>();
+        }
+        if (Collection.class.isAssignableFrom(clazz)) {
+            return (T) new ArrayList<>();
+        }
+        if (SortedMap.class.isAssignableFrom(clazz)) {
+            return (T) new TreeMap<>();
+        }
+        if (Map.class.isAssignableFrom(clazz)) {
+            return (T) new HashMap<>();
         }
         throw new SupportException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
     }
