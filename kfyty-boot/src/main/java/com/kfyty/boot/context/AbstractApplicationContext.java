@@ -4,7 +4,7 @@ import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
-import com.kfyty.support.autoconfig.ImportBeanDefine;
+import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -203,10 +203,10 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {
-        Map<String, BeanDefinition> importBeanDefines = this.getBeanDefinitions(e -> ImportBeanDefine.class.isAssignableFrom(e.getValue().getBeanType()));
+        Map<String, BeanDefinition> importBeanDefines = this.getBeanDefinitions(e -> ImportBeanDefinition.class.isAssignableFrom(e.getValue().getBeanType()));
         for (BeanDefinition importBeanDefine : importBeanDefines.values()) {
-            ImportBeanDefine bean = (ImportBeanDefine) this.registerBean(importBeanDefine);
-            bean.doImport(scanClasses).forEach(this::registerBeanDefinition);
+            ImportBeanDefinition bean = (ImportBeanDefinition) this.registerBean(importBeanDefine);
+            bean.doImport(this, scanClasses).forEach(this::registerBeanDefinition);
         }
     }
 

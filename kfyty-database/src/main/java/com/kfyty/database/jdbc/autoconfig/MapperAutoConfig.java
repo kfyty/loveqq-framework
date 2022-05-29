@@ -2,16 +2,17 @@ package com.kfyty.database.jdbc.autoconfig;
 
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
-import com.kfyty.support.autoconfig.ImportBeanDefine;
+import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.support.utils.AnnotationUtil;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
+
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
 /**
  * 描述: 自动配置 Mapper 注解
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-public class MapperAutoConfig implements ImportBeanDefine {
+public class MapperAutoConfig implements ImportBeanDefinition {
 
     @Bean
     @ConditionalOnMissingBean
@@ -40,11 +41,12 @@ public class MapperAutoConfig implements ImportBeanDefine {
     }
 
     @Override
-    public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
-        return scanClasses
-                .stream()
-                .filter(e -> AnnotationUtil.hasAnnotation(e, Mapper.class))
-                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(MapperInterfaceFactoryBean.class).addConstructorArgs(Class.class, e).getBeanDefinition())
-                .collect(Collectors.toSet());
+    public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
+        return e -> AnnotationUtil.hasAnnotation(e, Mapper.class);
+    }
+
+    @Override
+    public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
+        return genericBeanDefinition(MapperInterfaceFactoryBean.class).addConstructorArgs(Class.class, clazz).getBeanDefinition();
     }
 }

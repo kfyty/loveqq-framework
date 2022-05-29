@@ -7,7 +7,7 @@ import com.kfyty.mvc.annotation.PostMapping;
 import com.kfyty.mvc.annotation.PutMapping;
 import com.kfyty.mvc.annotation.RestController;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ImportBeanDefine;
+import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
@@ -22,7 +22,6 @@ import com.kfyty.support.autoconfig.annotation.Service;
 import com.kfyty.support.autoconfig.annotation.Value;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ApplicationEvent;
 import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.utils.AnnotationUtil;
@@ -38,9 +37,11 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
 /**
  * 描述: 自动注入测试
@@ -182,15 +183,16 @@ interface Factory {}
 class FactoryImpl implements Factory {}
 
 @Component
-class FactoryImport implements ImportBeanDefine {
+class FactoryImport implements ImportBeanDefinition {
 
     @Override
-    public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
-        return scanClasses
-                .stream()
-                .filter(e -> !e.equals(Factory.class) && Factory.class.isAssignableFrom(e))
-                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(FactoryProxy.class).addConstructorArgs(Class.class, e).getBeanDefinition())
-                .collect(Collectors.toSet());
+    public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
+        return e -> !e.equals(Factory.class) && Factory.class.isAssignableFrom(e);
+    }
+
+    @Override
+    public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
+        return genericBeanDefinition(FactoryProxy.class).addConstructorArgs(Class.class, clazz).getBeanDefinition();
     }
 }
 
