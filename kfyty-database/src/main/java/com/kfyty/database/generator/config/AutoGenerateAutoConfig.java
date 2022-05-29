@@ -7,14 +7,13 @@ import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ImportBeanDefine;
+import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.EventListener;
 import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -23,9 +22,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
+import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -37,7 +36,7 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 @Configuration
-public class AutoGenerateAutoConfig implements ImportBeanDefine {
+public class AutoGenerateAutoConfig implements ImportBeanDefinition {
     @Autowired(required = false)
     private GeneratorConfigurationSupport configurationSupport;
 
@@ -60,12 +59,13 @@ public class AutoGenerateAutoConfig implements ImportBeanDefine {
     }
 
     @Override
-    public Set<BeanDefinition> doImport(Set<Class<?>> scanClasses) {
-        return scanClasses
-                .stream()
-                .filter(AbstractDatabaseMapper.class::isAssignableFrom)
-                .map(e -> BeanDefinitionBuilder.genericBeanDefinition(DatabaseMapperFactory.class).addConstructorArgs(Class.class, e).getBeanDefinition())
-                .collect(Collectors.toSet());
+    public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
+        return AbstractDatabaseMapper.class::isAssignableFrom;
+    }
+
+    @Override
+    public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
+        return genericBeanDefinition(DatabaseMapperFactory.class).addConstructorArgs(Class.class, clazz).getBeanDefinition();
     }
 
     @SneakyThrows
