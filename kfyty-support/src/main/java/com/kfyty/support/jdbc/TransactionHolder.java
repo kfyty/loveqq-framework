@@ -19,16 +19,20 @@ public class TransactionHolder {
     }
 
     public static Transaction currentTransaction() {
+        return currentTransaction(true);
+    }
+
+    public static Transaction currentTransaction(boolean valid) {
         Transaction transaction = CURRENT_TRANSACTION.get();
-        if (transaction == null) {
+        if (valid && transaction == null) {
             throw new IllegalStateException("the current thread is not bound to the transaction !");
         }
         return transaction;
     }
 
-    public static void removeCurrentTransaction() {
+    public static void resetCurrentTransaction(Transaction before) {
         try {
-            CURRENT_TRANSACTION.remove();
+            CURRENT_TRANSACTION.set(before);
         } catch (Exception e) {
             log.warn("remove current transaction failed !", e);
         }

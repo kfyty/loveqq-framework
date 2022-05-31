@@ -47,4 +47,11 @@ public @interface ConditionalOnProperty {
      * @return 默认 false
      */
     boolean matchIfMissing() default false;
+
+    /**
+     * 配置中存在属性 key 但不为空时，条件是否成立
+     *
+     * @return 默认 false
+     */
+    boolean matchIfNonNull() default false;
 }

@@ -26,6 +26,9 @@ public class OnPropertyCondition implements Condition {
         if (!propertyContext.contains(propertyKey)) {
             return conditional.matchIfMissing();
         }
+        if (conditional.matchIfNonNull()) {
+            return CommonUtil.notEmpty(propertyContext.getProperty(propertyKey));
+        }
         return Objects.equals(propertyContext.getProperty(propertyKey), conditional.havingValue());
     }
 

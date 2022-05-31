@@ -54,9 +54,11 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
             String key = prefix + "." + entry.getKey();
             Field field = entry.getValue();
             if (AnnotationUtil.hasAnnotation(field, NestedConfigurationProperty.class)) {
-                Object fieldInstance = ReflectUtil.newInstance(field.getType());
-                ReflectUtil.setFieldValue(bean, field, fieldInstance);
-                this.bindConfigurationProperties(fieldInstance, key, ignoreInvalidFields, ignoreUnknownFields);
+                if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
+                    Object fieldInstance = ReflectUtil.newInstance(field.getType());
+                    ReflectUtil.setFieldValue(bean, field, fieldInstance);
+                    this.bindConfigurationProperties(fieldInstance, key, ignoreInvalidFields, ignoreUnknownFields);
+                }
                 continue;
             }
             if (!this.propertyContext.contains(key)) {

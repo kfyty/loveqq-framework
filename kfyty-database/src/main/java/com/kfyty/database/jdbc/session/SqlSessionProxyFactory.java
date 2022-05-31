@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public class SqlSessionProxyFactory {
     @Getter
-    private final Configuration configuration;
+    protected final Configuration configuration;
 
     public SqlSessionProxyFactory(Configuration configuration) {
         this.configuration = Objects.requireNonNull(configuration);

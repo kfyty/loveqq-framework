@@ -135,11 +135,11 @@ public class ConditionContext {
      */
     private Map<String, ConditionalBeanDefinition> findNestedConditional(ConditionalBeanDefinition current, AnnotationWrapper<?> metadata, Condition condition) {
         Map<String, ConditionalBeanDefinition> nested = new HashMap<>(4);
-        if (!(condition instanceof AbstractCondition)) {
+        if (!(condition instanceof AbstractBeanCondition)) {
             return nested;                                                      // 无可校验的嵌套条件，默认跳过
         }
-        AbstractCondition abstractCondition = (AbstractCondition) condition;
-        for (String conditionName : abstractCondition.conditionNames(metadata)) {
+        AbstractBeanCondition abstractBeanCondition = (AbstractBeanCondition) condition;
+        for (String conditionName : abstractBeanCondition.conditionNames(metadata)) {
             ConditionalBeanDefinition nestedConditional = this.conditionBeanMap.get(conditionName);
             if (nestedConditional == null) {
                 this.skippedCondition.add(current.getBeanName());               // 依赖的条件不存在，跳过
@@ -149,7 +149,7 @@ public class ConditionContext {
                 nested.put(conditionName, nestedConditional);
             }
         }
-        for (Class<?> conditionType : abstractCondition.conditionTypes(metadata)) {
+        for (Class<?> conditionType : abstractBeanCondition.conditionTypes(metadata)) {
             Map<String, ConditionalBeanDefinition> collect = this.conditionBeanMap.values().stream().filter(e -> conditionType.isAssignableFrom(e.getBeanType())).collect(Collectors.toMap(GenericBeanDefinition::getBeanName, v -> v));
             if (collect.isEmpty()) {                                            // 依赖的条件不存在，跳过
                 this.skippedCondition.add(current.getBeanName());

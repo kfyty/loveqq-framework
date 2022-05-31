@@ -39,7 +39,7 @@ public class Configuration {
     public static final String MAPPER_NAMESPACE = "namespace";
     public static final String MAPPER_STATEMENT_ID = "id";
     public static final String INTERCEPTOR_METHOD_NAME = "intercept";
-    private static final QueryInterceptor DEFAULT_INTERCEPTOR = new QueryInterceptor() {};
+    public static final QueryInterceptor DEFAULT_INTERCEPTOR = new QueryInterceptor() {};
 
     private DataSource dataSource;
     private DynamicProvider<?> dynamicProvider;

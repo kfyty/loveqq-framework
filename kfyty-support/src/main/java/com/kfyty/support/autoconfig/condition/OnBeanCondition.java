@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  * @date 2022/4/17 11:43
  * @email kfyty725@hotmail.com
  */
-public class OnBeanCondition extends AbstractCondition {
+public class OnBeanCondition extends AbstractBeanCondition {
 
     @Override
     protected String[] conditionNames(AnnotationWrapper<?> metadata) {

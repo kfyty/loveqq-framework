@@ -70,20 +70,9 @@ public class SqlSession implements InvocationHandler {
     @ToString.Exclude
     private final Configuration configuration;
 
-    /**
-     * 事务
-     */
-    @ToString.Exclude
-    private Transaction transaction;
-
     public SqlSession(Class<?> mapperClass, Configuration configuration) {
-        this(mapperClass, configuration, null);
-    }
-
-    public SqlSession(Class<?> mapperClass, Configuration configuration, Transaction transaction) {
         this.mapperClass = mapperClass;
         this.configuration = configuration;
-        this.transaction = transaction;
         this.providerAdapter = new ProviderAdapter(configuration);
     }
 
@@ -93,10 +82,11 @@ public class SqlSession implements InvocationHandler {
      * @return Transaction
      */
     public Transaction getTransaction() {
+        Transaction transaction = TransactionHolder.currentTransaction(false);
         if (transaction == null) {
-            this.transaction = new JdbcTransaction(this.configuration.getDataSource());
+            TransactionHolder.setCurrentTransaction(transaction = new JdbcTransaction(this.configuration.getDataSource()));
         }
-        return this.transaction;
+        return transaction;
     }
 
     /**
@@ -253,9 +243,9 @@ public class SqlSession implements InvocationHandler {
         checkMapKey(annotation, returnType);
         final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
-        final Transaction transaction = this.getTransaction();
+        final Transaction before = TransactionHolder.currentTransaction(false);
         try {
-            TransactionHolder.setCurrentTransaction(transaction);
+            Transaction transaction = this.getTransaction();
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
                 MethodParameter method = new MethodParameter(mapperMethod, params.values().stream().map(MethodParameter::getValue).toArray());
                 return this.processSubQuery(mapperMethod, annotation, this.invokeInterceptorChain(method, annotation, sqlParams, returnType));
@@ -265,7 +255,7 @@ public class SqlSession implements InvocationHandler {
             Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             return this.processSubQuery(mapperMethod, annotation, retValue);
         } finally {
-            TransactionHolder.removeCurrentTransaction();
+            TransactionHolder.resetCurrentTransaction(before);
         }
     }
 
