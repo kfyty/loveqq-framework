@@ -10,7 +10,7 @@ import com.kfyty.support.wrapper.AnnotationWrapper;
  * @date 2022/4/17 11:28
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractCondition implements Condition {
+public abstract class AbstractBeanCondition implements Condition {
 
     @Override
     public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
