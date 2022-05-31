@@ -5,6 +5,7 @@ import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.autoconfig.condition.annotation.Conditional;
 import com.kfyty.support.exception.BeansException;
@@ -29,7 +30,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     /**
      * 条件 BeanDefinition
      */
-    private final Map<String, ConditionalBeanDefinition> conditionBeanMap = synchronizedMap(new LinkedHashMap<>());
+    protected final Map<String, ConditionalBeanDefinition> conditionBeanMap = synchronizedMap(new LinkedHashMap<>());
 
     /**
      * 自动注入能力支持
@@ -40,8 +41,15 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     @Override
     public void resolveConditionBeanDefinitionRegistry(String name, BeanDefinition beanDefinition) {
         if (beanDefinition instanceof MethodBeanDefinition) {
-            ConditionalBeanDefinition parentConditionalBeanDefinition = conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
+            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
             if (parentConditionalBeanDefinition != null || hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Conditional.class)) {
+                this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
+                return;
+            }
+        }
+        if (beanDefinition instanceof FactoryBeanDefinition) {
+            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanName());
+            if (parentConditionalBeanDefinition != null) {
                 this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
