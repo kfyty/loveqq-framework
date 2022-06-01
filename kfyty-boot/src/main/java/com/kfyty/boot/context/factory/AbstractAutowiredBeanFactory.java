@@ -4,7 +4,6 @@ import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.autoconfig.condition.annotation.Conditional;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 import static java.util.Collections.synchronizedMap;
 
@@ -55,12 +53,6 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
             }
         }
         if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
-            if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
-                super.registerBeanDefinition(name, beanDefinition);
-                BeanDefinition factoryBeanDefinition = factoryBeanDefinition(beanDefinition).getBeanDefinition();
-                name = factoryBeanDefinition.getBeanName();
-                beanDefinition = factoryBeanDefinition;
-            }
             this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
             return;
         }
