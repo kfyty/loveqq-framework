@@ -1,7 +1,8 @@
 package com.kfyty.support.autoconfig.condition;
 
-import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.wrapper.AnnotationWrapper;
+
+import java.lang.reflect.Method;
 
 /**
  * 描述: 条件匹配接口
@@ -12,20 +13,14 @@ import com.kfyty.support.wrapper.AnnotationWrapper;
  */
 public abstract class AbstractBeanCondition implements Condition {
 
-    @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
-        BeanFactory beanFactory = context.getBeanFactory();
-        for (String conditionName : this.conditionNames(metadata)) {
-            if (!beanFactory.containsBeanDefinition(conditionName)) {
-                return false;
-            }
+    protected Class<?>[] buildBeanTypes(AnnotationWrapper<?> metadata) {
+        if (metadata.isDeclaringClass()) {
+            return new Class<?>[]{metadata.getDeclaring()};
         }
-        for (Class<?> conditionType : this.conditionTypes(metadata)) {
-            if (beanFactory.getBeanDefinitionNames(conditionType).isEmpty()) {
-                return false;
-            }
+        if (metadata.isDeclaringMethod()) {
+            return new Class<?>[]{((Method) metadata.getDeclaring()).getReturnType()};
         }
-        return true;
+        throw new UnsupportedOperationException();
     }
 
     protected abstract String[] conditionNames(AnnotationWrapper<?> metadata);
