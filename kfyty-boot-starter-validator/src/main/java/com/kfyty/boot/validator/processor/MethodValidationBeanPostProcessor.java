@@ -1,10 +1,9 @@
-package com.kfyty.boot.processor;
+package com.kfyty.boot.validator.processor;
 
-import com.kfyty.boot.proxy.MethodValidationInterceptorProxy;
+import com.kfyty.boot.validator.proxy.MethodValidationInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.proxy.InterceptorChainPoint;
-import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import jakarta.validation.Constraint;
 import jakarta.validation.Valid;
@@ -13,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 
 /**
  * 描述: 方法参数校验
@@ -29,10 +31,10 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
         for (Method method : ReflectUtil.getMethods(beanType)) {
-            if (AnnotationUtil.hasAnnotation(method, Valid.class) || AnnotationUtil.hasAnnotationElement(method, Constraint.class)) {
+            if (hasAnnotation(method, Valid.class) || hasAnnotationElement(method, Constraint.class)) {
                 return true;
             }
-            if (Arrays.stream(method.getParameters()).anyMatch(e -> AnnotationUtil.hasAnnotation(e, Valid.class) || AnnotationUtil.hasAnnotationElement(e, Constraint.class))) {
+            if (Arrays.stream(method.getParameters()).anyMatch(e -> hasAnnotation(e, Valid.class) || hasAnnotationElement(e, Constraint.class))) {
                 return true;
             }
         }
