@@ -1,18 +1,20 @@
 package com.kfyty.support.autoconfig.condition;
 
 import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnSingleCandidate;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.wrapper.AnnotationWrapper;
+
+import java.util.List;
 
 /**
  * 描述:
  *
  * @author kfyty725
- * @date 2022/4/17 11:43
+ * @date 2022/5/23 17:05
  * @email kfyty725@hotmail.com
  */
-public class OnBeanCondition extends AbstractBeanCondition {
+public class OnSingleCandidateCondition extends AbstractBeanCondition {
 
     @Override
     public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
@@ -23,7 +25,8 @@ public class OnBeanCondition extends AbstractBeanCondition {
             }
         }
         for (Class<?> conditionType : this.conditionTypes(metadata)) {
-            if (beanFactory.getBeanDefinitionNames(conditionType).isEmpty()) {
+            List<String> beanDefinitionNames = beanFactory.getBeanDefinitionNames(conditionType);
+            if (beanDefinitionNames.size() != 1) {
                 return false;
             }
         }
@@ -32,13 +35,13 @@ public class OnBeanCondition extends AbstractBeanCondition {
 
     @Override
     protected String[] conditionNames(AnnotationWrapper<?> metadata) {
-        ConditionalOnBean conditionalOnBean = (ConditionalOnBean) metadata.get();
+        ConditionalOnSingleCandidate conditionalOnBean = (ConditionalOnSingleCandidate) metadata.get();
         return conditionalOnBean.name();
     }
 
     @Override
     protected Class<?>[] conditionTypes(AnnotationWrapper<?> metadata) {
-        ConditionalOnBean conditionalOnBean = (ConditionalOnBean) metadata.get();
+        ConditionalOnSingleCandidate conditionalOnBean = (ConditionalOnSingleCandidate) metadata.get();
         if (CommonUtil.notEmpty(conditionalOnBean.value())) {
             return conditionalOnBean.value();
         }
