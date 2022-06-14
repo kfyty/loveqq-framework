@@ -1,4 +1,4 @@
-package com.kfyty.boot.proxy;
+package com.kfyty.boot.validator.proxy;
 
 import com.kfyty.support.proxy.InterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
@@ -38,15 +38,15 @@ public class MethodValidationInterceptorProxy implements InterceptorChainPoint {
         return retValue;
     }
 
-    private void beforeValid(Object target, Method method, Object[] args) {
+    protected void beforeValid(Object target, Method method, Object[] args) {
         this.doValid(v -> v.forExecutables().validateParameters(target, method, args));
     }
 
-    private void afterValid(Object target, Method method, Object retValue) {
+    protected void afterValid(Object target, Method method, Object retValue) {
         this.doValid(v -> v.forExecutables().validateReturnValue(target, method, retValue));
     }
 
-    private void doValid(Function<Validator, Set<ConstraintViolation<Object>>> validAction) {
+    protected void doValid(Function<Validator, Set<ConstraintViolation<Object>>> validAction) {
         Set<ConstraintViolation<Object>> constraintViolations = validAction.apply(this.validator);
         if (CommonUtil.notEmpty(constraintViolations)) {
             throw new ConstraintViolationException(constraintViolations);

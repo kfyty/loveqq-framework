@@ -16,8 +16,10 @@
         <module>kfyty-aop</module>
         <module>kfyty-sdk</module>
         <module>kfyty-support</module>
-        <module>kfyty-boot-starter-uid-generator</module>
+        <module>kfyty-boot-starter-datasource</module>
+        <module>kfyty-boot-starter-validator</module>
         <module>kfyty-boot-starter-quartz</module>
+        <module>kfyty-boot-starter-uid-generator</module>
     </modules>
 
     <properties>
@@ -32,9 +34,13 @@
         <hibernate.validator.version>7.0.0.Final</hibernate.validator.version>
 
         <druid.version>1.1.15</druid.version>
+        <hikari.version>4.0.3</hikari.version>
+        <tomcat.jdbc.version>9.0.35</tomcat.jdbc.version>
         <mysql.version>8.0.16</mysql.version>
         <oracle14.version>10.2.0.4.0</oracle14.version>
         <mssql.version>7.4.0.jre8</mssql.version>
+        <redisson-version>3.17.2</redisson-version>
+        <lettuce.version>6.1.5.RELEASE</lettuce.version>
 
         <k-jte.version>1.0-SNAPSHOT</k-jte.version>
 
@@ -215,6 +221,18 @@
             </dependency>
 
             <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikari.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jdbc</artifactId>
+                <version>${tomcat.jdbc.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
@@ -230,6 +248,18 @@
                 <groupId>com.microsoft.sqlserver</groupId>
                 <artifactId>mssql-jdbc</artifactId>
                 <version>${mssql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson</artifactId>
+                <version>${redisson-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>${lettuce.version}</version>
             </dependency>
 
             <!-- jsp 模板引擎：https://github.com/kfyty/k-jte.git -->

@@ -1,8 +1,9 @@
-package com.kfyty.boot.autoconfig;
+package com.kfyty.boot.validator.autoconfig;
 
-import com.kfyty.boot.processor.MethodValidationBeanPostProcessor;
+import com.kfyty.boot.validator.processor.MethodValidationBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -18,16 +19,19 @@ import jakarta.validation.ValidatorFactory;
 public class ValidationAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
     public ValidatorFactory validatorFactory() {
         return Validation.buildDefaultValidatorFactory();
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public Validator validator() {
         return this.validatorFactory().getValidator();
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public MethodValidationBeanPostProcessor methodValidationBeanPostProcessor() {
         return new MethodValidationBeanPostProcessor();
     }
