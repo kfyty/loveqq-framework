@@ -110,7 +110,7 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
         this.loadProperties();
     }
 
-    private void loadCommandLineProperties() {
+    protected void loadCommandLineProperties() {
         String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
         for (String key : commandLineArgs) {
             if (key.startsWith("--")) {

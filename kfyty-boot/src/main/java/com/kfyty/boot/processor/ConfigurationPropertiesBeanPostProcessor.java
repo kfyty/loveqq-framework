@@ -16,6 +16,7 @@ import com.kfyty.support.utils.ReflectUtil;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.support.utils.ConverterUtil.getTypeConverter;
 
 /**
@@ -49,11 +50,11 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
         return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), ConfigurationProperties.class);
     }
 
-    protected void bindConfigurationProperties(Object bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
+    protected <T extends Enum<T>> void bindConfigurationProperties(Object bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(bean.getClass()).entrySet()) {
             String key = prefix + "." + entry.getKey();
             Field field = entry.getValue();
-            if (AnnotationUtil.hasAnnotation(field, NestedConfigurationProperty.class)) {
+            if (hasAnnotation(field, NestedConfigurationProperty.class)) {
                 if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
                     Object fieldInstance = ReflectUtil.newInstance(field.getType());
                     ReflectUtil.setFieldValue(bean, field, fieldInstance);
@@ -61,19 +62,19 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
                 }
                 continue;
             }
-            if (!this.propertyContext.contains(key)) {
+            if (!this.propertyContext.contains(key) || !field.getType().isEnum() && getTypeConverter(String.class, field.getType()) == null) {
                 if (ignoreUnknownFields) {
                     continue;
                 }
-                throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] not found");
+                throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] not found or no suitable converter");
             }
-            if (getTypeConverter(String.class, field.getType()) == null) {
-                if (ignoreInvalidFields) {
-                    continue;
-                }
-                throw new IllegalArgumentException("configuration properties bind failed, can't convert property key: [" + key + "], no suitable converter is available");
+            if (!field.getType().isEnum()) {
+                ReflectUtil.setFieldValue(bean, field, this.propertyContext.getProperty(key, field.getType()));
+                continue;
             }
-            ReflectUtil.setFieldValue(bean, field, this.propertyContext.getProperty(key, field.getType()));
+            @SuppressWarnings("unchecked")
+            T enumValue = Enum.valueOf((Class<T>) field.getType(), this.propertyContext.getProperty(key, String.class));
+            ReflectUtil.setFieldValue(bean, field, enumValue);
         }
     }
 }
