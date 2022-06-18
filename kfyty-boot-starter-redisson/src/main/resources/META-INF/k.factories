@@ -1,0 +1,1 @@
+com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.data.redis.redisson.autoconfig.RedissonAutoConfiguration

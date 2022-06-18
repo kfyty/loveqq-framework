@@ -18,6 +18,7 @@
         <module>kfyty-support</module>
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-validator</module>
+        <module>kfyty-boot-starter-redisson</module>
         <module>kfyty-boot-starter-quartz</module>
         <module>kfyty-boot-starter-uid-generator</module>
     </modules>
