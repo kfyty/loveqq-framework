@@ -2,6 +2,9 @@ package com.kfyty.support.converter;
 
 import com.kfyty.support.utils.CommonUtil;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 描述:
  *
@@ -10,6 +13,11 @@ import com.kfyty.support.utils.CommonUtil;
  * @email kfyty725@hotmail.com
  */
 public class StringToByteConverter implements Converter<String, Byte> {
+
+    @Override
+    public List<Class<?>> supportTypes() {
+        return Collections.singletonList(byte.class);
+    }
 
     @Override
     public Byte apply(String source) {

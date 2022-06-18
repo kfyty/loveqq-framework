@@ -19,7 +19,12 @@ public abstract class ConverterUtil {
     private static final Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> TYPE_CONVERTER = new HashMap<>();
 
     static {
-        PackageUtil.scanInstance(Converter.class).forEach(ConverterUtil::registerConverter);
+        PackageUtil.scanInstance(Converter.class)
+                .forEach(e -> {
+                    Converter<?, ?> converter = (Converter<?, ?>) e;
+                    converter.supportTypes().forEach(type -> registerConverter(getSuperGeneric(converter.getClass()), type, converter));
+                    registerConverter(converter);
+                });
     }
 
     public static Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> getTypeConverters() {
