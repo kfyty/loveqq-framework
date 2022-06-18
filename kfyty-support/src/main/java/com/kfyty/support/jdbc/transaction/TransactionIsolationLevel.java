@@ -1,4 +1,4 @@
-package com.kfyty.support.transaction;
+package com.kfyty.support.jdbc.transaction;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

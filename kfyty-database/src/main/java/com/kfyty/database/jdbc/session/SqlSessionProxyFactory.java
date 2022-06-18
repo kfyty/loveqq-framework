@@ -1,6 +1,6 @@
 package com.kfyty.database.jdbc.session;
 
-import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.jdbc.transaction.Transaction;
 import lombok.Getter;
 
 import java.lang.reflect.InvocationHandler;

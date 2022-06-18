@@ -1,8 +1,8 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
-import com.kfyty.support.wrapper.Function3;
-import com.kfyty.support.wrapper.Function4;
+import com.kfyty.support.wrapper.function.Function3;
+import com.kfyty.support.wrapper.function.Function4;
 import com.kfyty.support.wrapper.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 

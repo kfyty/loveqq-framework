@@ -1,7 +1,7 @@
 package com.kfyty.support.jdbc;
 
-import com.kfyty.support.transaction.Transaction;
-import com.kfyty.support.transaction.TransactionIsolationLevel;
+import com.kfyty.support.jdbc.transaction.Transaction;
+import com.kfyty.support.jdbc.transaction.TransactionIsolationLevel;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;

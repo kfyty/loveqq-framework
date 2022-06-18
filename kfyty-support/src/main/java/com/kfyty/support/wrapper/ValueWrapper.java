@@ -12,7 +12,7 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 @AllArgsConstructor
-public class WrapperValue<T> {
+public class ValueWrapper<T> {
     private T value;
 
     public T get() {
@@ -30,7 +30,7 @@ public class WrapperValue<T> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof WrapperValue && Objects.equals(this.value, ((WrapperValue<?>) obj).value);
+        return obj instanceof ValueWrapper && Objects.equals(this.value, ((ValueWrapper<?>) obj).value);
     }
 
     @Override

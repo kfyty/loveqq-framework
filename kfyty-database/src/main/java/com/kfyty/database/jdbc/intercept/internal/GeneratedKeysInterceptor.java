@@ -12,7 +12,7 @@ import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ResultSetUtil;
-import com.kfyty.support.wrapper.WrapperValue;
+import com.kfyty.support.wrapper.ValueWrapper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -45,7 +45,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
     private static final Predicate<Method> INSERT_METHOD_PREDICATE = method -> method.equals(INSERT) || method.equals(INSERT_BATCH);
 
     @Override
-    public Object intercept(WrapperValue<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    public Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
         if (!INSERT_METHOD_PREDICATE.test(chain.getMapperMethod().getMethod())) {
             return chain.proceed();
         }

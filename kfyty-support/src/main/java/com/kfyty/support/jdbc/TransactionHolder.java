@@ -1,6 +1,7 @@
 package com.kfyty.support.jdbc;
 
-import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.jdbc.transaction.Transaction;
+import com.kfyty.support.wrapper.RecoverableThreadLocal;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -12,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TransactionHolder {
-    private static final ThreadLocal<Transaction> CURRENT_TRANSACTION = new ThreadLocal<>();
+    private static final ThreadLocal<Transaction> CURRENT_TRANSACTION = new RecoverableThreadLocal<>();
 
     public static void setCurrentTransaction(Transaction transaction) {
         CURRENT_TRANSACTION.set(transaction);
@@ -30,9 +31,9 @@ public class TransactionHolder {
         return transaction;
     }
 
-    public static void resetCurrentTransaction(Transaction before) {
+    public static void removeCurrentTransaction() {
         try {
-            CURRENT_TRANSACTION.set(before);
+            CURRENT_TRANSACTION.remove();
         } catch (Exception e) {
             log.warn("remove current transaction failed !", e);
         }
