@@ -1,6 +1,6 @@
 package com.kfyty.support.utils;
 
-import com.kfyty.support.wrapper.SerializableFunction;
+import com.kfyty.support.wrapper.function.SerializableFunction;
 import com.kfyty.support.wrapper.WeakKey;
 
 import java.lang.invoke.SerializedLambda;

@@ -3,7 +3,7 @@ package com.kfyty.support.utils;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.type.TypeHandler;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.jdbc.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;

@@ -17,7 +17,7 @@ import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.transaction.Transaction;
+import com.kfyty.support.jdbc.transaction.Transaction;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
@@ -243,7 +243,6 @@ public class SqlSession implements InvocationHandler {
         checkMapKey(annotation, returnType);
         final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
-        final Transaction before = TransactionHolder.currentTransaction(false);
         try {
             Transaction transaction = this.getTransaction();
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
@@ -255,7 +254,7 @@ public class SqlSession implements InvocationHandler {
             Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             return this.processSubQuery(mapperMethod, annotation, retValue);
         } finally {
-            TransactionHolder.resetCurrentTransaction(before);
+            TransactionHolder.removeCurrentTransaction();
         }
     }
 

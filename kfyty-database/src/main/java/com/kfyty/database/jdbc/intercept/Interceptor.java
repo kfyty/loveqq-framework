@@ -3,7 +3,7 @@ package com.kfyty.database.jdbc.intercept;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.wrapper.WrapperValue;
+import com.kfyty.support.wrapper.ValueWrapper;
 
 import java.sql.PreparedStatement;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 public interface Interceptor {
 
     @Order(10)
-    default Object intercept(WrapperValue<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    default Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
         return chain.proceed();
     }
 
