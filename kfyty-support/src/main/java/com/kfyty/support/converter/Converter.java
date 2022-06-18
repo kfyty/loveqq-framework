@@ -1,5 +1,8 @@
 package com.kfyty.support.converter;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 描述: 数据类型转换
  *
@@ -8,6 +11,15 @@ package com.kfyty.support.converter;
  * @email kfyty725@hotmail.com
  */
 public interface Converter<S, T> {
+    /**
+     * 支持的类型
+     *
+     * @return 类型
+     */
+    default List<Class<?>> supportTypes() {
+        return Collections.emptyList();
+    }
+
     /**
      * 将 S 转换为 T
      *

@@ -2,6 +2,9 @@ package com.kfyty.support.converter;
 
 import com.kfyty.support.utils.CommonUtil;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 描述:
  *
@@ -10,6 +13,11 @@ import com.kfyty.support.utils.CommonUtil;
  * @email kfyty725@hotmail.com
  */
 public class StringToBooleanConverter implements Converter<String, Boolean> {
+
+    @Override
+    public List<Class<?>> supportTypes() {
+        return Collections.singletonList(boolean.class);
+    }
 
     @Override
     public Boolean apply(String source) {
