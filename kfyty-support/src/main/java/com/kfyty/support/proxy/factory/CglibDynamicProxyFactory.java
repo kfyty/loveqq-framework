@@ -10,6 +10,8 @@ import net.sf.cglib.proxy.Enhancer;
 
 import static com.kfyty.support.utils.CommonUtil.EMPTY_CLASS_ARRAY;
 import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: cglib 动态代理工厂
@@ -46,7 +48,7 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(targetClass);
         enhancer.setInterfaces(ReflectUtil.getInterfaces(targetClass));
-        enhancer.setCallback(new MethodInterceptorChain(source));
+        enhancer.setCallback(new MethodInterceptorChain(source, ofNullable(this.points).orElse(emptyList())));
         if (CommonUtil.notEmpty(callbacks)) {
             enhancer.setCallbacks(callbacks);
         }

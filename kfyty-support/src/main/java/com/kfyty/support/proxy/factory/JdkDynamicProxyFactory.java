@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.lang.reflect.Proxy;
 
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+
 /**
  * 描述: jdk 动态代理工厂
  *
@@ -26,6 +29,6 @@ public class JdkDynamicProxyFactory extends DynamicProxyFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
-        return (T) Proxy.newProxyInstance(targetClass.getClassLoader(), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source));
+        return (T) Proxy.newProxyInstance(targetClass.getClassLoader(), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source, ofNullable(this.points).orElse(emptyList())));
     }
 }

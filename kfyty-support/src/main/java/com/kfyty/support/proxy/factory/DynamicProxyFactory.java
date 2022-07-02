@@ -4,7 +4,12 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.proxy.InterceptorChainPoint;
 import lombok.NoArgsConstructor;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
@@ -22,6 +27,7 @@ import static com.kfyty.support.utils.ReflectUtil.hasAnyInterfaces;
  */
 @NoArgsConstructor
 public abstract class DynamicProxyFactory {
+    protected List<InterceptorChainPoint> points;
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
         if (isJdkProxy(bean)) {
@@ -42,6 +48,14 @@ public abstract class DynamicProxyFactory {
         return !proxyTargetClass ? new JdkDynamicProxyFactory() : new CglibDynamicProxyFactory();
     }
 
+    public DynamicProxyFactory addInterceptorPoint(InterceptorChainPoint point) {
+        if (this.points == null) {
+            this.points = new LinkedList<>();
+        }
+        this.points.add(Objects.requireNonNull(point));
+        return this;
+    }
+
     public <T> T createProxy(T source) {
         return createProxy(source, EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY);
     }
@@ -59,7 +73,7 @@ public abstract class DynamicProxyFactory {
         return createProxy(null, targetClass, argTypes, argValues);
     }
 
-    public abstract  <T> T createProxy(T source, BeanDefinition beanDefinition);
+    public abstract <T> T createProxy(T source, BeanDefinition beanDefinition);
 
     public abstract <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues);
 }

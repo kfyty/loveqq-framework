@@ -142,9 +142,7 @@ public class RequestMappingAnnotationHandler {
         methodMapping.setProduces(annotation.produces());
         methodMapping.setRequestMethod(annotation.requestMethod());
         this.parsePathVariable(methodMapping);
-        if (log.isDebugEnabled()) {
-            log.debug("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
-        }
+        log.info("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
     }
 
     private void parsePathVariable(MethodMapping methodMapping) {

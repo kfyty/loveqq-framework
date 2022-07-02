@@ -45,7 +45,12 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
     @Override
     public Object proceed(Object[] args) throws Throwable {
-        throw new UnsupportedOperationException();
+        Object[] arguments = this.methodProxyWrapper.getArguments();
+        if (arguments.length != args.length) {
+            throw new IllegalArgumentException("inconsistent parameter lengths");
+        }
+        System.arraycopy(args, 0, arguments, 0, args.length);
+        return this.proceed();
     }
 
     @Override

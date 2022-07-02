@@ -74,9 +74,13 @@ public class MethodProxyWrapper {
     }
 
     public Object invoke() throws Throwable {
+        return this.invoke(this.arguments);
+    }
+
+    public Object invoke(Object[] args) throws Throwable {
         if (this.target == null || hasAnnotationElement(this.target, Configuration.class)) {
-            return this.methodProxy.invokeSuper(this.proxy, this.arguments);
+            return this.methodProxy.invokeSuper(this.proxy, args);
         }
-        return ReflectUtil.invokeMethod(this.target, this.method, this.arguments);
+        return ReflectUtil.invokeMethod(this.target, this.method, args);
     }
 }

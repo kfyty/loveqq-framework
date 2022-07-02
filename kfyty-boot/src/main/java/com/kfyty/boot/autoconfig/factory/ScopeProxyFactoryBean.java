@@ -6,7 +6,6 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
-import com.kfyty.support.utils.AopUtil;
 
 /**
  * 描述: 为非单例 bean 创建作用域代理
@@ -45,8 +44,9 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
     @Override
     @SuppressWarnings("unchecked")
     public T getObject() {
-        Object proxy = DynamicProxyFactory.create(true).createProxy(this.getBeanType());
-        AopUtil.addProxyInterceptorPoint(proxy, new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition));
-        return (T) proxy;
+        return (T) DynamicProxyFactory
+                .create(true)
+                .addInterceptorPoint(new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition))
+                .createProxy(this.getBeanType());
     }
 }

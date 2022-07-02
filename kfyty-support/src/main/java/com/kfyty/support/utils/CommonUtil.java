@@ -6,6 +6,7 @@ import org.w3c.dom.Element;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -81,6 +82,11 @@ public abstract class CommonUtil {
      * 空对象数组
      */
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+
+    /**
+     * 空注解数组
+     */
+    public static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
     /**
      * 空 Class 数组

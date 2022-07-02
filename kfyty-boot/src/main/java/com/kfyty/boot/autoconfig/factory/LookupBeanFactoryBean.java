@@ -5,7 +5,6 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
-import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ScopeUtil;
 
 /**
@@ -39,9 +38,10 @@ public class LookupBeanFactoryBean<T> implements ApplicationContextAware, Factor
     @Override
     @SuppressWarnings("unchecked")
     public T getObject() {
-        Object proxy = DynamicProxyFactory.create(true).createProxy(this.getBeanType());
-        AopUtil.addProxyInterceptorPoint(proxy, new LookupMethodInterceptorProxy(this.applicationContext));
-        return (T) proxy;
+        return (T) DynamicProxyFactory
+                .create(true)
+                .addInterceptorPoint(new LookupMethodInterceptorProxy(this.applicationContext))
+                .createProxy(this.getBeanType());
     }
 
     @Override
