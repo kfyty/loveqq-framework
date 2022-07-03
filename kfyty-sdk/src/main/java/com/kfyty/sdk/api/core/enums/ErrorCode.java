@@ -3,7 +3,7 @@ package com.kfyty.sdk.api.core.enums;
 /**
  * 描述: 错误码
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/23 10:53
  * @email kfyty725@hotmail.com
  */

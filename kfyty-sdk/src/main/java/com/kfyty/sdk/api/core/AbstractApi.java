@@ -26,7 +26,7 @@ import static java.util.Optional.ofNullable;
  * 描述: api 基础实现，封装了模板代码及扩展接口
  * 如果需要对 api 调用进行重试的操作，可以使用 {@link ApiRetryDecorate} 进行装饰
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 14:10
  * @email kfyty725@hotmail.com
  */

@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * 描述: api sdk 配置
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 14:10
  * @email kfyty725@hotmail.com
  */

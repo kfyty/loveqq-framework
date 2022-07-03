@@ -14,7 +14,7 @@ import static java.net.Proxy.NO_PROXY;
 /**
  * 描述: http 请求
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 17:50
  * @email kfyty725@hotmail.com
  * @see HttpRequestExecutor

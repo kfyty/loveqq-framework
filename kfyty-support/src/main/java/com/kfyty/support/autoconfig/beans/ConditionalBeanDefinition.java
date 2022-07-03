@@ -23,7 +23,7 @@ import static java.util.Collections.unmodifiableList;
  * 描述: 有条件的 BeanDefinition
  * 将在普通 BeanDefinition 注册后，进行条件验证后注册
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2022/4/23 16:41
  * @email kfyty725@hotmail.com
  */

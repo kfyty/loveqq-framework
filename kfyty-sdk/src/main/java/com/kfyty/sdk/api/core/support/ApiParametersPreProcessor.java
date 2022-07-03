@@ -18,7 +18,7 @@ import static com.kfyty.sdk.api.core.utils.ParameterUtil.resolveParameters;
 /**
  * 描述: {@link Parameter} 前置处理器
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/23 17:46
  * @email kfyty725@hotmail.com
  */

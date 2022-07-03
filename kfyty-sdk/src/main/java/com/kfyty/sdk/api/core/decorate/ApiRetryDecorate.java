@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  *                                      .exchange();
  * }</pre>
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/12 15:10
  * @email kfyty725@hotmail.com
  */

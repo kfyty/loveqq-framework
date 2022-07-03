@@ -8,7 +8,7 @@ import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.kjte.JstlRenderEngine;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
+import com.kfyty.database.util.TemplateEngineUtil;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import lombok.NoArgsConstructor;
@@ -47,7 +47,7 @@ public class JspTemplate extends AbstractTemplateEngine {
     public JspTemplate(String prefix, File jsp, String classPath) {
         super(prefix, jsp.getName());
         this.classPath = classPath;
-        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(CodeGeneratorTemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
+        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(TemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
         this.templateEngine = new JstlTemplateEngine(config);
     }
 
@@ -57,7 +57,7 @@ public class JspTemplate extends AbstractTemplateEngine {
 
     @Override
     public List<? extends GeneratorTemplate> loadTemplates(String prefix) {
-        return CodeGeneratorTemplateEngineUtil.loadJspTemplates(this, prefix);
+        return TemplateEngineUtil.loadJspTemplates(this, prefix);
     }
 
     @Override

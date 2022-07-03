@@ -21,7 +21,7 @@ import static java.util.Optional.ofNullable;
  * 可以为一些 api 的通用参数设置统一的提供器，而不需要每次都手动设置
  * 仅当参数为空时应用，如果提供器返回空，将使用 {@link Parameter#defaultValue()} 的默认值
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/12/1 10:42
  * @email kfyty725@hotmail.com
  */

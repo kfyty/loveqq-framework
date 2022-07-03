@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 描述: 错误码
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 11:46
  * @email kfyty725@hotmail.com
  */

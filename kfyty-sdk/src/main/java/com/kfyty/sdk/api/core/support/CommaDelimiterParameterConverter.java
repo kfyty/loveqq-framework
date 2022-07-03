@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * 描述: 逗号分割的参数转换器
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/24 17:50
  * @email kfyty725@hotmail.com
  */

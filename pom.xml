@@ -15,6 +15,7 @@
         <module>kfyty-mvc</module>
         <module>kfyty-aop</module>
         <module>kfyty-sdk</module>
+        <module>kfyty-excel</module>
         <module>kfyty-support</module>
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-validator</module>
@@ -27,6 +28,7 @@
         <cglib.version>3.3.0</cglib.version>
         <jackson.version>2.12.5</jackson.version>
         <freemarker.version>2.3.30</freemarker.version>
+        <commons.compress.version>1.21</commons.compress.version>
 
         <jstl.version>1.2</jstl.version>
         <servlet.api.version>4.0.0</servlet.api.version>
@@ -183,6 +185,12 @@
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
             </dependency>
 
             <dependency>

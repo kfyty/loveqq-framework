@@ -3,7 +3,7 @@ package com.kfyty.sdk.api.core;
 /**
  * 描述: 对 api 的请求结果进行序列化/反序列化操作
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 14:17
  * @email kfyty725@hotmail.com
  */

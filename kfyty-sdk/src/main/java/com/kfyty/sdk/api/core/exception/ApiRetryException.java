@@ -3,7 +3,7 @@ package com.kfyty.sdk.api.core.exception;
 /**
  * 描述: api 重试异常
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/15 15:59
  * @email kfyty725@hotmail.com
  */

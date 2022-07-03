@@ -3,7 +3,7 @@ package com.kfyty.sdk.api.core;
 /**
  * 描述: api 参数提供器
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/12/1 10:41
  * @email kfyty725@hotmail.com
  */
