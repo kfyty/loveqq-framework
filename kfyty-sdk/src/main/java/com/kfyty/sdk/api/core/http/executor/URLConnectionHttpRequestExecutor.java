@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * 描述: 基于 URL Connection 的执行器
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 18:12
  * @email kfyty725@hotmail.com
  */

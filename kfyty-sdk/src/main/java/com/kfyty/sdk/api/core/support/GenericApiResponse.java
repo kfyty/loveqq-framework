@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 描述: 数据泛型响应
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/30 10:36
  * @email kfyty725@hotmail.com
  */

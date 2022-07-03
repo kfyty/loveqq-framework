@@ -5,7 +5,7 @@ import com.kfyty.sdk.api.core.enums.ErrorCode;
 /**
  * 描述: api 异常
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 11:50
  * @email kfyty725@hotmail.com
  */

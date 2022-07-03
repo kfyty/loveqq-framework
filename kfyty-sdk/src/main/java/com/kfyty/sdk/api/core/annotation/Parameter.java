@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 /**
  * 描述: 标识 api 请求参数
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/11 18:30
  * @email kfyty725@hotmail.com
  * @see ParameterUtil#resolveParameters(Parameter, Object)

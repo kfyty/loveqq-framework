@@ -3,7 +3,7 @@ package com.kfyty.database.generator.template;
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
-import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
+import com.kfyty.database.util.TemplateEngineUtil;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public abstract class AbstractTemplateEngine implements GeneratorTemplate {
     public AbstractTemplateEngine(String prefix, String template) {
         this.prefix = prefix;
         this.template = template;
-        this.variable = new HashMap<>(CodeGeneratorTemplateEngineUtil.loadGeneratorProperties());
+        this.variable = new HashMap<>(TemplateEngineUtil.loadGeneratorProperties());
     }
 
     @Override

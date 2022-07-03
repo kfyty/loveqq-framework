@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * 描述: fastjson 实现
  *
- * @author kun.zhang
+ * @author kfyty725
  * @date 2021/11/12 16:10
  * @email kfyty725@hotmail.com
  */

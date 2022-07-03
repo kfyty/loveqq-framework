@@ -21,9 +21,21 @@ public abstract class IOUtil {
             int n = -1;
             byte[] bytes = new byte[limit];
             while ((n = in.read(bytes)) != -1) {
-                out.write(bytes, 0, n);
+                write(out, bytes, 0, n);
             }
             out.flush();
+        } catch (Exception e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    public static void write(OutputStream out, byte[] bytes) {
+        write(out, bytes, 0, bytes.length);
+    }
+
+    public static void write(OutputStream out, byte[] bytes, int start, int limit) {
+        try {
+            out.write(bytes, start, limit);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

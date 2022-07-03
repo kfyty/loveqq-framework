@@ -4,9 +4,9 @@ import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.database.generator.template.GeneratorTemplate;
-import com.kfyty.database.util.CodeGeneratorTemplateEngineUtil;
 import com.kfyty.database.util.TemplateEngineUtil;
 import com.kfyty.support.io.SimpleBufferedWriter;
+import com.kfyty.support.utils.FreemarkerUtil;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.NoArgsConstructor;
@@ -37,7 +37,7 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
 
     @Override
     public List<? extends GeneratorTemplate> loadTemplates(String prefix) {
-        return CodeGeneratorTemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
+        return TemplateEngineUtil.loadFreemarkerTemplates(this, prefix);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class FreemarkerTemplate extends AbstractTemplateEngine {
 
     protected void initTemplate() {
         if (this.freemarkerTemplate == null) {
-            this.freemarkerTemplate = TemplateEngineUtil.loadFreemarkerTemplate(CodeGeneratorTemplateEngineUtil.getTemplatePath(prefix), this.template);
+            this.freemarkerTemplate = FreemarkerUtil.getTemplate(TemplateEngineUtil.getTemplatePath(prefix), this.template);
         }
     }
 }
