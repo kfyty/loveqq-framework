@@ -101,6 +101,11 @@ public class TemplateExcelParallelExport<T> implements AutoCloseable {
     public static final String TEMPLATE_ROWS_PARAM_NAME = "rows";
 
     /**
+     * 当前写入行名称
+     */
+    public static final String TEMPLATE_CURRENT_ROW_PARAM_NAME = "currentRow";
+
+    /**
      * 模板名称，默认为 public
      * 对于公共项目，会到 /excel/items/{template} 下查找
      * 对于表格模板，会到 /excel/templates/{template}_*.ftl 下查找
@@ -116,6 +121,16 @@ public class TemplateExcelParallelExport<T> implements AutoCloseable {
      * 表头
      */
     private final Map<String, TemplateTitle> titles;
+
+    /**
+     * 是否已写入公共条目
+     */
+    private boolean writePublicItems = false;
+
+    /**
+     * 当前写入的行
+     */
+    private int currentRow = 2;
 
     public TemplateExcelParallelExport(OutputStream out, Class<T> clazz) {
         this(DEFAULT_TEMPLATE, out, clazz);
@@ -180,10 +195,12 @@ public class TemplateExcelParallelExport<T> implements AutoCloseable {
             List<TemplateCell> cells = titles.values().stream().map(e -> new TemplateCell(beanMap.get(e.getKey()))).collect(Collectors.toList());
             templateRows.add(new TemplateRow(cells));
         }
-        Map<String, Collection<TemplateRow>> params = new HashMap<>(4);
+        Map<String, Object> params = new HashMap<>(4);
         params.put(TEMPLATE_ROWS_PARAM_NAME, templateRows);
+        params.put(TEMPLATE_CURRENT_ROW_PARAM_NAME, this.currentRow);
         String write = renderTemplate(EXCEL_SHEET_TEMPLATE_BASE_PATH, this.template + TEMPLATE_WRITE_SUFFIX, params);
         IOUtil.write(this.out, write.getBytes(StandardCharsets.UTF_8));
+        this.currentRow += templateRows.size();
     }
 
     /**
@@ -232,6 +249,10 @@ public class TemplateExcelParallelExport<T> implements AutoCloseable {
      */
     private void downloadPublicItems() {
         try {
+            if (this.writePublicItems) {
+                return;
+            }
+            this.writePublicItems = true;
             String path = EXCEL_PUBLIC_ITEMS_PREFIX + this.template;
             URLConnection connection = TemplateExcelParallelExport.class.getClassLoader().getResource(path).openConnection();
             if (!(connection instanceof JarURLConnection)) {
