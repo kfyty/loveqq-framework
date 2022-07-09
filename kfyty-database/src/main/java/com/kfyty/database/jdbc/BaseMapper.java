@@ -21,6 +21,7 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
 public interface BaseMapper<PrimaryKey, T> {
     /**
      * 插入一条数据
+     *
      * @param entity 数据
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -28,6 +29,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 批量插入数据
+     *
      * @param entity 数据
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -35,6 +37,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键查询数据
+     *
      * @param pk 主键
      * @return 数据
      */
@@ -43,6 +46,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键批量查询数据
+     *
      * @param pks 主键
      * @return 数据
      */
@@ -51,6 +55,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 查询所有数据
+     *
      * @return 数据
      */
     @Query(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -58,6 +63,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键更新数据
+     *
      * @param entity 数据
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -65,6 +71,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键批量更新数据
+     *
      * @param entity 数据
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -72,6 +79,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键删除数据
+     *
      * @param pk 主键
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)
@@ -79,6 +87,7 @@ public interface BaseMapper<PrimaryKey, T> {
 
     /**
      * 根据主键批量删除数据
+     *
      * @param pks 主键
      */
     @Execute(provider = DialectProvider.class, value = EMPTY_STRING)

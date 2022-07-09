@@ -103,7 +103,7 @@ public abstract class JdbcUtil {
     public static void commitTransactionIfNecessary(Transaction transaction) throws SQLException {
         if (transaction.isAutoCommit()) {
             transaction.commit();
-            CommonUtil.close(transaction);
+            IOUtil.close(transaction);
         }
     }
 

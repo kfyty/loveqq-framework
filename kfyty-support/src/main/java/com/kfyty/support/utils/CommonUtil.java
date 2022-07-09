@@ -2,14 +2,11 @@ package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
 import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Element;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,18 +14,17 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.kfyty.support.utils.IOUtil.ensureFolderExists;
+import static com.kfyty.support.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
@@ -94,10 +90,7 @@ public abstract class CommonUtil {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
 
     public static boolean empty(Object obj) {
-        if (obj != null && CharSequence.class.isAssignableFrom(obj.getClass())) {
-            return ((CharSequence) obj).toString().trim().length() < 1;
-        }
-        return size(obj) < 1;
+        return obj instanceof CharSequence ? ((CharSequence) obj).toString().trim().length() < 1 : size(obj) < 1;
     }
 
     public static boolean notEmpty(Object obj) {
@@ -167,6 +160,16 @@ public abstract class CommonUtil {
         return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
     }
 
+    public static void iteratorSplit(String source, String start, String end, Consumer<String> substring) {
+        int startIndex = source.indexOf(start);
+        int endIndex = source.indexOf(end, startIndex);
+        while (startIndex != -1 && endIndex != -1) {
+            substring.accept(source.substring(startIndex, endIndex));
+            startIndex = source.indexOf(start, endIndex);
+            endIndex = source.indexOf(end, startIndex);
+        }
+    }
+
     public static List<Object> toList(Object value) {
         return toList(value, entry -> entry);
     }
@@ -190,9 +193,7 @@ public abstract class CommonUtil {
                 .entrySet()
                 .stream()
                 .sorted(comparator)
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
-                    throw new IllegalStateException("duplicate key " + k2);
-                }, LinkedHashMap::new));
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
         unsortedMap.clear();
         unsortedMap.putAll(sorted);
         return unsortedMap;
@@ -282,47 +283,6 @@ public abstract class CommonUtil {
         return target;
     }
 
-    public static String resolveAttribute(Element element, String name) {
-        return resolveAttribute(element, name, null);
-    }
-
-    public static String resolveAttribute(Element element, String name, Supplier<RuntimeException> emptyException) {
-        String attribute = element.getAttribute(name);
-        if (emptyException != null && CommonUtil.empty(attribute)) {
-            throw emptyException.get();
-        }
-        return attribute;
-    }
-
-    public static void ensureFolderExists(String path) {
-        File file = new File(path);
-        if (!file.exists() && !file.mkdirs()) {
-            throw new SupportException("ensure folder exists failed !");
-        }
-    }
-
-    public static List<File> scanFiles(String path) {
-        return scanFiles(path, e -> true);
-    }
-
-    public static List<File> scanFiles(String path, Predicate<File> filePredicate) {
-        return scanFiles(path, filePredicate, Thread.currentThread().getContextClassLoader());
-    }
-
-    public static List<File> scanFiles(String path, Predicate<File> filePredicate, ClassLoader classLoader) {
-        try {
-            URL root = Objects.requireNonNull(classLoader.getResource(""));
-            File file = new File(root.getPath() + path);
-            if (file.isFile()) {
-                return filePredicate.test(file) ? singletonList(file) : emptyList();
-            }
-            File[] files = file.listFiles();
-            return files == null ? emptyList() : Arrays.stream(files).filter(File::isFile).filter(filePredicate).collect(Collectors.toList());
-        } catch (Exception e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
     public static void sleep(long time) {
         sleep(time, TimeUnit.MILLISECONDS);
     }
@@ -331,20 +291,6 @@ public abstract class CommonUtil {
         try {
             timeUnit.sleep(time);
         } catch (InterruptedException e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
-    public static void close(Object obj) {
-        if (obj == null) {
-            return;
-        }
-        if (!(obj instanceof AutoCloseable)) {
-            throw new SupportException("can't close !");
-        }
-        try {
-            ((AutoCloseable) obj).close();
-        } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
     }
@@ -361,10 +307,7 @@ public abstract class CommonUtil {
             Method method = ReflectUtil.getMethod(clazz, "generateProxyClass", String.class, Class[].class);
             byte[] b = (byte[]) ReflectUtil.invokeMethod(null, method, proxy.getClass().getName(), proxy.getClass().getInterfaces());
             ensureFolderExists(savePath);
-            FileOutputStream out = new FileOutputStream(savePath + proxy.getClass().getName() + ".class");
-            out.write(b);
-            out.flush();
-            close(out);
+            IOUtil.close(IOUtil.write(new FileOutputStream(savePath + proxy.getClass().getName() + ".class"), b));
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

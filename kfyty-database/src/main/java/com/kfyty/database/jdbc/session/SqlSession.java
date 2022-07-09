@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.support.utils.CommonUtil.notEmpty;
+import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
 
 /**
  * 功能描述: SqlSession，仅支持通过接口代理操作数据库
@@ -126,7 +127,7 @@ public class SqlSession implements InvocationHandler {
         if (!(annotation instanceof Query || annotation instanceof SubQuery)) {
             return;
         }
-        returnType.setMapKey(ReflectUtil.invokeMethod(annotation, "key"));
+        returnType.setMapKey(invokeMethod(annotation, "key"));
     }
 
     /**
@@ -137,11 +138,11 @@ public class SqlSession implements InvocationHandler {
      * @return SQL
      */
     private String resolveSQLByAnnotation(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        Class<?> provider = ReflectUtil.invokeMethod(annotation, "provider");
+        Class<?> provider = invokeMethod(annotation, "provider");
         if (!provider.equals(void.class)) {
             return this.providerAdapter.doProvide(provider, this.mapperClass, mapperMethod, annotation, params);
         }
-        String sql = ReflectUtil.invokeMethod(annotation, "value");
+        String sql = invokeMethod(annotation, "value");
         if (CommonUtil.empty(sql)) {
             throw new IllegalArgumentException("SQL statement is empty !");
         }
@@ -157,7 +158,7 @@ public class SqlSession implements InvocationHandler {
      */
     private String processForEach(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
         String sql = resolveSQLByAnnotation(mapperMethod, annotation, params);
-        ForEach[] forEachList = ReflectUtil.invokeMethod(annotation, "forEach");
+        ForEach[] forEachList = invokeMethod(annotation, "forEach");
         return sql + ForEachUtil.processForEach(params, forEachList);
     }
 
@@ -169,7 +170,7 @@ public class SqlSession implements InvocationHandler {
      */
     private Object processSubQuery(Method mapperMethod, Annotation annotation, Object obj) {
         if (annotation instanceof Query && obj != null) {
-            SubQuery[] subQueries = ReflectUtil.invokeMethod(annotation, "subQuery");
+            SubQuery[] subQueries = invokeMethod(annotation, "subQuery");
             CommonUtil.consumer(obj, e -> this.processSubQuery(mapperMethod, subQueries, e), Map.Entry::getValue);
         }
         return obj;
@@ -243,6 +244,7 @@ public class SqlSession implements InvocationHandler {
         checkMapKey(annotation, returnType);
         final String sql = this.processForEach(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
+        final Transaction before = TransactionHolder.currentTransaction(false);
         try {
             Transaction transaction = this.getTransaction();
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
@@ -251,10 +253,10 @@ public class SqlSession implements InvocationHandler {
             }
             String methodName = BeanUtil.getBeanName(annotation.annotationType());
             Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-            Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+            Object retValue = invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             return this.processSubQuery(mapperMethod, annotation, retValue);
         } finally {
-            TransactionHolder.removeCurrentTransaction();
+            TransactionHolder.resetCurrentTransaction(before);
         }
     }
 

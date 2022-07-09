@@ -14,13 +14,18 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.FIELD})
 public @interface TemplateExcel {
     /**
-     * 表头
+     * 标注在类上时，表示工作簿名称，数据将写入该工作簿
+     * 标注在属性上时，表示表头名称
+     * <p>
+     * 若工作簿上的模板表头不存在，则按类的表头导出
+     * 若工作簿上的模板表头存在，则必须和类的表头完全不匹配，否则抛出异常
+     * </p>
      *
-     * @return 表头
+     * @return 工作簿/表头
      */
     String value();
 

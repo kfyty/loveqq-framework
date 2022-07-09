@@ -14,6 +14,7 @@ import com.kfyty.support.utils.JsonUtil;
 
 import java.net.HttpCookie;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static java.lang.String.format;
@@ -96,6 +97,11 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
         @Override
         public String cookie(String name) {
             return this.response.getCookieValue(name);
+        }
+
+        @Override
+        public Map<String, List<String>> headers() {
+            return this.response.headers();
         }
 
         @Override

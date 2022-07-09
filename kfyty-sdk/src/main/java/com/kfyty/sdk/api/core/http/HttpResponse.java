@@ -2,6 +2,7 @@ package com.kfyty.sdk.api.core.http;
 
 import java.net.HttpCookie;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 描述: http 响应
@@ -40,6 +41,13 @@ public interface HttpResponse extends AutoCloseable {
      * @return cookie
      */
     String cookie(String name);
+
+    /**
+     * 获取请求头
+     *
+     * @return 请求头
+     */
+    Map<String, List<String>> headers();
 
     /**
      * 获取 cookies
