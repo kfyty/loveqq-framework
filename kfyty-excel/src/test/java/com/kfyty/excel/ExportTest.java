@@ -17,9 +17,10 @@ public class ExportTest {
     @Test
     public void test() {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        TemplateExcelParallelExport<ExportEntity> export = new TemplateExcelParallelExport<>(out, ExportEntity.class);
+        TemplateExcelParallelExport export = new TemplateExcelParallelExport(out, ExportEntity.class);
         export.start();
         export.write(new ExportEntity(1L, "test"));
         export.end();
+        export.close();
     }
 }

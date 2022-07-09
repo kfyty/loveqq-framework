@@ -12,6 +12,7 @@ import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.support.io.SimpleBufferedWriter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.IOUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -156,14 +157,13 @@ public class GenerateSources {
                     out = new SimpleBufferedWriter(new FileWriter(file, template.sameFile()));
                 }
                 template.doGenerate(tableInfo, configuration, out);
-                out.flush();
                 if (!template.sameFile()) {
-                    CommonUtil.close(out);
+                    IOUtil.close(out);
                     out = null;
                 }
                 log.debug("generate resource: [{}] success --> [{}]", file.getName(), file.getAbsolutePath());
             }
-            CommonUtil.close(out);
+            IOUtil.close(out);
             out = null;
         }
     }

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@TemplateExcel("public")
 public class ExportEntity {
     @TemplateExcel("id")
     private Long id;

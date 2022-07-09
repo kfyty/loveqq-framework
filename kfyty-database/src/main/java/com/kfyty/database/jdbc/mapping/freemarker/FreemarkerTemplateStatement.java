@@ -24,4 +24,9 @@ public class FreemarkerTemplateStatement extends TemplateStatement {
     public FreemarkerTemplateStatement(String id, String labelType) {
         super(id, labelType);
     }
+
+    public FreemarkerTemplateStatement(String id, String labelType, Template template) {
+        this(id, labelType);
+        this.template = template;
+    }
 }

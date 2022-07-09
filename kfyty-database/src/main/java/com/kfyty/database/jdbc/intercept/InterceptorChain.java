@@ -5,7 +5,7 @@ import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.TransactionHolder;
 import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.support.utils.IOUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ResultSetUtil;
 import com.kfyty.support.wrapper.ValueWrapper;
@@ -91,8 +91,8 @@ public class InterceptorChain implements AutoCloseable {
     @Override
     public void close() {
         try {
-            CommonUtil.close(this.getPreparedStatement());
-            CommonUtil.close(this.getResultSet());
+            IOUtil.close(this.getPreparedStatement());
+            IOUtil.close(this.getResultSet());
         } finally {
             try {
                 commitTransactionIfNecessary(TransactionHolder.currentTransaction());
