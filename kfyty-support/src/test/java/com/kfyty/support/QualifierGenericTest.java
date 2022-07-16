@@ -63,7 +63,7 @@ public class QualifierGenericTest {
         SimpleGeneric mapT = SimpleGeneric.from(QualifierGenericTest.class.getMethod("mapT"));
         SimpleGeneric mapList = SimpleGeneric.from(QualifierGenericTest.class.getMethod("mapList"));
         QualifierGeneric nested = QualifierGeneric.from(QualifierGenericTest.class.getMethod("nested"));
-        Assert.assertFalse(t.isSimpleParameterizedType());
+        Assert.assertFalse(t.isSimpleGeneric());
         Assert.assertTrue(arrT.isSimpleArray());
         Assert.assertTrue(List.class.isAssignableFrom(listT.getSourceType()) && !Map.class.isAssignableFrom(listT.getFirst().get()));
         Assert.assertTrue(Set.class.isAssignableFrom(setT.getSourceType()));
@@ -88,7 +88,7 @@ public class QualifierGenericTest {
         ActualGeneric fromService = ActualGeneric.from(DefaultController.class, service);
         ActualGeneric fromBaseService = ActualGeneric.from(DefaultController.class, baseService);
         ActualGeneric fromEntityClass = ActualGeneric.from(DefaultController.class, entityClass);
-        Assert.assertFalse(fromT.isSimpleParameterizedType());
+        Assert.assertFalse(fromT.isSimpleGeneric());
         Assert.assertEquals(fromT.getSourceType(), Entity.class);
         Assert.assertEquals(fromK.getSourceType(), Integer.class);
         Assert.assertEquals(fromBaseT.getSourceType(), Entity.class);

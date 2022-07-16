@@ -99,7 +99,7 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, ActualGeneric returnType, Autowired autowired) {
         Object resolveBean = null;
-        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleParameterizedType(), autowired);
+        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleGeneric(), autowired);
         if (List.class.isAssignableFrom(returnType.getSourceType())) {
             resolveBean = new ArrayList<>(beans.values());
         }

@@ -30,6 +30,73 @@ public class SimpleGeneric extends QualifierGeneric {
         super(sourceType, resolveType);
     }
 
+    /**
+     * 是否是简单的数组泛型，即只有一个泛型，且泛型是数组
+     * eg: <code>String[]</code>
+     *
+     * @return true if simple array generic
+     */
+    public boolean isSimpleArray() {
+        if (this.size() != 1) {
+            return false;
+        }
+        return this.getGeneric().isArray();
+    }
+
+    /**
+     * 返回是否是简单的参数化类型，即泛型参数只有一个的泛型，不包含类型变量的泛型(List<E>)
+     * eg: <code>List<String><code/>
+     * eg: <code>List<String[]><code/>
+     * eg: <code>String[]<code/>
+     *
+     * @return true if simple generic
+     */
+    public boolean isSimpleGeneric() {
+        return !Objects.equals(this.sourceType, this.resolveType) || this.isSimpleArray();
+    }
+
+    /**
+     * 返回是否是 Map<K, V> 泛型
+     *
+     * @return true if map generic
+     */
+    public boolean isMapGeneric() {
+        return Map.class.isAssignableFrom(this.sourceType);
+    }
+
+    /**
+     * 返回 map key 泛型
+     *
+     * @return map key generic
+     */
+    public Generic getMapKeyType() {
+        return this.getFirst();
+    }
+
+    /**
+     * 返回 map value 泛型
+     *
+     * @return map value generic
+     */
+    public Generic getMapValueType() {
+        return this.getSecond();
+    }
+
+    /**
+     * 返回简单的实际泛型
+     *
+     * @return 泛型
+     */
+    public Class<?> getSimpleActualType() {
+        if (isMapGeneric()) {
+            return this.getMapValueType().get();
+        }
+        if (!isSimpleGeneric() || !Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !this.isSimpleArray()) {
+            return this.sourceType;
+        }
+        return this.getFirst().get();
+    }
+
     @Override
     protected QualifierGeneric create(Class<?> sourceType) {
         return new SimpleGeneric(sourceType);
@@ -38,42 +105,6 @@ public class SimpleGeneric extends QualifierGeneric {
     @Override
     protected QualifierGeneric create(Class<?> sourceType, Type resolveType) {
         return new SimpleGeneric(sourceType, resolveType);
-    }
-
-    public boolean isSimpleArray() {
-        if (this.size() != 1) {
-            return false;
-        }
-        return this.getFirst().isArray();
-    }
-
-    public boolean isSimpleParameterizedType() {
-        return !Objects.equals(this.sourceType, this.resolveType) || isSimpleArray();
-    }
-
-    public boolean isMapGeneric() {
-        return Map.class.isAssignableFrom(this.sourceType);
-    }
-
-    public Generic getMapKeyType() {
-        return this.getFirst();
-    }
-
-    public Generic getMapValueType() {
-        return this.getSecond();
-    }
-
-    public Class<?> getSimpleActualType() {
-        if (!isSimpleParameterizedType()) {
-            return this.sourceType;
-        }
-        if (isMapGeneric()) {
-            return getMapValueType().get();
-        }
-        if (!Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !isSimpleArray()) {
-            return this.sourceType;
-        }
-        return this.getFirst().get();
     }
 
     public static SimpleGeneric from(Class<?> clazz) {
