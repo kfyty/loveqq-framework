@@ -19,15 +19,20 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public class SimpleGeneric extends QualifierGeneric {
-    @Getter @Setter
+    @Getter
+    @Setter
     private String mapKey;
 
     public SimpleGeneric(Class<?> sourceType) {
         super(sourceType);
     }
 
-    public SimpleGeneric(Class<?> sourceType, Type resolveType) {
-        super(sourceType, resolveType);
+    public SimpleGeneric(Type generic) {
+        super(generic);
+    }
+
+    public SimpleGeneric(Class<?> sourceType, Type generic) {
+        super(sourceType, generic);
     }
 
     /**
@@ -52,6 +57,9 @@ public class SimpleGeneric extends QualifierGeneric {
      * @return true if simple generic
      */
     public boolean isSimpleGeneric() {
+        if (this.sourceType == null) {
+            return this.size() == 1;
+        }
         return !Objects.equals(this.sourceType, this.resolveType) || this.isSimpleArray();
     }
 
@@ -61,7 +69,7 @@ public class SimpleGeneric extends QualifierGeneric {
      * @return true if map generic
      */
     public boolean isMapGeneric() {
-        return Map.class.isAssignableFrom(this.sourceType);
+        return this.isGeneric(Map.class);
     }
 
     /**
@@ -91,8 +99,8 @@ public class SimpleGeneric extends QualifierGeneric {
         if (isMapGeneric()) {
             return this.getMapValueType().get();
         }
-        if (!isSimpleGeneric() || !Collection.class.isAssignableFrom(this.sourceType) && !Class.class.isAssignableFrom(this.sourceType) && !this.isSimpleArray()) {
-            return this.sourceType;
+        if (!isSimpleGeneric() || !this.isGeneric(Collection.class) && !this.isGeneric(Class.class) && !this.isSimpleArray()) {
+            return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
         }
         return this.getFirst().get();
     }

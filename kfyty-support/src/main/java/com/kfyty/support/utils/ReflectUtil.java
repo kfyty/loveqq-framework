@@ -7,6 +7,7 @@ import com.kfyty.support.wrapper.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -126,6 +127,10 @@ public abstract class ReflectUtil {
         return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
     }
 
+    public static boolean isStaticFinal(int modifiers) {
+        return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
+    }
+
     public static boolean hasAnyInterfaces(Class<?> clazz) {
         return clazz.isInterface() || clazz.getInterfaces().length > 0;
     }
@@ -172,6 +177,9 @@ public abstract class ReflectUtil {
     public static <T> T newInstance(Class<T> clazz) {
         if (!isAbstract(clazz)) {
             return newInstance(searchSuitableConstructor(clazz));
+        }
+        if (clazz.isArray()) {
+            return (T) Array.newInstance(clazz.getComponentType(), 0);
         }
         if (SortedSet.class.isAssignableFrom(clazz)) {
             return (T) new TreeSet<>();

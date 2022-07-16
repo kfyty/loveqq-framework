@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static com.kfyty.support.utils.ReflectUtil.getRawType;
 import static com.kfyty.support.utils.ReflectUtil.getTypeVariableName;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 全限定泛型描述
@@ -64,9 +65,16 @@ public class QualifierGeneric {
      * @param sourceType 类型
      */
     public QualifierGeneric(Class<?> sourceType) {
-        this.sourceType = sourceType;
-        this.resolveType = sourceType;
-        this.genericInfo = new LinkedHashMap<>(4);
+        this(sourceType, null);
+    }
+
+    /**
+     * 构建一个没有原始类型的泛型的 QualifierGeneric
+     *
+     * @param genericType 类型
+     */
+    public QualifierGeneric(Type genericType) {
+        this(null, genericType);
     }
 
     /**
@@ -87,7 +95,10 @@ public class QualifierGeneric {
      * @return this
      */
     public QualifierGeneric doResolve() {
-        return this.processGenericType(this.resolveType);
+        if (this.sourceType == this.resolveType && this.sourceType != null && !this.sourceType.isArray()) {
+            return this;
+        }
+        return this.processGenericType(ofNullable(this.resolveType).orElse(this.sourceType));
     }
 
     /**
@@ -109,6 +120,19 @@ public class QualifierGeneric {
     }
 
     /**
+     * 是否是给定类型的泛型
+     *
+     * @param generic 泛型 eg: Map.class
+     * @return true if is generic
+     */
+    public boolean isGeneric(Class<?> generic) {
+        if (this.sourceType != null) {
+            return generic.isAssignableFrom(this.sourceType);
+        }
+        return generic.isAssignableFrom(ReflectUtil.getRawType(this.resolveType));
+    }
+
+    /**
      * 获取泛型信息，如果泛型有多个则抛出异常
      *
      * @return 泛型
@@ -118,6 +142,16 @@ public class QualifierGeneric {
             throw new SupportException("more than one generic !");
         }
         return this.getFirst();
+    }
+
+    /**
+     * 获取嵌套的泛型
+     *
+     * @param generic 嵌套类型的父泛型
+     * @return 嵌套的泛型
+     */
+    public QualifierGeneric getNested(Generic generic) {
+        return this.genericInfo.get(generic);
     }
 
     /**

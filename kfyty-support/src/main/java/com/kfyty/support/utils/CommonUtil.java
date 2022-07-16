@@ -156,8 +156,16 @@ public abstract class CommonUtil {
         return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toList());
     }
 
+    public static <T> List<T> split(String source, String pattern, Function<String, T> mapping) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toList());
+    }
+
     public static Set<String> split(String source, String pattern, boolean distinct) {
         return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
+    }
+
+    public static <T> Set<T> split(String source, String pattern, Function<String, T> mapping, boolean distinct) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toSet());
     }
 
     public static void iteratorSplit(String source, String start, String end, Consumer<String> substring) {
@@ -186,6 +194,15 @@ public abstract class CommonUtil {
         }
         log.error("data to list error, data is not collection, array or map !");
         return emptyList();
+    }
+
+    public static Object copyToArray(Class<?> elementType, Collection<?> collection) {
+        int index = 0;
+        Object instance = Array.newInstance(elementType, collection.size());
+        for (Object o : collection) {
+            Array.set(instance, index++, o);
+        }
+        return instance;
     }
 
     public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {

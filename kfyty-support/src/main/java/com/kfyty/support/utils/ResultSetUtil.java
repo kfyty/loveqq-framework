@@ -5,7 +5,6 @@ import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.type.TypeHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -58,7 +57,7 @@ public abstract class ResultSetUtil {
         if (returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if (!returnType.isSimpleGeneric()) {
+        if (!returnType.hasGeneric()) {
             return processSingleObject(resultSet, returnType.getSourceType());
         }
         if (Set.class.isAssignableFrom(returnType.getSourceType())) {
@@ -78,29 +77,19 @@ public abstract class ResultSetUtil {
 
     public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
-        if (CommonUtil.empty(result)) {
-            return null;
-        }
         if (result.size() > 1) {
             throw new TooManyResultException("too many result found !");
         }
-        return result.get(0);
+        return result.isEmpty() ? null : result.get(0);
     }
 
     public static <T> Object processArrayObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
         List<T> result = processListObject(resultSet, clazz);
-        if (CommonUtil.empty(result)) {
-            return Array.newInstance(clazz, 0);
-        }
-        Object o = Array.newInstance(clazz, result.size());
-        for (int i = 0; i < result.size(); i++) {
-            Array.set(o, i, result.get(i));
-        }
-        return o;
+        return CommonUtil.copyToArray(clazz, result);
     }
 
     public static <T> Set<T> processSetObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
-        return Optional.of(processListObject(resultSet, clazz)).filter(CommonUtil::notEmpty).map(HashSet::new).orElse(new HashSet<>(2));
+        return Optional.of(processListObject(resultSet, clazz)).map(HashSet::new).orElseGet(HashSet::new);
     }
 
     @SuppressWarnings("unchecked")

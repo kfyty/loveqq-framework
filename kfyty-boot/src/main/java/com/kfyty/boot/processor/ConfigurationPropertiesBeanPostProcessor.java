@@ -1,8 +1,8 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.GenericPropertiesContext;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.support.autoconfig.PropertyContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
@@ -17,7 +17,6 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.support.utils.ConverterUtil.getTypeConverter;
 
 /**
  * 描述:
@@ -29,10 +28,10 @@ import static com.kfyty.support.utils.ConverterUtil.getTypeConverter;
 @Component
 public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
-    private PropertyContext propertyContext;
+    private ApplicationContext applicationContext;
 
     @Autowired
-    private ApplicationContext applicationContext;
+    private GenericPropertiesContext propertyContext;
 
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         ConfigurationProperties configurationProperties = this.obtainConfigurationPropertiesAnnotation(beanName);
@@ -50,10 +49,13 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
         return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), ConfigurationProperties.class);
     }
 
-    protected <T extends Enum<T>> void bindConfigurationProperties(Object bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
+    public <T extends Enum<T>> void bindConfigurationProperties(Object bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(bean.getClass()).entrySet()) {
             String key = prefix + "." + entry.getKey();
             Field field = entry.getValue();
+            if (ReflectUtil.isStaticFinal(field.getModifiers())) {
+                continue;
+            }
             if (hasAnnotation(field, NestedConfigurationProperty.class)) {
                 if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
                     Object fieldInstance = ReflectUtil.newInstance(field.getType());
@@ -62,19 +64,26 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
                 }
                 continue;
             }
-            if (!this.propertyContext.contains(key) || !field.getType().isEnum() && getTypeConverter(String.class, field.getType()) == null) {
+            if (!Map.class.isAssignableFrom(field.getType()) && !this.propertyContext.contains(key)) {
                 if (ignoreUnknownFields) {
                     continue;
                 }
-                throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] not found or no suitable converter");
+                throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] not exists");
             }
-            if (!field.getType().isEnum()) {
-                ReflectUtil.setFieldValue(bean, field, this.propertyContext.getProperty(key, field.getType()));
+            if (field.getType().isEnum()) {
+                @SuppressWarnings("unchecked")
+                T enumValue = Enum.valueOf((Class<T>) field.getType(), this.propertyContext.getProperty(key, String.class));
+                ReflectUtil.setFieldValue(bean, field, enumValue);
                 continue;
             }
-            @SuppressWarnings("unchecked")
-            T enumValue = Enum.valueOf((Class<T>) field.getType(), this.propertyContext.getProperty(key, String.class));
-            ReflectUtil.setFieldValue(bean, field, enumValue);
+            try {
+                ReflectUtil.setFieldValue(bean, field, this.propertyContext.getProperty(key, field.getGenericType()));
+            } catch (Exception e) {
+                if (ignoreInvalidFields) {
+                    continue;
+                }
+                throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "]", e);
+            }
         }
     }
 }
