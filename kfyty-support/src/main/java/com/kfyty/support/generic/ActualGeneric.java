@@ -26,8 +26,12 @@ public class ActualGeneric extends SimpleGeneric {
         super(sourceType);
     }
 
-    public ActualGeneric(Class<?> sourceType, Type resolveType) {
-        super(sourceType, resolveType);
+    public ActualGeneric(Type generic) {
+        super(generic);
+    }
+
+    public ActualGeneric(Class<?> sourceType, Type generic) {
+        super(sourceType, generic);
     }
 
     @Override

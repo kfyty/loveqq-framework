@@ -5,7 +5,6 @@ import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.PropertyContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.converter.Converter;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ConverterUtil;
@@ -24,19 +23,18 @@ import static java.util.Collections.unmodifiableMap;
  * @date 2022/3/12 15:11
  * @email kfyty725@hotmail.com
  */
-@Component
 public class DefaultPropertiesContext implements PropertyContext, ApplicationContextAware, InitializingBean {
-    private static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
+    protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
      * applicationContext
      */
-    private ApplicationContext applicationContext;
+    protected ApplicationContext applicationContext;
 
     /**
      * 属性配置
      */
-    private final Map<String, String> propertySources;
+    protected final Map<String, String> propertySources;
 
     public DefaultPropertiesContext() {
         this.propertySources = new HashMap<>();

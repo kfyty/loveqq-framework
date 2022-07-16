@@ -16,12 +16,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Value {
     /**
-     * 配置文件的属性 eg: ${a.b}
+     * 配置文件的属性 eg: ${a.b:default}
      */
-    String value() default "";
-
-    /**
-     * 默认值
-     */
-    String defaultValue() default "";
+    String value();
 }
