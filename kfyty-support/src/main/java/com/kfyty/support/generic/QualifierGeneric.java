@@ -22,7 +22,7 @@ import static com.kfyty.support.utils.ReflectUtil.getRawType;
 import static com.kfyty.support.utils.ReflectUtil.getTypeVariableName;
 
 /**
- * 描述: 泛型描述
+ * 描述: 全限定泛型描述
  *
  * @author kfyty725
  * @date 2021/6/24 13:00
@@ -47,27 +47,103 @@ public class QualifierGeneric {
 
     /**
      * 泛型类型，对于其 key，取值如下：
-     *      如果是 Class：
-     *              如果 Class 是数组类型，则为数组组件类型
-     *              如果 Class 非泛型 Class，则为其父类直接泛型类型 + 接口直接泛型类型
-     *              如果都不是，则为空
-     *      如果是 Field，则为其类型的直接泛型
-     *      如果是 Method，则为其返回值类型的直接泛型
-     *      如果是 Parameter，则为其参数类型的直接泛型
+     * 如果是 Class：
+     * 如果 Class 是数组类型，则为数组组件类型
+     * 如果 Class 非泛型 Class，则为其父类直接泛型类型 + 接口直接泛型类型
+     * 如果都不是，则为空
+     * 如果是 Field，则为其类型的直接泛型
+     * 如果是 Method，则为其返回值类型的直接泛型
+     * 如果是 Parameter，则为其参数类型的直接泛型
      * 对于其 value，如果 key 是泛型，则递归查询，直到查询到泛型为 TypeVariable
      */
     protected final Map<Generic, QualifierGeneric> genericInfo;
 
-    protected QualifierGeneric(Class<?> sourceType) {
+    /**
+     * 构建一个没有泛型的 QualifierGeneric
+     *
+     * @param sourceType 类型
+     */
+    public QualifierGeneric(Class<?> sourceType) {
         this.sourceType = sourceType;
         this.resolveType = sourceType;
         this.genericInfo = new LinkedHashMap<>(4);
     }
 
-    protected QualifierGeneric(Class<?> sourceType, Type resolveType) {
+    /**
+     * 构建一个 QualifierGeneric
+     *
+     * @param sourceType  原始类型
+     * @param genericType 原始类型存在的泛型类型
+     */
+    public QualifierGeneric(Class<?> sourceType, Type genericType) {
         this.sourceType = sourceType;
-        this.resolveType = resolveType;
+        this.resolveType = genericType;
         this.genericInfo = new LinkedHashMap<>(4);
+    }
+
+    /**
+     * 解析泛型
+     *
+     * @return this
+     */
+    public QualifierGeneric doResolve() {
+        return this.processGenericType(this.resolveType);
+    }
+
+    /**
+     * 返回泛型的数量
+     *
+     * @return size
+     */
+    public int size() {
+        return this.genericInfo.size();
+    }
+
+    /**
+     * 返回是否存在泛型
+     *
+     * @return true is exists
+     */
+    public boolean hasGeneric() {
+        return this.size() > 0;
+    }
+
+    /**
+     * 获取泛型信息，如果泛型有多个则抛出异常
+     *
+     * @return 泛型
+     */
+    public Generic getGeneric() {
+        if (this.size() > 1) {
+            throw new SupportException("more than one generic !");
+        }
+        return this.getFirst();
+    }
+
+    /**
+     * 获取第一个泛型
+     *
+     * @return 第一个泛型
+     */
+    public Generic getFirst() {
+        if (!this.hasGeneric()) {
+            throw new SupportException("generic not exists !");
+        }
+        return this.genericInfo.keySet().iterator().next();
+    }
+
+    /**
+     * 获取第二个泛型
+     *
+     * @return 第二个泛型
+     */
+    public Generic getSecond() {
+        if (this.size() < 2) {
+            throw new SupportException("generic not exists !");
+        }
+        Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
+        iterator.next();
+        return iterator.next();
     }
 
     protected QualifierGeneric create(Class<?> sourceType) {
@@ -78,41 +154,7 @@ public class QualifierGeneric {
         return new QualifierGeneric(sourceType, resolveType);
     }
 
-    public QualifierGeneric doResolve() {
-        return this.processGenericType(this.resolveType);
-    }
-
-    public int size() {
-        return this.genericInfo.size();
-    }
-
-    public Generic getFirst() {
-        return this.genericInfo.keySet().iterator().next();
-    }
-
-    public Generic getSecond() {
-        Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
-        iterator.next();
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
-    public static QualifierGeneric from(Class<?> clazz) {
-        return new QualifierGeneric(clazz).doResolve();
-    }
-
-    public static QualifierGeneric from(Field field) {
-        return new QualifierGeneric(field.getType(), field.getGenericType()).doResolve();
-    }
-
-    public static QualifierGeneric from(Method method) {
-        return new QualifierGeneric(method.getReturnType(), method.getGenericReturnType()).doResolve();
-    }
-
-    public static QualifierGeneric from(Parameter parameter) {
-        return new QualifierGeneric(parameter.getType(), parameter.getParameterizedType()).doResolve();
-    }
-
-    private QualifierGeneric processGenericType(Type genericType) {
+    protected QualifierGeneric processGenericType(Type genericType) {
         if (genericType == null) {
             return this;
         }
@@ -139,7 +181,7 @@ public class QualifierGeneric {
         throw new SupportException("unsupported generic type !");
     }
 
-    private void processClassGenericType(Class<?> clazz) {
+    protected void processClassGenericType(Class<?> clazz) {
         if (clazz.isArray()) {
             this.genericInfo.put(new Generic(clazz.getComponentType(), true), null);
             return;
@@ -151,15 +193,32 @@ public class QualifierGeneric {
         }
     }
 
-    private void processGenericArrayType(GenericArrayType type) {
+    protected void processGenericArrayType(GenericArrayType type) {
         this.processGenericType(type.getGenericComponentType());
     }
 
-    private void processParameterizedType(ParameterizedType type) {
+    protected void processParameterizedType(ParameterizedType type) {
         this.processParameterizedType(type, null);
     }
 
-    private void processParameterizedType(ParameterizedType type, Class<?> superType) {
+    protected void processWildcardType(WildcardType wildcardType) {
+        Type type = CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0];
+        this.processGenericType(type);
+    }
+
+    protected void processTypeVariable(TypeVariable<?> typeVariable) {
+        this.processTypeVariable(getTypeVariableName(typeVariable), false, null);
+    }
+
+    protected void processTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
+        if (superType == null) {
+            this.genericInfo.put(new Generic(typeVariableName, isArray), null);
+            return;
+        }
+        this.genericInfo.put(new SuperGeneric(typeVariableName, isArray, superType), null);
+    }
+
+    protected void processParameterizedType(ParameterizedType type, Class<?> superType) {
         Type[] actualTypeArguments = type.getActualTypeArguments();
         for (Type actualTypeArgument : actualTypeArguments) {
             if (actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
@@ -187,20 +246,19 @@ public class QualifierGeneric {
         }
     }
 
-    private void processWildcardType(WildcardType wildcardType) {
-        Type type = CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0];
-        this.processGenericType(type);
+    public static QualifierGeneric from(Class<?> clazz) {
+        return new QualifierGeneric(clazz).doResolve();
     }
 
-    private void processTypeVariable(TypeVariable<?> typeVariable) {
-        this.processTypeVariable(getTypeVariableName(typeVariable), false, null);
+    public static QualifierGeneric from(Field field) {
+        return new QualifierGeneric(field.getType(), field.getGenericType()).doResolve();
     }
 
-    private void processTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
-        if (superType == null) {
-            this.genericInfo.put(new Generic(typeVariableName, isArray), null);
-            return;
-        }
-        this.genericInfo.put(new SuperGeneric(typeVariableName, isArray, superType), null);
+    public static QualifierGeneric from(Method method) {
+        return new QualifierGeneric(method.getReturnType(), method.getGenericReturnType()).doResolve();
+    }
+
+    public static QualifierGeneric from(Parameter parameter) {
+        return new QualifierGeneric(parameter.getType(), parameter.getParameterizedType()).doResolve();
     }
 }

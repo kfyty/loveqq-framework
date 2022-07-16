@@ -58,7 +58,7 @@ public abstract class ResultSetUtil {
         if (returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if (!returnType.isSimpleParameterizedType()) {
+        if (!returnType.isSimpleGeneric()) {
             return processSingleObject(resultSet, returnType.getSourceType());
         }
         if (Set.class.isAssignableFrom(returnType.getSourceType())) {
