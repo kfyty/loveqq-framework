@@ -10,7 +10,6 @@ import com.kfyty.support.autoconfig.annotation.Value;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import com.kfyty.support.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static com.kfyty.support.utils.ConverterUtil.convert;
 import static com.kfyty.support.utils.ReflectUtil.setFieldValue;
 
 /**
@@ -50,7 +48,11 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             if (property == null && resolve.getValue() == null) {
                 throw new IllegalArgumentException("parameter does not exist: " + resolve.getKey());
             }
-            setFieldValue(target, field, property != null ? property : convert(resolve.getValue(), field.getType()));
+            if (property == null) {
+                this.propertyContext.setProperty(resolve.getKey(), resolve.getValue());
+                property = this.propertyContext.getProperty(resolve.getKey(), field.getGenericType());
+            }
+            setFieldValue(target, field, property);
         }
         if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
             BeanUtil.copyProperties(target, bean);
@@ -59,10 +61,10 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
     }
 
     private Pair<String, String> resolve(String value) {
-        int index = value.indexOf(value, ':');
-        if (index < 0 || index == value.length() - 1) {
-            return new Pair<>(value.replaceAll("[${}]", ""), index < 0 ? null : CommonUtil.EMPTY_STRING);
+        int index = value.indexOf(':');
+        if (index < 0) {
+            return new Pair<>(value.replaceAll("[${}]", ""), null);
         }
-        return new Pair<>(value.substring(0, index).replaceAll("[${}]", ""), value.substring(index + 1));
+        return new Pair<>(value.substring(0, index).replaceAll("[${}]", ""), value.substring(index + 1).replaceAll("[${}]", ""));
     }
 }

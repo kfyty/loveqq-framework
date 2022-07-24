@@ -4,7 +4,8 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.AutowiredProcessor;
+import com.kfyty.support.autoconfig.beans.autowired.AutowiredDescription;
+import com.kfyty.support.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
@@ -38,6 +39,7 @@ public class LookupMethodInterceptorProxy implements InterceptorChainPoint {
             return chain.proceed(methodProxy);
         }
         String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.getBeanName(method.getReturnType());
-        return this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(method), AnnotationUtil.findAnnotation(method, Autowired.class));
+        AutowiredDescription description = AutowiredDescription.from(AnnotationUtil.findAnnotation(method, Autowired.class));
+        return this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(method), description);
     }
 }
