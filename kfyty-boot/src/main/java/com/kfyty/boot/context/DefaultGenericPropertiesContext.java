@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.kfyty.support.utils.ConverterUtil.convert;
-import static java.util.Optional.ofNullable;
 
 /**
  * 描述:
@@ -51,7 +50,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     @SuppressWarnings("unchecked")
     public <T> T getProperty(String key, SimpleGeneric targetType, T defaultValue) {
         if (targetType.getResolveType() instanceof Class) {
-            return ofNullable((T) this.getProperty(key, (Class<?>) targetType.getResolveType())).orElse(defaultValue);
+            return (T) this.getProperty(key, (Class<?>) targetType.getResolveType(), null);
         }
         if (targetType.isMapGeneric()) {
             Map<String, String> properties = this.getProperties().entrySet().stream().filter(e -> e.getKey().startsWith(key)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

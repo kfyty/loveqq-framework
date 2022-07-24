@@ -2,6 +2,8 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.beans.autowired.AutowiredDescription;
+import com.kfyty.support.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.support.generic.ActualGeneric;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -17,7 +19,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+
+import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 简单的通用 bean 定义
@@ -185,11 +189,12 @@ public class GenericBeanDefinition implements BeanDefinition {
             return Collections.emptyMap();
         }
         Parameter[] parameters = this.constructor.getParameters();
-        Map<Class<?>, Object> constructorArgs = Optional.ofNullable(this.defaultConstructorArgs).map(LinkedHashMap::new).orElse(new LinkedHashMap<>(4));
+        Autowired constructorAnnotation = findAnnotation(this.constructor, Autowired.class);
+        Map<Class<?>, Object> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedHashMap::new).orElse(new LinkedHashMap<>(4));
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
-            Autowired autowired = AnnotationUtil.findAnnotation(parameter, Autowired.class);
-            Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), autowired != null ? autowired : AnnotationUtil.findAnnotation(this.constructor, Autowired.class));
+            Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(constructorAnnotation);
+            Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired));
             constructorArgs.put(parameter.getType(), resolveBean);
         }
         return constructorArgs;

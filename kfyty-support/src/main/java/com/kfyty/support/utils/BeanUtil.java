@@ -16,11 +16,12 @@ import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.BiPredicate;
 
+import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: bean 工具
@@ -61,8 +62,8 @@ public abstract class BeanUtil {
      * @return bean name
      */
     public static String getBeanName(Parameter parameter) {
-        Qualifier qualifier = AnnotationUtil.findAnnotation(parameter, Qualifier.class);
-        return qualifier != null ? qualifier.value() : getBeanName(parameter.getType(), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+        Qualifier qualifier = findAnnotation(parameter, Qualifier.class);
+        return qualifier != null ? qualifier.value() : getBeanName(parameter.getType(), ofNullable(findAnnotation(parameter, Autowired.class)).map(Autowired::value).orElse(null));
     }
 
     /**
@@ -79,12 +80,12 @@ public abstract class BeanUtil {
     /**
      * 从 class 以及 Autowired 注解中解析 bean name
      *
-     * @param clazz     class
-     * @param autowired Autowired 注解实例
+     * @param clazz         class
+     * @param autowiredName 可能的自动注入名称
      * @return bean name
      */
-    public static String getBeanName(Class<?> clazz, Autowired autowired) {
-        return autowired != null && CommonUtil.notEmpty(autowired.value()) ? autowired.value() : getBeanName(clazz);
+    public static String getBeanName(Class<?> clazz, String autowiredName) {
+        return CommonUtil.notEmpty(autowiredName) ? autowiredName : getBeanName(clazz);
     }
 
     /**
@@ -94,7 +95,7 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
      */
     public static int getBeanOrder(Object bean) {
-        return Optional.ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE);
+        return ofNullable(findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE);
     }
 
     /**
@@ -108,11 +109,11 @@ public abstract class BeanUtil {
             return getBeanOrder(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
-            Order order = AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Order.class);
+            Order order = findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Order.class);
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         if (beanDefinition instanceof GenericBeanDefinition) {
-            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Order.class);
+            Order order = findAnnotation(beanDefinition.getBeanType(), Order.class);
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         return Order.LOWEST_PRECEDENCE;

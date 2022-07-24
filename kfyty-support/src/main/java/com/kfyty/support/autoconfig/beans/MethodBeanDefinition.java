@@ -2,8 +2,8 @@ package com.kfyty.support.autoconfig.beans;
 
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Autowired;
+import com.kfyty.support.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.support.generic.ActualGeneric;
-import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+
+import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: Bean 注解定义的 bean 定义
@@ -118,9 +121,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
 
     protected Object[] prepareMethodArgs() {
         int index = 0;
+        Autowired methodAnnotation = findAnnotation(this.beanMethod, Autowired.class);
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
-            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AnnotationUtil.findAnnotation(parameter, Autowired.class));
+            Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(methodAnnotation);
+            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired));
         }
         return parameters;
     }
