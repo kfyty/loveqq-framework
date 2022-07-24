@@ -1,7 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.converter.Converter;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 
 import java.util.HashMap;
 import java.util.Map;

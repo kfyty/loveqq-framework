@@ -12,7 +12,7 @@ import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;

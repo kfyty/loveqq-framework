@@ -1,6 +1,6 @@
 package com.kfyty.support.utils;
 
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;

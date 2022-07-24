@@ -3,7 +3,7 @@ package com.kfyty.aop.aspectj.creator;
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.support.utils.BeanUtil;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 
 import java.util.Arrays;
 import java.util.List;
