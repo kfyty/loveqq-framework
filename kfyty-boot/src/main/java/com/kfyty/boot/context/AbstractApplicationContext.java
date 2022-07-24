@@ -17,7 +17,7 @@ import com.kfyty.support.event.ApplicationListener;
 import com.kfyty.support.event.ContextRefreshedEvent;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.wrapper.AnnotationWrapper;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

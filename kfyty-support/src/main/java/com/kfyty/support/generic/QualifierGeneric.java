@@ -39,12 +39,12 @@ public class QualifierGeneric {
      * 如果是 Method，则为其返回值类型
      * 如果是 Parameter，则为其参数类型
      */
-    protected final Class<?> sourceType;
+    protected Class<?> sourceType;
 
     /**
      * 解析的目标类型
      */
-    protected final Type resolveType;
+    protected Type resolveType;
 
     /**
      * 泛型类型，对于其 key，取值如下：

@@ -16,14 +16,14 @@ import com.kfyty.support.generic.Generic;
 import com.kfyty.support.generic.SimpleGeneric;
 import com.kfyty.support.jdbc.JdbcTransaction;
 import com.kfyty.support.jdbc.TransactionHolder;
-import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.jdbc.transaction.Transaction;
+import com.kfyty.support.method.MethodParameter;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.JdbcUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 

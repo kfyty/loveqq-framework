@@ -1,6 +1,5 @@
 package com.kfyty.support.utils;
 
-import com.sun.org.apache.xerces.internal.dom.DeferredTextImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -25,6 +24,11 @@ import java.util.function.Supplier;
  * @email kfyty725@hotmail.com
  */
 public abstract class XmlUtil {
+    /**
+     * DeferredTextImpl 实现类
+     */
+    private static final String DEFERRED_TEXT_IMPL_CLASS = "com.sun.org.apache.xerces.internal.dom.DeferredTextImpl";
+
     /**
      * 获取一个 DocumentBuilderFactory
      *
@@ -235,7 +239,7 @@ public abstract class XmlUtil {
      * @return 子节点
      */
     public static List<Node> availableChildren(Element element) {
-        return filterChildren(element, node -> !(node instanceof DeferredTextImpl));
+        return filterChildren(element, node -> !node.getClass().getName().equals(DEFERRED_TEXT_IMPL_CLASS));
     }
 
     /**

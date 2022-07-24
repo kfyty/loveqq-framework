@@ -1,5 +1,6 @@
 package com.kfyty.support.generic;
 
+import com.kfyty.support.reflect.GenericArrayTypeImpl;
 import com.kfyty.support.utils.ReflectUtil;
 
 import java.lang.reflect.Array;
@@ -47,8 +48,8 @@ public class ActualGeneric extends SimpleGeneric {
     protected void processActualGeneric() {
         if (this.resolveType instanceof TypeVariable) {
             Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.getFirst().getTypeVariable(), this.actualDeclaringClass);
-            ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "sourceType"), actualFieldType);
-            ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "resolveType"), actualFieldType);
+            this.sourceType = actualFieldType;
+            this.resolveType = actualFieldType;
             this.genericInfo.clear();
             return;
         }
@@ -64,8 +65,8 @@ public class ActualGeneric extends SimpleGeneric {
         this.genericInfo.clear();
         this.genericInfo.putAll(genericMap);
         if (this.resolveType instanceof GenericArrayType) {
-            ReflectUtil.setFinalFieldValue(this, ReflectUtil.getField(this.getClass(), "sourceType"), Array.newInstance(getFirst().get(), 0).getClass());
-            ReflectUtil.setFinalFieldValue(this.resolveType, ReflectUtil.getField(this.resolveType.getClass(), "genericComponentType"), getFirst().get());
+            this.sourceType = Array.newInstance(this.getFirst().get(), 0).getClass();
+            this.resolveType = GenericArrayTypeImpl.make(this.getFirst().get());
         }
     }
 

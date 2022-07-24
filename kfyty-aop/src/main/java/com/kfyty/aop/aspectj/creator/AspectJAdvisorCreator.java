@@ -8,7 +8,7 @@ import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

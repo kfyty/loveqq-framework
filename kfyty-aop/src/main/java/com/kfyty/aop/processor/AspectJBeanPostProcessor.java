@@ -12,7 +12,7 @@ import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.support.utils.CommonUtil;
 import com.kfyty.support.utils.ReflectUtil;
-import javafx.util.Pair;
+import com.kfyty.support.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
 
