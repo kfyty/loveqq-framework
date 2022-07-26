@@ -9,10 +9,10 @@ import com.kfyty.support.utils.CommonUtil;
  * @date 2022/3/12 12:49
  * @email kfyty725@hotmail.com
  */
-public class StringToStringConverter implements Converter<String, String> {
+public class StringToObjectConverter implements Converter<String, Object> {
 
     @Override
-    public String apply(String source) {
+    public Object apply(String source) {
         return CommonUtil.empty(source) ? null : source;
     }
 }
