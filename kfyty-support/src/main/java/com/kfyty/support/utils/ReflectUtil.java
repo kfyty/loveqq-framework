@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 import java.util.SortedMap;
@@ -44,6 +45,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -196,7 +199,10 @@ public abstract class ReflectUtil {
         if (SortedMap.class.isAssignableFrom(clazz)) {
             return (T) new TreeMap<>();
         }
-        if (Map.class.isAssignableFrom(clazz)) {
+        if (ConcurrentMap.class.isAssignableFrom(clazz)) {
+            return (T) new ConcurrentHashMap<>();
+        }
+        if (Map.class.isAssignableFrom(clazz) && !Properties.class.isAssignableFrom(clazz)) {
             return (T) new HashMap<>();
         }
         throw new SupportException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
