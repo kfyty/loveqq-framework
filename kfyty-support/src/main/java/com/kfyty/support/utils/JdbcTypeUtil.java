@@ -23,6 +23,7 @@ public abstract class JdbcTypeUtil {
                 return "SMALLINT";
             case "char":
             case "text":
+            case "tinytext":
             case "varchar":
             case "varchar2":
             case "nvarchar2":
@@ -32,6 +33,7 @@ public abstract class JdbcTypeUtil {
             case "nclob":
                 return "NCLOB";
             case "longtext":
+            case "mediumtext":
             case "long varchar":
                 return "LONGVARCHAR";
             case "decimal":
@@ -80,6 +82,8 @@ public abstract class JdbcTypeUtil {
             case "text":
             case "json":
             case "other":
+            case "tinytext":
+            case "mediumtext":
             case "longtext":
             case "clob":
             case "nclob":
