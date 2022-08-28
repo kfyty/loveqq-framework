@@ -4,6 +4,7 @@ import com.kfyty.support.autoconfig.condition.OnPropertyCondition;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -19,6 +20,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Conditional(OnPropertyCondition.class)
 @Target({ElementType.TYPE, ElementType.METHOD})
+@Repeatable(ConditionalOnProperty.ConditionalOnProperties.class)
 public @interface ConditionalOnProperty {
     /**
      * 属性 key
@@ -54,4 +56,18 @@ public @interface ConditionalOnProperty {
      * @return 默认 false
      */
     boolean matchIfNonNull() default false;
+
+    /**
+     * 属性条件容器
+     */
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Conditional(OnPropertyCondition.class)
+    @Target({ElementType.TYPE, ElementType.METHOD})
+    @interface ConditionalOnProperties {
+        /**
+         * 属性条件容器
+         */
+        ConditionalOnProperty[] value();
+    }
 }
