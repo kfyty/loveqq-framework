@@ -70,7 +70,8 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
         AnnotatedElement annotatedElement = beanDefinition instanceof MethodBeanDefinition ?
                 ((MethodBeanDefinition) beanDefinition).getBeanMethod()
                 : beanDefinition instanceof FactoryBeanDefinition ? ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
-        Annotation[] annotations = AnnotationUtil.findAnnotationElements(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class));
+        Annotation[] possibleAnnotations = AnnotationUtil.findAnnotationElements(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class));
+        Annotation[] annotations = AnnotationUtil.flatRepeatableAnnotation(possibleAnnotations);
         for (Annotation annotation : annotations) {
             this.conditionDeclares.add(this.buildConditionDeclare(annotation));
         }
