@@ -276,7 +276,11 @@ public class QualifierGeneric {
             Class<?> rawType = getRawType(actualTypeArgument);
             boolean isArray = actualTypeArgument instanceof GenericArrayType;
             QualifierGeneric nested = actualTypeArgument instanceof Class ? null : create(rawType, actualTypeArgument).doResolve();
-            this.genericInfo.put(superType == null ? new Generic(rawType, isArray) : new SuperGeneric(rawType, isArray, superType), nested);
+            Generic generic = superType == null ? new Generic(rawType, isArray) : new SuperGeneric(rawType, isArray, superType);
+            if (generic instanceof SuperGeneric && this.genericInfo.containsKey(generic)) {
+                ((SuperGeneric) generic).incrementIndex();
+            }
+            this.genericInfo.put(generic, nested);
         }
     }
 

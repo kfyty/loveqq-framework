@@ -10,16 +10,20 @@ import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.support.autoconfig.annotation.Lookup;
+import com.kfyty.support.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import lombok.Data;
 import lombok.Getter;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * 描述:
@@ -60,12 +64,35 @@ public class ComponentTest implements CommandLineRunner {
 }
 
 class ComponentT {}
+
 class ComponentS {
     @Getter
     private final long time;
 
     public ComponentS() {
         this.time = System.currentTimeMillis();
+    }
+}
+
+@Component
+@ConfigurationProperties("k.prop")
+class PropertiesConfig implements InitializingBean {
+    private Properties opt;
+
+    @NestedConfigurationProperty
+    private User user;
+
+    @Override
+    public void afterPropertiesSet() {
+        Assert.assertEquals(this.user.getId(), Long.valueOf(1L));
+        Assert.assertEquals(this.user.getName(), "name");
+        Assert.assertEquals(this.opt.getProperty("user.enable"), "true");
+    }
+
+    @Data
+    public static class User {
+        private Long id;
+        private String name;
     }
 }
 

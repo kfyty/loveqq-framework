@@ -55,7 +55,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         }
         if (targetType.isMapGeneric()) {
             Map<String, String> properties = this.getProperties().entrySet().stream().filter(e -> e.getKey().startsWith(key)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            Class<?> valueType = targetType.getResolveType() instanceof Class ? (Class<?>) targetType.getResolveType() : targetType.getMapValueType().get();
+            Class<?> valueType = targetType.size() > 1 ? targetType.getMapValueType().get() : (Class<?>) targetType.getResolveType();
             return (T) convertAndBind(key, properties, (Map<String, Object>) newInstance(getRawType(targetType.getResolveType())), valueType);
         }
         if (targetType.isSimpleGeneric()) {
@@ -81,7 +81,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         String replace = prefix + ".";
         Set<String> bind = new HashSet<>(4);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (ReflectUtil.isBaseDataType(valueType)) {
+            if (valueType == Object.class || ReflectUtil.isBaseDataType(valueType)) {
                 target.put(entry.getKey().replace(replace, ""), convert(entry.getValue(), valueType));
                 continue;
             }

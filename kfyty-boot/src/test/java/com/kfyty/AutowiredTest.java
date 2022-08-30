@@ -283,7 +283,6 @@ class TestEventListener implements ITestEvent, ApplicationListener<TestEvent>, I
 }
 
 class TestEvent extends ApplicationEvent<String> {
-
     /**
      * Constructs a prototypical Event.
      *

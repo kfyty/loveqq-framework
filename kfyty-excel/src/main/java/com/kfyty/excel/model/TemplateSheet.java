@@ -59,6 +59,7 @@ public class TemplateSheet {
 
     private static final String DEFAULT_TITLE_TEMPLATE =
             "<sheetData>\n" +
+                    "<#assign alphas = [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\", \"J\", \"K\", \"L\", \"M\", \"N\", \"O\", \"P\", \"Q\", \"R\", \"S\", \"T\", \"U\", \"V\", \"W\", \"X\", \"Y\", \"Z\"] />\n" +
                     "    <row r=\"1\" spans=\"1:14\" customFormat=\"1\" customHeight=\"1\" x14ac:dyDescent=\"0.3\">\n" +
                     "        <#list titles as title>\n" +
                     "            <c r=\"${alphas[title_index]}1\" t=\"inlineStr\">\n" +
@@ -248,7 +249,7 @@ public class TemplateSheet {
         if (emptyIndex > 0) {
             sheet.setStartTemplate(buildTemplate(EXCEL_SHEET_TEMPLATE_BASE_PATH, sheet.getSheetName() + "_start", sheetXml.substring(0, emptyIndex) + DEFAULT_TITLE_TEMPLATE));
             sheet.setWriteTemplate(buildTemplate(EXCEL_SHEET_TEMPLATE_BASE_PATH, sheet.getSheetName() + "_write", DEFAULT_ROW_TEMPLATE));
-            sheet.setEndTemplate(buildTemplate(EXCEL_SHEET_TEMPLATE_BASE_PATH, sheet.getSheetName() + "_end", sheetXml.substring(emptyIndex)));
+            sheet.setEndTemplate(buildTemplate(EXCEL_SHEET_TEMPLATE_BASE_PATH, sheet.getSheetName() + "_end", end + sheetXml.substring(emptyIndex + empty.length())));
             return sheet;
         }
 
