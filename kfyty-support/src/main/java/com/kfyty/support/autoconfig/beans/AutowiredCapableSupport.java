@@ -19,10 +19,18 @@ public interface AutowiredCapableSupport {
      *
      * @param bean bean 实例
      */
-    void doAutowiredBean(Object bean);
+    void autowiredBean(Object bean);
+
+    /**
+     * 对 bean 执行依赖注入
+     *
+     * @param bean        bean 实例
+     * @param ignoredLazy 是否忽略懒加载的注入
+     */
+    void autowiredBean(Object bean, boolean ignoredLazy);
 
     /**
      * 注入懒加载的 bean
      */
-    void doAutowiredLazy();
+    void autowiredLazy();
 }

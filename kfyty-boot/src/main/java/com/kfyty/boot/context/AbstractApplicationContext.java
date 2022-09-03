@@ -62,7 +62,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void afterRefresh() {
-        super.doAutowiredLazy();
+        super.autowiredLazy();
         this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
     }
 
