@@ -10,7 +10,6 @@ import com.kfyty.support.autoconfig.InitializingBean;
 import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
@@ -278,7 +277,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             this.removeBeanReference(name);
             this.invokeAwareMethod(name, bean);
             bean = this.invokeBeanPostProcessAfterInstantiation(name, getExposedBean(beanDefinition, bean));
-            this.doAutowiredBean(name, getExposedBean(beanDefinition, bean));
+            this.autowiredBean(name, getExposedBean(beanDefinition, bean));
             bean = this.invokeLifecycleMethod(name, getExposedBean(beanDefinition, bean));
             return bean;
         }
@@ -370,7 +369,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      * @param beanName bean 名称
      * @param bean     bean 实例
      */
-    public abstract void doAutowiredBean(String beanName, Object bean);
+    public abstract void autowiredBean(String beanName, Object bean);
 
     protected Object getExposedBean(BeanDefinition beanDefinition, Object bean) {
         return beanDefinition.isSingleton() ? this.getBean(beanDefinition.getBeanName()) : bean;

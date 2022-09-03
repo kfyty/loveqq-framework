@@ -67,21 +67,21 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     }
 
     @Override
-    public void doAutowiredBean(String beanName, Object bean) {
+    public void autowiredBean(String beanName, Object bean) {
         if (this == bean) {
             return;
         }
         if (this.autowiredCapableSupport == null) {
             this.getBean(AutowiredCapableSupport.class);
         }
-        this.autowiredCapableSupport.doAutowiredBean(bean);
+        this.autowiredCapableSupport.autowiredBean(bean);
     }
 
-    public void doAutowiredLazy() {
+    public void autowiredLazy() {
         if (this.autowiredCapableSupport == null) {
             throw new BeansException("no bean instance found of type: " + AutowiredCapableSupport.class);
         }
-        this.autowiredCapableSupport.doAutowiredLazy();
+        this.autowiredCapableSupport.autowiredLazy();
     }
 
     @Override
