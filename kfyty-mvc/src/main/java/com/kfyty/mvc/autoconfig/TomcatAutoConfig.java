@@ -9,6 +9,7 @@ import com.kfyty.support.autoconfig.DestroyBean;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Configuration;
+import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.support.autoconfig.annotation.Import;
 import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
@@ -38,6 +39,7 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(TomcatWebServer.class)
+    @ConfigurationProperties("k.mvc.tomcat")
     public TomcatConfig tomcatConfig() {
         TomcatConfig config = new TomcatConfig(applicationContext.getPrimarySource());
         applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));

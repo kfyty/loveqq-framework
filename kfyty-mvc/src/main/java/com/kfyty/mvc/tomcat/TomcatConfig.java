@@ -21,6 +21,7 @@ public class TomcatConfig {
 
     private int port;
     private String protocol;
+    private String contextPath;
     private List<String> staticPattern;
     private String dispatcherMapping;
     private Class<?> primarySource;
@@ -34,6 +35,7 @@ public class TomcatConfig {
     public TomcatConfig(Class<?> primarySource) {
         this.port = 8080;
         this.protocol = DEFAULT_PROTOCOL;
+        this.contextPath = DEFAULT_DISPATCHER_MAPPING;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
         this.staticPattern = new LinkedList<>();
         this.primarySource = primarySource;
