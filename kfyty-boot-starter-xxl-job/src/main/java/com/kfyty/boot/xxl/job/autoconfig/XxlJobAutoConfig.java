@@ -15,12 +15,12 @@ import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@ConditionalOnProperty(value = "k.xxl.adminAddresses", matchIfNonNull = true)
+@ConditionalOnProperty(value = "k.xxl.job.adminAddresses", matchIfNonNull = true)
 public class XxlJobAutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConfigurationProperties("k.xxl")
+    @ConfigurationProperties("k.xxl.job")
     public XxlJobBootExecutor xxlJobBootExecutor() {
         return new XxlJobBootExecutor();
     }
