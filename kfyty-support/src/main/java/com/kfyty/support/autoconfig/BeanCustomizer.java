@@ -7,6 +7,22 @@ package com.kfyty.support.autoconfig;
  * @date 2021/8/10 18:02
  * @email kfyty725@hotmail.com
  */
+@FunctionalInterface
 public interface BeanCustomizer<T> {
+    /**
+     * 自定义 bean
+     *
+     * @param bean bean
+     */
     void customize(T bean);
+
+    /**
+     * 自定义 bean
+     *
+     * @param name bean name
+     * @param bean bean
+     */
+    default void customize(String name, T bean) {
+        this.customize(bean);
+    }
 }

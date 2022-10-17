@@ -1,4 +1,4 @@
-package com.kfyty.boot.autoconfig;
+package com.kfyty.boot.autoconfig.support;
 
 import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;

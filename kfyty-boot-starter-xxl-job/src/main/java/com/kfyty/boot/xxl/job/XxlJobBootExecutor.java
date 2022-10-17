@@ -12,6 +12,7 @@ import com.xxl.job.core.handler.annotation.XxlJob;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 描述:
@@ -21,6 +22,7 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationContextAware, ContextAfterRefreshed, DestroyBean {
+    private int jobCnt;
     private ApplicationContext applicationContext;
 
     @Override
@@ -35,7 +37,11 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         BootGlueFactory.refreshInstance(this.applicationContext);
 
         try {
-            super.start();
+            if (this.jobCnt > 0) {
+                super.start();
+                ThreadPoolExecutor executor = this.applicationContext.getBean("defaultThreadPoolExecutor");
+                executor.execute(() -> {});
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -57,6 +63,7 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
                 XxlJob xxlJob = AnnotationUtil.findAnnotation(executeMethod, XxlJob.class);
                 if (xxlJob != null) {
                     registJobHandler(xxlJob, bean, executeMethod);
+                    this.jobCnt++;
                 }
             }
         }

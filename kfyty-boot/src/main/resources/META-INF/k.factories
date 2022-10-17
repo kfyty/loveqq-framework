@@ -11,5 +11,5 @@ com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.boot.processor.BeanCustomizerBeanPostProcessor,\
     com.kfyty.boot.processor.PostConstructProcessor,\
     com.kfyty.boot.processor.PreDestroyProcessor,\
-    com.kfyty.boot.autoconfig.DefaultThreadPoolExecutor,\
-    com.kfyty.boot.autoconfig.LookupBeanDefinitionImport
+    com.kfyty.boot.autoconfig.ThreadPoolExecutorAutoConfig,\
+    com.kfyty.boot.autoconfig.support.LookupBeanDefinitionImport

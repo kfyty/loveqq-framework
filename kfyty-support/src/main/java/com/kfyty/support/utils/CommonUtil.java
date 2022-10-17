@@ -45,6 +45,11 @@ public abstract class CommonUtil {
     public static final String EMPTY_STRING = "";
 
     /**
+     * CPU 核心数
+     */
+    public static final int CPU_CORE = Runtime.getRuntime().availableProcessors();
+
+    /**
      * 空行的正则表达式
      */
     public static final Pattern BLANK_LINE_PATTERN = Pattern.compile("(?m)^\\s*$" + System.lineSeparator());
