@@ -2,8 +2,10 @@ package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
@@ -11,6 +13,7 @@ import java.util.regex.Matcher;
 
 import static com.kfyty.support.utils.CommonUtil.PLACEHOLDER_PATTERN;
 import static com.kfyty.support.utils.CommonUtil.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 描述: 读取 properties 配置文件工具，支持 import 其他配置文件，支持 ${} 进行引用
@@ -48,7 +51,7 @@ public abstract class PropertiesUtil {
             if (stream == null) {
                 return properties;
             }
-            properties.load(stream);
+            properties.load(new BufferedReader(new InputStreamReader(stream, UTF_8)));
             processPlaceholder(properties);
             after.accept(properties, classLoader);
             return properties;
