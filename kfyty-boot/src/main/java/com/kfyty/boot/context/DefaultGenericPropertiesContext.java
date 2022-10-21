@@ -60,6 +60,9 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         }
         if (targetType.isSimpleGeneric()) {
             String property = this.getProperty(key, String.class);
+            if (property == null) {
+                return null;
+            }
             Object result = newInstance(getRawType(targetType.getResolveType()));
             return (T) convertAndBind(property, result, targetType.getSimpleActualType());
         }
