@@ -36,6 +36,11 @@ public interface BeanDefinition {
     String SCOPE_PROTOTYPE = "prototype";
 
     /**
+     * 刷新作用域
+     */
+    String SCOPE_REFRESH = "refresh";
+
+    /**
      * bean name，唯一
      */
     String getBeanName();

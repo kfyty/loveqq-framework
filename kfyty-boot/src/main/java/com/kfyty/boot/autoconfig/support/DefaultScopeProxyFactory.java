@@ -1,0 +1,48 @@
+package com.kfyty.boot.autoconfig.support;
+
+import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.autoconfig.beans.BeanFactory;
+import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.support.event.ApplicationEvent;
+import com.kfyty.support.event.ApplicationListener;
+import com.kfyty.support.exception.BeansException;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 描述: 默认的代理工厂
+ *
+ * @author kfyty725
+ * @date 2022/10/22 10:12
+ * @email kfyty725@hotmail.com
+ */
+@Slf4j
+public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationListener<ApplicationEvent<?>> {
+    protected Map<String, ScopeProxyFactory> scopeProxyFactoryMap;
+
+    @Override
+    public Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory) {
+        if (this.scopeProxyFactoryMap == null) {
+            this.scopeProxyFactoryMap = beanFactory.getBeanOfType(ScopeProxyFactory.class);
+        }
+        return this.obtainScopeProxyFactory(beanDefinition.getScope()).getObject(beanDefinition, beanFactory);
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationEvent<?> event) {
+        if (this.scopeProxyFactoryMap != null) {
+            Map<String, ScopeProxyFactory> copy = new HashMap<>(this.scopeProxyFactoryMap);
+            copy.values().stream().filter(e -> e != this).forEach(v -> v.onApplicationEvent(event));
+        }
+    }
+
+    protected ScopeProxyFactory obtainScopeProxyFactory(String scope) {
+        ScopeProxyFactory scopeProxyFactory = this.scopeProxyFactoryMap.get(scope);
+        if (scopeProxyFactory == null) {
+            throw new BeansException("This scope is not supported temporarily: " + scope);
+        }
+        return scopeProxyFactory;
+    }
+}

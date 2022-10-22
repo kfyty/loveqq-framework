@@ -43,12 +43,6 @@ public class ComponentTest implements CommandLineRunner {
     @Autowired
     private C c;
 
-    @Autowired
-    private ComponentT componentT1;
-
-    @Autowired
-    private ComponentT componentT2;
-
     @Test
     public void test() {
         K.run(ComponentTest.class);
@@ -59,11 +53,8 @@ public class ComponentTest implements CommandLineRunner {
         Assert.assertNotNull(a);
         Assert.assertNull(b);
         Assert.assertNotNull(c);
-        Assert.assertNotSame(componentT1, componentT2);
     }
 }
-
-class ComponentT {}
 
 class ComponentS {
     @Getter
@@ -130,7 +121,7 @@ abstract class A implements InitializingBean, CommandLineRunner {
         List<C> cs = this.cList();
         Assert.assertNotNull(c1);
         Assert.assertNotNull(c2);
-        Assert.assertNotEquals(c1, c2);
+        Assert.assertEquals(c1, c2);
         Assert.assertEquals(1, cs.size());
     }
 }
@@ -150,13 +141,7 @@ class B {}
 class C {
 
     @Bean
-    @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-    public ComponentT componentT() {
-        return new ComponentT();
-    }
-
-    @Bean
-    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE, scopeProxy = true)
+    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
     public ComponentS componentScope() {
         return new ComponentS();
     }

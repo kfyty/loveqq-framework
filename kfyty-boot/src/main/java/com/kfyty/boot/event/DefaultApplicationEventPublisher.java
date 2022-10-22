@@ -42,14 +42,14 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     private boolean isRefreshed = false;
 
     /**
+     * 过早发布的事件
+     */
+    private List<ApplicationEvent<?>> earlyPublishedEvent = new LinkedList<>();
+
+    /**
      * 注册的事件监听器
      */
     private final List<ApplicationListener> applicationListeners = new ArrayList<>();
-
-    /**
-     * 过早发布的事件
-     */
-    private final List<ApplicationEvent<?>> earlyPublishedEvent = new LinkedList<>();
 
     @Lazy
     @Autowired(required = false)
@@ -63,6 +63,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
         if (CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();
+            this.earlyPublishedEvent = null;
         }
     }
 
@@ -83,7 +84,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
             } else {
                 listenerType = ReflectUtil.getSuperGeneric(listenerClass, SUPER_GENERIC_FILTER);
             }
-            if (listenerType.equals(Object.class) || listenerType.equals(event.getClass())) {
+            if (listenerType.equals(ApplicationEvent.class) || listenerType.equals(event.getClass())) {
                 applicationListener.onApplicationEvent(event);
             }
         }

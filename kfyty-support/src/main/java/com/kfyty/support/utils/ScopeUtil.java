@@ -50,11 +50,6 @@ public abstract class ScopeUtil {
             }
 
             @Override
-            public boolean scopeProxy() {
-                return false;
-            }
-
-            @Override
             public Class<? extends Annotation> annotationType() {
                 return Scope.class;
             }
