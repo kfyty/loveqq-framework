@@ -1,10 +1,11 @@
 package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.ScopeProxyInterceptorProxy;
-import com.kfyty.support.autoconfig.BeanFactoryAware;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
 
 /**
@@ -14,31 +15,33 @@ import com.kfyty.support.proxy.factory.DynamicProxyFactory;
  * @date 2021/7/11 12:43
  * @email kfyty725@hotmail.com
  */
-public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T> {
+public class ScopeProxyFactoryBean<T> implements FactoryBean<T> {
     /**
      * 作用域代理原 bean 名称前缀
      */
     public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
 
+    /**
+     * 作用域代理目标 bean 定义
+     */
+    private final BeanDefinition scopedTarget;
+
+    @Autowired
     private BeanFactory beanFactory;
 
-    private final BeanDefinition sourceBeanDefinition;
+    @Autowired
+    private ScopeProxyFactory scopeProxyFactory;
 
-    public ScopeProxyFactoryBean(BeanDefinition sourceBeanDefinition) {
-        this.sourceBeanDefinition = sourceBeanDefinition;
-        if (!sourceBeanDefinition.getBeanName().startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
-            sourceBeanDefinition.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + sourceBeanDefinition.getBeanName());
+    public ScopeProxyFactoryBean(BeanDefinition scopedTarget) {
+        this.scopedTarget = scopedTarget;
+        if (!scopedTarget.getBeanName().startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
+            scopedTarget.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + scopedTarget.getBeanName());
         }
     }
 
     @Override
-    public void setBeanFactory(BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
-    }
-
-    @Override
     public Class<?> getBeanType() {
-        return this.sourceBeanDefinition.getBeanType();
+        return this.scopedTarget.getBeanType();
     }
 
     @Override
@@ -46,7 +49,7 @@ public class ScopeProxyFactoryBean<T> implements BeanFactoryAware, FactoryBean<T
     public T getObject() {
         return (T) DynamicProxyFactory
                 .create(true)
-                .addInterceptorPoint(new ScopeProxyInterceptorProxy(this.beanFactory, this.sourceBeanDefinition))
+                .addInterceptorPoint(new ScopeProxyInterceptorProxy(this.scopedTarget, this.beanFactory, this.scopeProxyFactory))
                 .createProxy(this.getBeanType());
     }
 }

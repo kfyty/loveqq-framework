@@ -37,7 +37,6 @@ import static com.kfyty.support.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_
 import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
 import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
-import static com.kfyty.support.utils.ScopeUtil.resolveScope;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
 
@@ -103,7 +102,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(BeanDefinition beanDefinition) {
-        if (!beanDefinition.isSingleton() && resolveScope(beanDefinition).scopeProxy()) {
+        if (!beanDefinition.isSingleton()) {
             beanDefinition.setAutowireCandidate(false);
             this.registerBeanDefinition(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition, true);
             beanDefinition = genericBeanDefinition(ScopeProxyFactoryBean.class).setBeanName(beanDefinition.getBeanName()).addConstructorArgs(BeanDefinition.class, beanDefinition).getBeanDefinition();

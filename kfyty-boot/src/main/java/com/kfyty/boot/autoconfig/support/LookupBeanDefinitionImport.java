@@ -4,9 +4,9 @@ import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.ImportBeanDefinition;
-import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Predicate;
 
@@ -22,7 +22,7 @@ import static com.kfyty.support.utils.ReflectUtil.isAbstract;
  * @date 2021/7/11 12:40
  * @email kfyty725@hotmail.com
  */
-@Component
+@Slf4j
 public class LookupBeanDefinitionImport implements ApplicationContextAware, ImportBeanDefinition {
     private ApplicationContext applicationContext;
 
