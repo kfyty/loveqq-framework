@@ -3,8 +3,8 @@ package com.kfyty.support.proxy;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
@@ -19,34 +19,34 @@ import static com.kfyty.support.utils.AopUtil.isJdkProxy;
  * @date 2021/6/19 13:46
  * @email kfyty725@hotmail.com
  */
-@Getter
+@Data
 @EqualsAndHashCode(exclude = "proxy")
 public class MethodProxyWrapper {
     /**
      * 代理目标
      * 当为 cglib 代理，且直接代理抽象类时，为空
      */
-    private final Object target;
+    private Object target;
 
     /**
      * 代理对象
      */
-    private final Object proxy;
+    private Object proxy;
 
     /**
      * 执行的目标方法
      */
-    private final Method method;
+    private Method method;
 
     /**
      * 目标方法参数
      */
-    private final Object[] arguments;
+    private Object[] arguments;
 
     /**
      * cglib 的代理方法对象
      */
-    private final MethodProxy methodProxy;
+    private MethodProxy methodProxy;
 
     public MethodProxyWrapper(Object target, Object proxy, Method method, Object[] args) {
         this(target, proxy, method, args, null);

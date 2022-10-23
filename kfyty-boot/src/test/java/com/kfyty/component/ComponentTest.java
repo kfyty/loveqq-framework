@@ -62,6 +62,9 @@ class ComponentS {
 
     public ComponentS() {
         this.time = System.currentTimeMillis();
+        if (this.getClass().getSimpleName().equals("ComponentS")) {
+            System.out.println("ComponentS");
+        }
     }
 }
 
@@ -139,6 +142,12 @@ class B {}
 @Configuration
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 class C {
+
+    public C() {
+        if (this.getClass().getSimpleName().equals("C")) {
+            System.out.println("C");
+        }
+    }
 
     @Bean
     @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
