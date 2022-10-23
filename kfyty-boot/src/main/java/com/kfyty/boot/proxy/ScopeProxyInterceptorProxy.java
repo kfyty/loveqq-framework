@@ -4,10 +4,9 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
-import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.MethodProxyWrapper;
-import com.kfyty.support.utils.ReflectUtil;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -28,7 +27,7 @@ public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Object bean = this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory);
-        return ReflectUtil.invokeMethod(bean, methodProxy.getMethod(), methodProxy.getArguments());
+        methodProxy.setTarget(this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory));
+        return chain.proceed(methodProxy);
     }
 }

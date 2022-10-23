@@ -1,5 +1,6 @@
 package com.kfyty.support.utils;
 
+import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
@@ -25,6 +26,9 @@ public abstract class ScopeUtil {
     }
 
     public static Scope resolveScope(Class<?> clazz) {
+        if (AnnotationUtil.hasAnnotationElement(clazz, Configuration.class)) {
+            return defaultScope();
+        }
         Scope scope = AnnotationUtil.findAnnotation(clazz, Scope.class);
         return scope != null ? scope : defaultScope();
     }
