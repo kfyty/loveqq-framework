@@ -76,6 +76,13 @@ public interface BeanDefinition {
     boolean isSingleton();
 
     /**
+     * 是否是 {@link FactoryBean}
+     *
+     * @return true if FactoryBean
+     */
+    boolean isFactoryBean();
+
+    /**
      * 是否是自动装配的候选者
      */
     boolean isAutowireCandidate();

@@ -67,6 +67,9 @@ public class BeanDefinitionBuilder {
 
     public BeanDefinition getBeanDefinition() {
         this.validate();
+        if (this.beanDefinition instanceof FactoryBeanDefinition) {
+            return this.beanDefinition;
+        }
         if (FactoryBean.class.isAssignableFrom(this.beanDefinition.getBeanType())) {
             this.beanDefinition.setBeanName(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName());
         }

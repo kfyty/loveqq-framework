@@ -17,8 +17,8 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
     private static final ThreadLocal<MethodInterceptorChain> CURRENT_INTERCEPTOR_CHAIN = new ThreadLocal<>();
 
     private int currentChainIndex;
-    private MethodProxyWrapper intercepting;
-    private final List<InterceptorChainPoint> chainPoints;
+    private MethodProxy intercepting;
+    private final List<MethodInterceptorChainPoint> chainPoints;
 
     public MethodInterceptorChain(Object source) {
         super(source);
@@ -26,7 +26,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         this.chainPoints = new ArrayList<>(4);
     }
 
-    public MethodInterceptorChain(Object source, List<InterceptorChainPoint> chainPoints) {
+    public MethodInterceptorChain(Object source, List<MethodInterceptorChainPoint> chainPoints) {
         super(source);
         this.currentChainIndex = -1;
         this.chainPoints = new ArrayList<>(chainPoints);
@@ -36,13 +36,13 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         return CURRENT_INTERCEPTOR_CHAIN.get();
     }
 
-    public MethodInterceptorChain addInterceptorPoint(InterceptorChainPoint chainPoint) {
+    public MethodInterceptorChain addInterceptorPoint(MethodInterceptorChainPoint chainPoint) {
         this.chainPoints.add(chainPoint);
         this.sortInterceptorChain();
         return this;
     }
 
-    public MethodInterceptorChain addInterceptorPoint(int index, InterceptorChainPoint chainPoint) {
+    public MethodInterceptorChain addInterceptorPoint(int index, MethodInterceptorChainPoint chainPoint) {
         this.chainPoints.add(index, chainPoint);
         return this;
     }
@@ -51,12 +51,12 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         this.sortInterceptorChain(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
-    public void sortInterceptorChain(Comparator<InterceptorChainPoint> comparator) {
+    public void sortInterceptorChain(Comparator<MethodInterceptorChainPoint> comparator) {
         this.chainPoints.sort(comparator);
     }
 
     @Override
-    protected Object process(MethodProxyWrapper methodProxy) throws Throwable {
+    protected Object process(MethodProxy methodProxy) throws Throwable {
         if (methodProxy.getTargetMethod().getDeclaringClass().equals(Object.class)) {
             return methodProxy.invoke();
         }
@@ -74,7 +74,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         }
     }
 
-    public Object proceed(MethodProxyWrapper methodProxy) throws Throwable {
+    public Object proceed(MethodProxy methodProxy) throws Throwable {
         if(++this.currentChainIndex == this.chainPoints.size()) {
             this.currentChainIndex = -1;
             return methodProxy.invoke();

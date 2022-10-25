@@ -2,9 +2,9 @@ package com.kfyty.aop.proxy;
 
 import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import org.aspectj.lang.JoinPoint;
 
 /**
@@ -15,7 +15,7 @@ import org.aspectj.lang.JoinPoint;
  * @email kfyty725@hotmail.com
  */
 @Order(Integer.MIN_VALUE)
-public class ExposeInvocationInterceptorProxy implements InterceptorChainPoint {
+public class ExposeInvocationInterceptorProxy implements MethodInterceptorChainPoint {
     private static final ThreadLocal<JoinPoint> CURRENT_JOIN_POINT = new ThreadLocal<>();
 
     private final MethodInvocationProceedingJoinPoint joinPoint;
@@ -33,7 +33,7 @@ public class ExposeInvocationInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         JoinPoint oldJoinPoint = CURRENT_JOIN_POINT.get();
         try {
             CURRENT_JOIN_POINT.set(this.joinPoint);

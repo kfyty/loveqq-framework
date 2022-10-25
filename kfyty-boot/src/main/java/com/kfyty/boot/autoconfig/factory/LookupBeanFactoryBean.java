@@ -3,9 +3,11 @@ package com.kfyty.boot.autoconfig.factory;
 import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
+import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.proxy.factory.DynamicProxyFactory;
 import com.kfyty.support.utils.ScopeUtil;
+import lombok.NoArgsConstructor;
 
 /**
  * 描述: 导入存在 Lookup 注解的方法的 bean 的 FactoryBean
@@ -14,15 +16,16 @@ import com.kfyty.support.utils.ScopeUtil;
  * @date 2021/7/11 12:43
  * @email kfyty725@hotmail.com
  */
+@NoArgsConstructor
 public class LookupBeanFactoryBean<T> implements ApplicationContextAware, FactoryBean<T> {
-    private final Class<?> beanType;
-    private final boolean isSingleton;
-
+    private Class<?> beanType;
+    private String beanScope;
     private ApplicationContext applicationContext;
 
+    @Autowired
     public LookupBeanFactoryBean(Class<?> beanType) {
         this.beanType = beanType;
-        this.isSingleton = ScopeUtil.isSingleton(beanType);
+        this.beanScope = ScopeUtil.resolveScope(beanType).value();
     }
 
     @Override
@@ -45,7 +48,7 @@ public class LookupBeanFactoryBean<T> implements ApplicationContextAware, Factor
     }
 
     @Override
-    public boolean isSingleton() {
-        return this.isSingleton;
+    public String getScope() {
+        return this.beanScope;
     }
 }

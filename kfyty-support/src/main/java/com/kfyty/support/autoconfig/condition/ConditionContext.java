@@ -1,6 +1,5 @@
 package com.kfyty.support.autoconfig.condition;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.support.autoconfig.beans.GenericBeanDefinition;
@@ -50,7 +49,7 @@ public class ConditionContext {
      */
     private final Set<String> skippedCondition;
 
-    public ConditionContext(ApplicationContext beanFactory, Map<String, ConditionalBeanDefinition> conditionBeanMap) {
+    public ConditionContext(BeanFactory beanFactory, Map<String, ConditionalBeanDefinition> conditionBeanMap) {
         this.beanFactory = beanFactory;
         this.conditionBeanMap = conditionBeanMap;
         this.resolvedCondition = new HashSet<>();
@@ -65,6 +64,9 @@ public class ConditionContext {
      * @return true if should skip
      */
     public boolean shouldSkip(ConditionalBeanDefinition conditionalBeanDefinition) {
+        if (conditionalBeanDefinition == null) {
+            return true;
+        }
         final String conditionBeanName = conditionalBeanDefinition.getBeanName();
         if (this.matchedCondition.contains(conditionBeanName)) {
             return false;

@@ -6,6 +6,7 @@ import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.support.utils.ScopeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Predicate;
@@ -38,6 +39,6 @@ public class LookupBeanDefinitionImport implements ApplicationContextAware, Impo
 
     @Override
     public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
-        return genericBeanDefinition(LookupBeanFactoryBean.class).addConstructorArgs(Class.class, clazz).getBeanDefinition();
+        return genericBeanDefinition(LookupBeanFactoryBean.class).setScope(ScopeUtil.resolveScope(clazz).value()).addConstructorArgs(Class.class, clazz).getBeanDefinition();
     }
 }

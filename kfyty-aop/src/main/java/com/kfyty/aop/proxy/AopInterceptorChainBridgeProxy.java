@@ -1,9 +1,9 @@
 package com.kfyty.aop.proxy;
 
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 
 /**
  * 描述: aop 拦截链桥接代理
@@ -13,7 +13,7 @@ import com.kfyty.support.proxy.MethodProxyWrapper;
  * @email kfyty725@hotmail.com
  */
 @Order(Integer.MAX_VALUE)
-public class AopInterceptorChainBridgeProxy implements InterceptorChainPoint {
+public class AopInterceptorChainBridgeProxy implements MethodInterceptorChainPoint {
     private final MethodInterceptorChain sourceChain;
 
     public AopInterceptorChainBridgeProxy(MethodInterceptorChain sourceChain) {
@@ -21,7 +21,7 @@ public class AopInterceptorChainBridgeProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         return this.sourceChain.proceed(methodProxy);
     }
 }

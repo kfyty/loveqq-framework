@@ -4,7 +4,7 @@ import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor
     }
 
     @Override
-    public InterceptorChainPoint createProxyPoint() {
+    public MethodInterceptorChainPoint createProxyPoint() {
         return new LookupMethodInterceptorProxy(this.applicationContext);
     }
 }

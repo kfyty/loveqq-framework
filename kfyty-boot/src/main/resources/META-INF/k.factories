@@ -1,4 +1,7 @@
 com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.boot.processor.factory.ImportBeanDefinitionBeanFactoryPostProcessor,\
+    com.kfyty.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
+    com.kfyty.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor,\
     com.kfyty.boot.context.DefaultGenericPropertiesContext,\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
     com.kfyty.boot.processor.ValueAnnotationBeanPostProcessor,\

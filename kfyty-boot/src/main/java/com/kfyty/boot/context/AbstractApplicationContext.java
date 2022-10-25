@@ -2,9 +2,9 @@ package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
 import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.support.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.support.autoconfig.BeanPostProcessor;
 import com.kfyty.support.autoconfig.ContextAfterRefreshed;
-import com.kfyty.support.autoconfig.ImportBeanDefinition;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -51,24 +51,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 
-    protected void beforeRefresh() {
-        this.close();
-        this.registerDefaultBean();
-        Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
-    }
-
-    protected void onRefresh() {
-
-    }
-
-    protected void afterRefresh() {
-        super.autowiredLazy();
-        this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
-    }
-
-    protected void registerDefaultBean() {
-        this.registerBean(BeanFactory.class, this);
-        this.registerBean(ApplicationContext.class, this);
+    public Set<Class<?>> getScanClasses() {
+        return this.scanClasses;
     }
 
     @Override
@@ -96,11 +80,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 /* 解析 bean 定义 */
                 this.prepareBeanDefines(this.scanClasses);
 
+                /* 执行 bean 工厂后置处理器 */
+                this.invokeBeanFactoryPostProcessor();
+
                 /* 注册 bean 后置处理器 */
                 this.registerBeanPostProcessors();
-
-                /* 导入自定义的 bean 定义 */
-                this.processImportBeanDefinition(this.scanClasses);
 
                 /* 实例化单例 bean 定义 */
                 this.instantiateBeanDefinition();
@@ -143,11 +127,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
      */
     @Override
     public boolean doFilterComponent(Class<?> beanClass) {
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = doFilterComponent(this.excludeFilterAnnotations, beanClass, false);
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = this.doFilterComponent(this.excludeFilterAnnotations, beanClass, false);
         if (!exclude.getKey() && exclude.getValue() != null) {
             return !doFilterComponent(exclude.getValue().getDeclaring());
         }
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = doFilterComponent(this.includeFilterAnnotations, beanClass, true);
+        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = this.doFilterComponent(this.includeFilterAnnotations, beanClass, true);
         return include.getKey();
     }
 
@@ -191,23 +175,49 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         return new Pair<>(!isInclude, null);
     }
 
+    protected void beforeRefresh() {
+        this.close();
+        this.registerDefaultBean();
+        Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
+    }
+
+    protected void onRefresh() {
+
+    }
+
+    protected void afterRefresh() {
+        super.autowiredLazy();
+        this.getBeanOfType(ContextAfterRefreshed.class).values().forEach(e -> e.onAfterRefreshed(this));
+    }
+
+    protected void registerDefaultBean() {
+        this.registerBean(BeanFactory.class, this);
+        this.registerBean(ApplicationContext.class, this);
+    }
+
     protected void prepareBeanDefines(Set<Class<?>> scanClasses) {
         scanClasses.stream().filter(e -> !isAbstract(e) && this.doFilterComponent(e)).map(e -> genericBeanDefinition(e).getBeanDefinition()).forEach(this::registerBeanDefinition);
+        this.resolveConditionBeanDefines();
+    }
+
+    protected void resolveConditionBeanDefines() {
+        ConditionContext conditionContext = this.getConditionContext();
         Map<String, ConditionalBeanDefinition> conditionalBeanDefinition = CommonUtil.sort(this.getConditionalBeanDefinition(), (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
-        ConditionContext conditionContext = new ConditionContext(this, conditionalBeanDefinition);
         for (ConditionalBeanDefinition value : conditionalBeanDefinition.values()) {
             if (!conditionContext.shouldSkip(value) && !value.isRegistered()) {
+                value.setRegistered(true);
                 this.registerBeanDefinition(value.getBeanName(), value.getBeanDefinition());
             }
         }
     }
 
-    protected void processImportBeanDefinition(Set<Class<?>> scanClasses) {
-        Map<String, BeanDefinition> importBeanDefines = this.getBeanDefinitions(e -> ImportBeanDefinition.class.isAssignableFrom(e.getValue().getBeanType()));
-        for (BeanDefinition importBeanDefine : importBeanDefines.values()) {
-            ImportBeanDefinition bean = (ImportBeanDefinition) this.registerBean(importBeanDefine);
-            bean.doImport(this, scanClasses).forEach(this::registerBeanDefinition);
+    protected void invokeBeanFactoryPostProcessor() {
+        Map<String, BeanDefinition> beanFactoryPostProcessors = this.getBeanDefinitions(e -> BeanFactoryPostProcessor.class.isAssignableFrom(e.getValue().getBeanType()));
+        for (BeanDefinition beanDefinition : beanFactoryPostProcessors.values()) {
+            BeanFactoryPostProcessor beanFactoryPostProcessor = (BeanFactoryPostProcessor) this.registerBean(beanDefinition);
+            beanFactoryPostProcessor.postProcessBeanFactory(this);
         }
+        this.resolveConditionBeanDefines();
     }
 
     protected void registerBeanPostProcessors() {
@@ -217,20 +227,20 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         }
     }
 
-    protected void sortBeanDefinition() {
-        synchronized (this.getBeanDefinitions()) {
-            Map<String, BeanDefinition> sortBeanDefinition = this.getBeanDefinitions(e -> true);
-            beanDefinitions.clear();
-            beanDefinitions.putAll(sortBeanDefinition);
-        }
-    }
-
     protected void instantiateBeanDefinition() {
         this.sortBeanDefinition();
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
             if (beanDefinition.isSingleton()) {
                 this.registerBean(beanDefinition);
             }
+        }
+    }
+
+    protected void sortBeanDefinition() {
+        synchronized (this.getBeanDefinitions()) {
+            Map<String, BeanDefinition> sortBeanDefinition = this.getBeanDefinitions(e -> true);
+            beanDefinitions.clear();
+            beanDefinitions.putAll(sortBeanDefinition);
         }
     }
 }

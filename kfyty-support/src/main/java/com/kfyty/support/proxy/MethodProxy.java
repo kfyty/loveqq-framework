@@ -4,10 +4,9 @@ import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.utils.AopUtil;
 import com.kfyty.support.utils.ReflectUtil;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 import static com.kfyty.support.utils.AopUtil.isJdkProxy;
@@ -20,8 +19,7 @@ import static com.kfyty.support.utils.AopUtil.isJdkProxy;
  * @email kfyty725@hotmail.com
  */
 @Data
-@EqualsAndHashCode(exclude = "proxy")
-public class MethodProxyWrapper {
+public class MethodProxy {
     /**
      * 代理目标
      * 当为 cglib 代理，且直接代理抽象类时，为空
@@ -46,13 +44,13 @@ public class MethodProxyWrapper {
     /**
      * cglib 的代理方法对象
      */
-    private MethodProxy methodProxy;
+    private net.sf.cglib.proxy.MethodProxy methodProxy;
 
-    public MethodProxyWrapper(Object target, Object proxy, Method method, Object[] args) {
+    public MethodProxy(Object target, Object proxy, Method method, Object[] args) {
         this(target, proxy, method, args, null);
     }
 
-    public MethodProxyWrapper(Object target, Object proxy, Method method, Object[] args, MethodProxy methodProxy) {
+    public MethodProxy(Object target, Object proxy, Method method, Object[] args, net.sf.cglib.proxy.MethodProxy methodProxy) {
         this.target = target;
         this.proxy = proxy;
         this.method = method;
@@ -82,5 +80,20 @@ public class MethodProxyWrapper {
             return this.methodProxy.invokeSuper(this.proxy, args);
         }
         return ReflectUtil.invokeMethod(this.target, this.method, args);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof MethodProxy)) {
+            return false;
+        }
+        MethodProxy other = (MethodProxy) o;
+        return Objects.equals(target, other.target) &&
+                Objects.equals(method, other.method) &&
+                Objects.deepEquals(arguments, other.arguments) &&
+                Objects.equals(methodProxy, other.methodProxy);
     }
 }

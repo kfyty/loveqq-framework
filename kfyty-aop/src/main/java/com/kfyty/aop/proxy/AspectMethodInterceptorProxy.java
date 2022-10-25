@@ -7,9 +7,9 @@ import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.aop.Advice;
@@ -31,10 +31,10 @@ import java.util.Map;
  */
 @Slf4j
 @Order(Order.HIGHEST_PRECEDENCE)
-public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
+public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint {
     private final List<Advisor> advisors;
     private final List<AdviceInterceptorPointAdapter> adapters;
-    private final Map<Method, List<InterceptorChainPoint>> advisorPointCache;
+    private final Map<Method, List<MethodInterceptorChainPoint>> advisorPointCache;
 
     public AspectMethodInterceptorProxy(List<Advisor> advisors, List<AdviceInterceptorPointAdapter> adapters) {
         this.advisors = advisors;
@@ -43,15 +43,15 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
-        List<InterceptorChainPoint> advices = this.findAdviceChainPoints(methodProxy);
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+        List<MethodInterceptorChainPoint> advices = this.findAdviceChainPoints(methodProxy);
         if (CommonUtil.empty(advices)) {
             return chain.proceed(methodProxy);
         }
         return this.buildMethodInvocationProceedingJoinPoint(methodProxy, chain, advices).proceed();
     }
 
-    protected MethodInvocationProceedingJoinPoint buildMethodInvocationProceedingJoinPoint(MethodProxyWrapper methodProxy, MethodInterceptorChain chain, List<InterceptorChainPoint> advices) {
+    protected MethodInvocationProceedingJoinPoint buildMethodInvocationProceedingJoinPoint(MethodProxy methodProxy, MethodInterceptorChain chain, List<MethodInterceptorChainPoint> advices) {
         MethodInterceptorChain aopChain = new MethodInterceptorChain(chain.getTarget(), advices);
         MethodInvocationProceedingJoinPoint joinPoint = new MethodInvocationProceedingJoinPoint(methodProxy, aopChain);
         aopChain.addInterceptorPoint(0, new ExposeInvocationInterceptorProxy(joinPoint))
@@ -59,15 +59,15 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
         return joinPoint;
     }
 
-    protected List<InterceptorChainPoint> findAdviceChainPoints(MethodProxyWrapper methodProxy) {
+    protected List<MethodInterceptorChainPoint> findAdviceChainPoints(MethodProxy methodProxy) {
         return this.advisorPointCache.computeIfAbsent(methodProxy.getMethod(), k -> {
             List<Advisor> advisors = this.findAdvisors(methodProxy);
-            List<InterceptorChainPoint> adviceChainPoint = new ArrayList<>();
+            List<MethodInterceptorChainPoint> adviceChainPoint = new ArrayList<>();
             next:
             for (Advisor advisor : advisors) {
                 Advice advice = advisor.getAdvice();
                 for (AdviceInterceptorPointAdapter adapter : this.adapters) {
-                    InterceptorChainPoint point = adapter.adapt(advice);
+                    MethodInterceptorChainPoint point = adapter.adapt(advice);
                     if (point != null) {
                         adviceChainPoint.add(point);
                         continue next;
@@ -80,7 +80,7 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
         });
     }
 
-    protected List<Advisor> findAdvisors(MethodProxyWrapper methodProxy) {
+    protected List<Advisor> findAdvisors(MethodProxy methodProxy) {
         List<Advisor> filteredAdvisors = new ArrayList<>();
         for (Advisor advisor : this.advisors) {
             if (advisor instanceof PointcutAdvisor) {
@@ -93,7 +93,7 @@ public class AspectMethodInterceptorProxy implements InterceptorChainPoint {
         return filteredAdvisors;
     }
 
-    protected Comparator<InterceptorChainPoint> getAdviceChainPointsComparator() {
-        return Comparator.comparing((InterceptorChainPoint e) -> AspectJAnnotationUtil.findAspectOrder(e.getClass()));
+    protected Comparator<MethodInterceptorChainPoint> getAdviceChainPointsComparator() {
+        return Comparator.comparing((MethodInterceptorChainPoint e) -> AspectJAnnotationUtil.findAspectOrder(e.getClass()));
     }
 }

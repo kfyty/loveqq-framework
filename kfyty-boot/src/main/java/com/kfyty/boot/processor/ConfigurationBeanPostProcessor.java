@@ -5,7 +5,7 @@ import com.kfyty.support.autoconfig.annotation.Component;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.utils.AnnotationUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +27,7 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
     }
 
     @Override
-    public InterceptorChainPoint createProxyPoint() {
+    public MethodInterceptorChainPoint createProxyPoint() {
         return new BeanMethodInterceptorProxy(this.applicationContext);
     }
 }
