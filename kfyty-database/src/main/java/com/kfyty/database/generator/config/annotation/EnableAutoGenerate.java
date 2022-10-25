@@ -1,6 +1,7 @@
 package com.kfyty.database.generator.config.annotation;
 
 import com.kfyty.database.generator.config.AutoGenerateAutoConfig;
+import com.kfyty.database.generator.config.DatabaseMapperImporter;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
 import com.kfyty.support.autoconfig.annotation.Import;
@@ -12,7 +13,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(config = AutoGenerateAutoConfig.class)
+@Import(config = {AutoGenerateAutoConfig.class, DatabaseMapperImporter.class})
 public @interface EnableAutoGenerate {
 
     boolean loadTemplate() default true;

@@ -4,7 +4,7 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.BootApplication;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import lombok.NoArgsConstructor;
 
 import java.util.LinkedList;
@@ -27,7 +27,7 @@ import static com.kfyty.support.utils.ReflectUtil.hasAnyInterfaces;
  */
 @NoArgsConstructor
 public abstract class DynamicProxyFactory {
-    protected List<InterceptorChainPoint> points;
+    protected List<MethodInterceptorChainPoint> points;
 
     public static DynamicProxyFactory create(Object bean, ApplicationContext context) {
         if (isJdkProxy(bean)) {
@@ -48,7 +48,7 @@ public abstract class DynamicProxyFactory {
         return !proxyTargetClass ? new JdkDynamicProxyFactory() : new CglibDynamicProxyFactory();
     }
 
-    public DynamicProxyFactory addInterceptorPoint(InterceptorChainPoint point) {
+    public DynamicProxyFactory addInterceptorPoint(MethodInterceptorChainPoint point) {
         if (this.points == null) {
             this.points = new LinkedList<>();
         }

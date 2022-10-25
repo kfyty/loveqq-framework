@@ -4,9 +4,9 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
 import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 @Order(ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER)
-public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
+public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint {
     public static final int SCOPE_PROXY_ORDER = -1 << 15;
 
     private final BeanDefinition beanDefinition;
@@ -26,7 +26,7 @@ public class ScopeProxyInterceptorProxy implements InterceptorChainPoint {
     private final ScopeProxyFactory scopeProxyFactory;
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         methodProxy.setTarget(this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory));
         return chain.proceed(methodProxy);
     }

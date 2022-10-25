@@ -20,13 +20,11 @@ import java.util.Map;
  */
 @Slf4j
 public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationListener<ApplicationEvent<?>> {
-    protected Map<String, ScopeProxyFactory> scopeProxyFactoryMap;
+    protected volatile Map<String, ScopeProxyFactory> scopeProxyFactoryMap;
 
     @Override
     public Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory) {
-        if (this.scopeProxyFactoryMap == null) {
-            this.scopeProxyFactoryMap = beanFactory.getBeanOfType(ScopeProxyFactory.class);
-        }
+        this.ensureScopeProxyFactory(beanFactory);
         return this.obtainScopeProxyFactory(beanDefinition.getScope()).getObject(beanDefinition, beanFactory);
     }
 
@@ -35,6 +33,16 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
         if (this.scopeProxyFactoryMap != null) {
             Map<String, ScopeProxyFactory> copy = new HashMap<>(this.scopeProxyFactoryMap);
             copy.values().stream().filter(e -> e != this).forEach(v -> v.onApplicationEvent(event));
+        }
+    }
+
+    protected void ensureScopeProxyFactory(BeanFactory beanFactory) {
+        if (this.scopeProxyFactoryMap == null) {
+            synchronized (this) {
+                if (this.scopeProxyFactoryMap == null) {
+                    this.scopeProxyFactoryMap = beanFactory.getBeanOfType(ScopeProxyFactory.class);
+                }
+            }
         }
     }
 

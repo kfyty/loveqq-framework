@@ -1,7 +1,7 @@
 package com.kfyty.support.utils;
 
 import com.kfyty.support.exception.SupportException;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
 import com.kfyty.support.proxy.MethodInvocationInterceptor;
 
@@ -126,12 +126,12 @@ public abstract class AopUtil {
      * 向给定的 bean 中添加代理拦截点
      *
      * @param bean                  代理 bean
-     * @param interceptorChainPoint 拦截点
+     * @param methodInterceptorChainPoint 拦截点
      * @return true if success
      */
-    public static boolean addProxyInterceptorPoint(Object bean, InterceptorChainPoint interceptorChainPoint) {
+    public static boolean addProxyInterceptorPoint(Object bean, MethodInterceptorChainPoint methodInterceptorChainPoint) {
         if (isCglibProxy(bean)) {
-            getProxyInterceptorChain(bean).addInterceptorPoint(interceptorChainPoint);
+            getProxyInterceptorChain(bean).addInterceptorPoint(methodInterceptorChainPoint);
             return true;
         }
         if (!isJdkProxy(bean)) {
@@ -141,7 +141,7 @@ public abstract class AopUtil {
         if (!(invocationHandler instanceof MethodInterceptorChain)) {
             return false;
         }
-        ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(interceptorChainPoint);
+        ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
         return true;
     }
 

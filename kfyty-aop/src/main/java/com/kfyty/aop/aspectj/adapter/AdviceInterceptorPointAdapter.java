@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj.adapter;
 
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import org.aopalliance.aop.Advice;
 
 /**
@@ -12,11 +12,11 @@ import org.aopalliance.aop.Advice;
  */
 public interface AdviceInterceptorPointAdapter {
     /**
-     * 将 {@link Advice} 适配为 {@link InterceptorChainPoint}
+     * 将 {@link Advice} 适配为 {@link MethodInterceptorChainPoint}
      * 返回 null 时将尝试下一个适配器
      *
      * @param advice 通知
      * @return 代理拦截点
      */
-    InterceptorChainPoint adapt(Advice advice);
+    MethodInterceptorChainPoint adapt(Advice advice);
 }

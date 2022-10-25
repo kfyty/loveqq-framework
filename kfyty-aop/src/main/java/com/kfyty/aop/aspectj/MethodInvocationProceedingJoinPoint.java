@@ -1,7 +1,7 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
@@ -25,11 +25,11 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
     private Signature signature;
     private SourceLocation sourceLocation;
 
-    private final MethodProxyWrapper methodProxyWrapper;
+    private final MethodProxy methodProxy;
     private final MethodInterceptorChain interceptorChain;
 
-    public MethodInvocationProceedingJoinPoint(MethodProxyWrapper methodProxyWrapper, MethodInterceptorChain interceptorChain) {
-        this.methodProxyWrapper = methodProxyWrapper;
+    public MethodInvocationProceedingJoinPoint(MethodProxy methodProxy, MethodInterceptorChain interceptorChain) {
+        this.methodProxy = methodProxy;
         this.interceptorChain = interceptorChain;
     }
 
@@ -40,32 +40,31 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
     @Override
     public Object proceed() throws Throwable {
-        return this.interceptorChain.proceed(this.methodProxyWrapper);
+        return this.interceptorChain.proceed(this.methodProxy);
     }
 
     @Override
     public Object proceed(Object[] args) throws Throwable {
-        Object[] arguments = this.methodProxyWrapper.getArguments();
-        if (arguments.length != args.length) {
+        if (args.length != this.methodProxy.getArguments().length) {
             throw new IllegalArgumentException("inconsistent parameter lengths");
         }
-        System.arraycopy(args, 0, arguments, 0, args.length);
+        this.methodProxy.setArguments(args);
         return this.proceed();
     }
 
     @Override
     public Object getThis() {
-        return this.methodProxyWrapper.getProxy();
+        return this.methodProxy.getProxy();
     }
 
     @Override
     public Object getTarget() {
-        return this.methodProxyWrapper.getTarget();
+        return this.methodProxy.getTarget();
     }
 
     @Override
     public Object[] getArgs() {
-        return this.methodProxyWrapper.getArguments();
+        return this.methodProxy.getArguments();
     }
 
     @Override
@@ -144,7 +143,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public Method getMethod() {
-            return methodProxyWrapper.getTargetMethod();
+            return methodProxy.getTargetMethod();
         }
 
         @Override
@@ -229,10 +228,10 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public Class<?> getWithinType() {
-            if (methodProxyWrapper.getTarget() == null) {
-                throw new UnsupportedOperationException("No source location joinpoint available: target is null");
+            if (methodProxy.getTarget() == null) {
+                throw new UnsupportedOperationException("No source location join point available: target is null");
             }
-            return methodProxyWrapper.getTarget().getClass();
+            return methodProxy.getTarget().getClass();
         }
 
         @Override

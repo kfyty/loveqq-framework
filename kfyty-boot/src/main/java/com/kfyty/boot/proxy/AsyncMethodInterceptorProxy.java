@@ -4,9 +4,9 @@ import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.annotation.Async;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.exception.AsyncMethodException;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import static com.kfyty.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THR
  */
 @Slf4j
 @Order(Integer.MIN_VALUE)
-public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
+public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint {
     private final ApplicationContext context;
 
     public AsyncMethodInterceptorProxy(ApplicationContext context) {
@@ -36,7 +36,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Async annotation = this.findAsyncAnnotation(methodProxy);
         if (annotation == null) {
             return chain.proceed(methodProxy);
@@ -57,7 +57,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
         return this.doExecuteAsync((ExecutorService) executor, methodProxy.getMethod(), task);
     }
 
-    private Object doExecuteAsync(ExecutorService executor, Method method, Callable<?> task) {
+    protected Object doExecuteAsync(ExecutorService executor, Method method, Callable<?> task) {
         if (!method.getReturnType().equals(void.class) && !method.getReturnType().equals(Void.class) && !Future.class.isAssignableFrom(method.getReturnType())) {
             throw new IllegalStateException("async method return type must be void/Void/Future: " + method);
         }
@@ -72,7 +72,7 @@ public class AsyncMethodInterceptorProxy implements InterceptorChainPoint {
         }, executor);
     }
 
-    private Async findAsyncAnnotation(MethodProxyWrapper methodProxy) {
+    protected Async findAsyncAnnotation(MethodProxy methodProxy) {
         Async annotation = AnnotationUtil.findAnnotation(methodProxy.getTargetMethod(), Async.class);
         if (annotation == null) {
             annotation = AnnotationUtil.findAnnotation(methodProxy.getTarget(), Async.class);

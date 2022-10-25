@@ -23,11 +23,11 @@ public interface FactoryBean<T> {
     T getObject();
 
     /**
-     * 是否单例
+     * 返回 bean 作用域
      *
-     * @return true if singleton
+     * @return {@link BeanDefinition}
      */
-    default boolean isSingleton() {
-        return true;
+    default String getScope() {
+        return BeanDefinition.SCOPE_SINGLETON;
     }
 }

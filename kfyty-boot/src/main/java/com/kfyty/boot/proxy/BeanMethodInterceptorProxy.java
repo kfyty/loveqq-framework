@@ -5,9 +5,9 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
 import com.kfyty.support.utils.ScopeUtil;
@@ -25,7 +25,7 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
  * @email kfyty725@hotmail.com
  */
 @Order(BeanMethodInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
-public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
+public class BeanMethodInterceptorProxy implements MethodInterceptorChainPoint {
     public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER >> 1;
 
     private final ApplicationContext context;
@@ -35,7 +35,7 @@ public class BeanMethodInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Method method = methodProxy.getTargetMethod();
         Bean annotation = AnnotationUtil.findAnnotation(method, Bean.class);
         if (annotation == null || !ScopeUtil.isSingleton(method)) {

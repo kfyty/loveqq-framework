@@ -17,7 +17,6 @@ import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import lombok.Data;
-import lombok.Getter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -57,14 +56,16 @@ public class ComponentTest implements CommandLineRunner {
 }
 
 class ComponentS {
-    @Getter
-    private final long time;
+    private static long time;
 
     public ComponentS() {
-        this.time = System.currentTimeMillis();
         if (this.getClass().getSimpleName().equals("ComponentS")) {
             System.out.println("ComponentS");
         }
+    }
+
+    public long getTime() {
+        return time++;
     }
 }
 
@@ -177,4 +178,44 @@ class AA1 extends AA {
 class AA2 extends AA {
     @Autowired
     private AA1 aa1;
+}
+
+@Component
+class PrototypeLookup implements CommandLineRunner {
+    @Autowired
+    private PrototypeAAA aaa;
+
+    @Autowired
+    private PrototypeAAA aaa2;
+
+    @Autowired
+    private PrototypeBBB bbb;
+
+    @Autowired
+    private PrototypeBBB bbb2;
+
+    @Override
+    public void run(String... args) throws Exception {
+        Assert.assertSame(this.aaa, this.aaa2);
+        Assert.assertSame(this.bbb, this.bbb2);
+        Assert.assertSame(this.aaa.getBBB(), this.bbb);
+        Assert.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
+    }
+
+    @Component
+    @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+    public static abstract class PrototypeAAA {
+        @Lookup
+        public abstract PrototypeBBB getBBB();
+    }
+
+    @Component
+    @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+    public static class PrototypeBBB {
+        private static long time;
+
+        public long getTime() {
+            return time++;
+        }
+    }
 }

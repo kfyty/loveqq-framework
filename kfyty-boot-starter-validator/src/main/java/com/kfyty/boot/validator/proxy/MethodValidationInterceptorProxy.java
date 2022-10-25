@@ -1,8 +1,8 @@
 package com.kfyty.boot.validator.proxy;
 
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxyWrapper;
+import com.kfyty.support.proxy.MethodProxy;
 import com.kfyty.support.utils.CommonUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -21,7 +21,7 @@ import java.util.function.Function;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class MethodValidationInterceptorProxy implements InterceptorChainPoint {
+public class MethodValidationInterceptorProxy implements MethodInterceptorChainPoint {
     private final Validator validator;
 
     public MethodValidationInterceptorProxy(Validator validator) {
@@ -29,7 +29,7 @@ public class MethodValidationInterceptorProxy implements InterceptorChainPoint {
     }
 
     @Override
-    public Object proceed(MethodProxyWrapper methodProxy, MethodInterceptorChain chain) throws Throwable {
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object target = methodProxy.getTarget();
         Method method = methodProxy.getTargetMethod();
         this.beforeValid(target, method, methodProxy.getArguments());

@@ -33,6 +33,38 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public abstract class BeanUtil {
     /**
+     * 作用域代理原 bean 名称前缀
+     */
+    public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
+
+    /**
+     * 移除 FactoryBean 名称前缀
+     *
+     * @param beanName factory bean name
+     * @return 原 bean name
+     */
+    public static String removeFactoryBeanNamePrefix(String beanName) {
+        while (beanName.startsWith(FactoryBeanDefinition.FACTORY_BEAN_PREFIX)) {
+            beanName = beanName.substring(FactoryBeanDefinition.FACTORY_BEAN_PREFIX.length());
+        }
+        return beanName;
+    }
+
+    /**
+     * 解析 FactoryBean bean type
+     *
+     * @param beanName factory bean type
+     * @return 原 bean type
+     */
+    public static Class<?> resolveFactoryBeanType(String beanName, Class<?> beanType) {
+        while (beanName.startsWith(FactoryBeanDefinition.FACTORY_BEAN_PREFIX)) {
+            beanName = beanName.substring(FactoryBeanDefinition.FACTORY_BEAN_PREFIX.length());
+            beanType = FactoryBeanDefinition.getSnapBeanType(beanName, beanType);
+        }
+        return beanType;
+    }
+
+    /**
      * 根据 class 对象转换为 bean name
      *
      * @param clazz class

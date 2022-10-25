@@ -1,6 +1,5 @@
 package com.kfyty.boot.context.factory;
 
-import com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean;
 import com.kfyty.support.autoconfig.ApplicationContext;
 import com.kfyty.support.autoconfig.ApplicationContextAware;
 import com.kfyty.support.autoconfig.BeanFactoryAware;
@@ -11,7 +10,6 @@ import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
 import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.support.exception.BeansException;
@@ -32,11 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean.SCOPE_PROXY_SOURCE_PREFIX;
 import static com.kfyty.support.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
 import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.support.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
 
@@ -92,7 +89,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     public List<BeanPostProcessor> getBeanPostProcessors() {
-        return beanPostProcessors;
+        return this.beanPostProcessors;
     }
 
     @Override
@@ -102,15 +99,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(BeanDefinition beanDefinition) {
-        if (!beanDefinition.isSingleton()) {
-            beanDefinition.setAutowireCandidate(false);
-            this.registerBeanDefinition(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName(), beanDefinition, true);
-            beanDefinition = genericBeanDefinition(ScopeProxyFactoryBean.class).setBeanName(beanDefinition.getBeanName()).addConstructorArgs(BeanDefinition.class, beanDefinition).getBeanDefinition();
-        }
         this.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, true);
-        if (FactoryBean.class.isAssignableFrom(beanDefinition.getBeanType())) {
-            this.registerBeanDefinition(factoryBeanDefinition(beanDefinition).getBeanDefinition());
-        }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
@@ -184,9 +173,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 .stream()
                 .filter(beanDefinitionPredicate)
                 .sorted((b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k1, k2) -> {
-                    throw new IllegalStateException("duplicate key " + k2);
-                }, LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
@@ -374,7 +361,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         return beanDefinition.isSingleton() ? this.getBean(beanDefinition.getBeanName()) : bean;
     }
 
-    private void invokeAwareMethod(String beanName, Object bean) {
+    protected void invokeAwareMethod(String beanName, Object bean) {
         if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(this);
         }
@@ -383,7 +370,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
     }
 
-    private Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean) {
+    protected Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean) {
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
                 Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName);
@@ -396,7 +383,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         return bean;
     }
 
-    private Object invokeLifecycleMethod(String beanName, Object bean) {
+    protected Object invokeLifecycleMethod(String beanName, Object bean) {
         if (bean instanceof ApplicationContext) {
             return bean;
         }
@@ -404,7 +391,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         return bean;
     }
 
-    private Object initializingBean(String beanName, Object bean) {
+    protected Object initializingBean(String beanName, Object bean) {
         BeanDefinition beanDefinition = this.getBeanDefinition(beanName);
 
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
@@ -419,7 +406,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             ((InitializingBean) bean).afterPropertiesSet();
         }
 
-        bean = getExposedBean(beanDefinition, bean);
+        bean = this.getExposedBean(beanDefinition, bean);
 
         if (beanDefinition instanceof MethodBeanDefinition) {
             final Object finalBean = bean;
@@ -427,7 +414,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             ofNullable(methodBeanDefinition.getInitMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(finalBean, e));
         }
 
-        bean = getExposedBean(beanDefinition, bean);
+        bean = this.getExposedBean(beanDefinition, bean);
 
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);

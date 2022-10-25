@@ -1,7 +1,7 @@
 package com.kfyty.aop.aspectj.adapter;
 
 import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import org.aopalliance.aop.Advice;
 
 /**
@@ -15,7 +15,7 @@ import org.aopalliance.aop.Advice;
 public class DefaultAdviceInterceptorPointAdapter implements AdviceInterceptorPointAdapter {
 
     @Override
-    public InterceptorChainPoint adapt(Advice advice) {
-        return advice instanceof InterceptorChainPoint ? (InterceptorChainPoint) advice : null;
+    public MethodInterceptorChainPoint adapt(Advice advice) {
+        return advice instanceof MethodInterceptorChainPoint ? (MethodInterceptorChainPoint) advice : null;
     }
 }

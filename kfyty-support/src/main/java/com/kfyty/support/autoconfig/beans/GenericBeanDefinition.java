@@ -124,6 +124,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isFactoryBean() {
+        return FactoryBean.class.isAssignableFrom(this.getBeanType());
+    }
+
+    @Override
     public boolean isAutowireCandidate() {
         return this.isAutowireCandidate;
     }
@@ -135,7 +140,7 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     @Override
     public BeanDefinition addConstructorArgs(Class<?> argType, Object arg) {
-        if(this.defaultConstructorArgs == null) {
+        if (this.defaultConstructorArgs == null) {
             this.defaultConstructorArgs = new LinkedHashMap<>(4);
         }
         this.defaultConstructorArgs.put(argType, arg);
@@ -160,32 +165,32 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     @Override
     public Object createInstance(ApplicationContext context) {
-        if(context.contains(this.getBeanName())) {
+        if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
         this.ensureAutowiredProcessor(context);
         Object bean = ReflectUtil.newInstance(this.beanType, this.getConstructArgs());
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("instantiate bean: {} !", bean);
         }
         return bean;
     }
 
     protected void ensureConstructor() {
-        if(this.constructor == null) {
+        if (this.constructor == null) {
             this.constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> AnnotationUtil.hasAnnotation(e, Autowired.class));
         }
     }
 
     protected void ensureAutowiredProcessor(ApplicationContext context) {
-        if(autowiredProcessor == null || autowiredProcessor.getContext() != context) {
+        if (autowiredProcessor == null || autowiredProcessor.getContext() != context) {
             autowiredProcessor = new AutowiredProcessor(context);
         }
     }
 
     protected Map<Class<?>, Object> prepareConstructorArgs() {
         this.ensureConstructor();
-        if(this.constructor.getParameterCount() == 0) {
+        if (this.constructor.getParameterCount() == 0) {
             return Collections.emptyMap();
         }
         Parameter[] parameters = this.constructor.getParameters();

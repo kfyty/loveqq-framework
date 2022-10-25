@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import static com.kfyty.support.utils.BeanUtil.removeFactoryBeanNamePrefix;
 import static com.kfyty.support.utils.ReflectUtil.newInstance;
 
 /**
@@ -47,7 +48,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
-        super(factoryBeanDefinition.getBeanName().substring(1), temp.getBeanType(), temp.isSingleton() ? SCOPE_SINGLETON : SCOPE_PROTOTYPE);
+        super(removeFactoryBeanNamePrefix(factoryBeanDefinition.getBeanName()), temp.getBeanType(), temp.getScope());
         this.factoryBeanDefinition = factoryBeanDefinition;
     }
 
@@ -68,6 +69,11 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
             log.debug("instantiate bean from factory bean: {} !", bean);
         }
         return bean;
+    }
+
+    public static Class<?> getSnapBeanType(String beanName, Class<?> defaultBeanType) {
+        FactoryBean<?> factoryBean = snapFactoryBeanCache.get(new WeakKey<>(beanName));
+        return factoryBean == null ? defaultBeanType : factoryBean.getBeanType();
     }
 
     public static FactoryBean<?> getSnapFactoryBean(BeanDefinition beanDefinition) {

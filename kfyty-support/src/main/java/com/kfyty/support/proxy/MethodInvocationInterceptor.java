@@ -1,7 +1,6 @@
 package com.kfyty.support.proxy;
 
 import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,17 +21,17 @@ public abstract class MethodInvocationInterceptor implements InvocationHandler, 
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.target, proxy, method, args));
+        return this.process(new MethodProxy(this.target, proxy, method, args));
     }
 
     @Override
-    public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-        return this.process(new MethodProxyWrapper(this.target, proxy, method, args, methodProxy));
+    public Object intercept(Object proxy, Method method, Object[] args, net.sf.cglib.proxy.MethodProxy methodProxy) throws Throwable {
+        return this.process(new MethodProxy(this.target, proxy, method, args, methodProxy));
     }
 
     public Object getTarget() {
         return this.target;
     }
 
-    protected abstract Object process(MethodProxyWrapper methodProxy) throws Throwable;
+    protected abstract Object process(MethodProxy methodProxy) throws Throwable;
 }

@@ -3,7 +3,7 @@ package com.kfyty.boot.validator.processor;
 import com.kfyty.boot.validator.proxy.MethodValidationInterceptorProxy;
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.proxy.InterceptorChainPoint;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.utils.ReflectUtil;
 import jakarta.validation.Constraint;
 import jakarta.validation.Valid;
@@ -42,7 +42,7 @@ public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProce
     }
 
     @Override
-    public InterceptorChainPoint createProxyPoint() {
+    public MethodInterceptorChainPoint createProxyPoint() {
         return new MethodValidationInterceptorProxy(this.validator);
     }
 }
