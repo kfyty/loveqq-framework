@@ -5,8 +5,8 @@ import com.kfyty.support.autoconfig.annotation.Bean;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
 import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodInterceptorChain;
+import com.kfyty.support.proxy.MethodInterceptorChainPoint;
 import com.kfyty.support.proxy.MethodProxy;
 import com.kfyty.support.utils.AnnotationUtil;
 import com.kfyty.support.utils.BeanUtil;
@@ -28,6 +28,8 @@ import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
 public class BeanMethodInterceptorProxy implements MethodInterceptorChainPoint {
     public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER >> 1;
 
+    public static final ThreadLocal<String> CURRENT_REQUIRED_BEAN_NAME = new ThreadLocal<>();
+
     private final ApplicationContext context;
 
     public BeanMethodInterceptorProxy(ApplicationContext context) {
@@ -41,12 +43,24 @@ public class BeanMethodInterceptorProxy implements MethodInterceptorChainPoint {
         if (annotation == null || !ScopeUtil.isSingleton(method)) {
             return chain.proceed(methodProxy);
         }
-        String beanNamePrefix = FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING;
-        String beanName = beanNamePrefix + BeanUtil.getBeanName(method, annotation);
-        if (this.context.contains(beanName)) {
-            return this.context.getBean(beanName);
+
+        String requiredBeanName = getCurrentRequiredBeanName();
+        String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING) +
+                BeanUtil.getBeanName(method, annotation);
+
+        if (requiredBeanName != null && !requiredBeanName.equals(beanName)) {
+            return chain.proceed(methodProxy);
         }
+
         BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName, method.getReturnType());
         return this.context.registerBean(beanDefinition);
+    }
+
+    public static String getCurrentRequiredBeanName() {
+        return CURRENT_REQUIRED_BEAN_NAME.get();
+    }
+
+    public static void setCurrentRequiredBeanName(String beanName) {
+        CURRENT_REQUIRED_BEAN_NAME.set(beanName);
     }
 }

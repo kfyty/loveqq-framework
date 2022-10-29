@@ -87,7 +87,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
     }
 
     protected void autowiredBeanField(Class<?> clazz, Object bean, boolean ignoredLazy) {
-        List<Field> lazies = new ArrayList<>(4);
+        List<Field> laziedFields = new ArrayList<>(4);
         List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
             AutowiredDescription description = AutowiredDescription.from(field);
@@ -100,12 +100,12 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
             }
             ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
             if (beanMethods.stream().anyMatch(e -> actualGeneric.getSimpleActualType().isAssignableFrom(e.getReturnType()))) {
-                lazies.add(field);
+                laziedFields.add(field);
                 continue;
             }
             this.autowiredProcessor.doAutowired(bean, field, description);
         }
-        lazies.forEach(e -> this.autowiredProcessor.doAutowired(bean, e));
+        laziedFields.forEach(e -> this.autowiredProcessor.doAutowired(bean, e));
     }
 
     protected void autowiredBeanMethod(Class<?> clazz, Object bean, boolean ignoredLazy) {
@@ -122,7 +122,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
         }
     }
 
-    private void putLazy(Object bean, AccessibleObject lazy) {
+    protected void putLazy(Object bean, AccessibleObject lazy) {
         if (this.lazyAutowired == null) {
             this.lazyAutowired = new HashMap<>();
         }

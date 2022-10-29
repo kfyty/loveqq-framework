@@ -2,7 +2,6 @@ package com.kfyty.database.generator.config;
 
 import com.kfyty.database.generator.GenerateSources;
 import com.kfyty.database.generator.config.annotation.EnableAutoGenerate;
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
@@ -42,14 +41,10 @@ public class AutoGenerateAutoConfig {
     @Autowired(required = false)
     private GenerateSources generateSources;
 
-    @Lazy
     @Autowired(required = false)
     private SqlSessionProxyFactory sqlSessionProxyFactory;
 
     @Lazy
-    @Autowired(required = false)
-    private Class<? extends AbstractDatabaseMapper> databaseMapper;
-
     @Bean
     public QueryInterceptor fieldStructInfoInterceptor() {
         return new FieldStructInfoInterceptor();
@@ -83,9 +78,6 @@ public class AutoGenerateAutoConfig {
         }
         if (this.templates != null) {
             generateSources.refreshTemplate(this.templates);
-        }
-        if (databaseMapper != null) {
-            generateSources.getConfiguration().setDatabaseMapper(databaseMapper);
         }
         return generateSources;
     }

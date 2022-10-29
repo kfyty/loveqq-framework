@@ -50,6 +50,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     protected String scope;
 
     /**
+     * 是否延迟初始化
+     */
+    protected boolean isLazyInit;
+
+    /**
      * 是否是自动装配的候选者
      */
     protected boolean isAutowireCandidate;
@@ -82,10 +87,15 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType, String scope) {
+        this(beanName, beanType, scope, false);
+    }
+
+    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope, boolean isLazyInit) {
         this();
         this.setBeanName(beanName);
         this.setBeanType(beanType);
         this.setScope(scope);
+        this.setLazyInit(isLazyInit);
     }
 
     @Override
@@ -116,6 +126,16 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public void setScope(String scope) {
         this.scope = Objects.requireNonNull(scope);
+    }
+
+    @Override
+    public boolean isLazyInit() {
+        return this.isLazyInit;
+    }
+
+    @Override
+    public void setLazyInit(boolean isLazyInit) {
+        this.isLazyInit = isLazyInit;
     }
 
     @Override
