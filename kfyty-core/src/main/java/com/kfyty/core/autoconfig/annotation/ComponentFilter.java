@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * @author kfyty725
  * @date 2021/5/21 16:46
  * @email kfyty725@hotmail.com
- * @see ApplicationContext#doFilterComponent(Class)
+ * @see com.kfyty.core.autoconfig.ConfigurableApplicationContext#doFilterComponent(Class)
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

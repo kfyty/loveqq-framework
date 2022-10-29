@@ -52,7 +52,7 @@ import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.gene
  */
 @Slf4j
 @RestController
-@BootApplication(proxyTargetClass = false)
+@BootApplication
 @ComponentScan(excludeFilter = @ComponentFilter(classes = WebMvcAutoConfigListener.class))
 public class AutowiredTest {
     @Value("${id}")

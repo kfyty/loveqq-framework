@@ -32,5 +32,5 @@ public interface AutowiredCapableSupport {
     /**
      * 注入懒加载的 bean
      */
-    void autowiredLazy();
+    void autowiredLazied();
 }

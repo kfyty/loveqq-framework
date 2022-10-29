@@ -74,7 +74,7 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
     }
 
     @Override
-    public void autowiredLazy() {
+    public void autowiredLazied() {
         for (Map.Entry<Object, AccessibleObject> entry : this.lazyAutowired.entrySet()) {
             if (entry.getValue() instanceof Field) {
                 this.autowiredProcessor.doAutowired(entry.getKey(), (Field) entry.getValue());

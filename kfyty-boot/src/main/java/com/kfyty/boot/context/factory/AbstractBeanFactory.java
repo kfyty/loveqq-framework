@@ -122,7 +122,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             this.registerBeanDefinition(name, beanDefinition);
             return;
         }
-        this.resolveConditionBeanDefinitionRegistry(name, beanDefinition);
+        this.registerConditionBeanDefinition(name, beanDefinition);
         this.beanDefinitionsForType.clear();
     }
 
@@ -263,7 +263,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             this.removeBeanReference(name);
             this.invokeAwareMethod(name, bean);
             bean = this.invokeBeanPostProcessAfterInstantiation(name, getExposedBean(beanDefinition, bean));
-            this.autowiredBean(name, getExposedBean(beanDefinition, bean));
+            this.autowiredBean(name, this.getExposedBean(beanDefinition, bean));
             bean = this.invokeLifecycleMethod(name, getExposedBean(beanDefinition, bean));
             return bean;
         }
@@ -334,14 +334,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     /**
-     * 解析条件 BeanDefinition
-     *
-     * @param name           BeanDefinition name
-     * @param beanDefinition BeanDefinition
-     */
-    public abstract void resolveConditionBeanDefinitionRegistry(String name, BeanDefinition beanDefinition);
-
-    /**
      * 创建 bean 实例
      *
      * @param beanDefinition bean 定义
@@ -364,9 +356,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     protected void invokeAwareMethod(String beanName, Object bean) {
         if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(this);
-        }
-        if (bean instanceof ApplicationContextAware) {
-            ((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
         }
     }
 

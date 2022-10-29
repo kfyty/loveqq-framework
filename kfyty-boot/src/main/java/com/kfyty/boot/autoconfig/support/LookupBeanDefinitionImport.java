@@ -2,7 +2,8 @@ package com.kfyty.boot.autoconfig.support;
 
 import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Lookup;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
@@ -24,11 +25,11 @@ import static com.kfyty.core.utils.ReflectUtil.isAbstract;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class LookupBeanDefinitionImport implements ApplicationContextAware, ImportBeanDefinition {
-    private ApplicationContext applicationContext;
+public class LookupBeanDefinitionImport implements ConfigurableApplicationContextAware, ImportBeanDefinition {
+    private ConfigurableApplicationContext applicationContext;
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
+    public void setConfigurableApplicationContext(ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

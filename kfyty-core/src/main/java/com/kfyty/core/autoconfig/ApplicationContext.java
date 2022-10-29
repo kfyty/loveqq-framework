@@ -14,9 +14,5 @@ public interface ApplicationContext extends BeanFactory, ApplicationEventPublish
 
     Class<?> getPrimarySource();
 
-    String[] getCommandLineArgs();
-
-    boolean doFilterComponent(Class<?> clazz);
-
     ApplicationContext refresh();
 }
