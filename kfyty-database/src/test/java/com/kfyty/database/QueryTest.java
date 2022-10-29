@@ -8,7 +8,7 @@ import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
 import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.vo.UserVo;
-import com.kfyty.support.utils.PropertiesUtil;
+import com.kfyty.core.utils.PropertiesUtil;
 import org.junit.Before;
 import org.junit.Test;
 

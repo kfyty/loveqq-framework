@@ -3,7 +3,7 @@ package com.kfyty.boot.baidu.uid.autoconfig.entity;
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
 import com.kfyty.database.jdbc.annotation.TableId;
 import com.kfyty.database.jdbc.annotation.TableName;
-import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.core.utils.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

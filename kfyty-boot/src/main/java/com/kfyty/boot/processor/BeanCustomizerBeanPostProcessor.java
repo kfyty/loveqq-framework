@@ -1,15 +1,15 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.BeanCustomizer;
-import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.utils.AopUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.BeanCustomizer;
+import com.kfyty.core.autoconfig.BeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.utils.AopUtil;
 
 import java.util.HashMap;
 import java.util.LinkedList;

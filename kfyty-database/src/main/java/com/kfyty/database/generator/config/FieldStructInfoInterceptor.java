@@ -3,13 +3,13 @@ package com.kfyty.database.generator.config;
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.jdbc.intercept.InterceptorChain;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.JdbcTypeUtil;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.JdbcTypeUtil;
 
 import java.util.Collection;
 import java.util.List;
 
-import static com.kfyty.support.utils.CommonUtil.mapping;
+import static com.kfyty.core.utils.CommonUtil.mapping;
 
 /**
  * 描述: 字段信息拦截器

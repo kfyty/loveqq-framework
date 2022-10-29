@@ -9,11 +9,11 @@ import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.jdbc.annotation.Query;
-import com.kfyty.support.io.SimpleBufferedWriter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.IOUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.io.SimpleBufferedWriter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.IOUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.kfyty.support.utils.CommonUtil.removePrefix;
+import static com.kfyty.core.utils.CommonUtil.removePrefix;
 
 /**
  * 功能描述: 生成资源

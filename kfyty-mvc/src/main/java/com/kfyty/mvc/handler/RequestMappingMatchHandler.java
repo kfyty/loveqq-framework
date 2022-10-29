@@ -2,7 +2,7 @@ package com.kfyty.mvc.handler;
 
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.RequestMethod;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.utils.CommonUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;

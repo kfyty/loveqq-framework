@@ -1,10 +1,10 @@
 package com.kfyty.boot.autoconfig;
 
 import com.kfyty.boot.autoconfig.support.DefaultThreadPoolExecutor;
-import com.kfyty.support.autoconfig.BeanCustomizer;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.thread.NamedThreadFactory;
+import com.kfyty.core.autoconfig.BeanCustomizer;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.thread.NamedThreadFactory;
 
 import java.util.concurrent.ThreadPoolExecutor;
 

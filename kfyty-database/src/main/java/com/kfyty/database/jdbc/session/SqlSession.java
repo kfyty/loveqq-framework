@@ -12,18 +12,18 @@ import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.database.util.SQLParametersResolveUtil;
-import com.kfyty.support.generic.Generic;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.jdbc.JdbcTransaction;
-import com.kfyty.support.jdbc.TransactionHolder;
-import com.kfyty.support.jdbc.transaction.Transaction;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.JdbcUtil;
-import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.wrapper.Pair;
+import com.kfyty.core.generic.Generic;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.jdbc.JdbcTransaction;
+import com.kfyty.core.jdbc.TransactionHolder;
+import com.kfyty.core.jdbc.transaction.Transaction;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.Pair;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,9 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static com.kfyty.support.utils.AnnotationUtil.findAnnotations;
-import static com.kfyty.support.utils.CommonUtil.notEmpty;
-import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
+import static com.kfyty.core.utils.AnnotationUtil.findAnnotations;
+import static com.kfyty.core.utils.CommonUtil.notEmpty;
+import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
 /**
  * 功能描述: SqlSession，仅支持通过接口代理操作数据库

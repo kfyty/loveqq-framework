@@ -1,10 +1,10 @@
 package com.kfyty.boot.data.redis.redisson.autoconfig;
 
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.support.autoconfig.annotation.NestedConfigurationProperty;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.Setter;
 import org.redisson.client.codec.Codec;
 import org.redisson.config.ClusterServersConfig;
@@ -15,8 +15,8 @@ import org.redisson.config.SentinelServersConfig;
 import org.redisson.config.SingleServerConfig;
 import org.redisson.connection.balancer.LoadBalancer;
 
-import static com.kfyty.support.utils.ReflectUtil.load;
-import static com.kfyty.support.utils.ReflectUtil.newInstance;
+import static com.kfyty.core.utils.ReflectUtil.load;
+import static com.kfyty.core.utils.ReflectUtil.newInstance;
 import static java.util.Optional.ofNullable;
 
 /**

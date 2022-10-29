@@ -1,22 +1,22 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.GenericPropertiesContext;
-import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.support.autoconfig.annotation.NestedConfigurationProperty;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.AopUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述:

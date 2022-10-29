@@ -1,1 +1,1 @@
-com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.xxl.job.autoconfig.XxlJobAutoConfig
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.xxl.job.autoconfig.XxlJobAutoConfig

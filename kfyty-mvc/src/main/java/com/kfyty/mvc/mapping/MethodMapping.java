@@ -1,7 +1,7 @@
 package com.kfyty.mvc.mapping;
 
 import com.kfyty.mvc.request.RequestMethod;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 

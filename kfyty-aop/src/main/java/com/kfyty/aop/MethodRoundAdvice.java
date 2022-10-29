@@ -1,8 +1,8 @@
 package com.kfyty.aop;
 
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxy;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodProxy;
 import org.aopalliance.aop.Advice;
 import org.aspectj.lang.ProceedingJoinPoint;
 

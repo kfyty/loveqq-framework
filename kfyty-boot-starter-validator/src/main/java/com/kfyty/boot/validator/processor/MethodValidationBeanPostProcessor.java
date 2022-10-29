@@ -1,10 +1,10 @@
 package com.kfyty.boot.validator.processor;
 
 import com.kfyty.boot.validator.proxy.MethodValidationInterceptorProxy;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.proxy.AbstractProxyCreatorProcessor;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.utils.ReflectUtil;
 import jakarta.validation.Constraint;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 
 /**
  * 描述: 方法参数校验

@@ -7,7 +7,7 @@ import org.aspectj.weaver.tools.ShadowMatch;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述: 注解匹配器

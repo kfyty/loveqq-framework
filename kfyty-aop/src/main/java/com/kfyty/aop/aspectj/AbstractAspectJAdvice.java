@@ -3,7 +3,7 @@ package com.kfyty.aop.aspectj;
 import com.kfyty.aop.Pointcut;
 import com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.aopalliance.aop.Advice;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static com.kfyty.support.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 
 /**
  * 描述: 通知基础实现

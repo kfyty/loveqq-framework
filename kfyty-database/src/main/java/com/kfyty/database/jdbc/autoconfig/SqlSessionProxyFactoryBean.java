@@ -4,10 +4,10 @@ import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
-import com.kfyty.support.autoconfig.InitializingBean;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.utils.BeanUtil;
+import com.kfyty.core.autoconfig.InitializingBean;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.utils.BeanUtil;
 import lombok.Data;
 
 import javax.sql.DataSource;

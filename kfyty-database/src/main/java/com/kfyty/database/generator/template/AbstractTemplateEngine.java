@@ -4,7 +4,7 @@ import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.util.TemplateEngineUtil;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.kfyty.support.utils.CommonUtil.removePrefix;
+import static com.kfyty.core.utils.CommonUtil.removePrefix;
 
 /**
  * 描述:

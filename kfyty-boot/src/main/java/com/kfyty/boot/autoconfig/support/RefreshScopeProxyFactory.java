@@ -1,10 +1,10 @@
 package com.kfyty.boot.autoconfig.support;
 
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
-import com.kfyty.support.event.ApplicationEvent;
-import com.kfyty.support.event.ContextRefreshedEvent;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.core.event.ApplicationEvent;
+import com.kfyty.core.event.ContextRefreshedEvent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

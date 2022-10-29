@@ -2,8 +2,8 @@ package com.kfyty.database.jdbc.sql.dynamic.freemarker;
 
 import com.kfyty.database.jdbc.mapping.freemarker.FreemarkerTemplateStatement;
 import com.kfyty.database.jdbc.sql.dynamic.AbstractDynamicProvider;
-import com.kfyty.support.utils.IOUtil;
-import com.kfyty.support.utils.XmlUtil;
+import com.kfyty.core.utils.IOUtil;
+import com.kfyty.core.utils.XmlUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -20,11 +20,11 @@ import static com.kfyty.database.jdbc.session.Configuration.EXECUTE_LABEL;
 import static com.kfyty.database.jdbc.session.Configuration.MAPPER_NAMESPACE;
 import static com.kfyty.database.jdbc.session.Configuration.MAPPER_STATEMENT_ID;
 import static com.kfyty.database.jdbc.session.Configuration.SELECT_LABEL;
-import static com.kfyty.support.utils.CommonUtil.BLANK_LINE_PATTERN;
-import static com.kfyty.support.utils.FreemarkerUtil.FREEMARKER_SUFFIX;
-import static com.kfyty.support.utils.FreemarkerUtil.buildTemplate;
-import static com.kfyty.support.utils.FreemarkerUtil.renderTemplate;
-import static com.kfyty.support.utils.XmlUtil.resolveAttribute;
+import static com.kfyty.core.utils.CommonUtil.BLANK_LINE_PATTERN;
+import static com.kfyty.core.utils.FreemarkerUtil.FREEMARKER_SUFFIX;
+import static com.kfyty.core.utils.FreemarkerUtil.buildTemplate;
+import static com.kfyty.core.utils.FreemarkerUtil.renderTemplate;
+import static com.kfyty.core.utils.XmlUtil.resolveAttribute;
 
 /**
  * 描述: 基于 freemarker 的动态 SQL 提供者

@@ -4,8 +4,8 @@ import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.sql.dialect.DialectProvider;
 import com.kfyty.database.jdbc.sql.dialect.MySQLDialectProvider;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.CommonUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.kfyty.support.utils.ReflectUtil.getMethod;
-import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
-import static com.kfyty.support.utils.ReflectUtil.newInstance;
+import static com.kfyty.core.utils.ReflectUtil.getMethod;
+import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
+import static com.kfyty.core.utils.ReflectUtil.newInstance;
 import static java.util.Optional.ofNullable;
 
 /**

@@ -1,13 +1,13 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.boot.processor.ConfigurationPropertiesBeanPostProcessor;
-import com.kfyty.support.autoconfig.GenericPropertiesContext;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.exception.SupportException;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.kfyty.support.utils.ConverterUtil.convert;
-import static com.kfyty.support.utils.ReflectUtil.getRawType;
-import static com.kfyty.support.utils.ReflectUtil.newInstance;
+import static com.kfyty.core.utils.ConverterUtil.convert;
+import static com.kfyty.core.utils.ReflectUtil.getRawType;
+import static com.kfyty.core.utils.ReflectUtil.newInstance;
 
 /**
  * 描述:

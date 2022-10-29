@@ -1,1 +1,1 @@
-com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.validator.autoconfig.ValidationAutoConfiguration
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.validator.autoconfig.ValidationAutoConfiguration

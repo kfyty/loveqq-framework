@@ -3,9 +3,9 @@ package com.kfyty.mvc.request.resolver;
 import com.kfyty.mvc.annotation.bind.RequestBody;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.JsonUtil;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.JsonUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;

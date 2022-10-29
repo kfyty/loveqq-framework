@@ -5,14 +5,14 @@ import com.kfyty.database.jdbc.annotation.TableId;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.intercept.InterceptorChain;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.jdbc.TransactionHolder;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.JdbcUtil;
-import com.kfyty.support.utils.ResultSetUtil;
-import com.kfyty.support.wrapper.ValueWrapper;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.jdbc.TransactionHolder;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.ResultSetUtil;
+import com.kfyty.core.wrapper.ValueWrapper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -26,10 +26,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.support.utils.ReflectUtil.getFieldMap;
-import static com.kfyty.support.utils.ReflectUtil.getMethod;
-import static com.kfyty.support.utils.ReflectUtil.setFieldValue;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.ReflectUtil.getFieldMap;
+import static com.kfyty.core.utils.ReflectUtil.getMethod;
+import static com.kfyty.core.utils.ReflectUtil.setFieldValue;
 
 /**
  * 描述: 主键自增拦截器，针对 {@link BaseMapper} 的插入方法回设主键值

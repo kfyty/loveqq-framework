@@ -10,13 +10,13 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
+        <module>kfyty-core</module>
         <module>kfyty-boot</module>
         <module>kfyty-database</module>
         <module>kfyty-mvc</module>
         <module>kfyty-aop</module>
         <module>kfyty-sdk</module>
         <module>kfyty-excel</module>
-        <module>kfyty-support</module>
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-validator</module>
         <module>kfyty-boot-starter-redisson</module>

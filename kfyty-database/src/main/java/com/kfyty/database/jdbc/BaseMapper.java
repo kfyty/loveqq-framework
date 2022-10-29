@@ -9,7 +9,7 @@ import java.util.List;
 
 import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARAM_ENTITY;
 import static com.kfyty.database.jdbc.sql.dialect.AbstractProvider.PROVIDER_PARAM_PK;
-import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: 数据库基础操作

@@ -1,22 +1,22 @@
 package com.kfyty.boot.context.factory;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.BeanFactoryAware;
-import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.DestroyBean;
-import com.kfyty.support.autoconfig.InitializingBean;
-import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.InstantiatedBeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.exception.BeansException;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.wrapper.WeakKey;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.BeanFactoryAware;
+import com.kfyty.core.autoconfig.BeanPostProcessor;
+import com.kfyty.core.autoconfig.DestroyBean;
+import com.kfyty.core.autoconfig.InitializingBean;
+import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.WeakKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -30,10 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.kfyty.support.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
-import static com.kfyty.support.utils.StreamUtil.throwMergeFunction;
+import static com.kfyty.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.core.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
 

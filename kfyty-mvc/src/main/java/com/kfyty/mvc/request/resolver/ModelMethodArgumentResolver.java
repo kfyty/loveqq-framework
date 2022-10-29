@@ -2,7 +2,7 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.support.Model;
-import com.kfyty.support.method.MethodParameter;
+import com.kfyty.core.method.MethodParameter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;

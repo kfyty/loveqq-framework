@@ -1,14 +1,14 @@
 package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.LazyProxyInterceptorProxy;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.factory.DynamicProxyFactory;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import lombok.NoArgsConstructor;
 
-import static com.kfyty.support.utils.BeanUtil.LAZY_PROXY_SOURCE_PREFIX;
+import static com.kfyty.core.utils.BeanUtil.LAZY_PROXY_SOURCE_PREFIX;
 
 /**
  * 描述: 为延迟初始化 bean 创建代理

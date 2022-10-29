@@ -1,13 +1,13 @@
 package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.mvc.tomcat.ServerEndpointExporter;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.InitializingBean;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.InitializingBean;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 
 import javax.servlet.ServletContext;
 import javax.websocket.server.ServerEndpoint;

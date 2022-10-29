@@ -1,11 +1,11 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.autoconfig.BeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.BeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.AopUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import javax.annotation.PreDestroy;
 import java.lang.reflect.Method;

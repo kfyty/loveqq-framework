@@ -1,14 +1,14 @@
 package com.kfyty.boot.data.jdbc.autoconfig;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.support.autoconfig.annotation.Import;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.core.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;

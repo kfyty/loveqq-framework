@@ -1,10 +1,10 @@
 package com.kfyty.boot.data.redis.redisson.autoconfig;
 
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Import;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 

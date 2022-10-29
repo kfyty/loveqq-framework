@@ -2,10 +2,10 @@ package com.kfyty.boot.quartz.autoconfig;
 
 import com.kfyty.boot.quartz.exception.ScheduledException;
 import com.kfyty.boot.quartz.processor.ScheduledAnnotationBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Import;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;

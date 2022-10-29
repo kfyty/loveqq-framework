@@ -1,8 +1,8 @@
 package com.kfyty.database.generator.config;
 
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
 import lombok.NoArgsConstructor;
 
 /**

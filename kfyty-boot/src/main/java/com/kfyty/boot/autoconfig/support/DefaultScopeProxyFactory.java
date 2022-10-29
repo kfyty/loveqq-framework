@@ -1,11 +1,11 @@
 package com.kfyty.boot.autoconfig.support;
 
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.autoconfig.beans.ScopeProxyFactory;
-import com.kfyty.support.event.ApplicationEvent;
-import com.kfyty.support.event.ApplicationListener;
-import com.kfyty.support.exception.BeansException;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.core.event.ApplicationEvent;
+import com.kfyty.core.event.ApplicationListener;
+import com.kfyty.core.exception.BeansException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

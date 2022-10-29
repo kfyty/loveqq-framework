@@ -1,14 +1,14 @@
 package com.kfyty.condition;
 
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.EventListener;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnClass;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.support.event.ContextRefreshedEvent;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.EventListener;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnClass;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.event.ContextRefreshedEvent;
 import org.junit.Assert;
 
 import java.util.List;

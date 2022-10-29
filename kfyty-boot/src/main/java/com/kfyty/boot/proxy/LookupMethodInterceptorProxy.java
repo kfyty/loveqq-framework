@@ -1,18 +1,18 @@
 package com.kfyty.boot.proxy;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Lookup;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.autowired.AutowiredDescription;
-import com.kfyty.support.autoconfig.beans.autowired.AutowiredProcessor;
-import com.kfyty.support.generic.ActualGeneric;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.proxy.MethodProxy;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Lookup;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.generic.ActualGeneric;
+import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.MethodProxy;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
 
 import java.lang.reflect.Method;
 

@@ -1,7 +1,7 @@
 package com.kfyty.database.generator.template.jsp;
 
 import com.kfyty.database.generator.config.GeneratorConfiguration;
-import com.kfyty.support.io.SimpleBufferedWriter;
+import com.kfyty.core.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;

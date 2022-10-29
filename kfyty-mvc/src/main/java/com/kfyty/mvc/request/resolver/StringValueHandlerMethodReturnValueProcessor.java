@@ -1,7 +1,7 @@
 package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.mvc.request.support.ModelViewContainer;
-import com.kfyty.support.method.MethodParameter;
+import com.kfyty.core.method.MethodParameter;
 
 /**
  * 描述:

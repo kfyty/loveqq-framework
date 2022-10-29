@@ -1,4 +1,4 @@
-com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration=\
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.aop.processor.AspectJBeanPostProcessor,\
     com.kfyty.aop.aspectj.creator.AspectJAdvisorCreator,\
     com.kfyty.aop.aspectj.adapter.DefaultAdviceInterceptorPointAdapter

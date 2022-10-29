@@ -1,9 +1,9 @@
 package com.kfyty.boot.validator.autoconfig;
 
 import com.kfyty.boot.validator.processor.MethodValidationBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;

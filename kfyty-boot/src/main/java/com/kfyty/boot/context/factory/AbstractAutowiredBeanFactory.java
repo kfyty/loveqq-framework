@@ -1,20 +1,20 @@
 package com.kfyty.boot.context.factory;
 
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.ConditionalBeanDefinition;
-import com.kfyty.support.autoconfig.beans.FactoryBeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
-import com.kfyty.support.autoconfig.condition.ConditionContext;
-import com.kfyty.support.autoconfig.condition.annotation.Conditional;
-import com.kfyty.support.exception.BeansException;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.ConditionalBeanDefinition;
+import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.autoconfig.condition.ConditionContext;
+import com.kfyty.core.autoconfig.condition.annotation.Conditional;
+import com.kfyty.core.exception.BeansException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 import static java.util.Collections.synchronizedMap;
 
 /**

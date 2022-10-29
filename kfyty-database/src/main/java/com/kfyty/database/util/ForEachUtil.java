@@ -1,13 +1,13 @@
 package com.kfyty.database.util;
 
 import com.kfyty.database.jdbc.annotation.ForEach;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.CommonUtil;
 
 import java.util.List;
 import java.util.Map;
 
-import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: ForEach 注解处理工具

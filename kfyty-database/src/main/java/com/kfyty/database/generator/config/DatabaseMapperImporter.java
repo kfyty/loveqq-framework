@@ -1,14 +1,14 @@
 package com.kfyty.database.generator.config;
 
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ImportBeanDefinition;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ImportBeanDefinition;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
 
 import java.util.function.Predicate;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
 /**
  * 描述:

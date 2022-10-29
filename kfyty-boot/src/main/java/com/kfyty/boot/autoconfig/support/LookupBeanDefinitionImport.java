@@ -1,20 +1,20 @@
 package com.kfyty.boot.autoconfig.support;
 
 import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.ImportBeanDefinition;
-import com.kfyty.support.autoconfig.annotation.Lookup;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.utils.ScopeUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.ImportBeanDefinition;
+import com.kfyty.core.autoconfig.annotation.Lookup;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.utils.ScopeUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Predicate;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.support.utils.ReflectUtil.getMethods;
-import static com.kfyty.support.utils.ReflectUtil.isAbstract;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.ReflectUtil.getMethods;
+import static com.kfyty.core.utils.ReflectUtil.isAbstract;
 
 /**
  * 描述: 导入存在 Lookup 注解的抽象方法的 bean 定义

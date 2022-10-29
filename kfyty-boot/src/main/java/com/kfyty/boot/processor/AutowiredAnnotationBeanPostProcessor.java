@@ -1,21 +1,21 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Lazy;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
-import com.kfyty.support.autoconfig.beans.autowired.AutowiredDescription;
-import com.kfyty.support.autoconfig.beans.autowired.AutowiredProcessor;
-import com.kfyty.support.generic.ActualGeneric;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.AopUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Lazy;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.generic.ActualGeneric;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.AopUtil;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.AccessibleObject;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.kfyty.support.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 功能描述: Autowired 注解处理器

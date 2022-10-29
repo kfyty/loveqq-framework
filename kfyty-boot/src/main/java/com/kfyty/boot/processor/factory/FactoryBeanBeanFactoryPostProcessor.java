@@ -1,19 +1,19 @@
 package com.kfyty.boot.processor.factory;
 
-import com.kfyty.support.autoconfig.BeanFactoryPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
-import com.kfyty.support.event.ApplicationListener;
-import com.kfyty.support.event.ContextRefreshedEvent;
+import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.event.ApplicationListener;
+import com.kfyty.core.event.ContextRefreshedEvent;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
 
 /**
  * 描述:

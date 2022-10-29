@@ -2,17 +2,17 @@ package com.kfyty.database.jdbc.autoconfig;
 
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ImportBeanDefinition;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ImportBeanDefinition;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.utils.AnnotationUtil;
 
 import java.util.function.Predicate;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
 /**
  * 描述: 自动配置 Mapper 注解

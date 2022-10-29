@@ -4,10 +4,10 @@ import com.kfyty.mvc.annotation.bind.RequestParam;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;

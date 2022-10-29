@@ -5,10 +5,10 @@ import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.aop.aspectj.AspectJExpressionPointcut;
 import com.kfyty.aop.support.DefaultPointcutAdvisor;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.wrapper.Pair;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
