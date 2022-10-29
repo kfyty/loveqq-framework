@@ -158,10 +158,6 @@ public class ConditionContext {
             }
             collect.entrySet().stream().filter(e -> !e.getKey().equals(current.getBeanName())).forEach(e -> nested.put(e.getKey(), e.getValue()));
         }
-        return sort(nested);
-    }
-
-    private static Map<String, ConditionalBeanDefinition> sort(Map<String, ConditionalBeanDefinition> conditionBeanMap) {
-        return CommonUtil.sort(conditionBeanMap, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
+        return CommonUtil.sort(nested, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
     }
 }

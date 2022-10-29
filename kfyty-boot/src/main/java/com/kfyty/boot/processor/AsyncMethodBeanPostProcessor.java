@@ -5,9 +5,10 @@ import com.kfyty.core.autoconfig.annotation.Async;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
-import com.kfyty.core.utils.AnnotationUtil;
-import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.core.utils.ReflectUtil.getMethods;
 
 /**
  * 描述:
@@ -22,7 +23,7 @@ public class AsyncMethodBeanPostProcessor extends AbstractProxyCreatorProcessor 
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return AnnotationUtil.hasAnnotation(beanType, Async.class) || ReflectUtil.getMethods(beanType).stream().anyMatch(e -> AnnotationUtil.hasAnnotation(e, Async.class));
+        return hasAnnotationElement(beanType, Async.class) || getMethods(beanType).stream().anyMatch(e -> hasAnnotationElement(e, Async.class));
     }
 
     @Override

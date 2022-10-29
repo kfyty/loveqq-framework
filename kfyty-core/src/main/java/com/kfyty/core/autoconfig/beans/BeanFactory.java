@@ -10,7 +10,7 @@ import java.util.Map;
  * @date 2021/6/14 10:59
  * @email kfyty725@hotmail.com
  */
-public interface BeanFactory extends BeanDefinitionRegistry, AutoCloseable {
+public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoCloseable {
 
     boolean contains(String name);
 

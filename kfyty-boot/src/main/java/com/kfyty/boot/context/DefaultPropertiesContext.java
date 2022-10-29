@@ -1,7 +1,7 @@
 package com.kfyty.boot.context;
 
-import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.InitializingBean;
 import com.kfyty.core.autoconfig.PropertyContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
@@ -23,13 +23,13 @@ import static java.util.Collections.unmodifiableMap;
  * @date 2022/3/12 15:11
  * @email kfyty725@hotmail.com
  */
-public class DefaultPropertiesContext implements PropertyContext, ApplicationContextAware, InitializingBean {
+public class DefaultPropertiesContext implements PropertyContext, ConfigurableApplicationContextAware, InitializingBean {
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
-     * applicationContext
+     * ConfigurableApplicationContext
      */
-    protected ApplicationContext applicationContext;
+    protected ConfigurableApplicationContext applicationContext;
 
     /**
      * 属性配置
@@ -48,7 +48,7 @@ public class DefaultPropertiesContext implements PropertyContext, ApplicationCon
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
+    public void setConfigurableApplicationContext(ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

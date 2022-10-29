@@ -1,5 +1,6 @@
 package com.kfyty.boot.context.factory;
 
+import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
@@ -9,13 +10,17 @@ import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.autoconfig.condition.ConditionContext;
 import com.kfyty.core.autoconfig.condition.annotation.Conditional;
 import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import static com.kfyty.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 import static java.util.Collections.synchronizedMap;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * 描述: 支持依赖注入的 bean 工厂
@@ -55,27 +60,61 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     }
 
     @Override
-    public void resolveConditionBeanDefinitionRegistry(String name, BeanDefinition beanDefinition) {
+    public ConditionContext getConditionContext() {
+        return this.conditionContext;
+    }
+
+    @Override
+    public void registerConditionBeanDefinition(BeanDefinition beanDefinition) {
+        this.registerConditionBeanDefinition(beanDefinition.getBeanName(), beanDefinition);
+    }
+
+    @Override
+    public void registerConditionBeanDefinition(String name, BeanDefinition beanDefinition) {
         if (beanDefinition instanceof MethodBeanDefinition) {
             ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
             if (parentConditionalBeanDefinition != null || hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Conditional.class)) {
-                this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
+                this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
         }
         if (beanDefinition instanceof FactoryBeanDefinition) {
             ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanName());
             if (parentConditionalBeanDefinition != null) {
-                this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
+                this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
         }
         if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
-            this.registerConditionalBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
+            this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
             return;
         }
         if (!conditionBeanMap.containsKey(name)) {
             super.registerBeanDefinition(name, beanDefinition);
+        }
+    }
+
+    @Override
+    public Map<String, ConditionalBeanDefinition> getConditionalBeanDefinition() {
+        return unmodifiableMap(this.conditionBeanMap);
+    }
+
+    @Override
+    public void registerConditionBeanDefinition(String name, ConditionalBeanDefinition conditionalBeanDefinition) {
+        if (this.conditionBeanMap.containsKey(name)) {
+            throw new BeansException("conflicting conditional bean definition: " + conditionalBeanDefinition.getBeanName());
+        }
+        this.conditionBeanMap.putIfAbsent(name, conditionalBeanDefinition);
+    }
+
+    @Override
+    public void resolveConditionBeanDefinitionRegistry() {
+        Map<String, ConditionalBeanDefinition> conditionalBeanDefinition = CommonUtil.sort(this.conditionBeanMap, (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
+        for (ConditionalBeanDefinition value : conditionalBeanDefinition.values()) {
+            if (!this.conditionContext.shouldSkip(value) && !value.isRegistered()) {
+                value.setRegistered(true);
+                this.registerBeanDefinition(value.getBeanName(), value.getBeanDefinition());
+            }
         }
     }
 
@@ -89,8 +128,11 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         if (this == bean) {
             return;
         }
+        if (bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
+            return;
+        }
         if (this.autowiredCapableSupport == null) {
-            this.getBean(AutowiredCapableSupport.class);
+            Objects.requireNonNull(this.getBean(AutowiredCapableSupport.class), "the bean does not exists of type: " + AutowiredCapableSupport.class);
         }
         this.autowiredCapableSupport.autowiredBean(bean);
     }
@@ -102,25 +144,10 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         this.autowiredCapableSupport = null;
     }
 
-    public void autowiredLazy() {
+    public void autowiredLazied() {
         if (this.autowiredCapableSupport == null) {
-            throw new BeansException("no bean instance found of type: " + AutowiredCapableSupport.class);
+            throw new BeansException("the bean instance does not exists of type: " + AutowiredCapableSupport.class);
         }
-        this.autowiredCapableSupport.autowiredLazy();
-    }
-
-    public ConditionContext getConditionContext() {
-        return this.conditionContext;
-    }
-
-    protected Map<String, ConditionalBeanDefinition> getConditionalBeanDefinition() {
-        return this.conditionBeanMap;
-    }
-
-    protected void registerConditionalBeanDefinition(String name, ConditionalBeanDefinition conditionalBeanDefinition) {
-        if (this.conditionBeanMap.containsKey(name)) {
-            throw new BeansException("conflicting conditional bean definition: " + conditionalBeanDefinition.getBeanName());
-        }
-        this.conditionBeanMap.putIfAbsent(name, conditionalBeanDefinition);
+        this.autowiredCapableSupport.autowiredLazied();
     }
 }

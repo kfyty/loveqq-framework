@@ -22,7 +22,8 @@ public interface BeanDefinition {
      */
     Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
             .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
-            .thenComparing(e -> getBeanOrder((BeanDefinition) e));
+            .thenComparing(e -> getBeanOrder((BeanDefinition) e))
+            .thenComparing(BeanDefinition::getBeanName);
 
     /**
      * 单例作用域

@@ -196,7 +196,7 @@ public class AutowiredProcessor {
             }
         }
         if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty() || AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            throw new BeansException("resolve target bean failed, no bean found of name: " + targetBeanName);
+            throw new BeansException("resolve target bean failed, the bean does not exists of name: " + targetBeanName);
         }
         return beanOfType;
     }

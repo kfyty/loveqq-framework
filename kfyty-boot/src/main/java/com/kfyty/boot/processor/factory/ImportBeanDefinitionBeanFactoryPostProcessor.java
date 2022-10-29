@@ -1,7 +1,7 @@
 package com.kfyty.boot.processor.factory;
 
-import com.kfyty.boot.context.AbstractApplicationContext;
 import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Order;
@@ -23,12 +23,14 @@ public class ImportBeanDefinitionBeanFactoryPostProcessor implements BeanFactory
 
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {
-        if (beanFactory instanceof AbstractApplicationContext) {
-            AbstractApplicationContext applicationContext = (AbstractApplicationContext) beanFactory;
-            Map<String, BeanDefinition> importBeanDefines = beanFactory.getBeanDefinitions(e -> ImportBeanDefinition.class.isAssignableFrom(e.getValue().getBeanType()));
+        if (beanFactory instanceof ConfigurableApplicationContext) {
+            ConfigurableApplicationContext applicationContext = (ConfigurableApplicationContext) beanFactory;
+            Map<String, BeanDefinition> importBeanDefines = beanFactory.getBeanDefinitions(ImportBeanDefinition.class);
             for (BeanDefinition importBeanDefine : importBeanDefines.values()) {
                 ImportBeanDefinition bean = (ImportBeanDefinition) beanFactory.registerBean(importBeanDefine);
-                bean.doImport(applicationContext, applicationContext.getScanClasses()).forEach(beanFactory::registerBeanDefinition);
+                for (BeanDefinition beanDefinition : bean.doImport(applicationContext, applicationContext.getScannedClasses())) {
+                    beanFactory.registerBeanDefinition(beanDefinition);
+                }
             }
         }
     }

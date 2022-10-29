@@ -1,8 +1,9 @@
 package com.kfyty.boot.context.factory;
 
 import com.kfyty.boot.K;
-import com.kfyty.boot.context.DefaultApplicationContext;
+import com.kfyty.boot.context.DefaultConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 
 /**
  * 描述: 上下文创建工厂
@@ -13,7 +14,14 @@ import com.kfyty.core.autoconfig.ApplicationContext;
  */
 public class ApplicationContextFactory {
 
-    public ApplicationContext create(K boot) {
-        return new DefaultApplicationContext(boot);
+    public ApplicationContext create(K k) {
+        return create(k.getCommandLineArgs(), k.getPrimarySource());
+    }
+
+    public ApplicationContext create(String[] commandLineArgs, Class<?> primarySource) {
+        ConfigurableApplicationContext configurableApplicationContext = new DefaultConfigurableApplicationContext();
+        configurableApplicationContext.setCommandLineArgs(commandLineArgs);
+        configurableApplicationContext.setPrimarySource(primarySource);
+        return configurableApplicationContext;
     }
 }
