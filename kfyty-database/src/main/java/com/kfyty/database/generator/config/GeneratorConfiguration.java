@@ -8,9 +8,9 @@ import com.kfyty.database.generator.config.annotation.Table;
 import com.kfyty.database.generator.config.annotation.Template;
 import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.kfyty.support.utils.CommonUtil.MATCH_ALL_PATTERN;
+import static com.kfyty.core.utils.CommonUtil.MATCH_ALL_PATTERN;
 import static java.util.Optional.ofNullable;
 
 /**

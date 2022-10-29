@@ -1,8 +1,8 @@
 package com.kfyty.boot.data.jdbc.autoconfig;
 
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import lombok.Data;
 
 /**

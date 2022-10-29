@@ -1,9 +1,9 @@
 package com.kfyty.database.generator.template;
 
 import com.kfyty.database.generator.config.GeneratorConfiguration;
-import com.kfyty.support.io.SimpleBufferedWriter;
+import com.kfyty.core.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
-import com.kfyty.support.utils.JdbcTypeUtil;
+import com.kfyty.core.utils.JdbcTypeUtil;
 
 import java.io.IOException;
 import java.util.Optional;

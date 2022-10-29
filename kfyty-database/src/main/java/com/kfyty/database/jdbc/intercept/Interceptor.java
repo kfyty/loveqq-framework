@@ -1,16 +1,16 @@
 package com.kfyty.database.jdbc.intercept;
 
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.wrapper.ValueWrapper;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.wrapper.ValueWrapper;
 
 import java.sql.PreparedStatement;
 import java.util.List;
 
 /**
  * 描述: SQL 执行拦截器
- * 执行顺序由 {@link com.kfyty.support.autoconfig.annotation.Order} 控制
+ * 执行顺序由 {@link Order} 控制
  *
  * @author kfyty725
  * @date 2021/8/8 10:40

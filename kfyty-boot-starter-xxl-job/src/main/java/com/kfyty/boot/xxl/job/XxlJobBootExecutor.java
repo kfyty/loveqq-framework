@@ -1,12 +1,12 @@
 package com.kfyty.boot.xxl.job;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.ContextAfterRefreshed;
-import com.kfyty.support.autoconfig.DestroyBean;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.core.autoconfig.DestroyBean;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import com.xxl.job.core.executor.XxlJobExecutor;
 import com.xxl.job.core.handler.annotation.XxlJob;
 

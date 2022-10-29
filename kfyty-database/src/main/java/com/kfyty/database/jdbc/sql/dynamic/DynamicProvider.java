@@ -2,7 +2,7 @@ package com.kfyty.database.jdbc.sql.dynamic;
 
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
-import com.kfyty.support.method.MethodParameter;
+import com.kfyty.core.method.MethodParameter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

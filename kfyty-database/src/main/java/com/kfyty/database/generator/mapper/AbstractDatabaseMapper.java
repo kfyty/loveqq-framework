@@ -7,7 +7,7 @@ import com.kfyty.database.jdbc.annotation.Query;
 
 import java.util.List;
 
-import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 功能描述: 数据库映射接口

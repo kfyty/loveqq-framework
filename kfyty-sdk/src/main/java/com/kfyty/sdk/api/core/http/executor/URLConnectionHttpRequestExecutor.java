@@ -10,7 +10,7 @@ import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.http.HttpRequest;
 import com.kfyty.sdk.api.core.http.HttpRequestExecutor;
-import com.kfyty.support.utils.JsonUtil;
+import com.kfyty.core.utils.JsonUtil;
 
 import java.net.HttpCookie;
 import java.util.List;

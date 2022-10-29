@@ -2,8 +2,8 @@ package com.kfyty.mvc.tomcat;
 
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

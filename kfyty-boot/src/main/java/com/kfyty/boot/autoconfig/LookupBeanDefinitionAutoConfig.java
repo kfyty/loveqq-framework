@@ -1,9 +1,9 @@
 package com.kfyty.boot.autoconfig;
 
 import com.kfyty.boot.autoconfig.support.LookupBeanDefinitionImport;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 
 /**
  * 描述:

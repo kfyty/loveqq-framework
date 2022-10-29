@@ -10,7 +10,7 @@ import java.lang.annotation.Annotation;
 import java.util.function.Function;
 
 import static com.kfyty.database.jdbc.session.Configuration.SELECT_LABEL;
-import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: 注解实例化工具

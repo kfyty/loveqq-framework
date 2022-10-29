@@ -5,8 +5,8 @@ import com.kfyty.sdk.api.core.ApiPreProcessor;
 import com.kfyty.sdk.api.core.ParameterProvider;
 import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.utils.ParameterUtil;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
 import java.util.Map;

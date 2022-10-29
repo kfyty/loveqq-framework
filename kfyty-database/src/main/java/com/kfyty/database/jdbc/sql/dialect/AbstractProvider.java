@@ -13,12 +13,12 @@ import com.kfyty.database.jdbc.sql.SelectProvider;
 import com.kfyty.database.jdbc.sql.UpdateProvider;
 import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.wrapper.Pair;
-import com.kfyty.support.wrapper.WeakKey;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.wrapper.WeakKey;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

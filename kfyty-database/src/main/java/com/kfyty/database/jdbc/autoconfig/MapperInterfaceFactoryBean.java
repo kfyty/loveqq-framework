@@ -1,8 +1,8 @@
 package com.kfyty.database.jdbc.autoconfig;
 
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
 
 /**
  * 描述: 导入 Mapper 注解的接口 bean 定义

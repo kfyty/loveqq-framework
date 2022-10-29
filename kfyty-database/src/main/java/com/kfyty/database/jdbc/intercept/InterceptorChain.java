@@ -2,13 +2,13 @@ package com.kfyty.database.jdbc.intercept;
 
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.jdbc.TransactionHolder;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.IOUtil;
-import com.kfyty.support.utils.JdbcUtil;
-import com.kfyty.support.utils.ResultSetUtil;
-import com.kfyty.support.wrapper.ValueWrapper;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.jdbc.TransactionHolder;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.IOUtil;
+import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.ResultSetUtil;
+import com.kfyty.core.wrapper.ValueWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -22,9 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.kfyty.support.utils.CommonUtil.size;
-import static com.kfyty.support.utils.JdbcUtil.commitTransactionIfNecessary;
-import static com.kfyty.support.utils.ReflectUtil.invokeMethod;
+import static com.kfyty.core.utils.CommonUtil.size;
+import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
+import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
 /**
  * 描述: SQL 执行拦截器链

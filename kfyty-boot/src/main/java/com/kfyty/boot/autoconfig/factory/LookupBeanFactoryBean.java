@@ -1,12 +1,12 @@
 package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.factory.DynamicProxyFactory;
-import com.kfyty.support.utils.ScopeUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.proxy.factory.DynamicProxyFactory;
+import com.kfyty.core.utils.ScopeUtil;
 import lombok.NoArgsConstructor;
 
 /**

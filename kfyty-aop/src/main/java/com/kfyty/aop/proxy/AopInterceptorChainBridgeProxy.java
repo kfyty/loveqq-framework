@@ -1,9 +1,9 @@
 package com.kfyty.aop.proxy;
 
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodProxy;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodProxy;
 
 /**
  * 描述: aop 拦截链桥接代理

@@ -6,12 +6,12 @@ import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.servlet.HandlerInterceptor;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Import;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 
 import javax.annotation.PostConstruct;
 import java.util.List;

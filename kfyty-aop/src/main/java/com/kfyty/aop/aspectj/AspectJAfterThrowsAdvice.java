@@ -1,7 +1,7 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.ThrowsAdvice;
-import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.core.utils.AnnotationUtil;
 import org.aspectj.lang.annotation.AfterThrowing;
 
 import java.lang.reflect.Method;

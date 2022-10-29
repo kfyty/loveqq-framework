@@ -1,6 +1,6 @@
 package com.kfyty.mvc.annotation;
 
-import com.kfyty.support.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Component;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

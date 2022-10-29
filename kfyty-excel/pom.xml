@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>kfyty-support</artifactId>
+            <artifactId>kfyty-core</artifactId>
             <version>${kfyty.utils.version}</version>
             <exclusions>
                 <exclusion>

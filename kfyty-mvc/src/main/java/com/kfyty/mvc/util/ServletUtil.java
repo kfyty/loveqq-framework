@@ -2,7 +2,7 @@ package com.kfyty.mvc.util;
 
 import com.kfyty.mvc.multipart.DefaultMultipartFile;
 import com.kfyty.mvc.multipart.MultipartFile;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.utils.CommonUtil;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;

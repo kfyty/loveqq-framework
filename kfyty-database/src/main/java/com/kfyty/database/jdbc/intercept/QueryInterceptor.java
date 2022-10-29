@@ -1,8 +1,8 @@
 package com.kfyty.database.jdbc.intercept;
 
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.generic.SimpleGeneric;
-import com.kfyty.support.method.MethodParameter;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.method.MethodParameter;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

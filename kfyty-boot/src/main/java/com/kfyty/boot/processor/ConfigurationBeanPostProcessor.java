@@ -1,12 +1,12 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.boot.proxy.BeanMethodInterceptorProxy;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.proxy.AbstractProxyCreatorProcessor;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.utils.AnnotationUtil;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.proxy.AbstractProxyCreatorProcessor;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.utils.AnnotationUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**

@@ -1,11 +1,11 @@
 package com.kfyty.database.util;
 
 import com.kfyty.database.jdbc.annotation.Param;
-import com.kfyty.support.method.MethodParameter;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ReflectUtil;
-import com.kfyty.support.wrapper.Pair;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
-import static com.kfyty.support.utils.CommonUtil.PARAMETERS_PATTERN;
+import static com.kfyty.core.utils.CommonUtil.PARAMETERS_PATTERN;
 
 /**
  * 描述: SQL 解析工具

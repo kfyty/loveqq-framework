@@ -4,8 +4,8 @@ import com.baidu.fsg.uid.worker.dao.WorkerNodeService;
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
 import com.kfyty.boot.baidu.uid.autoconfig.entity.WorkerNode;
 import com.kfyty.boot.baidu.uid.autoconfig.mapper.WorkerNodeMapper;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Service;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Service;
 
 /**
  * 描述:

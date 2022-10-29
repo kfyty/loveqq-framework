@@ -1,8 +1,8 @@
 package com.kfyty.boot.xxl.job;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.beans.AutowiredCapableSupport;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
+import com.kfyty.core.utils.ReflectUtil;
 import com.xxl.job.core.glue.GlueFactory;
 
 import java.lang.reflect.Field;

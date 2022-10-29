@@ -6,9 +6,9 @@ import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import com.baidu.fsg.uid.worker.WorkerIdAssigner;
 import com.kfyty.boot.baidu.uid.autoconfig.mapper.WorkerNodeMapper;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Import;
 
 /**
  * 描述: 集成百度 uid 自动配置

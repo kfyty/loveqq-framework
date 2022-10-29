@@ -1,11 +1,11 @@
 package com.kfyty.boot.xxl.job.autoconfig;
 
 import com.kfyty.boot.xxl.job.XxlJobBootExecutor;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Configuration;
-import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.support.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 
 /**
  * 描述:

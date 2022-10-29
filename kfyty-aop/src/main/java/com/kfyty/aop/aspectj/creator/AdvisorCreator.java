@@ -2,8 +2,8 @@ package com.kfyty.aop.aspectj.creator;
 
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.wrapper.Pair;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.wrapper.Pair;
 
 import java.util.Arrays;
 import java.util.List;

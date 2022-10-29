@@ -1,6 +1,6 @@
 package com.kfyty.boot.autoconfig.support;
 
-import com.kfyty.support.autoconfig.DestroyBean;
+import com.kfyty.core.autoconfig.DestroyBean;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.BlockingQueue;
@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.kfyty.support.utils.CommonUtil.CPU_CORE;
+import static com.kfyty.core.utils.CommonUtil.CPU_CORE;
 
 /**
  * 描述: 默认的线程池

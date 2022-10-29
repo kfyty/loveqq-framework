@@ -3,7 +3,7 @@ package com.kfyty.sdk.api.core.utils;
 import com.kfyty.sdk.api.core.ParameterConverter;
 import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.exception.ApiException;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import java.util.Optional;
 import java.util.function.Supplier;

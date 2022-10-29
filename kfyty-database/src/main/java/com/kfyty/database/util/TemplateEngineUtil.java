@@ -4,8 +4,8 @@ import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
 import com.kfyty.database.generator.template.jsp.JspTemplate;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.PropertiesUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

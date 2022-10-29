@@ -1,14 +1,14 @@
 package com.kfyty.boot.context;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContextAware;
-import com.kfyty.support.autoconfig.InitializingBean;
-import com.kfyty.support.autoconfig.PropertyContext;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.converter.Converter;
-import com.kfyty.support.utils.CommonUtil;
-import com.kfyty.support.utils.ConverterUtil;
-import com.kfyty.support.utils.PropertiesUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.InitializingBean;
+import com.kfyty.core.autoconfig.PropertyContext;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.converter.Converter;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ConverterUtil;
+import com.kfyty.core.utils.PropertiesUtil;
 
 import java.util.HashMap;
 import java.util.List;

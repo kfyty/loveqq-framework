@@ -2,7 +2,7 @@ package com.kfyty.boot.context.factory;
 
 import com.kfyty.boot.K;
 import com.kfyty.boot.context.DefaultApplicationContext;
-import com.kfyty.support.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ApplicationContext;
 
 /**
  * 描述: 上下文创建工厂

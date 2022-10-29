@@ -1,17 +1,17 @@
 package com.kfyty.boot.processor.factory;
 
 import com.kfyty.boot.autoconfig.factory.LazyProxyFactoryBean;
-import com.kfyty.support.autoconfig.BeanFactoryPostProcessor;
-import com.kfyty.support.autoconfig.annotation.Autowired;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.kfyty.support.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
-import static com.kfyty.support.utils.BeanUtil.LAZY_PROXY_SOURCE_PREFIX;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.core.utils.BeanUtil.LAZY_PROXY_SOURCE_PREFIX;
 
 /**
  * 描述:

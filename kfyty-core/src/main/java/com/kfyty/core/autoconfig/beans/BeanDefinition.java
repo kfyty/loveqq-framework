@@ -1,0 +1,133 @@
+package com.kfyty.core.autoconfig.beans;
+
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
+
+import java.util.Comparator;
+import java.util.Map;
+
+import static com.kfyty.core.utils.BeanUtil.getBeanOrder;
+
+/**
+ * 描述: bean 定义
+ *
+ * @author kfyty725
+ * @date 2021/5/22 11:13
+ * @email kfyty725@hotmail.com
+ */
+public interface BeanDefinition {
+    /**
+     * BeanDefinition 排序比较器
+     */
+    Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
+            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
+            .thenComparing(e -> getBeanOrder((BeanDefinition) e));
+
+    /**
+     * 单例作用域
+     */
+    String SCOPE_SINGLETON = "singleton";
+
+    /**
+     * 原型作用域
+     */
+    String SCOPE_PROTOTYPE = "prototype";
+
+    /**
+     * 刷新作用域
+     */
+    String SCOPE_REFRESH = "refresh";
+
+    /**
+     * bean name，唯一
+     */
+    String getBeanName();
+
+    /**
+     * 设置 bean name
+     */
+    void setBeanName(String beanName);
+
+    /**
+     * bean 的类型
+     */
+    Class<?> getBeanType();
+
+    /**
+     * 设置 bean 类型
+     */
+    void setBeanType(Class<?> beanType);
+
+    /**
+     * bean 的作用域
+     */
+    String getScope();
+
+    /**
+     * 设置 bean 作用域
+     */
+    void setScope(String scope);
+
+    /**
+     * 是否延迟初始化
+     *
+     * @return true if lazy init
+     */
+    boolean isLazyInit();
+
+    /**
+     * 设置是否延迟初始化
+     *
+     * @param isLazyInit 是否延迟初始化
+     */
+    void setLazyInit(boolean isLazyInit);
+
+    /**
+     * 是否单例
+     */
+    boolean isSingleton();
+
+    /**
+     * 是否是 {@link FactoryBean}
+     *
+     * @return true if FactoryBean
+     */
+    boolean isFactoryBean();
+
+    /**
+     * 是否是自动装配的候选者
+     */
+    boolean isAutowireCandidate();
+
+    /**
+     * 设置是否是自动装配的候选者，只对针对类型装配有效
+     */
+    void setAutowireCandidate(boolean autowireCandidate);
+
+    /**
+     * 添加默认的构造器参数，参数索引从 0 开始
+     * 其他的参数将从 bean 工厂获取
+     */
+    BeanDefinition addConstructorArgs(Class<?> argType, Object arg);
+
+    /**
+     * 获取构造器参数
+     */
+    Map<Class<?>, Object> getConstructArgs();
+
+    /**
+     * 获取构造器参数类型
+     */
+    Class<?>[] getConstructArgTypes();
+
+    /**
+     * 获取构造器参数值
+     */
+    Object[] getConstructArgValues();
+
+    /**
+     * 创建 bean 实例
+     */
+    Object createInstance(ApplicationContext context);
+}

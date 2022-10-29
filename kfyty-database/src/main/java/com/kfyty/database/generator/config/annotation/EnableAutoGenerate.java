@@ -3,7 +3,7 @@ package com.kfyty.database.generator.config.annotation;
 import com.kfyty.database.generator.config.AutoGenerateAutoConfig;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
 import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
-import com.kfyty.support.autoconfig.annotation.Import;
+import com.kfyty.core.autoconfig.annotation.Import;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

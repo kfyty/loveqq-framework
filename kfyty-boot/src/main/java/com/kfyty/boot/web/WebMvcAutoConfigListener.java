@@ -1,13 +1,13 @@
 package com.kfyty.boot.web;
 
 import com.kfyty.boot.K;
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.annotation.Component;
-import com.kfyty.support.autoconfig.annotation.ComponentFilter;
-import com.kfyty.support.autoconfig.annotation.ComponentScan;
-import com.kfyty.support.autoconfig.annotation.EnableAutoConfiguration;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.ReflectUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.core.autoconfig.annotation.ComponentScan;
+import com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;

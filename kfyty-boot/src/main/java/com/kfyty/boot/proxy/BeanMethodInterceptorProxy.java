@@ -1,21 +1,21 @@
 package com.kfyty.boot.proxy;
 
-import com.kfyty.support.autoconfig.ApplicationContext;
-import com.kfyty.support.autoconfig.annotation.Bean;
-import com.kfyty.support.autoconfig.annotation.Order;
-import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.FactoryBean;
-import com.kfyty.support.proxy.MethodInterceptorChain;
-import com.kfyty.support.proxy.MethodInterceptorChainPoint;
-import com.kfyty.support.proxy.MethodProxy;
-import com.kfyty.support.utils.AnnotationUtil;
-import com.kfyty.support.utils.BeanUtil;
-import com.kfyty.support.utils.ScopeUtil;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.MethodProxy;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.ScopeUtil;
 
 import java.lang.reflect.Method;
 
-import static com.kfyty.support.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
-import static com.kfyty.support.utils.CommonUtil.EMPTY_STRING;
+import static com.kfyty.core.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: bean 注解代理

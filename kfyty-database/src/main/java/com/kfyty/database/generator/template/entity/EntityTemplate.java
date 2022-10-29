@@ -3,8 +3,8 @@ package com.kfyty.database.generator.template.entity;
 import com.kfyty.database.generator.info.AbstractFieldStructInfo;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.GeneratorTemplate;
-import com.kfyty.support.io.SimpleBufferedWriter;
-import com.kfyty.support.utils.CommonUtil;
+import com.kfyty.core.io.SimpleBufferedWriter;
+import com.kfyty.core.utils.CommonUtil;
 import lombok.Getter;
 
 import java.io.IOException;
