@@ -55,6 +55,11 @@ public class BeanDefinitionBuilder {
         return this;
     }
 
+    public BeanDefinitionBuilder setLazyInit(boolean isLazyInit) {
+        this.beanDefinition.setLazyInit(isLazyInit);
+        return this;
+    }
+
     public BeanDefinitionBuilder setAutowireCandidate(boolean autowireCandidate) {
         this.beanDefinition.setAutowireCandidate(autowireCandidate);
         return this;
@@ -77,6 +82,9 @@ public class BeanDefinitionBuilder {
     }
 
     public void validate() {
+        if (!this.beanDefinition.isLazyInit()) {
+            this.setLazyInit(BeanUtil.isLazyInit(this.beanDefinition));
+        }
         if (CommonUtil.empty(this.beanDefinition.getBeanName())) {
             throw new IllegalStateException("bean name can't empty !");
         }

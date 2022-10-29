@@ -91,9 +91,12 @@ public class MethodProxy {
             return false;
         }
         MethodProxy other = (MethodProxy) o;
-        return Objects.equals(target, other.target) &&
-                Objects.equals(method, other.method) &&
-                Objects.deepEquals(arguments, other.arguments) &&
-                Objects.equals(methodProxy, other.methodProxy);
+        if (this.target != null && other.target != null && this.target.getClass() != other.target.getClass()) {
+            return false;
+        }
+        return Objects.equals(this.target, other.target) &&
+                Objects.equals(this.method, other.method) &&
+                Objects.deepEquals(this.arguments, other.arguments) &&
+                Objects.equals(this.methodProxy, other.methodProxy);
     }
 }

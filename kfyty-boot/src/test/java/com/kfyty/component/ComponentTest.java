@@ -11,6 +11,7 @@ import com.kfyty.support.autoconfig.annotation.ComponentFilter;
 import com.kfyty.support.autoconfig.annotation.ComponentScan;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.annotation.Lookup;
 import com.kfyty.support.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.support.autoconfig.annotation.Order;
@@ -23,6 +24,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  * 描述:
@@ -181,7 +183,7 @@ class AA2 extends AA {
 }
 
 @Component
-class PrototypeLookup implements CommandLineRunner {
+class ComplexBean implements CommandLineRunner {
     @Autowired
     private PrototypeAAA aaa;
 
@@ -194,8 +196,12 @@ class PrototypeLookup implements CommandLineRunner {
     @Autowired
     private PrototypeBBB bbb2;
 
+    @Autowired
+    private LazyAAA lazyAAA;
+
     @Override
     public void run(String... args) throws Exception {
+        Assert.assertNotEquals(this.lazyAAA.get(), this.lazyAAA.get());
         Assert.assertSame(this.aaa, this.aaa2);
         Assert.assertSame(this.bbb, this.bbb2);
         Assert.assertSame(this.aaa.getBBB(), this.bbb);
@@ -216,6 +222,27 @@ class PrototypeLookup implements CommandLineRunner {
 
         public long getTime() {
             return time++;
+        }
+    }
+
+    @Lazy
+    @Component
+    @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+    public static class LazyAAA {
+
+        public LazyAAA() {
+            if (this.getClass().getSimpleName().equals("LazyAAA")) {
+                System.out.println("LazyAAA");
+            }
+        }
+
+        @Lookup
+        public PrototypeBBB getBBB() {
+            return null;
+        }
+
+        public String get() {
+            return UUID.randomUUID().toString();
         }
     }
 }

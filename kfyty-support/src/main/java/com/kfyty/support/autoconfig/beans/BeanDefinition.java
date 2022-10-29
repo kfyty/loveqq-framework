@@ -71,6 +71,20 @@ public interface BeanDefinition {
     void setScope(String scope);
 
     /**
+     * 是否延迟初始化
+     *
+     * @return true if lazy init
+     */
+    boolean isLazyInit();
+
+    /**
+     * 设置是否延迟初始化
+     *
+     * @param isLazyInit 是否延迟初始化
+     */
+    void setLazyInit(boolean isLazyInit);
+
+    /**
      * 是否单例
      */
     boolean isSingleton();

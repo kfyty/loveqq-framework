@@ -3,7 +3,6 @@ package com.kfyty.support.utils;
 import com.kfyty.support.autoconfig.annotation.Configuration;
 import com.kfyty.support.autoconfig.annotation.Scope;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
-import com.kfyty.support.autoconfig.beans.MethodBeanDefinition;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -16,6 +15,18 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 public abstract class ScopeUtil {
+    private static final Scope DEFAULT_SCOPE = new Scope() {
+
+        @Override
+        public String value() {
+            return BeanDefinition.SCOPE_SINGLETON;
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Scope.class;
+        }
+    };
 
     public static boolean isSingleton(Class<?> clazz) {
         return BeanDefinition.SCOPE_SINGLETON.equals(resolveScope(clazz).value());
@@ -29,34 +40,16 @@ public abstract class ScopeUtil {
         if (AnnotationUtil.hasAnnotationElement(clazz, Configuration.class)) {
             return defaultScope();
         }
-        Scope scope = AnnotationUtil.findAnnotation(clazz, Scope.class);
+        Scope scope = AnnotationUtil.findAnnotationElement(clazz, Scope.class);
         return scope != null ? scope : defaultScope();
     }
 
     public static Scope resolveScope(Method beanMethod) {
-        Scope scope = AnnotationUtil.findAnnotation(beanMethod, Scope.class);
+        Scope scope = AnnotationUtil.findAnnotationElement(beanMethod, Scope.class);
         return scope != null ? scope : defaultScope();
     }
 
-    public static Scope resolveScope(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return resolveScope(((MethodBeanDefinition) beanDefinition).getBeanMethod());
-        }
-        return resolveScope(beanDefinition.getBeanType());
-    }
-
     public static Scope defaultScope() {
-        return new Scope() {
-
-            @Override
-            public String value() {
-                return BeanDefinition.SCOPE_SINGLETON;
-            }
-
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return Scope.class;
-            }
-        };
+        return DEFAULT_SCOPE;
     }
 }

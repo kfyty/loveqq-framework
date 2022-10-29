@@ -2,6 +2,7 @@ package com.kfyty.support.utils;
 
 import com.kfyty.support.autoconfig.annotation.Autowired;
 import com.kfyty.support.autoconfig.annotation.Bean;
+import com.kfyty.support.autoconfig.annotation.Lazy;
 import com.kfyty.support.autoconfig.annotation.Order;
 import com.kfyty.support.autoconfig.annotation.Qualifier;
 import com.kfyty.support.autoconfig.beans.BeanDefinition;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.function.BiPredicate;
 
 import static com.kfyty.support.utils.AnnotationUtil.findAnnotation;
+import static com.kfyty.support.utils.AnnotationUtil.hasAnnotationElement;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Optional.ofNullable;
@@ -36,6 +38,11 @@ public abstract class BeanUtil {
      * 作用域代理原 bean 名称前缀
      */
     public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
+
+    /**
+     * 延迟初始化代理原 bean 名称前缀
+     */
+    public static final String LAZY_PROXY_SOURCE_PREFIX = "laziedTarget.";
 
     /**
      * 移除 FactoryBean 名称前缀
@@ -149,6 +156,26 @@ public abstract class BeanUtil {
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         return Order.LOWEST_PRECEDENCE;
+    }
+
+    /**
+     * 判断给定 BeanDefinition 是否延迟初始化
+     *
+     * @param beanDefinition bean 定义
+     * @return true is lazy init
+     */
+    public static boolean isLazyInit(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof FactoryBeanDefinition) {
+            return isLazyInit(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
+        }
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            boolean isLazyInit = hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Lazy.class);
+            return isLazyInit || isLazyInit(((MethodBeanDefinition) beanDefinition).getParentDefinition());
+        }
+        if (beanDefinition instanceof GenericBeanDefinition) {
+            return hasAnnotationElement(beanDefinition.getBeanType(), Lazy.class);
+        }
+        return false;
     }
 
     /**

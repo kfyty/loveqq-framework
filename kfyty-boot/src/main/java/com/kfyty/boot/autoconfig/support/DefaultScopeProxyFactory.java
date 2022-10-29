@@ -49,7 +49,7 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
     protected ScopeProxyFactory obtainScopeProxyFactory(String scope) {
         ScopeProxyFactory scopeProxyFactory = this.scopeProxyFactoryMap.get(scope);
         if (scopeProxyFactory == null) {
-            throw new BeansException("This scope is not supported temporarily: " + scope);
+            throw new BeansException("this scope is not supported temporarily: " + scope);
         }
         return scopeProxyFactory;
     }
