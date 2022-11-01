@@ -2,18 +2,23 @@ package com.kfyty.boot.context;
 
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.InitializingBean;
 import com.kfyty.core.autoconfig.PropertyContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.converter.Converter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ConverterUtil;
-import com.kfyty.core.utils.PropertiesUtil;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.kfyty.core.utils.PropertiesUtil.include;
+import static com.kfyty.core.utils.PropertiesUtil.load;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -23,7 +28,7 @@ import static java.util.Collections.unmodifiableMap;
  * @date 2022/3/12 15:11
  * @email kfyty725@hotmail.com
  */
-public class DefaultPropertiesContext implements PropertyContext, ConfigurableApplicationContextAware, InitializingBean {
+public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
@@ -32,11 +37,17 @@ public class DefaultPropertiesContext implements PropertyContext, ConfigurableAp
     protected ConfigurableApplicationContext applicationContext;
 
     /**
+     * 配置文件
+     */
+    protected final List<String> configs;
+
+    /**
      * 属性配置
      */
     protected final Map<String, String> propertySources;
 
     public DefaultPropertiesContext() {
+        this.configs = new LinkedList<>();
         this.propertySources = new HashMap<>();
     }
 
@@ -53,16 +64,25 @@ public class DefaultPropertiesContext implements PropertyContext, ConfigurableAp
     }
 
     @Override
+    public void addConfig(String... path) {
+        this.configs.addAll(Arrays.asList(path));
+    }
+
+    @Override
+    public List<String> getConfigs() {
+        return unmodifiableList(this.configs);
+    }
+
+    @Override
     public void loadProperties() {
-        this.loadCommandLineProperties();
-        this.loadProperties(DEFAULT_PROPERTIES_LOCATION);
+        this.getConfigs().forEach(this::loadProperties);
     }
 
     @Override
     public void loadProperties(String path) {
-        PropertiesUtil.load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
+        load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
             p.putAll(this.propertySources);
-            PropertiesUtil.include(p, c);
+            include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {
                 this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
             }
@@ -81,7 +101,16 @@ public class DefaultPropertiesContext implements PropertyContext, ConfigurableAp
 
     @Override
     public void setProperty(String key, String value) {
-        this.propertySources.put(key, value);
+        this.setProperty(key, value, true);
+    }
+
+    @Override
+    public void setProperty(String key, String value, boolean replace) {
+        if (replace) {
+            this.propertySources.put(key, value);
+            return;
+        }
+        this.propertySources.putIfAbsent(key, value);
     }
 
     @Override
@@ -105,7 +134,20 @@ public class DefaultPropertiesContext implements PropertyContext, ConfigurableAp
 
     @Override
     public void afterPropertiesSet() {
+        this.loadCommandLineProperties();
+        this.addConfig(DEFAULT_PROPERTIES_LOCATION);
         this.loadProperties();
+    }
+
+    @Override
+    public void onDestroy() {
+        this.close();
+    }
+
+    @Override
+    public void close() {
+        this.configs.clear();
+        this.propertySources.clear();
     }
 
     protected void loadCommandLineProperties() {
