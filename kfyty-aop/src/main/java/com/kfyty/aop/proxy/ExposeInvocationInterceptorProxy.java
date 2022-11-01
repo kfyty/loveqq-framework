@@ -5,6 +5,7 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodProxy;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 
 /**
@@ -14,20 +15,17 @@ import org.aspectj.lang.JoinPoint;
  * @date 2021/8/1 14:33
  * @email kfyty725@hotmail.com
  */
+@RequiredArgsConstructor
 @Order(Integer.MIN_VALUE)
 public class ExposeInvocationInterceptorProxy implements MethodInterceptorChainPoint {
     private static final ThreadLocal<JoinPoint> CURRENT_JOIN_POINT = new ThreadLocal<>();
 
     private final MethodInvocationProceedingJoinPoint joinPoint;
 
-    public ExposeInvocationInterceptorProxy(MethodInvocationProceedingJoinPoint joinPoint) {
-        this.joinPoint = joinPoint;
-    }
-
     public static JoinPoint currentJoinPoint() {
         JoinPoint joinPoint = CURRENT_JOIN_POINT.get();
         if (joinPoint == null) {
-            throw new IllegalStateException("No join point found !");
+            throw new IllegalStateException("the join point does not exists on this thread !");
         }
         return joinPoint;
     }

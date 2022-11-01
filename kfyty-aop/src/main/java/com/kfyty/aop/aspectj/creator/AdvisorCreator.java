@@ -1,13 +1,12 @@
 package com.kfyty.aop.aspectj.creator;
 
 import com.kfyty.aop.Advisor;
-import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
+import com.kfyty.aop.aspectj.AspectClass;
+import com.kfyty.aop.aspectj.AspectJFactory;
 import com.kfyty.core.utils.BeanUtil;
-import com.kfyty.core.wrapper.Pair;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -19,17 +18,17 @@ import java.util.stream.Collectors;
  */
 public interface AdvisorCreator {
 
-    default List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, Class<?> aspectClass) {
-        return this.createAdvisor(aspectMapping, new Class[] {aspectClass});
+    default List<Advisor> createAdvisor(AspectJFactory aspectJFactory, Class<?> aspectClass) {
+        return this.createAdvisor(aspectJFactory, new Class[]{aspectClass});
     }
 
-    default List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, Class<?> ... aspectClasses) {
-        return this.createAdvisor(aspectMapping, Arrays.stream(aspectClasses).map(e -> new Pair<String, Class<?>>(BeanUtil.getBeanName(e), e)).collect(Collectors.toList()));
+    default List<Advisor> createAdvisor(AspectJFactory aspectJFactory, Class<?>... aspectClasses) {
+        return this.createAdvisor(aspectJFactory, Arrays.stream(aspectClasses).map(e -> new AspectClass(BeanUtil.getBeanName(e), e)).collect(Collectors.toList()));
     }
 
-    default List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, List<Pair<String, Class<?>>> namedAspectClasses) {
-        return namedAspectClasses.stream().flatMap(e -> this.createAdvisor(aspectMapping, e).stream()).collect(Collectors.toList());
+    default List<Advisor> createAdvisor(AspectJFactory aspectJFactory, List<AspectClass> aspectClasses) {
+        return aspectClasses.stream().flatMap(e -> this.createAdvisor(aspectJFactory, e).stream()).collect(Collectors.toList());
     }
 
-    List<Advisor> createAdvisor(Function<AbstractAspectJAdvice, Object> aspectMapping, Pair<String, Class<?>> namedAspectClass);
+    List<Advisor> createAdvisor(AspectJFactory aspectJFactory, AspectClass aspectClass);
 }

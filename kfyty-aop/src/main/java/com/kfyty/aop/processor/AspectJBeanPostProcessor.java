@@ -3,6 +3,9 @@ package com.kfyty.aop.processor;
 import com.kfyty.aop.Advisor;
 import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
+import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
+import com.kfyty.aop.aspectj.AspectClass;
+import com.kfyty.aop.aspectj.AspectJFactory;
 import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.aop.aspectj.creator.AdvisorCreator;
 import com.kfyty.aop.proxy.AspectMethodInterceptorProxy;
@@ -12,7 +15,6 @@ import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
 
@@ -97,11 +99,11 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
             return;
         }
         this.hasResolveAspect = true;
+        AspectJFactory aspectJFactory = advice -> this.applicationContext.getBean(((AbstractAspectJAdvice) advice).getAspectName());
         Collection<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class).values();
         for (BeanDefinition beanDefinition : aspectJAnnotationBeanDefinition) {
-            Pair<String, Class<?>> namesAspectClass = new Pair<>(beanDefinition.getBeanName(), beanDefinition.getBeanType());
-            List<Advisor> advisors = this.advisorCreator.createAdvisor(e -> this.applicationContext.getBean(e.getAspectName()), namesAspectClass);
-            this.aspectAdvisor.addAll(advisors);
+            AspectClass aspectClass = new AspectClass(beanDefinition.getBeanName(), beanDefinition.getBeanType());
+            this.aspectAdvisor.addAll(this.advisorCreator.createAdvisor(aspectJFactory, aspectClass));
         }
     }
 }
