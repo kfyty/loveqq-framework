@@ -7,8 +7,8 @@ import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.autoconfig.annotation.Order;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
 import com.kfyty.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +18,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 描述: 切面代理
@@ -39,7 +39,7 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
     public AspectMethodInterceptorProxy(List<Advisor> advisors, List<AdviceInterceptorPointAdapter> adapters) {
         this.advisors = advisors;
         this.adapters = adapters;
-        this.advisorPointCache = new HashMap<>();
+        this.advisorPointCache = new ConcurrentHashMap<>();
     }
 
     @Override

@@ -16,12 +16,11 @@ import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 import static com.kfyty.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 
 /**
- * 描述: 通知基础实现
+ * 描述: aspectj 通知基础实现
  *
  * @author kfyty725
  * @date 2021/7/30 16:33
@@ -36,9 +35,9 @@ public abstract class AbstractAspectJAdvice implements Advice {
     private String aspectName;
 
     /**
-     * 提供切面实例
+     * 切面工厂
      */
-    private Function<AbstractAspectJAdvice, Object> aspectInstanceProvider;
+    private AspectJFactory aspectJFactory;
 
     /**
      * 切入点
@@ -67,12 +66,12 @@ public abstract class AbstractAspectJAdvice implements Advice {
     private String throwing;
 
     public Object getAspectInstance() {
-        return this.aspectInstanceProvider.apply(this);
+        return this.aspectJFactory.getInstance(this);
     }
 
-    public void setAspectBean(String aspectName, Function<AbstractAspectJAdvice, Object> aspectInstanceProvider) {
+    public void setAspectBean(String aspectName, AspectJFactory aspectJFactory) {
         this.setAspectName(aspectName);
-        this.setAspectInstanceProvider(aspectInstanceProvider);
+        this.setAspectJFactory(aspectJFactory);
     }
 
     public void setPointcut(Pointcut pointcut) {
