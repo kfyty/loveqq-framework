@@ -30,7 +30,7 @@ import static com.kfyty.core.utils.ReflectUtil.newInstance;
 @Component
 public class DefaultGenericPropertiesContext extends DefaultPropertiesContext implements GenericPropertiesContext {
     @Autowired
-    private ConfigurationPropertiesBeanPostProcessor configurationPropertiesBeanPostProcessor;
+    protected ConfigurationPropertiesBeanPostProcessor configurationPropertiesBeanPostProcessor;
 
     @Override
     public <T> T getProperty(String key, Type targetType) {

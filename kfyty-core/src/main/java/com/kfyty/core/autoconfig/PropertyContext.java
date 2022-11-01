@@ -1,5 +1,6 @@
 package com.kfyty.core.autoconfig;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,7 +10,21 @@ import java.util.Map;
  * @date 2022/3/12 15:06
  * @email kfyty725@hotmail.com
  */
-public interface PropertyContext {
+public interface PropertyContext extends AutoCloseable {
+    /**
+     * 添加配置文件
+     *
+     * @param path 配置文件路径
+     */
+    void addConfig(String... path);
+
+    /**
+     * 获取配置文件
+     *
+     * @return 配置文件
+     */
+    List<String> getConfigs();
+
     /**
      * 读取配置文件
      */
@@ -44,6 +59,15 @@ public interface PropertyContext {
      * @param value 属性 value
      */
     void setProperty(String key, String value);
+
+    /**
+     * 设置属性
+     *
+     * @param key     属性 key
+     * @param value   属性 value
+     * @param replace 如果存在是否替换
+     */
+    void setProperty(String key, String value, boolean replace);
 
     /**
      * 获取属性

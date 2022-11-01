@@ -31,7 +31,7 @@ import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 功能描述: Autowired 注解处理器
- * 必须实现 InstantiationAwareBeanPostProcessor 接口，以保证其最高的优先级
+ * 必须实现 {@link InstantiationAwareBeanPostProcessor} 接口，以保证其最高的优先级
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/27 10:43
