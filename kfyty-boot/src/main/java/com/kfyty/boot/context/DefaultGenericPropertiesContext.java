@@ -86,7 +86,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      * @return 配置
      */
     public Map<String, Map<String, String>> searchCollectionProperties(String prefix) {
-        String pattern = prefix.replace(".", "\\.").replace("[", "\\[") + "\\[[0-9]+]\\..+";
+        String pattern = prefix.replace(".", "\\.").replace("[", "\\[") + "\\[[0-9]+].*";
         Map<String, Map<String, String>> properties = new TreeMap<>();
         for (Map.Entry<String, String> entry : this.getProperties().entrySet()) {
             if (!entry.getKey().matches(pattern)) {
@@ -96,6 +96,10 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             int right = entry.getKey().indexOf(']', left);
             String index = entry.getKey().substring(left, right + 1);
             Map<String, String> nested = properties.computeIfAbsent(index, k -> new HashMap<>());
+            if (right == entry.getKey().length() - 1) {
+                nested.put(entry.getKey(), entry.getValue());
+                continue;
+            }
             nested.put(entry.getKey().substring(right + 2), entry.getValue());
         }
         return properties;
@@ -157,7 +161,12 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      */
     public Collection<?> convertAndBind(String prefix, Class<?> elementType, Map<String, Map<String, String>> properties) {
         List<Object> result = new ArrayList<>(properties.size());
+        boolean isBaseType = elementType == Object.class || ReflectUtil.isBaseDataType(elementType);
         for (Map.Entry<String, Map<String, String>> entry : properties.entrySet()) {
+            if (isBaseType) {
+                entry.getValue().values().forEach(e -> result.add(convert(e, elementType)));
+                continue;
+            }
             String key = prefix + entry.getKey();
             Object instance = newInstance(elementType);
             this.configurationPropertiesBeanPostProcessor.bindConfigurationProperties(instance, key);
@@ -177,9 +186,10 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     public Object convertAndBind(String prefix, Map<String, Object> target, Class<?> valueType) {
         String replace = prefix + ".";
         Set<String> bind = new HashSet<>(4);
+        boolean isBaseType = valueType == Object.class || ReflectUtil.isBaseDataType(valueType);
         Map<String, String> properties = this.searchMapProperties(prefix);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (valueType == Object.class || ReflectUtil.isBaseDataType(valueType)) {
+            if (isBaseType) {
                 target.put(entry.getKey().replace(replace, ""), convert(entry.getValue(), valueType));
                 continue;
             }
