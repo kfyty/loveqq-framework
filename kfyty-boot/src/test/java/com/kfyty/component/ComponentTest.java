@@ -76,20 +76,32 @@ class ComponentS {
 class PropertiesConfig implements InitializingBean {
     private Properties opt;
 
+    private List<User> users;
+
+    private Map<String, User> userMap;
+
     @NestedConfigurationProperty
     private User user;
 
     @Override
     public void afterPropertiesSet() {
+        Assert.assertEquals(this.users.size(), 2);
         Assert.assertEquals(this.user.getId(), Long.valueOf(1L));
         Assert.assertEquals(this.user.getName(), "name");
+        Assert.assertEquals(this.users.get(1).getName(), "name2");
+        Assert.assertEquals(this.userMap.get("1").getChildren().get(0).getExtra().get(0), "map");
         Assert.assertEquals(this.opt.getProperty("user.enable"), "true");
     }
 
     @Data
     public static class User {
         private Long id;
+
         private String name;
+
+        private List<String> extra;
+
+        private List<User> children;
     }
 }
 
@@ -140,7 +152,8 @@ abstract class LookupBean {
 
 @Component
 @ComponentScan(excludeFilter = @ComponentFilter(classes = C.class))
-class B {}
+class B {
+}
 
 @Configuration
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)

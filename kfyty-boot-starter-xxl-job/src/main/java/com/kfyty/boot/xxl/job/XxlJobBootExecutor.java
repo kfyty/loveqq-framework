@@ -1,7 +1,7 @@
 package com.kfyty.boot.xxl.job;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;

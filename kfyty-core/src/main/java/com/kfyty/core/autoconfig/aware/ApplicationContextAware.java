@@ -1,4 +1,6 @@
-package com.kfyty.core.autoconfig;
+package com.kfyty.core.autoconfig.aware;
+
+import com.kfyty.core.autoconfig.ApplicationContext;
 
 /**
  * 描述: 设置 ApplicationContext

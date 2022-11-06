@@ -3,7 +3,7 @@ package com.kfyty.boot.autoconfig.support;
 import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Lookup;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;

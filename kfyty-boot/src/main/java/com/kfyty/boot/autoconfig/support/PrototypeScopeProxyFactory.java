@@ -2,7 +2,7 @@ package com.kfyty.boot.autoconfig.support;
 
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
-import com.kfyty.core.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.core.autoconfig.scope.ScopeProxyFactory;
 
 /**
  * 描述: 原型代理工厂

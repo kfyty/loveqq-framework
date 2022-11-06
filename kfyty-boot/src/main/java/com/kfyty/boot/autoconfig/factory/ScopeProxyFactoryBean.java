@@ -5,7 +5,7 @@ import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
-import com.kfyty.core.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import lombok.NoArgsConstructor;
 

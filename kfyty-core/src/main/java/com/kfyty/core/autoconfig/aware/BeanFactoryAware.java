@@ -1,4 +1,4 @@
-package com.kfyty.core.autoconfig;
+package com.kfyty.core.autoconfig.aware;
 
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 

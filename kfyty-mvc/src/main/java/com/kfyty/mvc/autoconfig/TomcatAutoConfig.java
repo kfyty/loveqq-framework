@@ -1,9 +1,5 @@
 package com.kfyty.mvc.autoconfig;
 
-import com.kfyty.mvc.WebServer;
-import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.mvc.tomcat.TomcatConfig;
-import com.kfyty.mvc.tomcat.TomcatWebServer;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.annotation.Autowired;
@@ -15,6 +11,10 @@ import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.core.event.ApplicationListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
+import com.kfyty.mvc.WebServer;
+import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.mvc.tomcat.TomcatConfig;
+import com.kfyty.mvc.tomcat.TomcatWebServer;
 
 import javax.servlet.Filter;
 import javax.servlet.ServletContext;
@@ -41,9 +41,9 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
     @ConditionalOnBean(TomcatWebServer.class)
     @ConfigurationProperties("k.mvc.tomcat")
     public TomcatConfig tomcatConfig() {
-        TomcatConfig config = new TomcatConfig(applicationContext.getPrimarySource());
-        applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
-        applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
+        TomcatConfig config = new TomcatConfig(this.applicationContext.getPrimarySource());
+        this.applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
+        this.applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
         return config;
     }
 

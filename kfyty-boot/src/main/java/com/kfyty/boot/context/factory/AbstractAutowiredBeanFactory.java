@@ -134,7 +134,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         if (this.autowiredCapableSupport == null) {
             Objects.requireNonNull(this.getBean(AutowiredCapableSupport.class), "the bean does not exists of type: " + AutowiredCapableSupport.class);
         }
-        this.autowiredCapableSupport.autowiredBean(bean);
+        this.autowiredCapableSupport.autowiredBean(beanName, bean);
     }
 
     @Override

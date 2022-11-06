@@ -2,7 +2,7 @@ package com.kfyty.boot.context;
 
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.utils.ReflectUtil;
