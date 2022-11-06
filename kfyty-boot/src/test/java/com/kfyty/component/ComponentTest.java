@@ -21,6 +21,7 @@ import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -76,6 +77,8 @@ class ComponentS {
 class PropertiesConfig implements InitializingBean {
     private Properties opt;
 
+    private List<Integer> ids;
+
     private List<User> users;
 
     private Map<String, User> userMap;
@@ -85,6 +88,7 @@ class PropertiesConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
+        Assert.assertEquals(this.ids, Arrays.asList(1, 2));
         Assert.assertEquals(this.users.size(), 2);
         Assert.assertEquals(this.user.getId(), Long.valueOf(1L));
         Assert.assertEquals(this.user.getName(), "name");
