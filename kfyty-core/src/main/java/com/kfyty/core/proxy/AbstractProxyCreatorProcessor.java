@@ -1,7 +1,7 @@
 package com.kfyty.core.proxy;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;

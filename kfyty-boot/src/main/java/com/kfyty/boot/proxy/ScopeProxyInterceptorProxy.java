@@ -3,7 +3,7 @@ package com.kfyty.boot.proxy;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
-import com.kfyty.core.autoconfig.beans.ScopeProxyFactory;
+import com.kfyty.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodProxy;

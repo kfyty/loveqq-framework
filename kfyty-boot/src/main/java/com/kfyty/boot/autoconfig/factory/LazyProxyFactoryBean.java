@@ -5,6 +5,7 @@ import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
+import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import lombok.NoArgsConstructor;
 
@@ -47,5 +48,15 @@ public class LazyProxyFactoryBean<T> implements FactoryBean<T> {
                 .create(true)
                 .addInterceptorPoint(new LazyProxyInterceptorProxy(this.lazedTarget.getBeanName(), this.beanFactory))
                 .createProxy(this.getBeanType());
+    }
+
+    public static boolean isLazyProxy(BeanDefinition beanDefinition) {
+        if (!(beanDefinition instanceof FactoryBeanDefinition)) {
+            return false;
+        }
+
+        BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
+
+        return LazyProxyFactoryBean.class.isAssignableFrom(factoryBeanDefinition.getBeanType());
     }
 }

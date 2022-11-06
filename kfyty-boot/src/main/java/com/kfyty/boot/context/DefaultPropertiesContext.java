@@ -1,7 +1,7 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.InitializingBean;
 import com.kfyty.core.autoconfig.PropertyContext;
@@ -22,7 +22,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * 描述:
+ * 描述: 默认的配置文件解析器
  *
  * @author kfyty725
  * @date 2022/3/12 15:11

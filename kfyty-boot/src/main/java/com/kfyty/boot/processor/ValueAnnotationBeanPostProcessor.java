@@ -31,7 +31,7 @@ import static com.kfyty.core.utils.ReflectUtil.setFieldValue;
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
-    private GenericPropertiesContext propertyContext;
+    protected GenericPropertiesContext propertyContext;
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
@@ -60,7 +60,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
         return null;
     }
 
-    private Pair<String, String> resolve(String value) {
+    protected Pair<String, String> resolve(String value) {
         int index = value.indexOf(':');
         if (index < 0) {
             return new Pair<>(value.replaceAll("[${}]", ""), null);

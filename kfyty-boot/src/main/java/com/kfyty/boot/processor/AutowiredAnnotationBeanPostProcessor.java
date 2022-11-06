@@ -1,7 +1,7 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.kfyty.boot.autoconfig.factory.LazyProxyFactoryBean.isLazyProxy;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
@@ -54,16 +55,20 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
     @Override
     public void setApplicationContext(ApplicationContext context) {
         this.autowiredProcessor = new AutowiredProcessor(context);
-        this.autowiredBean(context);
+        this.autowiredBean(null, context);
     }
 
     @Override
-    public void autowiredBean(Object bean) {
-        this.autowiredBean(bean, false);
+    public void autowiredBean(String beanName, Object bean) {
+        this.autowiredBean(beanName, bean, false);
     }
 
     @Override
-    public void autowiredBean(Object bean, boolean ignoredLazy) {
+    public void autowiredBean(String beanName, Object bean, boolean ignoredLazy) {
+        ApplicationContext context = this.autowiredProcessor.getContext();
+        if (beanName != null && isLazyProxy(context.getBeanDefinition(beanName))) {
+            return;
+        }
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
         this.autowiredBeanField(targetClass, target, ignoredLazy);

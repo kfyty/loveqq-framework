@@ -2,7 +2,7 @@ package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
@@ -149,7 +149,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected void registerBeanPostProcessors() {
         Map<String, BeanDefinition> beanPostProcessors = this.getBeanDefinitions(BeanPostProcessor.class);
         for (BeanDefinition beanDefinition : beanPostProcessors.values()) {
-            this.registerBeanPostProcessors((BeanPostProcessor) this.registerBean(beanDefinition));
+            this.registerBeanPostProcessors(beanDefinition.getBeanName(), (BeanPostProcessor) this.registerBean(beanDefinition));
         }
     }
 

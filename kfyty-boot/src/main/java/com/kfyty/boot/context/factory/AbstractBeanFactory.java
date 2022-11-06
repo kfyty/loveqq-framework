@@ -1,13 +1,13 @@
 package com.kfyty.boot.context.factory;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
-import com.kfyty.core.autoconfig.BeanFactoryAware;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.InitializingBean;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
@@ -20,8 +20,9 @@ import com.kfyty.core.wrapper.WeakKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +64,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     /**
      * bean 后置处理器
      */
-    protected final List<BeanPostProcessor> beanPostProcessors;
-
+    protected final Map<String, BeanPostProcessor> beanPostProcessors;
 
     /**
      * 同一类型的 bean 定义缓存
@@ -80,16 +80,16 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.beanDefinitions = Collections.synchronizedMap(new LinkedHashMap<>());
         this.beanInstances = new ConcurrentHashMap<>();
         this.beanReference = new ConcurrentHashMap<>();
-        this.beanPostProcessors = new ArrayList<>();
+        this.beanPostProcessors = Collections.synchronizedMap(new LinkedHashMap<>());
         this.beanDefinitionsForType = Collections.synchronizedMap(new WeakHashMap<>());
     }
 
-    public void registerBeanPostProcessors(BeanPostProcessor beanPostProcessor) {
-        this.beanPostProcessors.add(beanPostProcessor);
+    public void registerBeanPostProcessors(String beanName, BeanPostProcessor beanPostProcessor) {
+        this.beanPostProcessors.put(beanName, beanPostProcessor);
     }
 
-    public List<BeanPostProcessor> getBeanPostProcessors() {
-        return this.beanPostProcessors;
+    public Collection<BeanPostProcessor> getBeanPostProcessors() {
+        return Collections.unmodifiableCollection(this.beanPostProcessors.values());
     }
 
     @Override
@@ -262,7 +262,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             }
             this.removeBeanReference(name);
             this.invokeAwareMethod(name, bean);
-            bean = this.invokeBeanPostProcessAfterInstantiation(name, getExposedBean(beanDefinition, bean));
+            bean = this.invokeBeanPostProcessAfterInstantiation(name, this.getExposedBean(beanDefinition, bean));
             this.autowiredBean(name, this.getExposedBean(beanDefinition, bean));
             bean = this.invokeLifecycleMethod(name, getExposedBean(beanDefinition, bean));
             return bean;
@@ -304,12 +304,18 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     public void close() {
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
+            if (!(entry.getValue() instanceof BeanPostProcessor)) {
+                this.destroyBean(entry.getKey(), entry.getValue());
+            }
+        }
+        for (Iterator<Map.Entry<String, BeanPostProcessor>> i = this.beanPostProcessors.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, BeanPostProcessor> entry = i.next();
             this.destroyBean(entry.getKey(), entry.getValue());
+            i.remove();
         }
         this.beanDefinitions.clear();
         this.beanInstances.clear();
         this.beanReference.clear();
-        this.beanPostProcessors.clear();
         this.beanDefinitionsForType.clear();
         this.applicationContext = null;
     }

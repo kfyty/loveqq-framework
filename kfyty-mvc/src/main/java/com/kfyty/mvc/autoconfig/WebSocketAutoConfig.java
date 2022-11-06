@@ -1,5 +1,6 @@
 package com.kfyty.mvc.autoconfig;
 
+import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.mvc.tomcat.ServerEndpointExporter;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.InitializingBean;
@@ -21,6 +22,7 @@ import javax.websocket.server.ServerEndpoint;
  */
 @Configuration
 @ConditionalOnBean(ServletContext.class)
+@ComponentFilter(annotations = ServerEndpoint.class)
 public class WebSocketAutoConfig implements InitializingBean {
     @Autowired
     private ApplicationContext applicationContext;

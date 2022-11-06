@@ -1,5 +1,7 @@
-package com.kfyty.core.autoconfig.beans;
+package com.kfyty.core.autoconfig.scope;
 
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.event.ApplicationEvent;
 
 /**

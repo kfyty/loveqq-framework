@@ -1,7 +1,7 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.ApplicationContextAware;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.BeanCustomizer;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Component;
