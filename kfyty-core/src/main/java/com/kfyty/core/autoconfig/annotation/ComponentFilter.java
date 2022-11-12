@@ -1,7 +1,5 @@
 package com.kfyty.core.autoconfig.annotation;
 
-import com.kfyty.core.autoconfig.ApplicationContext;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,7 +29,7 @@ public @interface ComponentFilter {
     Class<?>[] classes() default {};
 
     /**
-     * 注解
+     * 某些注解存在
      */
     Class<? extends Annotation>[] annotations() default {};
 }

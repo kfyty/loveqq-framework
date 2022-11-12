@@ -3,14 +3,14 @@ package com.kfyty.boot.context;
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
-import com.kfyty.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
 import com.kfyty.core.io.FactoriesLoader;
+import com.kfyty.core.support.AntPathMatcher;
+import com.kfyty.core.support.PatternMatcher;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
 import com.kfyty.core.wrapper.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,17 +32,20 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
 
     protected Class<?> primarySource;
 
+    protected PatternMatcher patternMatcher;
+
     protected Set<Class<?>> scannedClasses;
 
-    protected List<AnnotationWrapper<ComponentFilter>> includeFilterAnnotations;
+    protected List<ComponentFilterDescription> includeFilters;
 
-    protected List<AnnotationWrapper<ComponentFilter>> excludeFilterAnnotations;
+    protected List<ComponentFilterDescription> excludeFilters;
 
     public DefaultConfigurableApplicationContext() {
         super();
+        this.patternMatcher = new AntPathMatcher();
         this.scannedClasses = new HashSet<>();
-        this.includeFilterAnnotations = new ArrayList<>(4);
-        this.excludeFilterAnnotations = new ArrayList<>(4);
+        this.includeFilters = new ArrayList<>(4);
+        this.excludeFilters = new ArrayList<>(4);
     }
 
     @Override
@@ -56,18 +59,23 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
+    public PatternMatcher getPatternMatcher() {
+        return this.patternMatcher;
+    }
+
+    @Override
     public Set<Class<?>> getScannedClasses() {
         return this.scannedClasses;
     }
 
     @Override
-    public List<AnnotationWrapper<ComponentFilter>> getIncludeComponentFilters() {
-        return this.includeFilterAnnotations;
+    public List<ComponentFilterDescription> getIncludeFilters() {
+        return this.includeFilters;
     }
 
     @Override
-    public List<AnnotationWrapper<ComponentFilter>> getExcludeComponentFilters() {
-        return this.excludeFilterAnnotations;
+    public List<ComponentFilterDescription> getExcludeFilters() {
+        return this.excludeFilters;
     }
 
     @Override
@@ -81,6 +89,11 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
+    public void setPatternMatcher(PatternMatcher patternMatcher) {
+        this.patternMatcher = Objects.requireNonNull(patternMatcher);
+    }
+
+    @Override
     public void addScannedClass(Class<?> clazz) {
         this.scannedClasses.add(clazz);
     }
@@ -91,23 +104,31 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
-    public void addIncludeComponentFilter(AnnotationWrapper<ComponentFilter> componentFilter) {
-        this.includeFilterAnnotations.add(componentFilter);
+    public void addIncludeFilter(ComponentFilterDescription componentFilter) {
+        this.includeFilters.add(componentFilter);
     }
 
     @Override
-    public void addExcludeComponentFilter(AnnotationWrapper<ComponentFilter> componentFilter) {
-        this.excludeFilterAnnotations.add(componentFilter);
+    public void addExcludeFilter(ComponentFilterDescription componentFilter) {
+        this.excludeFilters.add(componentFilter);
     }
 
     @Override
     public boolean doFilterComponent(Class<?> beanClass) {
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> exclude = this.doFilterComponent(this.excludeFilterAnnotations, beanClass, false);
+        Pair<Boolean, ComponentFilterDescription> exclude = this.doFilterComponent(this.excludeFilters, beanClass, false);
         if (!exclude.getKey() && exclude.getValue() != null) {
-            return !doFilterComponent(exclude.getValue().getDeclaring());
+            return !doFilterComponent(exclude.getValue().getDeclare());
         }
-        Pair<Boolean, AnnotationWrapper<ComponentFilter>> include = this.doFilterComponent(this.includeFilterAnnotations, beanClass, true);
+        Pair<Boolean, ComponentFilterDescription> include = this.doFilterComponent(this.includeFilters, beanClass, true);
         return include.getKey();
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        this.scannedClasses.clear();
+        this.includeFilters.clear();
+        this.excludeFilters.clear();
     }
 
     @Override
@@ -135,22 +156,21 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     /**
      * 根据组件过滤器进行匹配
      *
-     * @param componentFilterWrappers 组件过滤条件
-     * @param beanClass               目标 bean class
-     * @param isInclude               当前匹配排除还是包含
+     * @param filters   组件过滤条件
+     * @param beanClass 目标 bean class
+     * @param isInclude 当前匹配排除还是包含
      * @return 匹配结果，以及对应的过滤组件
      */
-    protected Pair<Boolean, AnnotationWrapper<ComponentFilter>> doFilterComponent(List<AnnotationWrapper<ComponentFilter>> componentFilterWrappers, Class<?> beanClass, boolean isInclude) {
-        for (AnnotationWrapper<ComponentFilter> componentFilterWrapper : componentFilterWrappers) {
-            ComponentFilter componentFilter = componentFilterWrapper.get();
-            if (Arrays.stream(componentFilter.value()).anyMatch(beanClass.getName()::startsWith)) {
-                return new Pair<>(isInclude, componentFilterWrapper);
+    protected Pair<Boolean, ComponentFilterDescription> doFilterComponent(List<ComponentFilterDescription> filters, Class<?> beanClass, boolean isInclude) {
+        for (ComponentFilterDescription filter : filters) {
+            if (filter.getBasePackages().stream().anyMatch(e -> this.patternMatcher.matches(e, beanClass.getName()))) {
+                return new Pair<>(isInclude, filter);
             }
-            if (Arrays.asList(componentFilter.classes()).contains(beanClass)) {
-                return new Pair<>(isInclude, componentFilterWrapper);
+            if (filter.getClasses().contains(beanClass)) {
+                return new Pair<>(isInclude, filter);
             }
-            if (Arrays.stream(componentFilter.annotations()).anyMatch(e -> hasAnnotationElement(beanClass, e))) {
-                return new Pair<>(isInclude, componentFilterWrapper);
+            if (filter.getAnnotations().stream().anyMatch(e -> hasAnnotationElement(beanClass, e))) {
+                return new Pair<>(isInclude, filter);
             }
         }
         return new Pair<>(!isInclude, null);
