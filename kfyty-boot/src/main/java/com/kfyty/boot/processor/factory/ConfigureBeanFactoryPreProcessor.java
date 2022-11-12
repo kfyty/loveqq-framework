@@ -11,6 +11,7 @@ import com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.core.autoconfig.annotation.Import;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -25,6 +26,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription.contains;
 
 /**
  * 描述: 配置 Bean 工厂
@@ -129,12 +132,12 @@ public class ConfigureBeanFactoryPreProcessor implements InstantiationAwareBeanP
         if (componentFilter == null || CommonUtil.empty(componentFilter.value()) && CommonUtil.empty(componentFilter.classes()) && CommonUtil.empty(componentFilter.annotations())) {
             return;
         }
-        AnnotationWrapper<ComponentFilter> filter = new AnnotationWrapper<>(declaring, componentFilter);
-        if (isInclude && !AnnotationWrapper.contains(this.applicationContext.getIncludeComponentFilters(), componentFilter)) {
-            this.applicationContext.addIncludeComponentFilter(filter);
+        ComponentFilterDescription filter = ComponentFilterDescription.from((Class<?>) declaring, componentFilter);
+        if (isInclude && !contains(this.applicationContext.getIncludeFilters(), componentFilter)) {
+            this.applicationContext.addIncludeFilter(filter);
         }
-        if (!isInclude && !AnnotationWrapper.contains(this.applicationContext.getExcludeComponentFilters(), componentFilter)) {
-            this.applicationContext.addExcludeComponentFilter(filter);
+        if (!isInclude && !contains(this.applicationContext.getExcludeFilters(), componentFilter)) {
+            this.applicationContext.addExcludeFilter(filter);
         }
     }
 }

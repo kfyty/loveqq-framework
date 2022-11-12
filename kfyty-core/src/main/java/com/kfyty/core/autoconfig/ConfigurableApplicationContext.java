@@ -1,7 +1,7 @@
 package com.kfyty.core.autoconfig;
 
-import com.kfyty.core.autoconfig.annotation.ComponentFilter;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.core.support.PatternMatcher;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,23 +18,27 @@ public interface ConfigurableApplicationContext extends ApplicationContext {
 
     String[] getCommandLineArgs();
 
+    PatternMatcher getPatternMatcher();
+
     Set<Class<?>> getScannedClasses();
 
-    List<AnnotationWrapper<ComponentFilter>> getIncludeComponentFilters();
+    List<ComponentFilterDescription> getIncludeFilters();
 
-    List<AnnotationWrapper<ComponentFilter>> getExcludeComponentFilters();
+    List<ComponentFilterDescription> getExcludeFilters();
 
     void setCommandLineArgs(String[] args);
 
     void setPrimarySource(Class<?> primarySource);
 
+    void setPatternMatcher(PatternMatcher patternMatcher);
+
     void addScannedClass(Class<?> clazz);
 
     void addScannedClasses(Collection<Class<?>> classes);
 
-    void addIncludeComponentFilter(AnnotationWrapper<ComponentFilter> componentFilter);
+    void addIncludeFilter(ComponentFilterDescription componentFilter);
 
-    void addExcludeComponentFilter(AnnotationWrapper<ComponentFilter> componentFilter);
+    void addExcludeFilter(ComponentFilterDescription componentFilter);
 
     /**
      * 根据组件过滤器进行匹配
