@@ -16,13 +16,19 @@ public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoClosea
 
     <T> T getBean(Class<T> clazz);
 
+    <T> T getBean(Class<T> clazz, boolean isLazyInit);
+
     <T> T getBean(String name);
+
+    <T> T getBean(String name, boolean isLazyInit);
 
     <T> Map<String, T> getBeanOfType(Class<T> clazz);
 
     <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass);
 
     Object registerBean(BeanDefinition beanDefinition);
+
+    Object registerBean(BeanDefinition beanDefinition, boolean isLazyInit);
 
     Object registerBean(Class<?> clazz, Object bean);
 

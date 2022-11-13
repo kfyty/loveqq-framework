@@ -1,13 +1,13 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
@@ -18,13 +18,10 @@ import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.kfyty.boot.autoconfig.factory.LazyProxyFactoryBean.isLazyProxy;
@@ -47,11 +44,6 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
      */
     private AutowiredProcessor autowiredProcessor;
 
-    /**
-     * 懒注入缓存
-     */
-    private Map<Object, AccessibleObject> lazyAutowired;
-
     @Override
     public void setApplicationContext(ApplicationContext context) {
         this.autowiredProcessor = new AutowiredProcessor(context);
@@ -60,47 +52,25 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        this.autowiredBean(beanName, bean, false);
-    }
-
-    @Override
-    public void autowiredBean(String beanName, Object bean, boolean ignoredLazy) {
         ApplicationContext context = this.autowiredProcessor.getContext();
         if (beanName != null && isLazyProxy(context.getBeanDefinition(beanName))) {
             return;
         }
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
-        this.autowiredBeanField(targetClass, target, ignoredLazy);
-        this.autowiredBeanMethod(targetClass, target, ignoredLazy);
+        this.autowiredBeanField(targetClass, target);
+        this.autowiredBeanMethod(targetClass, target);
         if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
             BeanUtil.copyProperties(target, bean);
         }
     }
 
-    @Override
-    public void autowiredLazied() {
-        for (Map.Entry<Object, AccessibleObject> entry : this.lazyAutowired.entrySet()) {
-            if (entry.getValue() instanceof Field) {
-                this.autowiredProcessor.doAutowired(entry.getKey(), (Field) entry.getValue());
-                continue;
-            }
-            this.autowiredProcessor.doAutowired(entry.getKey(), (Method) entry.getValue());
-        }
-        this.lazyAutowired.clear();
-        this.lazyAutowired = null;
-    }
-
-    protected void autowiredBeanField(Class<?> clazz, Object bean, boolean ignoredLazy) {
-        List<Field> laziedFields = new ArrayList<>(4);
+    protected void autowiredBeanField(Class<?> clazz, Object bean) {
+        List<Field> laziedFields = new LinkedList<>();
         List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
             AutowiredDescription description = AutowiredDescription.from(field);
             if (description == null) {
-                continue;
-            }
-            if (!ignoredLazy && hasAnnotation(field, Lazy.class)) {
-                this.putLazy(bean, field);
                 continue;
             }
             ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
@@ -108,29 +78,20 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
                 laziedFields.add(field);
                 continue;
             }
-            this.autowiredProcessor.doAutowired(bean, field, description);
+            this.autowiredProcessor.doAutowired(bean, field, description.markLazied(hasAnnotation(field, Lazy.class)));
         }
-        laziedFields.forEach(e -> this.autowiredProcessor.doAutowired(bean, e));
+        for (Field field : laziedFields) {
+            this.autowiredProcessor.doAutowired(bean, field, AutowiredDescription.from(field).markLazied(hasAnnotation(field, Lazy.class)));
+        }
     }
 
-    protected void autowiredBeanMethod(Class<?> clazz, Object bean, boolean ignoredLazy) {
+    protected void autowiredBeanMethod(Class<?> clazz, Object bean) {
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = AutowiredDescription.from(method);
             if (description == null) {
                 continue;
             }
-            if (!ignoredLazy && hasAnnotation(method, Lazy.class)) {
-                this.putLazy(bean, method);
-                continue;
-            }
-            this.autowiredProcessor.doAutowired(bean, method, description);
+            this.autowiredProcessor.doAutowired(bean, method, description.markLazied(hasAnnotation(method, Lazy.class)));
         }
-    }
-
-    protected void putLazy(Object bean, AccessibleObject lazy) {
-        if (this.lazyAutowired == null) {
-            this.lazyAutowired = new HashMap<>();
-        }
-        this.lazyAutowired.put(bean, lazy);
     }
 }

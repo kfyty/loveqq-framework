@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isLazied;
+import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isRequired;
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.core.utils.AopUtil.isJdkProxy;
@@ -178,24 +180,24 @@ public class AutowiredProcessor {
                 if (isGeneric) {
                     for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
                         if (!beanOfType.containsKey(entry.getKey())) {
-                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue()));
+                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue(), isLazied(autowired)));
                         }
                     }
                 } else {
                     BeanDefinition beanDefinition = targetBeanDefinitions.size() == 1 ? targetBeanDefinitions.values().iterator().next() : targetBeanDefinitions.get(targetBeanName);
                     if (beanDefinition == null) {
-                        if (!AutowiredDescription.isRequired(autowired)) {
+                        if (!isRequired(autowired)) {
                             return beanOfType;
                         }
                         throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, but no bean definition found of name: {}", targetType, targetBeanName));
                     }
-                    beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition));
+                    beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition, isLazied(autowired)));
                 }
             } finally {
                 this.removeResolving(targetBeanName, targetType, isGeneric);
             }
         }
-        if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty() || AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
+        if (isRequired(autowired) && beanOfType.isEmpty() || isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
             throw new BeansException("resolve target bean failed, the bean does not exists of name: " + targetBeanName);
         }
         return beanOfType;

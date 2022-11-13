@@ -21,10 +21,9 @@ public abstract class PlaceholdersUtil {
     }
 
     public static String resolve(String value, String placeholder, String left, String right, Map<?, ?> properties) {
-        int leftIndex = value.length();
         StringBuilder resolved = new StringBuilder(value);
         while (true) {
-            leftIndex = resolved.lastIndexOf(placeholder + left, leftIndex);
+            int leftIndex = resolved.lastIndexOf(placeholder + left);
 
             if (leftIndex == -1) {
                 break;

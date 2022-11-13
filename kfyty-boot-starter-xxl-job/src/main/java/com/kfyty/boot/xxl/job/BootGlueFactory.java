@@ -24,7 +24,7 @@ public class BootGlueFactory extends GlueFactory {
     @Override
     public void injectService(Object instance) {
         if (instance != null) {
-            this.autowiredCapableSupport.autowiredBean(null, instance, true);
+            this.autowiredCapableSupport.autowiredBean(null, instance);
         }
     }
 

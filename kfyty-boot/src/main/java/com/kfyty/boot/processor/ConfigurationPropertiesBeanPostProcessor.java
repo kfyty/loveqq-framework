@@ -1,16 +1,15 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -24,18 +23,11 @@ import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述: 绑定 bean 属性配置
- * <p>
- * <b>
- * 本类不能实现 {@link com.kfyty.core.autoconfig.aware.ApplicationContextAware} 之类的接口
- * 否则 {@link Value} 注解将失效
- * </b>
- * </p>
  *
  * @author kfyty725
  * @date 2022/5/25 22:38
  * @email kfyty725@hotmail.com
  */
-@Lazy
 @Getter
 @Component
 public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
@@ -55,9 +47,6 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
     protected GenericPropertiesContext propertyContext;
 
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        if (this == bean) {
-            return null;
-        }
         ConfigurationProperties configurationProperties = this.obtainConfigurationPropertiesAnnotation(beanName);
         if (configurationProperties != null) {
             this.bindConfigurationProperties(AopUtil.getTarget(bean), configurationProperties.value(), configurationProperties.ignoreInvalidFields(), configurationProperties.ignoreUnknownFields());

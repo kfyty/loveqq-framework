@@ -19,7 +19,15 @@ import java.lang.annotation.Target;
 public @interface Scope {
     /**
      * 作用域，默认为单例
+     *
      * @return SCOPE
      */
     String value() default BeanDefinition.SCOPE_SINGLETON;
+
+    /**
+     * 是否使用作用域代理
+     *
+     * @return 默认 true
+     */
+    boolean scopeProxy() default true;
 }
