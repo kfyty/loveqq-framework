@@ -1,6 +1,7 @@
 package com.kfyty.boot.context.env;
 
 import com.kfyty.boot.processor.ConfigurationPropertiesBeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -33,6 +34,7 @@ import static com.kfyty.core.utils.ReflectUtil.newInstance;
  */
 @Component
 public class DefaultGenericPropertiesContext extends DefaultPropertiesContext implements GenericPropertiesContext {
+    @Lazy
     @Autowired
     protected ConfigurationPropertiesBeanPostProcessor configurationPropertiesBeanPostProcessor;
 

@@ -28,7 +28,17 @@ public class AutowiredDescription {
     /**
      * 是否必须
      */
-    private final boolean required;
+    private boolean required;
+
+    /**
+     * 是否延迟加载
+     */
+    private boolean lazied;
+
+    public AutowiredDescription(String value, boolean required) {
+        this.value = value;
+        this.required = required;
+    }
 
     public String value() {
         return this.value;
@@ -38,8 +48,26 @@ public class AutowiredDescription {
         return this.required;
     }
 
+    public boolean lazied() {
+        return this.lazied;
+    }
+
+    public AutowiredDescription markRequired(boolean isRequired) {
+        this.required = isRequired;
+        return this;
+    }
+
+    public AutowiredDescription markLazied(boolean isLazied) {
+        this.lazied = isLazied;
+        return this;
+    }
+
     public static boolean isRequired(AutowiredDescription description) {
         return description == null || description.required();
+    }
+
+    public static boolean isLazied(AutowiredDescription description) {
+        return description != null && description.lazied();
     }
 
     public static AutowiredDescription from(AccessibleObject accessibleObject) {

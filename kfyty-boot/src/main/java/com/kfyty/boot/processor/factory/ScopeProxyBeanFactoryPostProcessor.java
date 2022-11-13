@@ -6,6 +6,7 @@ import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.utils.ScopeUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,10 @@ public class ScopeProxyBeanFactoryPostProcessor implements BeanFactoryPostProces
         for (Map.Entry<String, BeanDefinition> beanDefinitionEntry : beanDefinitionMap.entrySet()) {
             BeanDefinition beanDefinition = beanDefinitionEntry.getValue();
             if (beanDefinition.isSingleton() || !beanDefinition.isAutowireCandidate()) {
+                continue;
+            }
+
+            if (!ScopeUtil.resolveScope(beanDefinition).scopeProxy()) {
                 continue;
             }
 

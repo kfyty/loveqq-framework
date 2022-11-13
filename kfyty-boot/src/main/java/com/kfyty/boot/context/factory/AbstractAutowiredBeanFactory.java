@@ -143,11 +143,4 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         this.conditionBeanMap.clear();
         this.autowiredCapableSupport = null;
     }
-
-    public void autowiredLazied() {
-        if (this.autowiredCapableSupport == null) {
-            throw new BeansException("the bean instance does not exists of type: " + AutowiredCapableSupport.class);
-        }
-        this.autowiredCapableSupport.autowiredLazied();
-    }
 }

@@ -3,6 +3,7 @@ package com.kfyty.boot.context;
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.support.AntPathMatcher;
@@ -149,7 +150,10 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
         for (String beanFactoryPreProcessorClassName : FactoriesLoader.loadFactories(BeanFactoryPreProcessor.class)) {
             Class<?> beanFactoryPreProcessorClass = ReflectUtil.load(beanFactoryPreProcessorClassName);
             this.addScannedClass(beanFactoryPreProcessorClass);
-            this.registerBeanDefinition(genericBeanDefinition(beanFactoryPreProcessorClass).getBeanDefinition());
+            BeanDefinition beanDefinition = genericBeanDefinition(beanFactoryPreProcessorClass)
+                    .setBeanName(beanFactoryPreProcessorClassName)
+                    .getBeanDefinition();
+            this.registerBeanDefinition(beanDefinition);
         }
     }
 

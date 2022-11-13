@@ -13,6 +13,7 @@ import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -183,20 +184,30 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public <T> T getBean(Class<T> clazz) {
+        return this.getBean(clazz, false);
+    }
+
+    @Override
+    public <T> T getBean(Class<T> clazz, boolean isLazyInit) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz);
         if (beanDefinitions.size() > 1) {
             throw new BeansException("more than one instance of type: " + clazz.getName());
         }
-        return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next().getBeanName());
+        return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next().getBeanName(), isLazyInit);
+    }
+
+    @Override
+    public <T> T getBean(String name) {
+        return this.getBean(name, false);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getBean(String name) {
+    public <T> T getBean(String name, boolean isLazyInit) {
         if (this.contains(name)) {
             return (T) this.beanInstances.get(name);
         }
-        return (T) this.registerBean(this.getBeanDefinition(name));
+        return (T) this.registerBean(this.getBeanDefinition(name), isLazyInit);
     }
 
     @Override
@@ -221,20 +232,29 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         return (Map<String, T>) beans;
     }
 
+    @Override
+    public Object registerBean(BeanDefinition beanDefinition) {
+        return this.registerBean(beanDefinition, false);
+    }
+
     /**
      * 根据 BeanDefinition 注册一个 bean
      * 由于创建 bean 实例的过程中可能会触发代理，因此需对返回的 bean 实例做二次判断
      *
      * @param beanDefinition BeanDefinition
+     * @param isLazyInit     是否延迟初始化，为 true 时返回一个延迟初始化代理
      * @return bean 实例
      */
     @Override
-    public Object registerBean(BeanDefinition beanDefinition) {
+    public Object registerBean(BeanDefinition beanDefinition, boolean isLazyInit) {
         if (this.contains(beanDefinition.getBeanName())) {
             return this.getBean(beanDefinition.getBeanName());
         }
         synchronized (this.beanInstances) {
             Object bean = ofNullable(this.beanReference.remove(beanDefinition.getBeanName())).orElseGet(() -> this.doCreateBean(beanDefinition));
+            if (isLazyInit) {
+                return this.createLazied(beanDefinition, bean);
+            }
             if (!this.contains(beanDefinition.getBeanName())) {
                 return this.registerBean(beanDefinition.getBeanName(), bean);
             }
@@ -420,5 +440,22 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
 
         return bean;
+    }
+
+    protected Object createLazied(BeanDefinition beanDefinition, Object bean) {
+        return DynamicProxyFactory
+                .create(true)
+                .addInterceptorPoint((methodProxy, chain) -> {
+                    if (!this.contains(beanDefinition.getBeanName())) {
+                        synchronized (this.beanInstances) {
+                            if (!this.contains(beanDefinition.getBeanName())) {
+                                this.registerBean(beanDefinition.getBeanName(), bean);
+                            }
+                        }
+                    }
+                    methodProxy.setTarget(this.getBean(beanDefinition.getBeanName()));
+                    return chain.proceed(methodProxy);
+                })
+                .createProxy(bean, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
     }
 }

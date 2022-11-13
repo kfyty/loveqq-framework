@@ -2,9 +2,7 @@ package com.kfyty.boot.event;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.event.ApplicationEvent;
 import com.kfyty.core.event.ApplicationEventPublisher;
@@ -51,15 +49,12 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
      */
     private final List<ApplicationListener> applicationListeners = new ArrayList<>();
 
-    @Lazy
-    @Autowired(required = false)
-    public void setApplicationListeners(List<ApplicationListener> applicationListeners) {
-        applicationListeners.forEach(this::registerEventListener);
-    }
-
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         this.isRefreshed = true;
+        for (ApplicationListener applicationListener : applicationContext.getBeanOfType(ApplicationListener.class).values()) {
+            this.registerEventListener(applicationListener);
+        }
         if (CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();

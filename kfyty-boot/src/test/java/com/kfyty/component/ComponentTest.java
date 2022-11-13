@@ -18,6 +18,7 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
@@ -75,6 +76,7 @@ class ComponentS {
 
 @Component
 @ConfigurationProperties("k.prop")
+@ConditionalOnProperty(value = "k.prop.enable", havingValue = "true")
 class PropertiesConfig implements InitializingBean {
     @Value("http://${k.prop.ip}:${port:8080}/${${index.path:index}:}")
     private String url;
@@ -219,6 +221,12 @@ class ComplexBean implements CommandLineRunner {
     private PrototypeBBB bbb2;
 
     @Autowired
+    private PrototypeCCC ccc1;
+
+    @Autowired
+    private PrototypeCCC ccc2;
+
+    @Autowired
     private LazyAAA lazyAAA;
 
     @Override
@@ -227,6 +235,8 @@ class ComplexBean implements CommandLineRunner {
         Assert.assertSame(this.aaa, this.aaa2);
         Assert.assertSame(this.bbb, this.bbb2);
         Assert.assertSame(this.aaa.getBBB(), this.bbb);
+        Assert.assertNotSame(this.ccc1, this.ccc2);
+        Assert.assertEquals(this.ccc1.getTime(), this.ccc1.getTime());
         Assert.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
     }
 
@@ -240,10 +250,20 @@ class ComplexBean implements CommandLineRunner {
     @Component
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     public static class PrototypeBBB {
-        private static long time;
+        private final long time = System.nanoTime();
 
         public long getTime() {
-            return time++;
+            return time;
+        }
+    }
+
+    @Component
+    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE, scopeProxy = false)
+    public static class PrototypeCCC {
+        private final long time = System.nanoTime();
+
+        public long getTime() {
+            return time;
         }
     }
 

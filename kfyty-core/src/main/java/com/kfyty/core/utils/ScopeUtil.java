@@ -3,6 +3,7 @@ package com.kfyty.core.utils;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -23,6 +24,11 @@ public abstract class ScopeUtil {
         }
 
         @Override
+        public boolean scopeProxy() {
+            return true;
+        }
+
+        @Override
         public Class<? extends Annotation> annotationType() {
             return Scope.class;
         }
@@ -34,6 +40,13 @@ public abstract class ScopeUtil {
 
     public static boolean isSingleton(Method method) {
         return BeanDefinition.SCOPE_SINGLETON.equals(resolveScope(method).value());
+    }
+
+    public static Scope resolveScope(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            return resolveScope(((MethodBeanDefinition) beanDefinition).getBeanMethod());
+        }
+        return resolveScope(beanDefinition.getBeanType());
     }
 
     public static Scope resolveScope(Class<?> clazz) {
