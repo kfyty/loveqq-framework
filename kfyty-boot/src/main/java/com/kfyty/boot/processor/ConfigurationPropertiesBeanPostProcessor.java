@@ -1,7 +1,7 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -65,14 +65,6 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
         return null;
     }
 
-    protected ConfigurationProperties obtainConfigurationPropertiesAnnotation(String beanName) {
-        BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), ConfigurationProperties.class);
-        }
-        return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), ConfigurationProperties.class);
-    }
-
     public void bindConfigurationProperties(Object bean, String prefix) {
         this.bindConfigurationProperties(bean, prefix, this.ignoreInvalidFields, this.ignoreUnknownFields);
     }
@@ -130,5 +122,13 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
 
     protected boolean isCollectionProperties(String key, Field field) {
         return field.getType().isArray() || Collection.class.isAssignableFrom(field.getType());
+    }
+
+    protected ConfigurationProperties obtainConfigurationPropertiesAnnotation(String beanName) {
+        BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            return AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), ConfigurationProperties.class);
+        }
+        return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), ConfigurationProperties.class);
     }
 }

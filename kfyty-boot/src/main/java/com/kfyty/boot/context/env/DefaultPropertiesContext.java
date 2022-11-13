@@ -1,20 +1,20 @@
-package com.kfyty.boot.context;
+package com.kfyty.boot.context.env;
 
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.InitializingBean;
-import com.kfyty.core.autoconfig.PropertyContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
+import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.converter.Converter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ConverterUtil;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.core.utils.PropertiesUtil.include;
 import static com.kfyty.core.utils.PropertiesUtil.load;
@@ -48,7 +48,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     public DefaultPropertiesContext() {
         this.configs = new LinkedList<>();
-        this.propertySources = new HashMap<>();
+        this.propertySources = new ConcurrentHashMap<>();
     }
 
     @Autowired(required = false)
@@ -111,6 +111,11 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
             return;
         }
         this.propertySources.putIfAbsent(key, value);
+    }
+
+    @Override
+    public void removeProperty(String key) {
+        this.propertySources.remove(key);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.kfyty.core.autoconfig.condition;
 
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
-import com.kfyty.core.autoconfig.PropertyContext;
+import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.wrapper.AnnotationWrapper;
 

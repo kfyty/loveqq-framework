@@ -1,4 +1,4 @@
-package com.kfyty.core.autoconfig;
+package com.kfyty.core.autoconfig.env;
 
 import com.kfyty.core.generic.SimpleGeneric;
 
