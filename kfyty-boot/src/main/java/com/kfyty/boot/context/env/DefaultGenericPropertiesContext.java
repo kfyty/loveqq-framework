@@ -1,7 +1,7 @@
-package com.kfyty.boot.context;
+package com.kfyty.boot.context.env;
 
 import com.kfyty.boot.processor.ConfigurationPropertiesBeanPostProcessor;
-import com.kfyty.core.autoconfig.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.exception.SupportException;

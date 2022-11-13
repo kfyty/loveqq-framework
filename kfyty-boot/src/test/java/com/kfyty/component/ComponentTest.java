@@ -16,6 +16,7 @@ import com.kfyty.core.autoconfig.annotation.Lookup;
 import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.annotation.Scope;
+import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import lombok.Data;
 import org.junit.Assert;
@@ -75,6 +76,9 @@ class ComponentS {
 @Component
 @ConfigurationProperties("k.prop")
 class PropertiesConfig implements InitializingBean {
+    @Value("http://${k.prop.ip}:${port:8080}/${${index.path:index}:}")
+    private String url;
+
     private Properties opt;
 
     private List<Integer> ids;
@@ -88,6 +92,7 @@ class PropertiesConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
+        Assert.assertEquals(this.url, "http://127.0.0.1:8080/");
         Assert.assertEquals(this.ids, Arrays.asList(1, 2));
         Assert.assertEquals(this.users.size(), 2);
         Assert.assertEquals(this.user.getId(), Long.valueOf(1L));

@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
-import java.util.regex.Matcher;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -68,18 +67,8 @@ public abstract class PropertiesUtil {
     public static void processPlaceholder(Properties properties) {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String value = entry.getValue().toString();
-            Matcher matcher = CommonUtil.PLACEHOLDER_PATTERN.matcher(value);
-            while (matcher.find()) {
-                do {
-                    String key = matcher.group().replaceAll("[${}]", "");
-                    if (!properties.containsKey(key)) {
-                        throw new IllegalArgumentException(CommonUtil.format("placeholder parameter [${{}}] does not exist !", key));
-                    }
-                    value = value.replace(matcher.group(), properties.get(key).toString());
-                } while (matcher.find());
-                matcher = CommonUtil.PLACEHOLDER_PATTERN.matcher(value);
-            }
-            properties.setProperty(entry.getKey().toString(), value);
+            String resolved = PlaceholdersUtil.resolve(value, properties);
+            properties.setProperty(entry.getKey().toString(), resolved);
         }
     }
 }

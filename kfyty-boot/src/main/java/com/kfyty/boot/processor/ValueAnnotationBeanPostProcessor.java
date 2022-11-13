@@ -1,21 +1,23 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.core.autoconfig.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.annotation.Value;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.kfyty.core.utils.ReflectUtil.setFieldValue;
 
@@ -31,6 +33,9 @@ import static com.kfyty.core.utils.ReflectUtil.setFieldValue;
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
+    protected PlaceholdersResolver placeholdersResolver;
+
+    @Autowired
     protected GenericPropertiesContext propertyContext;
 
     @Override
@@ -43,16 +48,10 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             if (annotation == null) {
                 continue;
             }
-            Pair<String, String> resolve = this.resolve(annotation.value());
-            Object property = this.propertyContext.getProperty(resolve.getKey(), field.getGenericType());
-            if (property == null && resolve.getValue() == null) {
-                throw new IllegalArgumentException("parameter does not exist: " + resolve.getKey());
+            Object property = this.resolvePlaceholderValue(annotation.value(), field.getGenericType());
+            if (property != null) {
+                setFieldValue(target, field, property);
             }
-            if (property == null) {
-                this.propertyContext.setProperty(resolve.getKey(), resolve.getValue());
-                property = this.propertyContext.getProperty(resolve.getKey(), field.getGenericType());
-            }
-            setFieldValue(target, field, property);
         }
         if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
             BeanUtil.copyProperties(target, bean);
@@ -60,11 +59,14 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
         return null;
     }
 
-    protected Pair<String, String> resolve(String value) {
-        int index = value.indexOf(':');
-        if (index < 0) {
-            return new Pair<>(value.replaceAll("[${}]", ""), null);
+    protected Object resolvePlaceholderValue(String value, Type targetType) {
+        String tempKey = "__temp__" + UUID.randomUUID() + "__key__";
+        try {
+            String resolved = this.placeholdersResolver.resolvePlaceholders(value);
+            this.propertyContext.setProperty(tempKey, resolved);
+            return this.propertyContext.getProperty(tempKey, targetType);
+        } finally {
+            this.propertyContext.removeProperty(tempKey);
         }
-        return new Pair<>(value.substring(0, index).replaceAll("[${}]", ""), value.substring(index + 1).replaceAll("[${}]", ""));
     }
 }

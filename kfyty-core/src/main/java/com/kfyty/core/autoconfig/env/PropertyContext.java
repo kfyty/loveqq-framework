@@ -1,4 +1,4 @@
-package com.kfyty.core.autoconfig;
+package com.kfyty.core.autoconfig.env;
 
 import java.util.List;
 import java.util.Map;
@@ -68,6 +68,13 @@ public interface PropertyContext extends AutoCloseable {
      * @param replace 如果存在是否替换
      */
     void setProperty(String key, String value, boolean replace);
+
+    /**
+     * 移除属性
+     *
+     * @param key 属性 key
+     */
+    void removeProperty(String key);
 
     /**
      * 获取属性
