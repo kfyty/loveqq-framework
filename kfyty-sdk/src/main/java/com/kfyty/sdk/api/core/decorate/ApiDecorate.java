@@ -96,6 +96,21 @@ public class ApiDecorate<T extends Api<T, R>, R extends ApiResponse> extends Abs
     }
 
     @Override
+    public T setPayload(byte[] payload) {
+        return this.decorate.setPayload(payload);
+    }
+
+    @Override
+    public T setCookieVersion(int cookieVersion) {
+        return this.decorate.setCookieVersion(cookieVersion);
+    }
+
+    @Override
+    public byte[] payload() {
+        return this.decorate.payload();
+    }
+
+    @Override
     public T addHeader(String key, String value) {
         return this.decorate.addHeader(key, value);
     }
@@ -113,6 +128,11 @@ public class ApiDecorate<T extends Api<T, R>, R extends ApiResponse> extends Abs
     @Override
     public T addQuery(String key, Object value) {
         return this.decorate.addQuery(key, value);
+    }
+
+    @Override
+    public T addPath(String key, Object value) {
+        return this.decorate.addPath(key, value);
     }
 
     @Override
@@ -153,11 +173,6 @@ public class ApiDecorate<T extends Api<T, R>, R extends ApiResponse> extends Abs
     @Override
     public Class<R> resolveResponseGeneric() {
         return this.decorate.resolveResponseGeneric();
-    }
-
-    @Override
-    public String processURIVariable(String uri) {
-        return this.decorate.processURIVariable(uri);
     }
 
     @Override

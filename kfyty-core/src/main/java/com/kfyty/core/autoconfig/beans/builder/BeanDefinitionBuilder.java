@@ -82,17 +82,17 @@ public class BeanDefinitionBuilder {
     }
 
     public void validate() {
-        if (!this.beanDefinition.isLazyInit()) {
-            this.setLazyInit(BeanUtil.isLazyInit(this.beanDefinition));
-        }
         if (CommonUtil.empty(this.beanDefinition.getBeanName())) {
             throw new IllegalStateException("bean name can't empty !");
         }
         if (this.beanDefinition.getBeanType() == null) {
             throw new IllegalStateException("bean type can't empty !");
         }
+        if (!this.beanDefinition.isLazyInit()) {
+            this.setLazyInit(BeanUtil.isLazyInit(this.beanDefinition));
+        }
         if (CommonUtil.empty(this.beanDefinition.getScope())) {
-            this.beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
+            this.setScope(BeanDefinition.SCOPE_SINGLETON);
         }
         if (CommonUtil.notEmpty(this.defaultConstructorArgs)) {
             this.defaultConstructorArgs.forEach(this.beanDefinition::addConstructorArgs);

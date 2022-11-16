@@ -8,8 +8,17 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * 描述: 简单的泛型，支持简单的泛型需求
@@ -19,8 +28,12 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public class SimpleGeneric extends QualifierGeneric {
-    @Getter
-    @Setter
+    public static final Class<?>[] SIMPLE_NESTED_GENERIC_CLASSES = new Class<?>[]{
+            Collection.class, List.class, Set.class, SortedSet.class, Queue.class, Deque.class,
+            Map.class, SortedMap.class, TreeMap.class, ConcurrentMap.class, ConcurrentHashMap.class
+    };
+
+    @Getter @Setter
     private String mapKey;
 
     public SimpleGeneric(Class<?> sourceType) {
@@ -103,6 +116,21 @@ public class SimpleGeneric extends QualifierGeneric {
             return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
         }
         return this.getFirst().get();
+    }
+
+    /**
+     * 解析简单的嵌套的泛型
+     *
+     * @return 嵌套泛型
+     */
+    public SimpleGeneric resolveNestedGeneric() {
+        for (Class<?> collectionClass : SIMPLE_NESTED_GENERIC_CLASSES) {
+            QualifierGeneric nested = this.getNested(new Generic(collectionClass));
+            if (nested != null) {
+                return (SimpleGeneric) nested;
+            }
+        }
+        return null;
     }
 
     @Override

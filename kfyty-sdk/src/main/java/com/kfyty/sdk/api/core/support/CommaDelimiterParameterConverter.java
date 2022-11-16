@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class CommaDelimiterParameterConverter implements ParameterConverter {
+public class CommaDelimiterParameterConverter implements ParameterConverter<Object, String> {
 
     @Override
     public String doConvert(Object parameter) {

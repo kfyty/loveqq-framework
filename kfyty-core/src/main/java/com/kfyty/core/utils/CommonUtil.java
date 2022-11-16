@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -282,13 +281,8 @@ public abstract class CommonUtil {
         return sb.toString();
     }
 
-    public static String processPlaceholder(String s, Map<String, Object> params) {
-        Matcher matcher = SIMPLE_PARAMETERS_PATTERN.matcher(s);
-        while (matcher.find()) {
-            String key = matcher.group().replaceAll("[{}]", "");
-            s = s.replace(matcher.group(), String.valueOf(params.get(key)));
-        }
-        return s;
+    public static String processPlaceholder(String s, Map<String, String> params) {
+        return PlaceholdersUtil.resolve(s, EMPTY_STRING, "{", "}", params);
     }
 
     public static String formatURI(String uri) {

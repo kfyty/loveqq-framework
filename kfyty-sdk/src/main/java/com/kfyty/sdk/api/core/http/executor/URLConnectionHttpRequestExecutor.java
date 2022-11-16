@@ -2,15 +2,17 @@ package com.kfyty.sdk.api.core.http.executor;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.io.resource.InputStreamResource;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
 import cn.hutool.http.cookie.GlobalCookieManager;
+import com.kfyty.core.support.FilePart;
+import com.kfyty.core.utils.JsonUtil;
 import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.http.HttpRequest;
 import com.kfyty.sdk.api.core.http.HttpRequestExecutor;
-import com.kfyty.core.utils.JsonUtil;
 
 import java.net.HttpCookie;
 import java.util.List;
@@ -30,13 +32,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
 
     @Override
-    public com.kfyty.sdk.api.core.http.HttpResponse wrapResponse(HttpRequest<?> api) {
+    public com.kfyty.sdk.api.core.http.HttpResponse exchangeResponse(HttpRequest<?> api, boolean validStatusCode) {
         URLConnectionHttpResponse response = this.wrapResponse(this.buildRequest(api).execute());
-        if (response.isSuccess()) {
+        if (!validStatusCode || response.isSuccess()) {
             return response;
         }
         IoUtil.close(response);
-        throw new ApiException(format("request failed with api: %s, status: %s, body: %s", api.requestURL(), response.code(), HttpUtil.getString(response.body(), UTF_8, false)));
+        throw new ApiException(format("request failed with api: %s, status: %s, body: %s", api.postProcessorURL(), response.code(), HttpUtil.getString(response.body(), UTF_8, false)));
     }
 
     @Override
@@ -51,12 +53,15 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
                 .contentType(api.contentType())
                 .method(this.resolveHttpMethod(api.method()))
                 .headerMap(api.headers(), true)
-                .form(api.formData())
                 .setProxy(api.proxy());
         if (CollUtil.isNotEmpty(api.cookies())) {
             /* 必须先判断再设置，即使返回值是安全的 */
             request.cookie(api.cookies());
         }
+        if (api.payload() != null) {
+            return request.body(api.payload());
+        }
+        request.form(this.processFormData(api.formData()));
         if (Objects.equals(api.contentType(), ApiConstants.CONTENT_TYPE_JSON)) {
             request.body(JsonUtil.toJson(api.formData()));
         }
@@ -70,6 +75,16 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
             }
         }
         throw new ApiException("unknown http request method: " + method);
+    }
+
+    protected Map<String, Object> processFormData(Map<String, Object> formData) {
+        for (Map.Entry<String, Object> entry : formData.entrySet()) {
+            if (entry.getValue() instanceof FilePart) {
+                FilePart filePart = (FilePart) entry.getValue();
+                entry.setValue(new InputStreamResource(filePart.openInputStream(), filePart.getName()));
+            }
+        }
+        return formData;
     }
 
     public static class URLConnectionHttpResponse implements com.kfyty.sdk.api.core.http.HttpResponse {
