@@ -13,7 +13,16 @@ public interface HttpRequestExecutor {
      *
      * @return response
      */
-    HttpResponse wrapResponse(HttpRequest<?> api);
+    default HttpResponse exchangeResponse(HttpRequest<?> api) {
+        return exchangeResponse(api, true);
+    }
+
+    /**
+     * 返回 http 响应
+     *
+     * @return response
+     */
+    HttpResponse exchangeResponse(HttpRequest<?> api, boolean validStatusCode);
 
     /**
      * 将三方响应包装为自定义响应
@@ -30,7 +39,7 @@ public interface HttpRequestExecutor {
      * @return body
      */
     default byte[] execute(HttpRequest<?> api) {
-        try (HttpResponse response = this.wrapResponse(api)) {
+        try (HttpResponse response = this.exchangeResponse(api)) {
             return response.body();
         }
     }

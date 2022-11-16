@@ -7,12 +7,12 @@ package com.kfyty.sdk.api.core;
  * @date 2021/11/24 17:37
  * @email kfyty725@hotmail.com
  */
-public interface ParameterConverter {
+public interface ParameterConverter<T, S> {
     /**
      * 将参数转换为字符串
      *
      * @param parameter 参数
      * @return 结果
      */
-    String doConvert(Object parameter);
+    S doConvert(T parameter);
 }

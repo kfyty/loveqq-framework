@@ -1,12 +1,13 @@
 package com.kfyty.sdk.api.core.support;
 
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.sdk.api.core.AbstractApi;
 import com.kfyty.sdk.api.core.ApiPreProcessor;
+import com.kfyty.sdk.api.core.ParameterConverter;
 import com.kfyty.sdk.api.core.ParameterProvider;
 import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.utils.ParameterUtil;
-import com.kfyty.core.utils.AnnotationUtil;
-import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -41,16 +42,28 @@ public class ApiParametersPreProcessor implements ApiPreProcessor {
                 api.addHeader(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
                 continue;
             }
-            if (parameter.cookie()) {
-                api.addCookie(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
-                continue;
-            }
             if (parameter.query()) {
                 api.addQuery(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
                 continue;
             }
+            if (parameter.path()) {
+                api.addPath(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
+                continue;
+            }
+            if (parameter.cookie()) {
+                api.addCookie(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
+                continue;
+            }
             if (api.method().equalsIgnoreCase("GET")) {
                 api.addFormData(parameter.value(), ParameterUtil.parameterConvert(parameter, optional.get()));
+                continue;
+            }
+            if (!parameter.converter().equals(ParameterConverter.class)) {
+                // noinspection unchecked
+                optional = Optional.of(ReflectUtil.newInstance(parameter.converter()).doConvert(optional.get()));
+            }
+            if (parameter.payload()) {
+                api.setPayload(optional.filter(e -> e instanceof byte[]).map(e -> (byte[]) e).orElseThrow(() -> new IllegalArgumentException("payload must be byte[]")));
                 continue;
             }
             api.addFormData(parameter.value(), optional.get());

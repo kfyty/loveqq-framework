@@ -18,7 +18,7 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 @Component
-@Order(Order.HIGHEST_PRECEDENCE)
+@Order(Integer.MIN_VALUE)
 public class ImportBeanDefinitionBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     @Override

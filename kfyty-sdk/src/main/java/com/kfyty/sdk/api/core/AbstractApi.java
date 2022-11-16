@@ -3,21 +3,19 @@ package com.kfyty.sdk.api.core;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.sdk.api.core.config.ApiConfiguration;
 import com.kfyty.sdk.api.core.decorate.ApiRetryDecorate;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.exception.BaseApiException;
 import com.kfyty.sdk.api.core.http.AbstractHttpRequest;
 import com.kfyty.sdk.api.core.http.HttpResponse;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.ReflectUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -78,17 +76,6 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
         return (Class<R>) ReflectUtil.getSuperGeneric(this.getClass(), 1);
     }
 
-    /**
-     * 处理 URI 变量，提供给子类处理 {@link this#requestURL()} 返回值
-     *
-     * @param uri uri
-     * @return url
-     */
-    public String processURIVariable(String uri) {
-        Objects.requireNonNull(uri);
-        return CommonUtil.processPlaceholder(uri, this.formData());
-    }
-
     @Override
     public int connectTimeout() {
         return ofNullable(this.connectTimeout).orElseGet(() -> this.getConfiguration().getConnectTimeout());
@@ -114,7 +101,7 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
             this.preProcessor();
             R response = this.exchangeInternal();
             if (log.isDebugEnabled()) {
-                log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}", this.requestURL(), DateUtil.current() - start,
+                log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}", this.postProcessorURL(), DateUtil.current() - start,
                         this.formData(), new String(this.getConfiguration().getApiSerializer().serialize(response)));
             }
             this.postProcessor(response);
@@ -133,7 +120,7 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
             this.preProcessor();
             byte[] bytes = this.executeInternal();
             if (log.isDebugEnabled()) {
-                log.debug("request api: {}, waste time: {} ms, parameters: {}, response body: {}", this.requestURL(), DateUtil.current() - start, this.formData(), new String(bytes));
+                log.debug("request api: {}, waste time: {} ms, parameters: {}, response body: {}", this.postProcessorURL(), DateUtil.current() - start, this.formData(), new String(bytes));
             }
             return bytes;
         } catch (BaseApiException e) {
@@ -173,7 +160,7 @@ public abstract class AbstractApi<T extends Api<T, R>, R extends ApiResponse> ex
     }
 
     protected R exchangeInternal() {
-        try (HttpResponse response = this.getConfiguration().getRequestExecutor().wrapResponse(this)) {
+        try (HttpResponse response = this.getConfiguration().getRequestExecutor().exchangeResponse(this)) {
             return this.exchangeInternal(response);
         }
     }

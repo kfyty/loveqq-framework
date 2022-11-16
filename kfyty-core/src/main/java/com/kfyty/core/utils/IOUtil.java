@@ -1,16 +1,27 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.support.FilePart;
+import com.kfyty.core.support.FilePartDescription;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.Flushable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -28,6 +39,7 @@ import static java.util.Objects.requireNonNull;
  * @date 2022/7/2 11:13
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public abstract class IOUtil {
     /**
      * 默认的缓冲区大小
@@ -233,6 +245,121 @@ public abstract class IOUtil {
         File file = new File(path);
         if (!file.exists() && !file.mkdirs()) {
             throw new SupportException("ensure folder exists failed !");
+        }
+    }
+
+    /**
+     * 下载到指定目录
+     *
+     * @param url     url
+     * @param dirName 目录
+     * @return 文件
+     */
+    public static File download(String url, String dirName) {
+        return download(url, dirName, UUID.randomUUID().toString().replace("-", ""));
+    }
+
+    /**
+     * 下载到指定目录
+     *
+     * @param url      url
+     * @param dirName  目录
+     * @param fileName 文件名称
+     * @return 文件
+     */
+    public static File download(String url, String dirName, String fileName) {
+        try {
+            long start = System.currentTimeMillis();
+            ensureFolderExists(dirName);
+
+            File file = new File(dirName + "/" + fileName);
+            URL httpUrl = new URL(url.replace(" ", "%20"));
+            HttpURLConnection conn = (HttpURLConnection) httpUrl.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setUseCaches(false);
+            conn.connect();
+
+            BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+
+            IOUtil.copy(bis, bos);
+
+            bos.close();
+            bis.close();
+            conn.disconnect();
+            log.info("下载文件耗时: {} -> {} ms", url, System.currentTimeMillis() - start);
+
+            return file;
+        } catch (IOException e) {
+            throw new SupportException(e);
+        }
+    }
+
+    /**
+     * 分割文件
+     *
+     * @param srcFile     文件
+     * @param splitSizeMB 分片大小
+     * @return 分片文件描述
+     */
+    public static List<FilePart> split(File srcFile, int splitSizeMB) {
+        return split(srcFile, splitSizeMB, true);
+    }
+
+    /**
+     * 分割文件
+     *
+     * @param srcFile         文件
+     * @param splitSizeMB     分片大小
+     * @param onlyDescription 是否仅保存分割描述文件
+     * @return 分片文件描述
+     */
+    public static List<FilePart> split(File srcFile, int splitSizeMB, boolean onlyDescription) {
+        try {
+            List<FilePart> fileParts = new ArrayList<>();
+            String splitDir = UUID.randomUUID().toString().replace("-", "");
+            ensureFolderExists(splitDir);
+
+            long totalSize = srcFile.length();                                                          // 文件
+            long size = splitSizeMB * 1024L * 1024L;                                                    // 每个分片大小
+
+            if (size >= totalSize) {
+                return Collections.singletonList(new FilePart(srcFile));
+            }
+
+            long splitSize = 0L;
+            int fileCount = (int) (totalSize / size);                                                   // 计算分片数量
+            boolean isOdd = totalSize % size != 0;                                                      // 是否不能整除
+            try (RandomAccessFile rf = new RandomAccessFile(srcFile, "r")) {
+                for (int i = 1; i <= fileCount; i++) {
+                    int length = (int) size;
+                    if (i == fileCount && isOdd) {
+                        length = (int) (totalSize - (fileCount - 1) * size);
+                    }
+                    if (onlyDescription) {
+                        FilePartDescription fpd = new FilePartDescription(i, (int) splitSize, length, i + "_" + srcFile.getName(), new RandomAccessFile(srcFile, "r"));
+                        splitSize += fpd.getLength();
+                        fileParts.add(fpd);
+                        log.info("after split file name: {}, file size: {}", fpd.getName(), fpd.getLength());
+                        continue;
+                    }
+                    File filePart = new File(splitDir, i + "_" + srcFile.getName());
+                    try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(filePart))) {
+                        byte[] bs = new byte[length];
+                        rf.read(bs);
+                        out.write(bs);
+                        out.flush();
+                        splitSize += filePart.length();
+                    }
+                    fileParts.add(new FilePart(i, filePart));
+                    log.info("after split file name: {}, file size: {}", filePart.getName(), filePart.length());
+                }
+            }
+            log.info("split ok, total: {}, split: {}....", totalSize, splitSize);
+            return fileParts;
+        } catch (IOException e) {
+            throw new SupportException(e);
         }
     }
 

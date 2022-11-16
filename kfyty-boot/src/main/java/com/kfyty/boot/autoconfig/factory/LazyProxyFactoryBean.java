@@ -9,8 +9,6 @@ import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import lombok.NoArgsConstructor;
 
-import static com.kfyty.core.utils.BeanUtil.LAZY_PROXY_SOURCE_PREFIX;
-
 /**
  * 描述: 为延迟初始化 bean 创建代理
  *
@@ -31,9 +29,6 @@ public class LazyProxyFactoryBean<T> implements FactoryBean<T> {
     @Autowired
     public LazyProxyFactoryBean(BeanDefinition lazedTarget) {
         this.lazedTarget = lazedTarget;
-        if (!lazedTarget.getBeanName().startsWith(LAZY_PROXY_SOURCE_PREFIX)) {
-            lazedTarget.setBeanName(LAZY_PROXY_SOURCE_PREFIX + lazedTarget.getBeanName());
-        }
     }
 
     @Override

@@ -48,6 +48,13 @@ public @interface Parameter {
     boolean query() default false;
 
     /**
+     * 是否为路径参数
+     *
+     * @return 默认 false
+     */
+    boolean path() default false;
+
+    /**
      * 是否是 header 参数
      *
      * @return 默认 false
@@ -60,6 +67,14 @@ public @interface Parameter {
      * @return 默认 false
      */
     boolean cookie() default false;
+
+    /**
+     * 是否为 payload 参数，如果是，请求时直接发送该数据
+     * 注意：payload 为 true 的参数只能有一个
+     *
+     * @return 默认 false
+     */
+    boolean payload() default false;
 
     /**
      * 参数校验后，是否忽略放入请求参数或者请求头或者cookie

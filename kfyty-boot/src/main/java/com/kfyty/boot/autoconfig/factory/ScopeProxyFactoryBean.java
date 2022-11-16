@@ -34,9 +34,6 @@ public class ScopeProxyFactoryBean<T> implements FactoryBean<T> {
     @Autowired
     public ScopeProxyFactoryBean(BeanDefinition scopedTarget) {
         this.scopedTarget = scopedTarget;
-        if (!scopedTarget.getBeanName().startsWith(SCOPE_PROXY_SOURCE_PREFIX)) {
-            scopedTarget.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + scopedTarget.getBeanName());
-        }
     }
 
     @Override

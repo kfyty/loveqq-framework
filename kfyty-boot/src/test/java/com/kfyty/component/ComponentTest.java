@@ -89,6 +89,14 @@ class PropertiesConfig implements InitializingBean {
 
     private Map<String, User> userMap;
 
+    private List<List<User>> configLists;
+
+    private List<Map<String, User>> listConfigMap;
+
+    private Map<String, Map<String, User>> configMapMap;
+
+    private Map<String, List<User>> configListMap;
+
     @NestedConfigurationProperty
     private User user;
 
@@ -97,16 +105,20 @@ class PropertiesConfig implements InitializingBean {
         Assert.assertEquals(this.url, "http://127.0.0.1:8080/");
         Assert.assertEquals(this.ids, Arrays.asList(1, 2));
         Assert.assertEquals(this.users.size(), 2);
-        Assert.assertEquals(this.user.getId(), Long.valueOf(1L));
+        Assert.assertEquals(this.user.getId(), "1");
         Assert.assertEquals(this.user.getName(), "name");
         Assert.assertEquals(this.users.get(1).getName(), "name2");
         Assert.assertEquals(this.userMap.get("1").getChildren().get(0).getExtra().get(0), "map");
         Assert.assertEquals(this.opt.getProperty("user.enable"), "true");
+        Assert.assertEquals(this.configLists.get(0).get(0).getId(), "unique_list_list");
+        Assert.assertEquals(this.listConfigMap.get(0).get("map").getId(), "unique_list_map");
+        Assert.assertEquals(this.configMapMap.get("map").get("nested").getId(), "unique_map_map");
+        Assert.assertEquals(this.configListMap.get("list").get(0).getId(), "unique_map_list");
     }
 
     @Data
     public static class User {
-        private Long id;
+        private String id;
 
         private String name;
 
@@ -183,7 +195,8 @@ class C {
     }
 }
 
-abstract class AA {}
+abstract class AA {
+}
 
 @Order(0)
 @Component
@@ -233,6 +246,7 @@ class ComplexBean implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Assert.assertNotEquals(this.lazyAAA.get(), this.lazyAAA.get());
         Assert.assertSame(this.aaa, this.aaa2);
+        Assert.assertNotEquals(this.aaa.getTime(), this.aaa2.getTime());
         Assert.assertSame(this.bbb, this.bbb2);
         Assert.assertSame(this.aaa.getBBB(), this.bbb);
         Assert.assertNotSame(this.ccc1, this.ccc2);
@@ -243,8 +257,14 @@ class ComplexBean implements CommandLineRunner {
     @Component
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     public static abstract class PrototypeAAA {
+        private final long time = System.nanoTime();
+
         @Lookup
         public abstract PrototypeBBB getBBB();
+
+        public long getTime() {
+            return time;
+        }
     }
 
     @Component

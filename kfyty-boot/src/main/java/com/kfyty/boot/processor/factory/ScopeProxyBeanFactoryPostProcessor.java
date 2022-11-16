@@ -4,6 +4,7 @@ import com.kfyty.boot.autoconfig.factory.ScopeProxyFactoryBean;
 import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.utils.ScopeUtil;
@@ -22,6 +23,7 @@ import static com.kfyty.core.utils.BeanUtil.SCOPE_PROXY_SOURCE_PREFIX;
  * @email kfyty725@hotmail.com
  */
 @Component
+@Order(Order.HIGHEST_PRECEDENCE)
 public class ScopeProxyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     @Autowired
     protected FactoryBeanBeanFactoryPostProcessor factoryBeanBeanFactoryPostProcessor;

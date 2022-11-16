@@ -11,9 +11,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
+import static com.kfyty.core.utils.CommonUtil.processPlaceholder;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -35,6 +36,11 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     protected Integer readTimeout;
 
     /**
+     * payload
+     */
+    protected byte[] payload;
+
+    /**
      * 请求头
      */
     protected Map<String, String> headers;
@@ -50,9 +56,19 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     protected Map<String, String> query;
 
     /**
+     * URL 路径参数
+     */
+    protected Map<String, String> path;
+
+    /**
      * cookie
      */
     protected List<HttpCookie> cookies;
+
+    /**
+     * {@link HttpCookie#version}
+     */
+    protected int cookieVersion = 0;
 
     /**
      * 代理
@@ -75,6 +91,23 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
         return (T) this;
     }
 
+    @SuppressWarnings("unchecked")
+    public T setPayload(byte[] payload) {
+        this.payload = payload;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T setCookieVersion(int cookieVersion) {
+        this.cookieVersion = cookieVersion;
+        return (T) this;
+    }
+
+    @Override
+    public byte[] payload() {
+        return this.payload;
+    }
+
     public T addHeader(String key, String value) {
         return this.addParameter(key, value, this.headers, non -> this.headers = new HashMap<>());
     }
@@ -85,12 +118,16 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
 
     @SuppressWarnings("unchecked")
     public T addFormData(Object data) {
-        BeanUtil.beanToMap(Objects.requireNonNull(data), false, true).forEach(this::addFormData);
+        BeanUtil.beanToMap(requireNonNull(data), false, true).forEach(this::addFormData);
         return (T) this;
     }
 
     public T addQuery(String key, Object value) {
         return this.addParameter(key, value, this.query, non -> this.query = new LinkedHashMap<>());
+    }
+
+    public T addPath(String key, Object value) {
+        return this.addParameter(key, value, this.path, non -> this.path = new LinkedHashMap<>());
     }
 
     public T addCookie(String key, String value) {
@@ -102,7 +139,8 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
         if (this.cookies == null) {
             this.cookies = new ArrayList<>();
         }
-        this.cookies.add(Objects.requireNonNull(cookie));
+        requireNonNull(cookie).setVersion(this.cookieVersion);
+        this.cookies.add(cookie);
         return (T) this;
     }
 
@@ -172,7 +210,7 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
      * @return url
      */
     public String getEncodeQueryURL() {
-        UrlBuilder builder = UrlBuilder.of(this.requestURL());
+        UrlBuilder builder = UrlBuilder.of(processPlaceholder(this.requestURL(), ofNullable(this.path).orElseGet(Collections::emptyMap)));
         ofNullable(this.query).orElse(Collections.emptyMap()).forEach(builder::addQuery);
         return builder.toString();
     }

@@ -84,6 +84,15 @@ public interface HttpRequest<T extends HttpRequest<T>> {
     }
 
     /**
+     * 请求数据
+     *
+     * @return 请求数据
+     */
+    default byte[] payload() {
+        return null;
+    }
+
+    /**
      * GET 请求参数
      *
      * @return 请求参数

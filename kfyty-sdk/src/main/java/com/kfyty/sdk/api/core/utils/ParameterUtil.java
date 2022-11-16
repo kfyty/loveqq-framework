@@ -1,9 +1,9 @@
 package com.kfyty.sdk.api.core.utils;
 
+import cn.hutool.core.util.ReflectUtil;
 import com.kfyty.sdk.api.core.ParameterConverter;
 import com.kfyty.sdk.api.core.annotation.Parameter;
 import com.kfyty.sdk.api.core.exception.ApiException;
-import com.kfyty.core.utils.ReflectUtil;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -44,10 +44,11 @@ public abstract class ParameterUtil {
         return isNotBlank(parameter.defaultValue()) ? Optional.of(parameter.defaultValue()) : Optional.empty();
     }
 
+    @SuppressWarnings("unchecked")
     public static String parameterConvert(Parameter parameter, Object value) {
         if (parameter == null || parameter.converter().equals(ParameterConverter.class)) {
             return value.toString();
         }
-        return ReflectUtil.newInstance(parameter.converter()).doConvert(value);
+        return ReflectUtil.newInstance(parameter.converter()).doConvert(value).toString();
     }
 }
