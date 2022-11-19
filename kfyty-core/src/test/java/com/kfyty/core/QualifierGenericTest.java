@@ -1,4 +1,4 @@
-package com.kfyty.support;
+package com.kfyty.core;
 
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.generic.QualifierGeneric;
