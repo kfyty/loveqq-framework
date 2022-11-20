@@ -1,6 +1,8 @@
 package com.kfyty.core;
 
 import com.kfyty.core.lang.LinkedArrayList;
+import com.kfyty.core.utils.CommonUtil;
+import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 /**
  * 描述:
@@ -86,5 +92,95 @@ public class LinkedArrayListTest {
             list2.remove(index);
             Assert.assertEquals(list1, list2);
         }
+    }
+
+    @Test
+    @SneakyThrows
+    public void performanceTest() {
+        int retry = 100;
+        int count = 1000000;
+        // Supplier<List<Integer>> list = () -> new LinkedList<>();
+        Supplier<List<Integer>> list = () -> new ArrayList<>(count / 200);
+        // Supplier<List<Integer>> list = () -> new LinkedArrayList<>(count / 200);
+        CountDownLatch latch = new CountDownLatch(3);
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        executorService.execute(this.addFirstPerformanceTest(retry, count, list, latch));
+        executorService.execute(this.addLastPerformanceTest(retry, count, list, latch));
+        executorService.execute(this.addRandomPerformanceTest(retry, count, list, latch));
+        latch.await();
+    }
+
+    private Runnable addFirstPerformanceTest(int retry, int count, Supplier<List<Integer>> list, CountDownLatch latch) {
+        return () -> {
+            try {
+                List<Long> time = new ArrayList<>();
+                for (int i = 0; i < retry; i++) {
+                    List<Integer> testList = list.get();
+                    long start = System.currentTimeMillis();
+                    for (int j = 0; j < count; j++) {
+                        testList.add(0, j);
+                    }
+                    time.add(System.currentTimeMillis() - start);
+                }
+                System.out.println(CommonUtil.format("{}: addFirst:{} min:{} ms, max:{} ms, avg: {} ms",
+                        list.get().getClass().getSimpleName(),
+                        count,
+                        time.stream().mapToLong(e -> e).min().getAsLong(),
+                        time.stream().mapToLong(e -> e).max().getAsLong(),
+                        time.stream().mapToLong(e -> e).average().getAsDouble()));
+            } finally {
+                latch.countDown();
+            }
+        };
+    }
+
+    private Runnable addLastPerformanceTest(int retry, int count, Supplier<List<Integer>> list, CountDownLatch latch) {
+        return () -> {
+            try {
+                List<Long> time = new ArrayList<>();
+                for (int i = 0; i < retry; i++) {
+                    List<Integer> testList = list.get();
+                    long start = System.currentTimeMillis();
+                    for (int j = 0; j < count; j++) {
+                        testList.add(j);
+                    }
+                    time.add(System.currentTimeMillis() - start);
+                }
+                System.out.println(CommonUtil.format("{}: addLast:{} min:{} ms, max:{} ms, avg: {} ms",
+                        list.get().getClass().getSimpleName(),
+                        count,
+                        time.stream().mapToLong(e -> e).min().getAsLong(),
+                        time.stream().mapToLong(e -> e).max().getAsLong(),
+                        time.stream().mapToLong(e -> e).average().getAsDouble()));
+            } finally {
+                latch.countDown();
+            }
+        };
+    }
+
+    private Runnable addRandomPerformanceTest(int retry, int count, Supplier<List<Integer>> list, CountDownLatch latch) {
+        return () -> {
+            try {
+                Random random = new Random();
+                List<Long> time = new ArrayList<>();
+                for (int i = 0; i < retry; i++) {
+                    List<Integer> testList = list.get();
+                    testList.add(0);
+                    long start = System.currentTimeMillis();
+                    for (int j = 0; j < count; j++) {
+                        testList.add(random.nextInt(testList.size()), j);
+                    }
+                    time.add(System.currentTimeMillis() - start);
+                }
+                System.out.println(CommonUtil.format("{}: addRandom:{} min:{} ms, max:{} ms, avg: {} ms",
+                        list.get().getClass().getSimpleName(),
+                        count,
+                        time.stream().mapToLong(e -> e).min().getAsLong(),
+                        time.stream().mapToLong(e -> e).max().getAsLong(),
+                        time.stream().mapToLong(e -> e).average().getAsDouble()));
+            } finally {
+                latch.countDown();
+            }
+        };
     }
 }
