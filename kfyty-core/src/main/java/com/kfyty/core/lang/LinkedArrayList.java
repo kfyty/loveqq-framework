@@ -41,6 +41,11 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
      */
     private transient LinkedArrayNode root;
 
+    /**
+     * 尾节点
+     */
+    private transient LinkedArrayNode tail;
+
     public LinkedArrayList() {
         this(MIN_CAPACITY);
     }
@@ -48,13 +53,16 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     public LinkedArrayList(int capacity) {
         super();
         this.size = 0;
-        this.capacity = Math.max(capacity, MIN_CAPACITY);
-        this.root = new LinkedArrayNode();
+        this.capacity = capacity;
+        this.root = this.tail = new LinkedArrayNode();
     }
 
     public LinkedArrayList(Collection<E> collections) {
-        this();
-        this.addAll(collections);
+        Object[] elements = collections.toArray();
+        this.size = elements.length;
+        this.capacity = MIN_CAPACITY;
+        this.root = this.tail = new LinkedArrayNode(this.size);
+        System.arraycopy(elements, 0, this.root.element, 0, this.size);
     }
 
     @Override
@@ -75,17 +83,27 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public E get(int index) {
+        if (index == this.size() - 1) {
+            return this.tail.get(this.tail.nodeSize - 1);
+        }
         return this.root.get(index);
     }
 
     @Override
     public E set(int index, E element) {
+        if (index == this.size() - 1) {
+            return this.tail.set(this.tail.nodeSize - 1, element);
+        }
         return this.root.set(index, element);
     }
 
     @Override
     public void add(int index, E element) {
-        this.root.add(index, element);
+        if (index == this.size()) {
+            this.tail.add(this.tail.nodeSize, element);
+        } else {
+            this.root.add(index, element);
+        }
         this.size++;
     }
 
@@ -99,9 +117,10 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         this.size = s.readInt();
-        this.root = new LinkedArrayNode(size);
+        this.root = this.tail = new LinkedArrayNode(size);
+        Object[] element = this.root.element;
         for (int i = 0; i < size; i++) {
-            this.root.element[i] = s.readObject();
+            element[i] = s.readObject();
         }
         this.root.nodeSize = this.size;
     }
@@ -109,7 +128,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
         s.writeInt(size);
-        LinkedArrayNode node = root;
+        LinkedArrayNode node = this.root;
         while (node != null) {
             for (int i = 0; i < node.nodeSize; i++) {
                 s.writeObject(node.element[i]);
@@ -210,7 +229,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
         @SuppressWarnings("unchecked")
         protected E get(int index) {
-            this.checkRange(index);
+            this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
                 return this.next == null ? null : this.next.get(index - nodeSize);
             }
@@ -219,7 +238,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
         @SuppressWarnings("unchecked")
         protected E set(int index, E e) {
-            this.checkRange(index);
+            this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
                 return this.next.set(index - nodeSize, e);
             }
@@ -230,7 +249,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
         @SuppressWarnings("unchecked")
         protected E remove(int index) {
-            this.checkRange(index);
+            this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
                 return this.next == null ? null : this.next.remove(index - nodeSize);
             }
@@ -272,15 +291,37 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             }
         }
 
+        /**
+         * 索引范围检查
+         *
+         * @param index 索引
+         */
         private void checkRange(int index) {
-            if (index < 0 || index > size()) {
-                throw new ArrayIndexOutOfBoundsException("Size: " + size() + ", index: " + index);
+            this.checkRange(index, size());
+        }
+
+        /**
+         * 索引范围检查
+         *
+         * @param index 索引
+         * @param limit 最大限制
+         */
+        private void checkRange(int index, int limit) {
+            if (index < 0 || index > limit) {
+                throw new ArrayIndexOutOfBoundsException("Size: " + limit + ", index: " + index);
             }
         }
 
+        /**
+         * 当前节点大小大于等于最大容量，尝试创建新的节点
+         * 1、如果 next 为空，则直接创建新的数组节点
+         * 2、如果 next 不为空并且容量已满，则将 next 的全部元素后移一位
+         * 3、如果 next 不为空并且容量未满，则创建新的数组节点插入其后
+         * 4、将当前元素的最后一个元素移动到 next 的第一位元素
+         */
         private void newNextIfNecessary() {
             if (this.next == null) {
-                this.next = new LinkedArrayNode();
+                LinkedArrayList.this.tail = this.next = new LinkedArrayNode();
             } else if (next.nodeSize < capacity) {
                 System.arraycopy(next.element, 0, next.element, 1, next.nodeSize);
             } else {
@@ -292,17 +333,35 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             this.next.nodeSize++;
         }
 
+        /**
+         * 如果插入索引位置大于等于节点大小，则尝试添加到下一个节点
+         * 1、如果当前节点未满并且索引在最大容量范围内，则尝试左移元素，并直接返回
+         * 2、否则如果 next 为空，则创建新的数组节点
+         * 3、调用 next.add() 插入元素
+         *
+         * @param index 索引
+         * @param e     元素
+         */
         private void addToNextIfNecessary(int index, E e) {
             if (this.nodeSize < capacity && index < capacity) {
                 this.shiftLeft(index, e);
                 return;
             }
             if (this.next == null) {
-                this.next = new LinkedArrayNode();
+                LinkedArrayList.this.tail = this.next = new LinkedArrayNode();
             }
             this.next.add(index - nodeSize, e);
         }
 
+        /**
+         * 尝试左移元素
+         * 1、如果 next 为空，则无需左移，直接添加即可
+         * 2、计算需要左移的元素数量，如果 next 节点大小小于左移的元素数量，则无需左移，直接调用 next.add() 添加即可
+         * 3、需要左移，执行左移，并将该元素插入当前节点最后的位置
+         *
+         * @param index 索引
+         * @param e     元素
+         */
         private void shiftLeft(int index, E e) {
             if (this.next == null) {
                 this.element[nodeSize++] = e;
@@ -317,6 +376,13 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             this.element[nodeSize++] = e;
         }
 
+        /**
+         * 执行左移，即将 next 的前 move 个元素移动到当前节点
+         * 1、如果移动后的 next 节点大小小于等于 move，则说明 next 节点已空，直接移除 next 节点
+         * 2、否则将 next 节点剩余的元素移动到数组头部
+         *
+         * @param move 需要移动的元素数量
+         */
         private void doShiftLeft(int move) {
             System.arraycopy(next.element, 0, this.element, this.nodeSize, move);
             this.nodeSize += move;
