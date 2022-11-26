@@ -47,6 +47,8 @@ import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -103,9 +105,21 @@ public abstract class ReflectUtil {
         return load(className, true);
     }
 
-    public static Class<?> load(String className, boolean throwIfFailed) {
+    public static Class<?> load(String className, boolean initialize) {
+        return load(className, initialize, Thread.currentThread().getContextClassLoader());
+    }
+
+    public static Class<?> load(String className, boolean initialize, boolean throwIfFailed) {
+        return load(className, initialize, Thread.currentThread().getContextClassLoader(), throwIfFailed);
+    }
+
+    public static Class<?> load(String className, boolean initialize, ClassLoader classLoader) {
+        return load(className, initialize, classLoader, true);
+    }
+
+    public static Class<?> load(String className, boolean initialize, ClassLoader classLoader, boolean throwIfFailed) {
         try {
-            return Class.forName(className);
+            return Class.forName(className, initialize, classLoader);
         } catch (ClassNotFoundException e) {
             if (throwIfFailed) {
                 throw new SupportException("load class failed, class does not exist !", e);
@@ -116,12 +130,7 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isPresent(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return load(className, false, false) != null;
     }
 
     public static boolean isAbstract(Class<?> clazz) {
@@ -175,6 +184,7 @@ public abstract class ReflectUtil {
 
     /*--------------------------------------------- 创建实例相关方法 ---------------------------------------------*/
 
+    @SuppressWarnings("unchecked")
     public static <T> T newInstance(Class<T> clazz) {
         if (!isAbstract(clazz)) {
             return newInstance(searchSuitableConstructor(clazz));
@@ -194,11 +204,14 @@ public abstract class ReflectUtil {
         if (Collection.class.isAssignableFrom(clazz)) {
             return (T) new ArrayList<>();
         }
-        if (SortedMap.class.isAssignableFrom(clazz)) {
-            return (T) new TreeMap<>();
+        if (ConcurrentNavigableMap.class.isAssignableFrom(clazz)) {
+            return (T) new ConcurrentSkipListMap<>();
         }
         if (ConcurrentMap.class.isAssignableFrom(clazz)) {
             return (T) new ConcurrentHashMap<>();
+        }
+        if (SortedMap.class.isAssignableFrom(clazz)) {
+            return (T) new TreeMap<>();
         }
         if (Map.class.isAssignableFrom(clazz) && !Properties.class.isAssignableFrom(clazz)) {
             return (T) new HashMap<>();

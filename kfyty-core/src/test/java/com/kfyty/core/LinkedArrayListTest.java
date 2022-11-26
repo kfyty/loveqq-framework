@@ -2,10 +2,15 @@ package com.kfyty.core;
 
 import com.kfyty.core.lang.LinkedArrayList;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.IOUtil;
 import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,13 +30,27 @@ import java.util.function.Supplier;
 public class LinkedArrayListTest {
 
     @Test
+    @SneakyThrows
+    @SuppressWarnings("unchecked")
     public void test1() {
         List<Integer> list = new LinkedArrayList<>(3);
+        list.add(1);
+        list.remove(0);
         list.add(1);
         list.add(3);
         list.add(1, 2);
         list.add(0, 0);
         Assert.assertEquals(list, Arrays.asList(0, 1, 2, 3));
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream);
+        oos.writeObject(list);
+        IOUtil.close(oos);
+
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+        List<Integer> o = (List<Integer>) ois.readObject();
+        IOUtil.close(ois);
+        Assert.assertEquals(o, Arrays.asList(0, 1, 2, 3));
     }
 
     @Test
@@ -69,11 +88,14 @@ public class LinkedArrayListTest {
         list.add(0, 6);
         list.add(0, 7);
         Assert.assertEquals(list, Arrays.asList(7, 6, 5, 4, 3, 2, 1));
+        list.clear();
+        list.addAll(Arrays.asList(1, 2));
+        Assert.assertEquals(list, Arrays.asList(1, 2));
     }
 
     @Test
     public void test5() {
-        int count = 10000;
+        int count = 3000;
         Random random = new Random();
         List<Integer> list1 = new ArrayList<>();
         List<Integer> list2 = new LinkedArrayList<>();
@@ -98,10 +120,10 @@ public class LinkedArrayListTest {
     @SneakyThrows
     public void performanceTest() {
         int retry = 100;
-        int count = 1000000;
+        int count = 10000;
         // Supplier<List<Integer>> list = () -> new LinkedList<>();
-        Supplier<List<Integer>> list = () -> new ArrayList<>(count / 200);
-        // Supplier<List<Integer>> list = () -> new LinkedArrayList<>(count / 200);
+        // Supplier<List<Integer>> list = () -> new ArrayList<>(count / 200);
+        Supplier<List<Integer>> list = () -> new LinkedArrayList<>(count / 200);
         CountDownLatch latch = new CountDownLatch(3);
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         executorService.execute(this.addFirstPerformanceTest(retry, count, list, latch));
