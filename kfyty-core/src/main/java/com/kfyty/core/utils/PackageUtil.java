@@ -80,7 +80,7 @@ public abstract class PackageUtil {
             return result;
         }
         for (String clazz : classes) {
-            Optional.ofNullable(ReflectUtil.load(clazz, false)).ifPresent(result::add);
+            Optional.ofNullable(ReflectUtil.load(clazz, false, false)).ifPresent(result::add);
         }
         return result;
     }

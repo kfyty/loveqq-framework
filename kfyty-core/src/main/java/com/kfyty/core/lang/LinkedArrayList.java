@@ -6,11 +6,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.RandomAccess;
 
 /**
@@ -37,9 +37,9 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     private transient int size;
 
     /**
-     * 根节点
+     * 头节点
      */
-    private transient LinkedArrayNode root;
+    private transient LinkedArrayNode head;
 
     /**
      * 尾节点
@@ -54,15 +54,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
         super();
         this.size = 0;
         this.capacity = capacity;
-        this.root = this.tail = new LinkedArrayNode();
-    }
-
-    public LinkedArrayList(Collection<E> collections) {
-        Object[] elements = collections.toArray();
-        this.size = elements.length;
-        this.capacity = MIN_CAPACITY;
-        this.root = this.tail = new LinkedArrayNode(this.size);
-        System.arraycopy(elements, 0, this.root.element, 0, this.size);
+        this.head = this.tail = new LinkedArrayNode(capacity);
     }
 
     @Override
@@ -83,52 +75,115 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public E get(int index) {
-        if (index == this.size() - 1) {
-            return this.tail.get(this.tail.nodeSize - 1);
+        if (index < this.size / 2) {
+            return this.head.get(index, true);
         }
-        return this.root.get(index);
+        return this.tail.get(this.size - 1 - index, false);
     }
 
     @Override
     public E set(int index, E element) {
-        if (index == this.size() - 1) {
-            return this.tail.set(this.tail.nodeSize - 1, element);
+        if (index < this.size / 2) {
+            return this.head.set(index, element, true);
         }
-        return this.root.set(index, element);
+        return this.tail.set(this.size - 1 - index, element, false);
     }
 
     @Override
     public void add(int index, E element) {
-        if (index == this.size()) {
+        if (index == this.size) {
             this.tail.add(this.tail.nodeSize, element);
         } else {
-            this.root.add(index, element);
+            this.head.add(index, element);
         }
         this.size++;
     }
 
     @Override
     public E remove(int index) {
-        E remove = this.root.remove(index);
-        size--;
+        E remove = index < this.size / 2
+                ? this.head.remove(index, true)
+                : this.tail.remove(size - 1 - index, false);
+        this.size--;
         return remove;
     }
 
+    @Override
+    public int indexOf(Object o) {
+        int index = -1;
+        for (E e : this) {
+            index++;
+            if (o == null && e == null || o != null && o.equals(e)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public int lastIndexOf(Object o) {
+        int index = this.size();
+        LinkedArrayNode node = this.tail;
+        while (node != null) {
+            for (int i = node.nodeSize - 1; i > -1; i--) {
+                index--;
+                E e = (E) node.element[i];
+                if (o == null && e == null || o != null && o.equals(e)) {
+                    return index;
+                }
+            }
+            node = node.prior;
+        }
+        return -1;
+    }
+
+    @Override
+    public void clear() {
+        LinkedArrayNode node = this.head;
+        while (node != null) {
+            node.nodeSize = 0;
+            Arrays.fill(node.element, null);
+            LinkedArrayNode next = node.next;
+            node.next = node.prior = null;
+            node = next;
+        }
+        this.size = 0;
+        this.tail = this.head;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof List)) {
+            return false;
+        }
+        Iterator<?> self = this.iterator();
+        Iterator<?> other = ((List<?>) o).iterator();
+        while (self.hasNext() && other.hasNext()) {
+            if (!Objects.equals(self.next(), other.next())) {
+                return false;
+            }
+        }
+        return !(self.hasNext() || other.hasNext());
+    }
+
+    @SuppressWarnings("unchecked")
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
-        this.size = s.readInt();
-        this.root = this.tail = new LinkedArrayNode(size);
-        Object[] element = this.root.element;
-        for (int i = 0; i < size; i++) {
-            element[i] = s.readObject();
+        this.size = 0;
+        this.head = this.tail = new LinkedArrayNode(this.capacity);
+        for (int i = 0, count = s.readInt(); i < count; i++) {
+            this.add((E) s.readObject());
         }
-        this.root.nodeSize = this.size;
     }
 
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
-        s.writeInt(size);
-        LinkedArrayNode node = this.root;
+        s.writeInt(this.size);
+        LinkedArrayNode node = this.head;
         while (node != null) {
             for (int i = 0; i < node.nodeSize; i++) {
                 s.writeObject(node.element[i]);
@@ -163,7 +218,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
         Iter() {
             this.curSize = LinkedArrayList.this.size;
-            this.curNode = LinkedArrayList.this.root;
+            this.curNode = LinkedArrayList.this.head;
         }
 
         @Override
@@ -193,7 +248,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
         @Override
         public void remove() {
             this.cursor--;
-            curNode.remove(--curNodeCursor);
+            curNode.remove(--curNodeCursor, true);
             this.curSize--;
             LinkedArrayList.this.size--;
         }
@@ -214,50 +269,71 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
         int nodeSize;
 
         /**
-         * 下一个节点
+         * 前驱节点
+         */
+        LinkedArrayNode prior;
+
+        /**
+         * 后继节点
          */
         LinkedArrayNode next;
-
-        LinkedArrayNode() {
-            this(capacity);
-        }
 
         LinkedArrayNode(int capacity) {
             this.nodeSize = 0;
             this.element = new Object[capacity];
         }
 
+        LinkedArrayNode(LinkedArrayNode prior) {
+            this(capacity);
+            this.prior = prior;
+        }
+
         @SuppressWarnings("unchecked")
-        protected E get(int index) {
+        protected E get(int index, boolean fromHead) {
             this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
-                return this.next == null ? null : this.next.get(index - nodeSize);
+                if (fromHead) {
+                    return this.next == null ? null : this.next.get(index - nodeSize, true);
+                }
+                return this.prior == null ? null : this.prior.get(index - nodeSize, false);
             }
+            index = reviseIndex(index, fromHead);
             return (E) this.element[index];
         }
 
         @SuppressWarnings("unchecked")
-        protected E set(int index, E e) {
+        protected E set(int index, E e, boolean fromHead) {
             this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
-                return this.next.set(index - nodeSize, e);
+                if (fromHead) {
+                    return this.next.set(index - nodeSize, e, true);
+                }
+                return this.prior.set(index - nodeSize, e, false);
             }
+            index = reviseIndex(index, fromHead);
             E result = (E) element[index];
             element[index] = e;
             return result;
         }
 
         @SuppressWarnings("unchecked")
-        protected E remove(int index) {
+        protected E remove(int index, boolean fromHead) {
             this.checkRange(index, size() - 1);
             if (index >= nodeSize) {
-                return this.next == null ? null : this.next.remove(index - nodeSize);
+                if (fromHead) {
+                    return this.next == null ? null : this.next.remove(index - nodeSize, true);
+                }
+                return this.prior == null ? null : this.prior.remove(index - nodeSize, false);
             }
+            index = reviseIndex(index, fromHead);
             E result = (E) element[index];
             if (index < nodeSize - 1) {
                 System.arraycopy(element, index + 1, element, index, nodeSize - 1 - index);
             }
             element[--nodeSize] = null;
+            if (this.nodeSize == 0) {
+                this.removeNode(this);
+            }
             return result;
         }
 
@@ -308,25 +384,60 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
          */
         private void checkRange(int index, int limit) {
             if (index < 0 || index > limit) {
-                throw new ArrayIndexOutOfBoundsException("Size: " + limit + ", index: " + index);
+                throw new ArrayIndexOutOfBoundsException("Size: " + size() + ", index: " + index);
             }
+        }
+
+        /**
+         * 修正索引值
+         *
+         * @param index    正向索引值
+         * @param fromHead 是否正向搜索
+         * @return 修正后的索引值
+         */
+        private int reviseIndex(int index, boolean fromHead) {
+            return fromHead ? index : this.nodeSize - 1 - index;
+        }
+
+        /**
+         * 移除节点
+         *
+         * @param node 节点
+         */
+        private void removeNode(LinkedArrayNode node) {
+            if (node.prior == null) {
+                if (node.next == null) {
+                    return;
+                }
+                node.next.prior = null;
+                LinkedArrayList.this.head = node.next;
+                return;
+            }
+            if (node.next == null) {
+                LinkedArrayList.this.tail = node.prior;
+                node.prior.next = null;
+                return;
+            }
+            node.prior.next = node.next;
+            node.next.prior = node.prior;
         }
 
         /**
          * 当前节点大小大于等于最大容量，尝试创建新的节点
          * 1、如果 next 为空，则直接创建新的数组节点
-         * 2、如果 next 不为空并且容量已满，则将 next 的全部元素后移一位
-         * 3、如果 next 不为空并且容量未满，则创建新的数组节点插入其后
+         * 2、如果 next 不为空并且容量未满，则将 next 的全部元素后移一位
+         * 3、如果 next 不为空并且容量已满，则创建新的数组节点插入其后
          * 4、将当前元素的最后一个元素移动到 next 的第一位元素
          */
         private void newNextIfNecessary() {
             if (this.next == null) {
-                LinkedArrayList.this.tail = this.next = new LinkedArrayNode();
+                LinkedArrayList.this.tail = this.next = new LinkedArrayNode(this);
             } else if (next.nodeSize < capacity) {
                 System.arraycopy(next.element, 0, next.element, 1, next.nodeSize);
             } else {
-                LinkedArrayNode temp = new LinkedArrayNode();
+                LinkedArrayNode temp = new LinkedArrayNode(this);
                 temp.next = this.next;
+                this.next.prior = temp;
                 this.next = temp;
             }
             this.next.element[0] = this.element[nodeSize - 1];
@@ -348,7 +459,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
                 return;
             }
             if (this.next == null) {
-                LinkedArrayList.this.tail = this.next = new LinkedArrayNode();
+                LinkedArrayList.this.tail = this.next = new LinkedArrayNode(this);
             }
             this.next.add(index - nodeSize, e);
         }
@@ -389,6 +500,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             if (next.nodeSize <= move) {
                 Arrays.fill(next.element, 0, next.nodeSize, null);
                 this.next = this.next.next;
+                this.next.prior = this;
                 return;
             }
             System.arraycopy(next.element, move, next.element, 0, next.nodeSize - move);

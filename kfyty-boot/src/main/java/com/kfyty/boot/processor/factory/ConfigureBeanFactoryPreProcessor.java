@@ -64,7 +64,7 @@ public class ConfigureBeanFactoryPreProcessor implements InstantiationAwareBeanP
         Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
         for (String className : factories) {
             if (!this.excludeQualifierAutoConfigNames.contains(className)) {
-                Optional.ofNullable(ReflectUtil.load(className, false)).ifPresent(e -> this.processScanBean(e, true));
+                Optional.ofNullable(ReflectUtil.load(className, false, false)).ifPresent(e -> this.processScanBean(e, true));
             }
         }
     }
