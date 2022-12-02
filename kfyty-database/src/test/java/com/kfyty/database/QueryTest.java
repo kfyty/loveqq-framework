@@ -1,6 +1,7 @@
 package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
 import com.kfyty.database.jdbc.session.Configuration;
@@ -8,7 +9,6 @@ import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
 import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.vo.UserVo;
-import com.kfyty.core.utils.PropertiesUtil;
 import org.junit.Before;
 import org.junit.Test;
 

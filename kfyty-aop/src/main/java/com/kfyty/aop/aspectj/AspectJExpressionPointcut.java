@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.kfyty.aop.utils.AspectJAnnotationUtil.findAspectExpression;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: aspectj 表达式切入点
@@ -61,7 +63,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
     public AspectJExpressionPointcut(Class<?> aspectClass, Method aspectMethod) {
         this.aspectClass = aspectClass;
         this.aspectMethod = aspectMethod;
-        this.expression = Optional.ofNullable(AspectJAnnotationUtil.findAspectExpression(this.aspectMethod)).orElseThrow(() -> new IllegalArgumentException("pointcut expression can't empty"));
+        this.expression = ofNullable(findAspectExpression(this.aspectMethod)).orElseThrow(() -> new IllegalArgumentException("pointcut expression can't empty"));
         this.argNames = this.buildArgumentNames();
         this.parameterTypes = this.buildParameterTypes();
         this.shadowMatchCache = new ConcurrentHashMap<>();
@@ -92,7 +94,17 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
         return this.getShadowMatch(method).alwaysMatches();
     }
 
-    private String[] buildArgumentNames() {
+    protected PointcutParameter[] buildPointcutParameters(PointcutParser pointcutParser) {
+        PointcutParameter[] pointcutParameters = new PointcutParameter[this.argNames.length];
+        for (int i = 0; i < argNames.length; i++) {
+            String argName = argNames[i];
+            Class<?> parameterType = parameterTypes[i];
+            pointcutParameters[i] = pointcutParser.createPointcutParameter(argName, parameterType);
+        }
+        return pointcutParameters;
+    }
+
+    protected String[] buildArgumentNames() {
         String[] argNames = AspectJAnnotationUtil.findArgNames(this.aspectMethod);
         Class<?>[] parameterTypes = this.aspectMethod.getParameterTypes();
         if (CommonUtil.empty(argNames) && parameterTypes.length == 1 && JoinPoint.class.isAssignableFrom(parameterTypes[0])) {
@@ -102,14 +114,12 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
             throw new IllegalArgumentException("the length of the arg names and the length of the parameter types are inconsistent");
         }
         List<String> result = new ArrayList<>();
+        AfterReturning afterReturning = AnnotationUtil.findAnnotation(this.aspectMethod, AfterReturning.class);
+        AfterThrowing afterThrowing = AnnotationUtil.findAnnotation(this.aspectMethod, AfterThrowing.class);
         for (int i = 0; i < argNames.length; i++) {
-            AfterReturning afterReturning = AnnotationUtil.findAnnotation(this.aspectMethod, AfterReturning.class);
-            AfterThrowing afterThrowing = AnnotationUtil.findAnnotation(this.aspectMethod, AfterThrowing.class);
-
             if (afterReturning != null && afterReturning.returning().equals(argNames[i]) || afterThrowing != null && afterThrowing.throwing().equals(argNames[i])) {
                 continue;
             }
-
             if (!JoinPoint.class.isAssignableFrom(parameterTypes[i])) {
                 result.add(argNames[i]);
             }
@@ -117,31 +127,19 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
         return result.toArray(new String[0]);
     }
 
-    private Class<?>[] buildParameterTypes() {
+    protected Class<?>[] buildParameterTypes() {
         List<Class<?>> parameterTypes = new ArrayList<>();
+        AfterReturning afterReturning = AnnotationUtil.findAnnotation(this.aspectMethod, AfterReturning.class);
+        AfterThrowing afterThrowing = AnnotationUtil.findAnnotation(this.aspectMethod, AfterThrowing.class);
         for (Parameter parameter : this.aspectMethod.getParameters()) {
             String parameterName = parameter.getName();
-            AfterReturning afterReturning = AnnotationUtil.findAnnotation(this.aspectMethod, AfterReturning.class);
-            AfterThrowing afterThrowing = AnnotationUtil.findAnnotation(this.aspectMethod, AfterThrowing.class);
-
             if (afterReturning != null && afterReturning.returning().equals(parameterName) || afterThrowing != null && afterThrowing.throwing().equals(parameterName)) {
                 continue;
             }
-
             if (!JoinPoint.class.isAssignableFrom(parameter.getType())) {
                 parameterTypes.add(parameter.getType());
             }
         }
-        return parameterTypes.toArray(new Class[0]);
-    }
-
-    private PointcutParameter[] buildPointcutParameters(PointcutParser pointcutParser) {
-        PointcutParameter[] pointcutParameters = new PointcutParameter[this.argNames.length];
-        for (int i = 0; i < argNames.length; i++) {
-            String argName = argNames[i];
-            Class<?> parameterType = parameterTypes[i];
-            pointcutParameters[i] = pointcutParser.createPointcutParameter(argName, parameterType);
-        }
-        return pointcutParameters;
+        return parameterTypes.toArray(CommonUtil.EMPTY_CLASS_ARRAY);
     }
 }

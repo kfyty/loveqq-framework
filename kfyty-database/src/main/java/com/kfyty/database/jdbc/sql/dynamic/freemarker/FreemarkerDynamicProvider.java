@@ -37,7 +37,7 @@ import static com.kfyty.core.utils.XmlUtil.resolveAttribute;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
 public class FreemarkerDynamicProvider extends AbstractDynamicProvider<FreemarkerTemplateStatement> {
-    private freemarker.template.Configuration freemarkerConfiguration;
+    protected freemarker.template.Configuration freemarkerConfiguration;
 
     @Override
     public List<FreemarkerTemplateStatement> resolve(List<String> paths) {
@@ -61,7 +61,7 @@ public class FreemarkerDynamicProvider extends AbstractDynamicProvider<Freemarke
         return sql.replaceAll(BLANK_LINE_PATTERN.pattern(), "").trim();
     }
 
-    private List<FreemarkerTemplateStatement> resolve(String namespace, String labelType, NodeList nodeList) {
+    protected List<FreemarkerTemplateStatement> resolve(String namespace, String labelType, NodeList nodeList) {
         List<FreemarkerTemplateStatement> templateStatements = new ArrayList<>(nodeList.getLength());
         for (int i = 0; i < nodeList.getLength(); i++) {
             Element element = (Element) nodeList.item(i);

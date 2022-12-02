@@ -56,7 +56,7 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         if (applicationContext == null) {
             return;
         }
-        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions();
+        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions(true);
         for (String beanName : beanDefinitions.keySet()) {
             Object bean = this.applicationContext.getBean(beanName);
             for (Method executeMethod : ReflectUtil.getMethods(bean.getClass())) {

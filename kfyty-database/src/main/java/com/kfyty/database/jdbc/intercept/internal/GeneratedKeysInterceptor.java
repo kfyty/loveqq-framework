@@ -45,13 +45,13 @@ public class GeneratedKeysInterceptor implements Interceptor {
     private static final Predicate<Method> INSERT_METHOD_PREDICATE = method -> method.equals(INSERT) || method.equals(INSERT_BATCH);
 
     @Override
-    public Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    public Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
         if (!INSERT_METHOD_PREDICATE.test(chain.getMapperMethod().getMethod())) {
             return chain.proceed();
         }
         try {
             Connection connection = TransactionHolder.currentTransaction().getConnection();
-            chain.setPreparedStatement(JdbcUtil.getPreparedStatement(connection, sql.get(), (c, s) -> JdbcUtil.preparedStatement(c, s, Statement.RETURN_GENERATED_KEYS), parameters.toArray(new MethodParameter[0])));
+            chain.setPreparedStatement(JdbcUtil.getPreparedStatement(connection, sql.get(), (c, s) -> JdbcUtil.preparedStatement(c, s, Statement.RETURN_GENERATED_KEYS), parameters));
             return chain.proceed();
         } catch (SQLException e) {
             throw new ExecuteInterceptorException(e);
@@ -59,7 +59,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
     }
 
     @Override
-    public Object intercept(PreparedStatement ps, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    public Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
         if (!INSERT_METHOD_PREDICATE.test(chain.getMapperMethod().getMethod())) {
             return chain.proceed();
         }
@@ -83,7 +83,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
     }
 
     private void processGeneratedKeys(PreparedStatement ps, Field pkField, Object[] params) {
-        try(ResultSet generatedKeys = ps.getGeneratedKeys()) {
+        try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
             int index = 0;
             List<?> list = ResultSetUtil.processListBaseType(generatedKeys, pkField.getType());
             for (Object param : params) {

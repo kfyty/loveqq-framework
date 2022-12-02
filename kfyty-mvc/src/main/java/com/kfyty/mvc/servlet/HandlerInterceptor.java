@@ -19,6 +19,6 @@ public interface HandlerInterceptor {
     default void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, Object retValue) throws Exception {
     }
 
-    default void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    default void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Throwable ex) throws Exception {
     }
 }

@@ -12,8 +12,20 @@ import java.lang.reflect.Method;
  * @email kfyty725@hotmail.com
  */
 public interface MethodMatcher {
-
+    /**
+     * {@link ShadowMatch}
+     *
+     * @param method 要匹配的方法
+     * @return {@link ShadowMatch}
+     */
     ShadowMatch getShadowMatch(Method method);
 
+    /**
+     * 方法是否匹配
+     *
+     * @param method      要匹配的方法
+     * @param targetClass 方法所在的类
+     * @return true if match
+     */
     boolean matches(Method method, Class<?> targetClass);
 }

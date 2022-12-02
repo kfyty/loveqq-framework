@@ -55,9 +55,21 @@ public interface DynamicProvider<TS extends TemplateStatement> {
      *
      * @param mapperClass  mapper class
      * @param mapperMethod 代理方法
-     * @param annotation   主机恩
      * @param params       方法参数
      * @return SQL
      */
-    String doProvide(Class<?> mapperClass, Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params);
+    String doProvide(Class<?> mapperClass, Method mapperMethod, Map<String, MethodParameter> params);
+
+    /**
+     * 提供动态 SQL 入口
+     *
+     * @param mapperClass  mapper class
+     * @param mapperMethod 代理方法
+     * @param annotation   方法注解
+     * @param params       方法参数
+     * @return SQL
+     */
+    default String doProvide(Class<?> mapperClass, Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
+        return this.doProvide(mapperClass, mapperMethod, params);
+    }
 }

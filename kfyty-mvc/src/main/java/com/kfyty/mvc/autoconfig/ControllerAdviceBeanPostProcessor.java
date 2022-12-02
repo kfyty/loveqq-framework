@@ -57,7 +57,7 @@ public class ControllerAdviceBeanPostProcessor extends AbstractProxyCreatorProce
         }
         this.controllerAdviceAnnotations = new LinkedList<>();
         this.controllerAdviceBasePackages = new LinkedList<>();
-        Map<String, BeanDefinition> controllerBeanDefinitionAdvices = this.applicationContext.getBeanDefinitionWithAnnotation(ControllerAdvice.class);
+        Map<String, BeanDefinition> controllerBeanDefinitionAdvices = this.applicationContext.getBeanDefinitionWithAnnotation(ControllerAdvice.class, true);
         for (BeanDefinition adviceBeanDefinition : controllerBeanDefinitionAdvices.values()) {
             Annotation annotation = AnnotationUtil.findAnnotation(adviceBeanDefinition.getBeanType(), ControllerAdvice.class);
             if (annotation == null) {

@@ -100,7 +100,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
         }
         this.hasResolveAspect = true;
         AspectJFactory aspectJFactory = advice -> this.applicationContext.getBean(((AbstractAspectJAdvice) advice).getAspectName());
-        Collection<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class).values();
+        Collection<BeanDefinition> aspectJAnnotationBeanDefinition = this.applicationContext.getBeanDefinitionWithAnnotation(Aspect.class, true).values();
         for (BeanDefinition beanDefinition : aspectJAnnotationBeanDefinition) {
             AspectClass aspectClass = new AspectClass(beanDefinition.getBeanName(), beanDefinition.getBeanType());
             this.aspectAdvisor.addAll(this.advisorCreator.createAdvisor(aspectJFactory, aspectClass));

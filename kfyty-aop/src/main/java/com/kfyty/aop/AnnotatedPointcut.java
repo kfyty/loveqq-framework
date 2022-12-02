@@ -10,5 +10,10 @@ import java.lang.annotation.Annotation;
  * @email kfyty725@hotmail.com
  */
 public interface AnnotatedPointcut extends Pointcut {
+    /**
+     * 获取切入点注解
+     *
+     * @return 切入点注解
+     */
     Class<? extends Annotation> annotationType();
 }

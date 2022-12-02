@@ -8,5 +8,10 @@ package com.kfyty.aop;
  * @email kfyty725@hotmail.com
  */
 public interface PointcutAdvisor extends Advisor {
+    /**
+     * 获取切入点
+     *
+     * @return 切入点
+     */
     Pointcut getPointcut();
 }

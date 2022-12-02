@@ -115,10 +115,22 @@ public class MethodParameter {
         this.value = value;
     }
 
+    /**
+     * 获取方法参数名称
+     *
+     * @return 参数名称
+     */
     public String getParameterName() {
         return this.parameter.getName();
     }
 
+    /**
+     * 获取方法参数名称，优先从提供者中获取
+     *
+     * @param annotation 方法参数注解
+     * @param mapping    参数名称提供者
+     * @return 参数名称
+     */
     public <A extends Annotation> String getParameterName(A annotation, Function<A, String> mapping) {
         String declaringName = annotation == null ? null : mapping.apply(annotation);
         return CommonUtil.notEmpty(declaringName) ? declaringName : this.getParameterName();

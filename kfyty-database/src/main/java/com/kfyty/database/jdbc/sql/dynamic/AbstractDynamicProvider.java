@@ -1,11 +1,10 @@
 package com.kfyty.database.jdbc.sql.dynamic;
 
+import com.kfyty.core.method.MethodParameter;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
-import com.kfyty.core.method.MethodParameter;
 import lombok.Data;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +18,7 @@ import java.util.Map;
  */
 @Data
 public abstract class AbstractDynamicProvider<TS extends TemplateStatement> implements DynamicProvider<TS> {
-    private Configuration configuration;
+    protected Configuration configuration;
 
     @Override
     public String resolveTemplateStatementId(Class<?> mapperClass, Method mapperMethod) {
@@ -31,7 +30,8 @@ public abstract class AbstractDynamicProvider<TS extends TemplateStatement> impl
     }
 
     @Override
-    public String doProvide(Class<?> mapperClass, Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    @SuppressWarnings("unchecked")
+    public String doProvide(Class<?> mapperClass, Method mapperMethod, Map<String, MethodParameter> params) {
         String id = this.resolveTemplateStatementId(mapperClass, mapperMethod);
         Map<String, Object> parameters = this.processTemplateParameters(params);
         TemplateStatement templateStatement = this.configuration.getTemplateStatements().get(id);

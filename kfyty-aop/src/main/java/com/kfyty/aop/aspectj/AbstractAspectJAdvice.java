@@ -4,8 +4,7 @@ import com.kfyty.aop.Pointcut;
 import com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.aopalliance.aop.Advice;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.weaver.tools.JoinPointMatch;
@@ -26,8 +25,7 @@ import static com.kfyty.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
  * @date 2021/7/30 16:33
  * @email kfyty725@hotmail.com
  */
-@Getter
-@Setter
+@Data
 public abstract class AbstractAspectJAdvice implements Advice {
     /**
      * 切面名称，一般为 bean name

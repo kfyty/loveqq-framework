@@ -1,5 +1,16 @@
 package com.kfyty.database.jdbc.session;
 
+import com.kfyty.core.generic.Generic;
+import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.jdbc.JdbcTransaction;
+import com.kfyty.core.jdbc.TransactionHolder;
+import com.kfyty.core.jdbc.transaction.Transaction;
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.core.wrapper.Pair;
 import com.kfyty.database.jdbc.BaseMapper;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
@@ -12,18 +23,6 @@ import com.kfyty.database.jdbc.sql.ProviderAdapter;
 import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.database.util.SQLParametersResolveUtil;
-import com.kfyty.core.generic.Generic;
-import com.kfyty.core.generic.SimpleGeneric;
-import com.kfyty.core.jdbc.JdbcTransaction;
-import com.kfyty.core.jdbc.TransactionHolder;
-import com.kfyty.core.jdbc.transaction.Transaction;
-import com.kfyty.core.method.MethodParameter;
-import com.kfyty.core.utils.AnnotationUtil;
-import com.kfyty.core.utils.BeanUtil;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.JdbcUtil;
-import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +40,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotations;
+import static com.kfyty.core.utils.AnnotationUtil.flatRepeatableAnnotation;
 import static com.kfyty.core.utils.CommonUtil.notEmpty;
 import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
@@ -131,13 +131,13 @@ public class SqlSession implements InvocationHandler {
     }
 
     /**
-     * 从注解上获取 SQL
+     * 获取 SQL
      *
      * @param mapperMethod mapper 方法
      * @param annotation   注解
      * @return SQL
      */
-    private String resolveSQLByAnnotation(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    private String resolveSQL(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
         Class<?> provider = invokeMethod(annotation, "provider");
         if (!provider.equals(void.class)) {
             return this.providerAdapter.doProvide(provider, this.mapperClass, mapperMethod, annotation, params);
@@ -157,7 +157,7 @@ public class SqlSession implements InvocationHandler {
      * @return 拼接完毕的 sql
      */
     private String processForEach(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        String sql = resolveSQLByAnnotation(mapperMethod, annotation, params);
+        String sql = resolveSQL(mapperMethod, annotation, params);
         ForEach[] forEachList = invokeMethod(annotation, "forEach");
         return sql + ForEachUtil.processForEach(params, forEachList);
     }
@@ -200,7 +200,7 @@ public class SqlSession implements InvocationHandler {
      * @return 返回值类型包装
      */
     private SimpleGeneric processReturnType(Method method) {
-        if (!method.getDeclaringClass().equals(BaseMapper.class) || method.getReturnType().equals(int.class)) {
+        if (!method.getDeclaringClass().equals(BaseMapper.class) || method.getReturnType().isPrimitive()) {
             return SimpleGeneric.from(method);
         }
         Class<?> entityClass = ReflectUtil.getSuperGeneric(this.mapperClass, 1);
@@ -223,7 +223,7 @@ public class SqlSession implements InvocationHandler {
      */
     private Annotation[] processAnnotation(Method method) {
         Predicate<Annotation> annotationFilter = e -> e.annotationType().equals(Query.class) || e.annotationType().equals(Execute.class);
-        Annotation[] annotations = Arrays.stream(AnnotationUtil.flatRepeatableAnnotation(findAnnotations(method))).filter(annotationFilter).toArray(Annotation[]::new);
+        Annotation[] annotations = Arrays.stream(flatRepeatableAnnotation(findAnnotations(method))).filter(annotationFilter).toArray(Annotation[]::new);
         if (CommonUtil.notEmpty(annotations)) {
             return annotations;
         }
@@ -253,7 +253,7 @@ public class SqlSession implements InvocationHandler {
             }
             String methodName = BeanUtil.getBeanName(annotation.annotationType());
             Method method = ReflectUtil.getMethod(JdbcUtil.class, methodName, Transaction.class, SimpleGeneric.class, String.class, MethodParameter[].class);
-            Object retValue = invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+            Object retValue = ReflectUtil.invokeMethod(null, method, transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             return this.processSubQuery(mapperMethod, annotation, retValue);
         } finally {
             TransactionHolder.resetCurrentTransaction(before);
@@ -264,13 +264,14 @@ public class SqlSession implements InvocationHandler {
      * 执行 SQL 拦截器链
      *
      * @param mapperMethod 接口方法
+     * @param annotation   mapper 方法注解
      * @param sqlParams    SQL 相关参数
      * @param returnType   返回值泛型
      * @return 执行结果
      */
     private Object invokeInterceptorChain(MethodParameter mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType) {
         Iterator<Map.Entry<Method, Interceptor>> iterator = this.configuration.getInterceptorMethodChain().entrySet().iterator();
-        try (InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, Arrays.asList(sqlParams.getValue()), iterator)) {
+        try (InterceptorChain chain = new InterceptorChain(mapperMethod, annotation, sqlParams.getKey(), returnType, sqlParams.getValue(), iterator)) {
             return chain.proceed();
         } catch (Exception e) {
             try {

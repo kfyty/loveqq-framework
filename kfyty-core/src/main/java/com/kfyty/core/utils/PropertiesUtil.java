@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
@@ -22,12 +23,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public abstract class PropertiesUtil {
     public static final String IMPORT_KEY = "k.config.include";
 
+    public static final String LOCATION_KEY = "k.config.location";
+
     public static Properties load(String path) {
-        return load(path, PropertiesUtil.class.getClassLoader());
+        return load(path, Thread.currentThread().getContextClassLoader());
     }
 
     public static Properties load(InputStream stream) {
-        return load(stream, PropertiesUtil.class.getClassLoader());
+        return load(stream, Thread.currentThread().getContextClassLoader());
     }
 
     public static Properties load(String path, ClassLoader classLoader) {
@@ -39,6 +42,10 @@ public abstract class PropertiesUtil {
     }
 
     public static Properties load(String path, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
+        Path resolvedPath = IOUtil.getPath(path);
+        if (resolvedPath != null && resolvedPath.isAbsolute()) {
+            return load(IOUtil.newInputStream(resolvedPath.toFile()), classLoader, after);
+        }
         return load(classLoader.getResourceAsStream(path), classLoader, after);
     }
 

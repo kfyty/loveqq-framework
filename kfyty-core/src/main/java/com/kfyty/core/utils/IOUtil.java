@@ -19,6 +19,8 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +52,21 @@ public abstract class IOUtil {
      * 临时文件夹位置
      */
     public static final String TEMP_PATH = System.getProperty("java.io.tmpdir");
+
+    /**
+     * 获取路径
+     *
+     * @param path 路径
+     * @return 路径
+     */
+    public static Path getPath(String path) {
+        try {
+            return Paths.get(path);
+        } catch (Exception e) {
+            log.error("get path failed: {}, error message: {}", path, e.getMessage());
+            return null;
+        }
+    }
 
     /**
      * 将输入流复制到输出流
