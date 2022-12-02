@@ -76,16 +76,18 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
                 throw new IllegalStateException("no suitable adapter for advice: " + advice);
             }
             adviceChainPoint.sort(this.getAdviceChainPointsComparator());
-            return Collections.unmodifiableList(adviceChainPoint);
+            return Collections.unmodifiableList(new ArrayList<>(adviceChainPoint));                                     // 释放多余的集合空间
         });
     }
 
     protected List<Advisor> findAdvisors(MethodProxy methodProxy) {
         List<Advisor> filteredAdvisors = new ArrayList<>();
+        Method targetMethod = methodProxy.getTargetMethod();
+        Class<?> targetClass = methodProxy.getTargetClass();
         for (Advisor advisor : this.advisors) {
             if (advisor instanceof PointcutAdvisor) {
                 MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();
-                if (methodMatcher.matches(methodProxy.getTargetMethod(), methodProxy.getTargetClass())) {
+                if (methodMatcher.matches(targetMethod, targetClass)) {
                     filteredAdvisors.add(advisor);
                 }
             }

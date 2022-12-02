@@ -3,6 +3,7 @@ package com.kfyty.boot;
 import com.kfyty.boot.context.factory.ApplicationContextFactory;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.CommandLineRunner;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,19 +18,14 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Slf4j
 @NoArgsConstructor
+@AllArgsConstructor
 public class K {
     private Class<?> primarySource;
     private String[] commandLineArgs;
     private ApplicationContextFactory applicationContextFactory;
 
     public K(Class<?> clazz, String... args) {
-        this.primarySource = clazz;
-        this.commandLineArgs = args;
-        this.setApplicationContextFactory(new ApplicationContextFactory());
-    }
-
-    public void setApplicationContextFactory(ApplicationContextFactory applicationContextFactory) {
-        this.applicationContextFactory = applicationContextFactory;
+        this(clazz, args, new ApplicationContextFactory());
     }
 
     public ApplicationContext run() {

@@ -20,6 +20,8 @@ import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
  * @email kfyty725@hotmail.com
  */
 public abstract class AnnotationInstantiateUtil {
+    private static final ForEach[] EMPTY_FOR_EACH_ARRAY = new ForEach[0];
+    private static final SubQuery[] EMPTY_SUB_QUERY_ARRAY = new SubQuery[0];
 
     public static Annotation createDynamicByLabelType(String labelType) {
         return SELECT_LABEL.equals(labelType) ? createDynamicQuery() : createDynamicExecute();
@@ -40,12 +42,12 @@ public abstract class AnnotationInstantiateUtil {
 
             @Override
             public ForEach[] forEach() {
-                return new ForEach[0];
+                return EMPTY_FOR_EACH_ARRAY;
             }
 
             @Override
             public SubQuery[] subQuery() {
-                return new SubQuery[0];
+                return EMPTY_SUB_QUERY_ARRAY;
             }
 
             @Override
@@ -75,7 +77,7 @@ public abstract class AnnotationInstantiateUtil {
 
             @Override
             public ForEach[] forEach() {
-                return new ForEach[0];
+                return EMPTY_FOR_EACH_ARRAY;
             }
 
             @Override

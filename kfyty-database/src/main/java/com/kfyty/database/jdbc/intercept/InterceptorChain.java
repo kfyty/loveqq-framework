@@ -1,14 +1,15 @@
 package com.kfyty.database.jdbc.intercept;
 
-import com.kfyty.database.jdbc.annotation.Execute;
-import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.jdbc.TransactionHolder;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ResultSetUtil;
 import com.kfyty.core.wrapper.ValueWrapper;
+import com.kfyty.database.jdbc.annotation.Execute;
+import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -17,14 +18,11 @@ import java.lang.reflect.Parameter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static com.kfyty.core.utils.CommonUtil.size;
 import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
-import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
 /**
  * 描述: SQL 执行拦截器链
@@ -39,7 +37,7 @@ public class InterceptorChain implements AutoCloseable {
     private final Annotation annotation;
     private final ValueWrapper<String> sql;
     private final SimpleGeneric returnType;
-    private final List<MethodParameter> methodParameters;
+    private final MethodParameter[] methodParameters;
     private final Iterator<Map.Entry<Method, Interceptor>> interceptors;
 
     private PreparedStatement preparedStatement;
@@ -47,25 +45,25 @@ public class InterceptorChain implements AutoCloseable {
     private Object retValue;
     private boolean hasRet;
 
-    public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
+    public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, MethodParameter[] methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
         this.mapperMethod = method;
         this.annotation = annotation;
         this.sql = new ValueWrapper<>(sql);
         this.returnType = returnType;
-        this.methodParameters = new ArrayList<>(methodParameters);
+        this.methodParameters = methodParameters;
         this.interceptors = interceptors;
     }
 
     public MethodParameter getMapperMethod() {
-        return mapperMethod;
+        return this.mapperMethod;
     }
 
     public PreparedStatement getPreparedStatement() {
-        return preparedStatement;
+        return this.preparedStatement;
     }
 
     public ResultSet getResultSet() {
-        return resultSet;
+        return this.resultSet;
     }
 
     public void setPreparedStatement(PreparedStatement preparedStatement) {
@@ -85,7 +83,7 @@ public class InterceptorChain implements AutoCloseable {
         if (interceptor.getValue() instanceof QueryInterceptor && this.annotation.annotationType().equals(Execute.class)) {
             return this.proceed();
         }
-        return this.retValue = invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
+        return this.retValue = ReflectUtil.invokeMethod(interceptor.getValue(), interceptor.getKey(), this.bindInterceptorParameters(interceptor.getKey()));
     }
 
     @Override
@@ -125,7 +123,7 @@ public class InterceptorChain implements AutoCloseable {
         if (SimpleGeneric.class.isAssignableFrom(parameterType)) {
             return this.returnType;
         }
-        if (List.class.isAssignableFrom(parameterType)) {
+        if (parameterType.isArray() && MethodParameter.class.isAssignableFrom(parameterType.getComponentType())) {
             return this.methodParameters;
         }
         if (PreparedStatement.class.isAssignableFrom(parameterType)) {
@@ -146,7 +144,7 @@ public class InterceptorChain implements AutoCloseable {
     protected PreparedStatement preparePreparedStatement() {
         if (this.preparedStatement == null) {
             try {
-                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(new MethodParameter[0]));
+                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters);
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }

@@ -1,5 +1,10 @@
 package com.kfyty.mvc.servlet;
 
+import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.PackageUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.mvc.handler.RequestMappingMatchHandler;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
@@ -9,11 +14,6 @@ import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.request.support.RequestContextHolder;
 import com.kfyty.mvc.request.support.ResponseContextHolder;
 import com.kfyty.mvc.util.ServletUtil;
-import com.kfyty.core.method.MethodParameter;
-import com.kfyty.core.utils.BeanUtil;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.PackageUtil;
-import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
@@ -43,24 +43,22 @@ import static java.util.Optional.ofNullable;
  * @since JDK 1.8
  */
 @Slf4j
+@Getter
 public class DispatcherServlet extends HttpServlet {
     private static final String PREFIX_PARAM_NAME = "prefix";
     private static final String SUFFIX_PARAM_NAME = "suffix";
 
-    @Setter @Getter
+    @Setter
     private String prefix = "";
 
-    @Setter @Getter
+    @Setter
     private String suffix = ".jsp";
 
-    @Getter
     private List<HandlerInterceptor> interceptorChains = new ArrayList<>(4);
 
-    @Getter
-    private List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>();
+    private List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(4);
 
-    @Getter
-    private List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>();
+    private List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>(4);
 
     private final RequestMappingMatchHandler requestMappingMatchHandler = new RequestMappingMatchHandler();
 
@@ -124,16 +122,9 @@ public class DispatcherServlet extends HttpServlet {
         this.returnValueProcessors.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
-    private void prepareDefaultArgumentResolversReturnValueProcessor() throws IOException {
-        Set<Class<?>> classes = PackageUtil.scanClass(HandlerMethodArgumentResolver.class);
-        for (Class<?> clazz : classes) {
-            if (!clazz.equals(HandlerMethodArgumentResolver.class) && HandlerMethodArgumentResolver.class.isAssignableFrom(clazz)) {
-                this.addArgumentResolver((HandlerMethodArgumentResolver) ReflectUtil.newInstance(clazz));
-            }
-            if (!clazz.equals(HandlerMethodReturnValueProcessor.class) && HandlerMethodReturnValueProcessor.class.isAssignableFrom(clazz)) {
-                this.addReturnProcessor((HandlerMethodReturnValueProcessor) ReflectUtil.newInstance(clazz));
-            }
-        }
+    private void prepareDefaultArgumentResolversReturnValueProcessor() {
+        this.setArgumentResolvers(PackageUtil.scanInstance(HandlerMethodArgumentResolver.class));
+        this.setReturnValueProcessors(PackageUtil.scanInstance(HandlerMethodReturnValueProcessor.class));
     }
 
     private void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -144,7 +135,7 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        Exception exception = null;
+        Throwable exception = null;
         MethodMapping methodMapping = this.requestMappingMatchHandler.doMatchRequest(request);
         try {
             if (methodMapping == null) {
@@ -165,7 +156,7 @@ public class DispatcherServlet extends HttpServlet {
             if (o != null) {
                 this.processReturnValue(o, new MethodParameter(methodMapping.getMappingMethod()), request, response, params);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.error("process request error !");
             exception = e;
             throw new ServletException(e);
@@ -191,7 +182,7 @@ public class DispatcherServlet extends HttpServlet {
         }
     }
 
-    private void processCompletionInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) throws ServletException {
+    private void processCompletionInterceptor(HttpServletRequest request, HttpServletResponse response, Object handler, Throwable e) throws ServletException {
         try {
             for (HandlerInterceptor interceptor : this.interceptorChains) {
                 interceptor.afterCompletion(request, response, handler, e);
@@ -205,7 +196,6 @@ public class DispatcherServlet extends HttpServlet {
         int index = 0;
         Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
         Object[] paramValues = new Object[parameters.length];
-        resolverParameters:
         for (Parameter parameter : parameters) {
             if (HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
                 paramValues[index++] = request;
@@ -216,20 +206,32 @@ public class DispatcherServlet extends HttpServlet {
                 continue;
             }
             MethodParameter methodParameter = new MethodParameter(methodMapping.getMappingMethod(), parameter);
-            for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
-                if (argumentResolver.supportsParameter(methodParameter)) {
-                    paramValues[index++] = argumentResolver.resolveArgument(methodParameter, methodMapping, request);
-                    continue resolverParameters;
-                }
+            Object arguments = this.processMethodArguments(methodParameter, methodMapping, request);
+            if (arguments != null) {
+                paramValues[index++] = arguments;
+                continue;
             }
             throw new IllegalArgumentException("can't parse parameters temporarily, no argument resolver support !");
         }
         return paramValues;
     }
 
-    private void processReturnValue(Object retValue, MethodParameter methodParameter, HttpServletRequest request, HttpServletResponse response, Object... params) throws Exception {
+    public Object processMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, HttpServletRequest request) throws IOException {
+        for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
+            if (argumentResolver.supportsParameter(methodParameter)) {
+                return argumentResolver.resolveArgument(methodParameter, methodMapping, request);
+            }
+        }
+        return null;
+    }
+
+    public void processReturnValue(Object retValue, MethodParameter methodParameter, HttpServletRequest request, HttpServletResponse response, Object... params) throws Throwable {
+        this.processReturnValue(retValue, methodParameter, request, response, params, () -> new IllegalArgumentException("can't parse return value temporarily, no return value processor support !"));
+    }
+
+    public void processReturnValue(Object retValue, MethodParameter methodParameter, HttpServletRequest request, HttpServletResponse response, Object[] params, Supplier<? extends Throwable> ex) throws Throwable {
         ModelViewContainer container = new ModelViewContainer(request, response);
-        container.setPrefix(prefix).setSuffix(suffix);
+        container.setPrefix(this.prefix).setSuffix(this.suffix);
         Arrays.stream(params).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
             if (returnValueProcessor.supportsReturnType(methodParameter)) {
@@ -237,6 +239,6 @@ public class DispatcherServlet extends HttpServlet {
                 return;
             }
         }
-        throw new IllegalArgumentException("can't parse return value temporarily, no return value processor support !");
+        throw ex.get();
     }
 }

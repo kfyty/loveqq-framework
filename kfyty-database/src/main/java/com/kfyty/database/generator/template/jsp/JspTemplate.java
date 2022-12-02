@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static com.kfyty.database.util.TemplateEngineUtil.getTemplatePath;
 import static com.kfyty.kjte.JstlTemplateEngine.CLASS_SUFFIX;
 
 /**
@@ -47,8 +48,7 @@ public class JspTemplate extends AbstractTemplateEngine {
     public JspTemplate(String prefix, File jsp, String classPath) {
         super(prefix, jsp.getName());
         this.classPath = classPath;
-        JstlTemplateEngineConfig config = new JstlTemplateEngineConfig(TemplateEngineUtil.getTemplatePath(prefix), Collections.singletonList(jsp));
-        this.templateEngine = new JstlTemplateEngine(config);
+        this.templateEngine = new JstlTemplateEngine(new JstlTemplateEngineConfig(getTemplatePath(prefix), Collections.singletonList(jsp)));
     }
 
     public JspTemplate create(String prefix, File jsp, String classPath) {

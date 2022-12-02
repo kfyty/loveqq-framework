@@ -159,13 +159,31 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
+    public Map<String, BeanDefinition> getBeanDefinitions(boolean isAutowireCandidate) {
+        return this.getBeanDefinitions(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate);
+    }
+
+    @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
         return this.beanDefinitionsForType.computeIfAbsent(new WeakKey<>(beanType), k -> this.getBeanDefinitions(e -> beanType.isAssignableFrom(e.getValue().getBeanType())));
     }
 
     @Override
+    public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType, boolean isAutowireCandidate) {
+        return this.getBeanDefinitions(beanType).entrySet()
+                .stream()
+                .filter(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
+    }
+
+    @Override
     public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass) {
         return this.getBeanDefinitions(e -> hasAnnotationElement(e.getValue().getBeanType(), annotationClass));
+    }
+
+    @Override
+    public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass, boolean isAutowireCandidate) {
+        return this.getBeanDefinitions(e -> hasAnnotationElement(e.getValue().getBeanType(), annotationClass) && e.getValue().isAutowireCandidate() == isAutowireCandidate);
     }
 
     @Override
@@ -189,7 +207,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public <T> T getBean(Class<T> clazz, boolean isLazyInit) {
-        Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz);
+        Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz, true);
         if (beanDefinitions.size() > 1) {
             throw new BeansException("more than one instance of type: " + clazz.getName());
         }

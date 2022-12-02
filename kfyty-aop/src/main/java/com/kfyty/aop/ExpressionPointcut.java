@@ -8,5 +8,10 @@ package com.kfyty.aop;
  * @email kfyty725@hotmail.com
  */
 public interface ExpressionPointcut extends Pointcut {
+    /**
+     * 获取切入点表达式
+     *
+     * @return 切入点表达式
+     */
     String getExpression();
 }

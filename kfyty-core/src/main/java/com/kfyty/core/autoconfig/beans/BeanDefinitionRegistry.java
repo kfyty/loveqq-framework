@@ -32,9 +32,15 @@ public interface BeanDefinitionRegistry {
 
     Map<String, BeanDefinition> getBeanDefinitions();
 
+    Map<String, BeanDefinition> getBeanDefinitions(boolean isAutowireCandidate);
+
     Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType);
 
+    Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType, boolean isAutowireCandidate);
+
     Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass);
+
+    Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass, boolean isAutowireCandidate);
 
     Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate);
 }

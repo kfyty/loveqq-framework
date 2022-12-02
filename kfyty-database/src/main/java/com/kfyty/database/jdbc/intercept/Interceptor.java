@@ -6,7 +6,6 @@ import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.wrapper.ValueWrapper;
 
 import java.sql.PreparedStatement;
-import java.util.List;
 
 /**
  * 描述: SQL 执行拦截器
@@ -19,12 +18,12 @@ import java.util.List;
 public interface Interceptor {
 
     @Order(10)
-    default Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    default Object intercept(ValueWrapper<String> sql, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
         return chain.proceed();
     }
 
     @Order(20)
-    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
+    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
         return chain.proceed();
     }
 }

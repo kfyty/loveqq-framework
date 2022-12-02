@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.kfyty.core.utils.PropertiesUtil.LOCATION_KEY;
 import static com.kfyty.core.utils.PropertiesUtil.include;
 import static com.kfyty.core.utils.PropertiesUtil.load;
 import static java.util.Collections.unmodifiableList;
@@ -140,6 +141,9 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void afterPropertiesSet() {
         this.loadCommandLineProperties();
+        if (this.contains(LOCATION_KEY)) {
+            this.addConfig(this.getProperty(LOCATION_KEY));
+        }
         this.addConfig(DEFAULT_PROPERTIES_LOCATION);
         this.loadProperties();
     }

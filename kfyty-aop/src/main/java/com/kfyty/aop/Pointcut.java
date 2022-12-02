@@ -8,5 +8,10 @@ package com.kfyty.aop;
  * @email kfyty725@hotmail.com
  */
 public interface Pointcut {
+    /**
+     * 获取方法匹配器
+     *
+     * @return 方法匹配器
+     */
     MethodMatcher getMethodMatcher();
 }
