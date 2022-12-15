@@ -1,6 +1,6 @@
 package com.kfyty.mvc.multipart;
 
-import org.apache.tomcat.util.http.fileupload.IOUtils;
+import com.kfyty.core.utils.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,26 +16,75 @@ import java.nio.file.Path;
  * @email kfyty725@hotmail.com
  */
 public interface MultipartFile {
-
+    /**
+     * 是否是文件
+     *
+     * @return true if file
+     */
     boolean isFile();
 
+    /**
+     * 表单文件名称
+     *
+     * @return 表单文件名
+     */
     String getName();
 
+    /**
+     * 源文件名称
+     *
+     * @return 源文件名
+     */
     String getOriginalFilename();
 
+    /**
+     * content-type
+     *
+     * @return content-type
+     */
     String getContentType();
 
+    /**
+     * 是否为空
+     *
+     * @return true if empty
+     */
     boolean isEmpty();
 
+    /**
+     * 文件大小
+     *
+     * @return 字节数
+     */
     long getSize();
 
+    /**
+     * 获取文件字节数组
+     *
+     * @return 字节数组
+     */
     byte[] getBytes() throws IOException;
 
+    /**
+     * 获取文件输入流
+     *
+     * @return 文件输入流
+     */
     InputStream getInputStream() throws IOException;
 
+    /**
+     * 写入到指定文件
+     *
+     * @param dest 目标文件
+     */
     void transferTo(File dest) throws Exception;
 
+    /**
+     * 写入到指定路径
+     *
+     * @param dest 目标路径
+     */
     default void transferTo(Path dest) throws IOException {
-        IOUtils.copy(getInputStream(), Files.newOutputStream(dest));
+        IOUtil.copy(this.getInputStream(), Files.newOutputStream(dest));
     }
 }

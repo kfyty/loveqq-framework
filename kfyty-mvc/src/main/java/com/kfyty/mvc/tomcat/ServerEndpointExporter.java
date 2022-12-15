@@ -37,7 +37,7 @@ public class ServerEndpointExporter {
 
     public ServerContainer getServerContainer() {
         ServerContainer serverContainer = (ServerContainer) servletContext.getAttribute(SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
-        if(serverContainer == null) {
+        if (serverContainer == null) {
             throw new IllegalStateException("javax.websocket.server.ServerContainer not available !");
         }
         return serverContainer;
@@ -51,8 +51,7 @@ public class ServerEndpointExporter {
                     log.debug("registering @ServerEndpoint class: {}", endpointClass);
                 }
                 serverContainer.addEndpoint(endpointClass);
-            }
-            catch (DeploymentException ex) {
+            } catch (DeploymentException ex) {
                 throw new IllegalStateException("failed to register @ServerEndpoint class: " + endpointClass, ex);
             }
         }

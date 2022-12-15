@@ -181,11 +181,14 @@ public abstract class CommonUtil {
         }
     }
 
-    public static List<Object> toList(Object value) {
+    public static List<?> toList(Object value) {
         return toList(value, entry -> entry);
     }
 
-    public static List<Object> toList(Object value, Function<Map.Entry<?, ?>, Object> entryMapping) {
+    public static List<?> toList(Object value, Function<Map.Entry<?, ?>, ?> entryMapping) {
+        if (value instanceof List) {
+            return (List<?>) value;
+        }
         if (value instanceof Collection) {
             return new ArrayList<>((Collection<?>) value);
         }

@@ -8,6 +8,8 @@ import com.kfyty.core.utils.AnnotationUtil;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
+import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
+
 /**
  * 描述:
  *
@@ -24,6 +26,6 @@ public class SessionAttributeMethodArgumentResolver implements HandlerMethodArgu
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
-        return request.getSession().getAttribute(parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), SessionAttribute.class), SessionAttribute::value));
+        return request.getSession().getAttribute(parameter.getParameterName(findAnnotation(parameter.getParameter(), SessionAttribute.class), SessionAttribute::value));
     }
 }

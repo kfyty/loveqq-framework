@@ -18,6 +18,8 @@ import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
 
+import static com.kfyty.core.utils.ReflectUtil.isAbstract;
+
 /**
  * 功能描述: 解析 package 工具
  *
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class PackageUtil {
-    private static final Map<WeakKey<String>, Set<String>> scanPackageCache = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<WeakKey<String>, Set<String>> SCAN_PACKAGE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
 
     public static Set<String> scanClassName(Class<?> mainClass) {
         return scanClassName(mainClass.getPackage().getName());
@@ -38,7 +40,7 @@ public abstract class PackageUtil {
     }
 
     public static <T> List<T> scanInstance(Class<T> mainClass) {
-        return scanInstance(mainClass.getPackage().getName(), clazz -> !clazz.equals(mainClass) && mainClass.isAssignableFrom(clazz));
+        return scanInstance(mainClass, clazz -> !isAbstract(clazz) && mainClass.isAssignableFrom(clazz));
     }
 
     public static <T> List<T> scanInstance(Class<T> mainClass, Predicate<Class<?>> scanFilter) {
@@ -53,7 +55,7 @@ public abstract class PackageUtil {
 
     public static Set<String> scanClassName(String basePackage) {
         try {
-            Set<String> cache = scanPackageCache.get(new WeakKey<>(basePackage));
+            Set<String> cache = SCAN_PACKAGE_CACHE.get(new WeakKey<>(basePackage));
             if (cache != null) {
                 return cache;
             }
@@ -67,7 +69,7 @@ public abstract class PackageUtil {
                 }
                 classes.addAll(scanClassNameByFile(url));
             }
-            return scanPackageCache.computeIfAbsent(new WeakKey<>(basePackage), k -> classes);
+            return SCAN_PACKAGE_CACHE.computeIfAbsent(new WeakKey<>(basePackage), k -> classes);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

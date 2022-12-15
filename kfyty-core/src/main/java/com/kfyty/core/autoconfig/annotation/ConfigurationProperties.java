@@ -6,11 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 自动绑定配置属性，目前仅支持简单类型绑定
+ * 描述: 自动绑定配置属性
  *
  * @author kfyty725
  * @date 2022/5/25 22:36
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.core.autoconfig.env.DataBinder
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})

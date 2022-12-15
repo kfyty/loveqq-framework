@@ -3,8 +3,8 @@ package com.kfyty.core.utils;
 import com.kfyty.core.converter.Converter;
 import com.kfyty.core.wrapper.Pair;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.core.utils.ReflectUtil.getSuperGeneric;
 
@@ -16,7 +16,7 @@ import static com.kfyty.core.utils.ReflectUtil.getSuperGeneric;
  * @email kfyty725@hotmail.com
  */
 public abstract class ConverterUtil {
-    private static final Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> TYPE_CONVERTER = new HashMap<>();
+    private static final Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> TYPE_CONVERTER = new ConcurrentHashMap<>();
 
     static {
         PackageUtil.scanInstance(Converter.class)

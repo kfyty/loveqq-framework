@@ -1,10 +1,10 @@
 package com.kfyty.boot.context.env;
 
-import com.kfyty.boot.processor.ConfigurationPropertiesBeanPostProcessor;
-import com.kfyty.core.autoconfig.annotation.Lazy;
-import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
+import com.kfyty.core.autoconfig.annotation.Lazy;
+import com.kfyty.core.autoconfig.env.DataBinder;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.utils.CommonUtil;
@@ -34,9 +34,14 @@ import static com.kfyty.core.utils.ReflectUtil.newInstance;
  */
 @Component
 public class DefaultGenericPropertiesContext extends DefaultPropertiesContext implements GenericPropertiesContext {
+    protected DataBinder dataBinder;
+
     @Lazy
+    @Override
     @Autowired
-    protected ConfigurationPropertiesBeanPostProcessor configurationPropertiesBeanPostProcessor;
+    public void setDataBinder(DataBinder dataBinder) {
+        this.dataBinder = dataBinder;
+    }
 
     @Override
     public <T> T getProperty(String key, Type targetType) {
@@ -137,7 +142,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         String property = this.getProperty(key, String.class);
 
         if (property != null) {
-            retValue = CommonUtil.split(property, this.configurationPropertiesBeanPostProcessor.getBindPropertyDelimiter(), e -> convert(e, targetType.getSimpleActualType()));
+            retValue = CommonUtil.split(property, this.dataBinder.getBindPropertyDelimiter(), e -> convert(e, targetType.getSimpleActualType()));
         } else {
             Map<String, Map<String, String>> properties = this.searchCollectionProperties(key);
             if (CommonUtil.notEmpty(properties)) {
@@ -155,7 +160,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             return CommonUtil.copyToArray(targetType.getSimpleActualType(), retValue);
         }
 
-        throw new IllegalArgumentException("unsupported bind operate");
+        throw new IllegalArgumentException("unsupported bind operate: " + rawType);
     }
 
     /**
@@ -181,7 +186,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             }
             String key = prefix + entry.getKey();
             Object instance = newInstance(elementType);
-            this.configurationPropertiesBeanPostProcessor.bindConfigurationProperties(instance, key);
+            this.dataBinder.bind(instance, key);
             result.add(instance);
         }
         return result;
@@ -220,7 +225,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             String bindKey = replace + key;
             if (!bind.contains(bindKey)) {
                 Object instance = newInstance(valueType);
-                this.configurationPropertiesBeanPostProcessor.bindConfigurationProperties(instance, bindKey);
+                this.dataBinder.bind(instance, bindKey);
                 target.put(key, instance);
                 bind.add(bindKey);
             }

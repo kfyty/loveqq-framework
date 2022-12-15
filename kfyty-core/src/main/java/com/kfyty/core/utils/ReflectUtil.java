@@ -719,13 +719,13 @@ public abstract class ReflectUtil {
             WildcardType wildcardType = (WildcardType) type;
             return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
         }
-        throw new SupportException("unable to get the raw type !");
+        throw new SupportException("unable to get the raw type: " + type);
     }
 
     public static String getTypeVariableName(Type type) {
         if (type instanceof TypeVariable) {
             return ((TypeVariable<?>) type).getName();
         }
-        throw new SupportException("unable to get the type variable !");
+        throw new SupportException("unable to get the type variable: " + type);
     }
 }

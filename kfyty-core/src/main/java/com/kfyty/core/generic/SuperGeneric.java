@@ -17,11 +17,6 @@ public class SuperGeneric extends Generic {
      */
     private final Class<?> superType;
 
-    /**
-     * 泛型索引，superType 泛型的顺序索引
-     */
-    private int index;
-
     public SuperGeneric(Class<?> type, Class<?> superType) {
         super(type);
         this.superType = superType;
@@ -39,10 +34,6 @@ public class SuperGeneric extends Generic {
 
     public Class<?> getSuper() {
         return this.superType;
-    }
-
-    public void incrementIndex() {
-        this.index++;
     }
 
     @Override

@@ -26,6 +26,9 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
+        if (String.class.isAssignableFrom(parameter.getParamType())) {
+            return ServletUtil.getRequestBody(request);
+        }
         return JsonUtil.toObject(ServletUtil.getRequestBody(request), parameter.getParamType());
     }
 }

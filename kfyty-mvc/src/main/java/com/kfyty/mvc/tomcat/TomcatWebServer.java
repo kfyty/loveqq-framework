@@ -153,9 +153,9 @@ public class TomcatWebServer implements WebServer {
     private void prepareResources(Context context) throws URISyntaxException {
         WebResourceRoot resources = new StandardRoot(context);
         URL pathURL = config.getPrimarySource().getProtectionDomain().getCodeSource().getLocation();
-        if(Files.isDirectory(Paths.get(pathURL.toURI()))) {
+        if (Files.isDirectory(Paths.get(pathURL.toURI()))) {
             resources.addPreResources(new DirResourceSet(resources, "/", pathURL.getPath(), "/"));
-        } else if(pathURL.getPath().endsWith(".jar")) {
+        } else if (pathURL.getPath().endsWith(".jar")) {
             resources.addJarResources(new JarResourceSet(resources, "/", pathURL.getPath(), "/"));
         } else {
             resources.addPreResources(new EmptyResourceSet(resources));
@@ -191,7 +191,7 @@ public class TomcatWebServer implements WebServer {
     }
 
     private void prepareDispatcherServlet(Context context) {
-        if(this.dispatcherServlet != null) {
+        if (this.dispatcherServlet != null) {
             Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
             context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
         }
@@ -209,7 +209,7 @@ public class TomcatWebServer implements WebServer {
             filterDef.setDescription(annotation.description());
             filterDef.setSmallIcon(annotation.smallIcon());
             filterDef.setLargeIcon(annotation.largeIcon());
-            if(CommonUtil.notEmpty(annotation.filterName())) {
+            if (CommonUtil.notEmpty(annotation.filterName())) {
                 filterDef.setFilterName(annotation.filterName());
             }
             for (WebInitParam webInitParam : annotation.initParams()) {
@@ -222,7 +222,7 @@ public class TomcatWebServer implements WebServer {
 
     private void prepareWebFilterMapping(Context context, FilterDef filterDef, WebFilter annotation) {
         String[] patterns = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : annotation.urlPatterns();
-        patterns = CommonUtil.empty(patterns) ? new String[] {"/*"} : patterns;
+        patterns = CommonUtil.empty(patterns) ? new String[]{"/*"} : patterns;
         for (String pattern : patterns) {
             FilterMap filterMap = new FilterMap();
             filterMap.setCharset(StandardCharsets.UTF_8);

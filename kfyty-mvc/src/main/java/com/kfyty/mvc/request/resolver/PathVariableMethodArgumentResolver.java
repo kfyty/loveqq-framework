@@ -1,16 +1,17 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.mvc.annotation.bind.PathVariable;
-import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.JsonUtil;
+import com.kfyty.mvc.annotation.bind.PathVariable;
+import com.kfyty.mvc.mapping.MethodMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 
 /**
  * 描述:
@@ -19,7 +20,7 @@ import java.util.Map;
  * @date 2021/6/4 10:25
  * @email kfyty725@hotmail.com
  */
-public class PathVariableMethodArgumentResolver implements HandlerMethodArgumentResolver {
+public class PathVariableMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -28,10 +29,10 @@ public class PathVariableMethodArgumentResolver implements HandlerMethodArgument
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
-        Map<String, Integer> restfulURLMappingIndex = mapping.getRestfulURLMappingIndex();
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
-        String paramName = parameter.getParameterName(AnnotationUtil.findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
+        Map<String, Integer> restfulURLMappingIndex = mapping.getRestfulURLMappingIndex();
+        String paramName = parameter.getParameterName(findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
         Integer paramIndex = restfulURLMappingIndex.get(paramName);
-        return JsonUtil.convert(paths.get(paramIndex), parameter.getParamType());
+        return this.createDataBinder(paramName, paths.get(paramIndex)).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
     }
 }

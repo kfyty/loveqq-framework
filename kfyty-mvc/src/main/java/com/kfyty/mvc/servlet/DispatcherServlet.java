@@ -1,11 +1,14 @@
 package com.kfyty.mvc.servlet;
 
+import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
+import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.mvc.handler.RequestMappingMatchHandler;
+import com.kfyty.mvc.handler.DefaultRequestMappingMatcher;
+import com.kfyty.mvc.handler.RequestMappingMatcher;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
@@ -13,7 +16,6 @@ import com.kfyty.mvc.request.support.Model;
 import com.kfyty.mvc.request.support.ModelViewContainer;
 import com.kfyty.mvc.request.support.RequestContextHolder;
 import com.kfyty.mvc.request.support.ResponseContextHolder;
-import com.kfyty.mvc.util.ServletUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
@@ -44,7 +47,7 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 @Getter
-public class DispatcherServlet extends HttpServlet {
+public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
     private static final String PREFIX_PARAM_NAME = "prefix";
     private static final String SUFFIX_PARAM_NAME = "suffix";
 
@@ -54,13 +57,20 @@ public class DispatcherServlet extends HttpServlet {
     @Setter
     private String suffix = ".jsp";
 
+    private BeanFactory beanFactory;
+
     private List<HandlerInterceptor> interceptorChains = new ArrayList<>(4);
 
     private List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(4);
 
     private List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>(4);
 
-    private final RequestMappingMatchHandler requestMappingMatchHandler = new RequestMappingMatchHandler();
+    private RequestMappingMatcher requestMappingMatcher = new DefaultRequestMappingMatcher();
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -70,6 +80,7 @@ public class DispatcherServlet extends HttpServlet {
             prefix = ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(prefix);
             suffix = ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(suffix);
             this.prepareDefaultArgumentResolversReturnValueProcessor();
+            this.afterPropertiesSet();
             log.info("initialize DispatcherServlet success !");
         } catch (Exception e) {
             log.info("initialize DispatcherServlet failed !");
@@ -89,54 +100,64 @@ public class DispatcherServlet extends HttpServlet {
         }
     }
 
-    public DispatcherServlet addInterceptor(HandlerInterceptor interceptor) {
+    public void addInterceptor(HandlerInterceptor interceptor) {
         this.interceptorChains.add(interceptor);
-        this.setInterceptorChains(this.interceptorChains);
-        return this;
     }
 
-    public DispatcherServlet addArgumentResolver(HandlerMethodArgumentResolver argumentResolver) {
+    public void addArgumentResolver(HandlerMethodArgumentResolver argumentResolver) {
         this.argumentResolvers.add(argumentResolver);
-        this.setArgumentResolvers(this.argumentResolvers);
-        return this;
     }
 
-    public DispatcherServlet addReturnProcessor(HandlerMethodReturnValueProcessor returnValueProcessor) {
+    public void addReturnProcessor(HandlerMethodReturnValueProcessor returnValueProcessor) {
         this.returnValueProcessors.add(returnValueProcessor);
-        this.setReturnValueProcessors(this.returnValueProcessors);
-        return this;
     }
 
     public void setInterceptorChains(List<HandlerInterceptor> interceptorChains) {
         this.interceptorChains = interceptorChains == null ? emptyList() : interceptorChains;
-        this.interceptorChains.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     public void setArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         this.argumentResolvers = argumentResolvers == null ? emptyList() : argumentResolvers;
-        this.argumentResolvers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     public void setReturnValueProcessors(List<HandlerMethodReturnValueProcessor> returnValueProcessors) {
         this.returnValueProcessors = returnValueProcessors == null ? emptyList() : returnValueProcessors;
+    }
+
+    public void setRequestMappingMatcher(RequestMappingMatcher requestMappingMatcher) {
+        this.requestMappingMatcher = Objects.requireNonNull(requestMappingMatcher);
+    }
+
+    public void afterPropertiesSet() {
+        this.interceptorChains.sort(Comparator.comparing(BeanUtil::getBeanOrder));
+        this.argumentResolvers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
         this.returnValueProcessors.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     private void prepareDefaultArgumentResolversReturnValueProcessor() {
         this.setArgumentResolvers(PackageUtil.scanInstance(HandlerMethodArgumentResolver.class));
         this.setReturnValueProcessors(PackageUtil.scanInstance(HandlerMethodReturnValueProcessor.class));
+        for (HandlerMethodArgumentResolver argumentResolver : this.getArgumentResolvers()) {
+            if (argumentResolver instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) argumentResolver).setBeanFactory(this.beanFactory);
+            }
+        }
+        for (HandlerMethodReturnValueProcessor returnValueProcessor : this.getReturnValueProcessors()) {
+            if (returnValueProcessor instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) returnValueProcessor).setBeanFactory(this.beanFactory);
+            }
+        }
     }
 
     private void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(mapping.getProduces());
-        ServletUtil.preparedRequestParam(request);
     }
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
-        MethodMapping methodMapping = this.requestMappingMatchHandler.doMatchRequest(request);
+        MethodMapping methodMapping = this.requestMappingMatcher.doMatchRequest(request);
         try {
             if (methodMapping == null) {
                 this.processReturnValue("redirect:/404", null, request, response);
@@ -144,14 +165,14 @@ public class DispatcherServlet extends HttpServlet {
                 return;
             }
             if (log.isDebugEnabled()) {
-                log.debug("matched url mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI());
+                log.debug("matched URL mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI());
             }
             if (!this.processPreInterceptor(request, response, methodMapping)) {
                 return;
             }
             this.preparedRequestResponse(methodMapping, request, response);
             Object[] params = this.preparedMethodParams(request, response, methodMapping);
-            Object o = ReflectUtil.invokeMethod(methodMapping.getMappingController(), methodMapping.getMappingMethod(), params);
+            Object o = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
             this.processPostInterceptor(request, response, methodMapping, o);
             if (o != null) {
                 this.processReturnValue(o, new MethodParameter(methodMapping.getMappingMethod()), request, response, params);
@@ -206,9 +227,9 @@ public class DispatcherServlet extends HttpServlet {
                 continue;
             }
             MethodParameter methodParameter = new MethodParameter(methodMapping.getMappingMethod(), parameter);
-            Object arguments = this.processMethodArguments(methodParameter, methodMapping, request);
+            MethodParameter arguments = this.processMethodArguments(methodParameter, methodMapping, request);
             if (arguments != null) {
-                paramValues[index++] = arguments;
+                paramValues[index++] = arguments.getValue();
                 continue;
             }
             throw new IllegalArgumentException("can't parse parameters temporarily, no argument resolver support !");
@@ -216,10 +237,11 @@ public class DispatcherServlet extends HttpServlet {
         return paramValues;
     }
 
-    public Object processMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, HttpServletRequest request) throws IOException {
+    public MethodParameter processMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, HttpServletRequest request) throws IOException {
         for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
             if (argumentResolver.supportsParameter(methodParameter)) {
-                return argumentResolver.resolveArgument(methodParameter, methodMapping, request);
+                methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
+                return methodParameter;
             }
         }
         return null;
