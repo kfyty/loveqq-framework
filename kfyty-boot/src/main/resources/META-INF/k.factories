@@ -7,6 +7,7 @@ com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
     com.kfyty.boot.processor.factory.LazyProxyBeanFactoryPostProcessor,\
     com.kfyty.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor,\
+    com.kfyty.boot.context.env.DefaultDataBinder,\
     com.kfyty.boot.context.env.DefaultGenericPropertiesContext,\
     com.kfyty.boot.context.env.DefaultPropertyPlaceholdersResolver,\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\

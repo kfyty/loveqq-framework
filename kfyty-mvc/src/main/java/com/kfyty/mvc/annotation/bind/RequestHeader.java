@@ -1,6 +1,4 @@
-package com.kfyty.mvc.annotation;
-
-import com.kfyty.mvc.annotation.bind.ResponseBody;
+package com.kfyty.mvc.annotation.bind;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,16 +7,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 标识一个控制器
+ * 从 {@link javax.servlet.http.HttpServletRequest#getHeader(String)} 中取值
  *
- * @see Controller
- * @see ResponseBody
+ * @see com.kfyty.mvc.request.resolver.RequestHeaderMethodArgumentResolver
  */
-@Controller
 @Documented
-@ResponseBody
-@Target(ElementType.TYPE)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RestController {
+public @interface RequestHeader {
     String value() default "";
 }

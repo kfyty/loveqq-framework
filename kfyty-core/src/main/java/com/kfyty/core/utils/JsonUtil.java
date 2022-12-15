@@ -61,7 +61,7 @@ public abstract class JsonUtil {
         return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
     }
 
-    public static <T> T toObject(Map<String, Object> map, Class<T> clazz) {
+    public static <T> T toObject(Map<?, ?> map, Class<T> clazz) {
         return DEFAULT_OBJECT_MAPPER.convertValue(map, clazz);
     }
 

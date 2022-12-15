@@ -4,18 +4,16 @@ public enum RequestMethod {
     GET,
     PUT,
     POST,
+    PATCH,
     DELETE;
 
     public static RequestMethod matchRequestMethod(String requestMethod) {
-        switch (requestMethod.toUpperCase()) {
-            case "PUT":
-                return RequestMethod.PUT;
-            case "POST":
-                return RequestMethod.POST;
-            case "DELETE":
-                return RequestMethod.DELETE;
-            default:
-                return RequestMethod.GET;
+        String method = requestMethod.toUpperCase();
+        for (RequestMethod value : RequestMethod.values()) {
+            if (value.name().equals(method)) {
+                return value;
+            }
         }
+        return GET;
     }
 }

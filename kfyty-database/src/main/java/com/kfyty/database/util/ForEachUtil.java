@@ -24,7 +24,7 @@ public abstract class ForEachUtil {
         }
         StringBuilder builder = new StringBuilder();
         for (ForEach each : forEachList) {
-            List<Object> list = CommonUtil.toList(params.get(each.collection()).getValue());
+            List<?> list = CommonUtil.toList(params.get(each.collection()).getValue());
             builder.append(each.open());
             for (int i = 0; i < list.size(); i++) {
                 String flag = "param_" + i + "_";

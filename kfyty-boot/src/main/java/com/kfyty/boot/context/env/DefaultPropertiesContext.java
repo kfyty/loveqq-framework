@@ -9,6 +9,7 @@ import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.converter.Converter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ConverterUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -29,6 +30,7 @@ import static java.util.Collections.unmodifiableMap;
  * @date 2022/3/12 15:11
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
@@ -56,6 +58,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     public void setConverters(List<Converter<?, ?>> converters) {
         if (CommonUtil.notEmpty(converters)) {
             converters.forEach(ConverterUtil::registerConverter);
+            log.info("registry converters: {}", converters);
         }
     }
 
@@ -67,6 +70,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void addConfig(String... path) {
         this.configs.addAll(Arrays.asList(path));
+        log.info("loaded properties config path: {}", Arrays.toString(path));
     }
 
     @Override

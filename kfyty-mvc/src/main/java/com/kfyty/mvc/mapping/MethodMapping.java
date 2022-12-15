@@ -1,12 +1,13 @@
 package com.kfyty.mvc.mapping;
 
-import com.kfyty.mvc.request.RequestMethod;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.mvc.request.RequestMethod;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,14 +22,6 @@ import java.util.Map;
 @Slf4j
 public class MethodMapping {
     /**
-     * URL 映射 Map，包含所有的映射关系
-     * RequestMethod    请求方法
-     * Integer          url 长度
-     * String           uri
-     */
-    private static Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> methodMappingMap;
-
-    /**
      * URL
      */
     private String url;
@@ -36,7 +29,12 @@ public class MethodMapping {
     /**
      * url 长度
      */
-    private Integer urlLength;
+    private Integer length;
+
+    /**
+     * url 路径
+     */
+    private List<String> paths;
 
     /**
      * 请求方法
@@ -44,24 +42,19 @@ public class MethodMapping {
     private RequestMethod requestMethod;
 
     /**
+     * 响应的内容类型
+     */
+    private String produces;
+
+    /**
      * 是否是 restful 风格 url
      */
     private boolean restfulUrl;
 
     /**
-     * restful 风格 url 路径
-     */
-    private List<String> paths;
-
-    /**
      * restful 风格 url 数据索引
      */
     private Map<String, Integer> restfulURLMappingIndex;
-
-    /**
-     * 响应的内容类型
-     */
-    private String produces;
 
     /**
      * 映射方法
@@ -71,38 +64,30 @@ public class MethodMapping {
     /**
      * 映射方法所在的控制器实例
      */
-    private Object mappingController;
-
-    static {
-        methodMappingMap = new HashMap<>();
-    }
+    private Object controller;
 
     public MethodMapping() {
         this.restfulUrl = false;
-        this.restfulURLMappingIndex = new HashMap<>();
+        this.restfulURLMappingIndex = new LinkedHashMap<>();
     }
 
-    public static MethodMapping newURLMapping(Object mappingController, Method mappingMethod) {
+    public static MethodMapping newURLMapping(Object controller, Method mappingMethod) {
         MethodMapping methodMapping = new MethodMapping();
-        methodMapping.setMappingController(mappingController);
+        methodMapping.setController(controller);
         methodMapping.setMappingMethod(mappingMethod);
         return methodMapping;
     }
 
-    public static Map<RequestMethod, Map<Integer, Map<String, MethodMapping>>> getMethodMappingMap() {
-        return methodMappingMap;
-    }
-
-    public Map<Integer, Map<String, MethodMapping>> buildMap() {
+    public Map<Integer, Map<String, MethodMapping>> buildUrlLengthMapping(RequestMethodMapping requestMethodMapping) {
         Map<String, MethodMapping> innerMap = new HashMap<>();
         Map<Integer, Map<String, MethodMapping>> outerMap = new HashMap<>();
-        Map<Integer, Map<String, MethodMapping>> urlLengthMappingMap = MethodMapping.methodMappingMap.get(this.requestMethod);
-        if (urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.urlLength)) {
+        Map<Integer, Map<String, MethodMapping>> urlLengthMappingMap = requestMethodMapping == null ? null : requestMethodMapping.getUrlLengthMapping();
+        if (urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.length)) {
             innerMap.put(this.url, this);
-            outerMap.put(this.urlLength, innerMap);
+            outerMap.put(this.length, innerMap);
             return outerMap;
         }
-        Map<String, MethodMapping> urlMappingMap = urlLengthMappingMap.get(this.urlLength);
+        Map<String, MethodMapping> urlMappingMap = urlLengthMappingMap.get(this.length);
         if (urlMappingMap.containsKey(this.url)) {
             throw new IllegalArgumentException(CommonUtil.format("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
         }

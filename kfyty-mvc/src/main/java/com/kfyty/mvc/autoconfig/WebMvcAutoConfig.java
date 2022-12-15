@@ -1,19 +1,23 @@
 package com.kfyty.mvc.autoconfig;
 
-import com.kfyty.mvc.annotation.Controller;
-import com.kfyty.mvc.handler.RequestMappingAnnotationHandler;
-import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
-import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
-import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.mvc.servlet.HandlerInterceptor;
 import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Import;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.mvc.annotation.Controller;
+import com.kfyty.mvc.handler.DefaultRequestMappingMatcher;
+import com.kfyty.mvc.handler.RequestMappingAnnotationHandler;
+import com.kfyty.mvc.handler.RequestMappingHandler;
+import com.kfyty.mvc.handler.RequestMappingMatcher;
+import com.kfyty.mvc.mapping.MethodMapping;
+import com.kfyty.mvc.request.resolver.HandlerMethodArgumentResolver;
+import com.kfyty.mvc.request.resolver.HandlerMethodReturnValueProcessor;
+import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.mvc.servlet.HandlerInterceptor;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -25,10 +29,7 @@ import java.util.List;
  */
 @Configuration
 @Import(config = ControllerAdviceBeanPostProcessor.class)
-public class WebMvcAutoConfig {
-    @Autowired
-    private ApplicationContext applicationContext;
-
+public class WebMvcAutoConfig implements ContextAfterRefreshed {
     @Autowired(required = false)
     private List<HandlerInterceptor> interceptorChain;
 
@@ -45,20 +46,29 @@ public class WebMvcAutoConfig {
         this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
         this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
         this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
+        dispatcherServlet.setRequestMappingMatcher(this.requestMappingMatcher());
         return dispatcherServlet;
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public RequestMappingAnnotationHandler requestMappingAnnotationHandler() {
+    public RequestMappingHandler requestMappingHandler() {
         return new RequestMappingAnnotationHandler();
     }
 
-    @PostConstruct
-    public void initMethodMapping() {
-        RequestMappingAnnotationHandler requestMappingAnnotationHandler = this.requestMappingAnnotationHandler();
-        for (Object value : this.applicationContext.getBeanWithAnnotation(Controller.class).values()) {
-            requestMappingAnnotationHandler.doParseMappingController(value);
+    @Bean
+    @ConditionalOnMissingBean
+    public RequestMappingMatcher requestMappingMatcher() {
+        return new DefaultRequestMappingMatcher();
+    }
+
+    @Override
+    public void onAfterRefreshed(ApplicationContext applicationContext) {
+        RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
+        RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
+        for (Object controller : applicationContext.getBeanWithAnnotation(Controller.class).values()) {
+            List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(controller);
+            requestMappingMatcher.registryMethodMapping(methodMappings);
         }
     }
 }

@@ -13,6 +13,13 @@ import java.lang.reflect.Type;
  */
 public interface GenericPropertiesContext extends PropertyContext {
     /**
+     * 设置数据绑定器
+     *
+     * @param dataBinder 数据绑定器
+     */
+    void setDataBinder(DataBinder dataBinder);
+
+    /**
      * 获取并转换属性值
      *
      * @param key        属性 key

@@ -1,6 +1,7 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.SupportException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @date 2021/7/15 16:51
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public abstract class PropertiesUtil {
     public static final String IMPORT_KEY = "k.config.include";
 
@@ -68,6 +70,7 @@ public abstract class PropertiesUtil {
         String imports = (String) properties.get(IMPORT_KEY);
         if (CommonUtil.notEmpty(imports)) {
             CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
+            log.info("included properties config: {}", imports);
         }
     }
 

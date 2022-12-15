@@ -1,7 +1,6 @@
 package com.kfyty.core.generic;
 
 import com.kfyty.core.utils.CommonUtil;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -12,7 +11,6 @@ import lombok.EqualsAndHashCode;
  * @email kfyty725@hotmail.com
  */
 @EqualsAndHashCode
-@AllArgsConstructor
 public class Generic {
     /**
      * 泛型类型变量
@@ -28,6 +26,11 @@ public class Generic {
      * 该泛型是否是数组
      */
     private final boolean isArray;
+
+    /**
+     * 泛型索引，泛型的顺序索引
+     */
+    private int index;
 
     public Generic(String typeVariable) {
         this(typeVariable, null, false);
@@ -45,6 +48,12 @@ public class Generic {
         this(null, type, isArray);
     }
 
+    public Generic(String typeVariable, Class<?> type, boolean isArray) {
+        this.typeVariable = typeVariable;
+        this.type = type;
+        this.isArray = isArray;
+    }
+
     public Class<?> get() {
         return this.type;
     }
@@ -59,6 +68,10 @@ public class Generic {
 
     public boolean isArray() {
         return this.isArray;
+    }
+
+    public void incrementIndex() {
+        this.index++;
     }
 
     @Override

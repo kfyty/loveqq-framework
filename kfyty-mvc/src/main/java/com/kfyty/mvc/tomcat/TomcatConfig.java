@@ -56,7 +56,7 @@ public class TomcatConfig {
         this.webListeners.add(listener);
     }
 
-    private void addDefaultStaticPattern() {
+    protected void addDefaultStaticPattern() {
         this.addStaticPattern("/static/*");
         this.addStaticPattern("*.js");
         this.addStaticPattern("*.css");

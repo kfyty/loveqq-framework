@@ -1,6 +1,6 @@
 package com.kfyty.mvc.annotation;
 
-import com.kfyty.mvc.annotation.bind.ResponseBody;
+import com.kfyty.mvc.request.RequestMethod;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,16 +9,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 标识一个控制器
+ * 请求映射路径
  *
- * @see Controller
- * @see ResponseBody
+ * @see RequestMapping
  */
-@Controller
 @Documented
-@ResponseBody
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RestController {
+@RequestMapping(value = "", requestMethod = RequestMethod.PATCH)
+public @interface PatchMapping {
+
     String value() default "";
+
+    String produces() default "";
 }
