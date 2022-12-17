@@ -83,6 +83,11 @@ public abstract class CommonUtil {
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
     /**
+     * 空字符串数组
+     */
+    public static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+    /**
      * 空注解数组
      */
     public static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];

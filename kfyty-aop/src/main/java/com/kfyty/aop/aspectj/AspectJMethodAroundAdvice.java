@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj;
 
-import com.kfyty.aop.MethodRoundAdvice;
+import com.kfyty.aop.MethodAroundAdvice;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -12,7 +12,7 @@ import org.aspectj.lang.reflect.MethodSignature;
  * @date 2021/7/31 16:11
  * @email kfyty725@hotmail.com
  */
-public class AspectJMethodRoundAdvice extends AbstractAspectJAdvice implements MethodRoundAdvice {
+public class AspectJMethodAroundAdvice extends AbstractAspectJAdvice implements MethodAroundAdvice {
 
     @Override
     public Object around(ProceedingJoinPoint pjp) throws Throwable {

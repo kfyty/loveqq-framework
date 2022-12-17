@@ -9,7 +9,6 @@ import com.kfyty.mvc.mapping.MethodMapping;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 
@@ -30,9 +29,8 @@ public class PathVariableMethodArgumentResolver extends AbstractHandlerMethodArg
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
-        Map<String, Integer> restfulURLMappingIndex = mapping.getRestfulURLMappingIndex();
         String paramName = parameter.getParameterName(findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
-        Integer paramIndex = restfulURLMappingIndex.get(paramName);
+        Integer paramIndex = mapping.getRestfulURLMappingIndex(paramName);
         return this.createDataBinder(paramName, paths.get(paramIndex)).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
     }
 }

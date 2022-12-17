@@ -53,6 +53,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.kfyty.core.utils.CommonUtil.EMPTY_CLASS_ARRAY;
+import static com.kfyty.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -229,8 +231,8 @@ public abstract class ReflectUtil {
     }
 
     public static <T> T newInstance(Class<T> clazz, Map<Class<?>, Object> constructorArgs) {
-        Object[] parameterClasses = CommonUtil.empty(constructorArgs) ? null : constructorArgs.keySet().toArray(new Class[0]);
-        Object[] parameterValues = parameterClasses == null ? new Object[0] : constructorArgs.values().toArray();
+        Object[] parameterClasses = CommonUtil.empty(constructorArgs) ? null : constructorArgs.keySet().toArray(EMPTY_CLASS_ARRAY);
+        Object[] parameterValues = parameterClasses == null ? EMPTY_OBJECT_ARRAY : constructorArgs.values().toArray();
         Predicate<Constructor<T>> constructorPredicate = parameterClasses == null ? null : c -> Arrays.equals(parameterClasses, c.getParameterTypes());
         return newInstance(searchSuitableConstructor(clazz, constructorPredicate), parameterValues);
     }
