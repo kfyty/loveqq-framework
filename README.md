@@ -9,19 +9,21 @@
 内置代码生成器和默认生成模板，支持 java 编程模板、freemarker 模板以及 jsp 模板（需要 k-jte 支持），或者自定义模板引擎。
 
 ## kfyty-mvc
-注解式 mvc，支持嵌入式 tomcat、文件上传接口、 restful 风格 url 解析匹配等。
+注解式 mvc，支持嵌入式 tomcat、复杂参数自动转换绑定、 restful/ant 风格路径匹配、全局异常处理、请求拦截器等。
 
 ## kfyty-aop
-集成 AspectJ 实现注解式 aop，可单独运行，也可结合 kfyty-boot 自动运行。 
+AOP 模块，支持 ant 路径匹配、支持注解类型匹配、集成 aspectJ，可以单独使用，也可以集成到 kfyty-boot 自动配置。
 
 ## kfyty-sdk
 用于快速封装 sdk，只需编写请求及响应模型，支持拦截器，易于拓展。
 
 ## kfyty-excel
-基于 xml 解析，实现了处理数据和导出 excel 同时进行。
+基于 xml 解析，实现了处理数据和导出 excel 同时进行，避免处理数据过大导致客户端超时。
 
 ## kfyty-boot
-注解式 ioc、自动装配、作用域(单例/原型/刷新)、条件注解、异步事件、动态代理、spi 等。
+注解式 ioc、自动装配、作用域代理(单例/原型/刷新)、懒加载代理、配置文件属性自动绑定(支持嵌套的复杂类型绑定)、条件注解、异步事件、动态代理、spi 等。
+##### 集成 quartz、xxl-job、redisson、druid、HikariCP、tomcat-jdbc、jakarta.validation、百度 uid 生成器的自动配置 starter。
+
 ```xml
 <dependency>
     <groupId>com.kfyty</groupId>
