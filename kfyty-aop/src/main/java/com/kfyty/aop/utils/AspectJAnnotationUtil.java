@@ -3,14 +3,14 @@ package com.kfyty.aop.utils;
 import com.kfyty.aop.AfterReturningAdvice;
 import com.kfyty.aop.MethodAfterAdvice;
 import com.kfyty.aop.MethodBeforeAdvice;
-import com.kfyty.aop.MethodRoundAdvice;
+import com.kfyty.aop.MethodAroundAdvice;
 import com.kfyty.aop.ThrowsAdvice;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.aop.aspectj.AspectJAfterReturningAdvice;
 import com.kfyty.aop.aspectj.AspectJAfterThrowsAdvice;
 import com.kfyty.aop.aspectj.AspectJMethodAfterAdvice;
 import com.kfyty.aop.aspectj.AspectJMethodBeforeAdvice;
-import com.kfyty.aop.aspectj.AspectJMethodRoundAdvice;
+import com.kfyty.aop.aspectj.AspectJMethodAroundAdvice;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -83,7 +83,7 @@ public abstract class AspectJAnnotationUtil {
     public static AbstractAspectJAdvice resolveAspectFor(Class<?> annotationType) {
         Objects.requireNonNull(annotationType);
         if (annotationType.equals(Around.class)) {
-            return new AspectJMethodRoundAdvice();
+            return new AspectJMethodAroundAdvice();
         }
         if (annotationType.equals(Before.class)) {
             return new AspectJMethodBeforeAdvice();
@@ -102,7 +102,7 @@ public abstract class AspectJAnnotationUtil {
 
     public static Class<? extends Annotation> resolveAnnotationTypeFor(Class<?> adviceType) {
         Objects.requireNonNull(adviceType);
-        if (MethodRoundAdvice.class.isAssignableFrom(adviceType)) {
+        if (MethodAroundAdvice.class.isAssignableFrom(adviceType)) {
             return Around.class;
         }
         if (MethodBeforeAdvice.class.isAssignableFrom(adviceType)) {

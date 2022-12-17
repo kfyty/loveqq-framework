@@ -1,15 +1,16 @@
 package com.kfyty.mvc.mapping;
 
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.wrapper.Pair;
 import com.kfyty.mvc.request.RequestMethod;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 功能描述: url 映射
@@ -20,6 +21,7 @@ import java.util.Map;
  */
 @Data
 @Slf4j
+@NoArgsConstructor
 public class MethodMapping {
     /**
      * URL
@@ -29,12 +31,12 @@ public class MethodMapping {
     /**
      * url 长度
      */
-    private Integer length;
+    private int length;
 
     /**
      * url 路径
      */
-    private List<String> paths;
+    private String[] paths;
 
     /**
      * 请求方法
@@ -54,7 +56,7 @@ public class MethodMapping {
     /**
      * restful 风格 url 数据索引
      */
-    private Map<String, Integer> restfulURLMappingIndex;
+    private Pair<String, Integer>[] restfulURLMappingIndex;
 
     /**
      * 映射方法
@@ -66,16 +68,20 @@ public class MethodMapping {
      */
     private Object controller;
 
-    public MethodMapping() {
-        this.restfulUrl = false;
-        this.restfulURLMappingIndex = new LinkedHashMap<>();
-    }
-
     public static MethodMapping newURLMapping(Object controller, Method mappingMethod) {
         MethodMapping methodMapping = new MethodMapping();
         methodMapping.setController(controller);
         methodMapping.setMappingMethod(mappingMethod);
         return methodMapping;
+    }
+
+    public Integer getRestfulURLMappingIndex(String path) {
+        for (Pair<String, Integer> urlMappingIndex : this.restfulURLMappingIndex) {
+            if (Objects.equals(urlMappingIndex.getKey(), path)) {
+                return urlMappingIndex.getValue();
+            }
+        }
+        throw new IllegalArgumentException("the restful path index does not exists: restful=" + this.url + ", path=" + path);
     }
 
     public Map<Integer, Map<String, MethodMapping>> buildUrlLengthMapping(RequestMethodMapping requestMethodMapping) {

@@ -15,7 +15,7 @@ import static com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy.currentJoinPo
  * @date 2021/7/29 16:04
  * @email kfyty725@hotmail.com
  */
-public interface MethodRoundAdvice extends Advice, MethodInterceptorChainPoint {
+public interface MethodAroundAdvice extends Advice, MethodInterceptorChainPoint {
 
     @Override
     default Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {

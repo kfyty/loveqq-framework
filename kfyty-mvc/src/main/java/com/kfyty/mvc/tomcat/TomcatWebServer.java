@@ -79,7 +79,7 @@ public class TomcatWebServer implements WebServer {
     public void start() {
         this.prepareConnector();
         this.started = true;
-        log.info("tomcat started on port({})", getPort());
+        log.info("tomcat started on port({})", this.getPort());
     }
 
     @Override
@@ -106,8 +106,8 @@ public class TomcatWebServer implements WebServer {
 
     private void configTomcat() {
         try {
-            tomcat.setPort(getPort());
-            tomcat.setBaseDir(createTempDir("tomcat").getAbsolutePath());
+            tomcat.setPort(this.getPort());
+            tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
             tomcat.getHost().setAutoDeploy(false);
             this.prepareContext();
             this.tomcat.start();                // 提前启动 tomcat 使监听器生效
@@ -242,7 +242,7 @@ public class TomcatWebServer implements WebServer {
         try {
             this.tomcat.stop();
         } catch (Throwable e) {
-            log.error("stop tomcat error: {}", e.getMessage());
+            log.error("stop tomcat error: {}", e.getMessage(), e);
         }
     }
 

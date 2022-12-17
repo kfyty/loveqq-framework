@@ -108,7 +108,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
         String[] argNames = AspectJAnnotationUtil.findArgNames(this.aspectMethod);
         Class<?>[] parameterTypes = this.aspectMethod.getParameterTypes();
         if (CommonUtil.empty(argNames) && parameterTypes.length == 1 && JoinPoint.class.isAssignableFrom(parameterTypes[0])) {
-            return new String[0];
+            return CommonUtil.EMPTY_STRING_ARRAY;
         }
         if (parameterTypes.length != argNames.length) {
             throw new IllegalArgumentException("the length of the arg names and the length of the parameter types are inconsistent");
@@ -124,7 +124,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
                 result.add(argNames[i]);
             }
         }
-        return result.toArray(new String[0]);
+        return result.toArray(CommonUtil.EMPTY_STRING_ARRAY);
     }
 
     protected Class<?>[] buildParameterTypes() {

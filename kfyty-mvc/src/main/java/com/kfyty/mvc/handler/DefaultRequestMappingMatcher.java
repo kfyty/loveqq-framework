@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -81,7 +82,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     protected MethodMapping preciseMatch(HttpServletRequest request) {
-        Map<Integer, Map<String, MethodMapping>> urlLengthMapping = this.requestMethodMappingMap.get(matchRequestMethod(request.getMethod())).getUrlLengthMapping();
+        Map<Integer, Map<String, MethodMapping>> urlLengthMapping = Optional.ofNullable(this.requestMethodMappingMap.get(matchRequestMethod(request.getMethod()))).map(RequestMethodMapping::getUrlLengthMapping).orElse(null);
         if (CommonUtil.empty(urlLengthMapping)) {
             return null;
         }
@@ -102,10 +103,10 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
             }
             boolean match = true;
             for (int i = 0; i < paths.size(); i++) {
-                if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(methodMapping.getPaths().get(i)).matches()) {
+                if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(methodMapping.getPaths()[i]).matches()) {
                     continue;
                 }
-                if (!methodMapping.getPaths().get(i).equals(paths.get(i))) {
+                if (!methodMapping.getPaths()[i].equals(paths.get(i))) {
                     match = false;
                     break;
                 }
@@ -124,8 +125,8 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
         if (methodMappings.size() == 1) {
             return methodMappings.get(0);
         }
-        methodMappings = methodMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().size())).collect(Collectors.toList());
-        if (methodMappings.get(0).getRestfulURLMappingIndex().size() == methodMappings.get(1).getRestfulURLMappingIndex().size()) {
+        methodMappings = methodMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulURLMappingIndex().length)).collect(Collectors.toList());
+        if (methodMappings.get(0).getRestfulURLMappingIndex().length == methodMappings.get(1).getRestfulURLMappingIndex().length) {
             throw new IllegalArgumentException(CommonUtil.format("mapping method ambiguous: [URL:{}, RequestMethod: {}] !", request.getRequestURI(), request.getMethod()));
         }
         return methodMappings.get(0);

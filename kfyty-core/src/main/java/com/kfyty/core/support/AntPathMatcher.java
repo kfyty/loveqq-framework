@@ -1,5 +1,7 @@
 package com.kfyty.core.support;
 
+import com.kfyty.core.utils.CommonUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -402,7 +404,7 @@ public class AntPathMatcher implements PatternMatcher {
 
     public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
         if (str == null) {
-            return new String[0];
+            return CommonUtil.EMPTY_STRING_ARRAY;
         }
         StringTokenizer st = new StringTokenizer(str, delimiters);
         List<String> tokens = new ArrayList<>();
@@ -415,6 +417,6 @@ public class AntPathMatcher implements PatternMatcher {
                 tokens.add(token);
             }
         }
-        return tokens.toArray(new String[0]);
+        return tokens.toArray(CommonUtil.EMPTY_STRING_ARRAY);
     }
 }

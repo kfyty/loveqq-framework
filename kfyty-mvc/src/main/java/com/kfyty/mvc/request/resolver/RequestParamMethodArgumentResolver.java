@@ -44,9 +44,9 @@ public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArg
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         RequestParam annotation = findAnnotation(parameter.getParameter(), RequestParam.class);
         String paramName = parameter.getParameterName(annotation, RequestParam::value);
-        String defaultValue = annotation == null ? CommonUtil.EMPTY_STRING : annotation.defaultValue();
         if (isBaseDataType(parameter.getParamType())) {
             String param = ServletUtil.getParameter(request, paramName);
+            String defaultValue = annotation == null ? CommonUtil.EMPTY_STRING : annotation.defaultValue();
             return this.createDataBinder(paramName, param != null ? param : defaultValue).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
         }
         if (parameter.getParameterGeneric() instanceof Class) {
