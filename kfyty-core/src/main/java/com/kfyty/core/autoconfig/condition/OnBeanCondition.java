@@ -39,7 +39,7 @@ public class OnBeanCondition extends AbstractBeanCondition {
     @Override
     protected Class<?>[] conditionTypes(AnnotationWrapper<?> metadata) {
         ConditionalOnBean conditionalOnBean = (ConditionalOnBean) metadata.get();
-        if (CommonUtil.notEmpty(conditionalOnBean.value())) {
+        if (CommonUtil.notEmpty(conditionalOnBean.value()) || CommonUtil.notEmpty(conditionalOnBean.name())) {
             return conditionalOnBean.value();
         }
         return this.buildBeanTypes(metadata);

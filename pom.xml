@@ -18,6 +18,7 @@
         <module>kfyty-sdk</module>
         <module>kfyty-excel</module>
         <module>kfyty-boot-starter-datasource</module>
+        <module>kfyty-boot-starter-spring-tx</module>
         <module>kfyty-boot-starter-validator</module>
         <module>kfyty-boot-starter-redisson</module>
         <module>kfyty-boot-starter-quartz</module>

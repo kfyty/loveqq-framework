@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.autoconfig;
 
+import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
 import com.kfyty.core.autoconfig.ApplicationContext;
@@ -9,8 +10,11 @@ import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.database.jdbc.transaction.ManagedJdbcTransaction;
 
+import javax.sql.DataSource;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
@@ -32,6 +36,12 @@ public class MapperAutoConfig implements ImportBeanDefinition {
         configuration.setOutputEncoding("UTF-8");
         configuration.setClassicCompatible(true);
         return new FreemarkerDynamicProvider().setFreemarkerConfiguration(configuration);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "transactionFactory")
+    public Supplier<Transaction> transactionFactory(DataSource dataSource) {
+        return () -> new ManagedJdbcTransaction(dataSource);
     }
 
     @Bean
