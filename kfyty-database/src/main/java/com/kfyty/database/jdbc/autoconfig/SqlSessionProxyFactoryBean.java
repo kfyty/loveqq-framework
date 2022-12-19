@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.autoconfig;
 
+import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
@@ -13,6 +14,7 @@ import lombok.Data;
 import javax.sql.DataSource;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 描述: SqlSessionProxyFactoryBean
@@ -23,8 +25,11 @@ import java.util.List;
  */
 @Data
 public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFactory>, InitializingBean {
-    @Autowired(required = false)
+    @Autowired
     private DataSource dataSource;
+
+    @Autowired(required = false)
+    private Supplier<Transaction> transactionFactory;
 
     @Autowired(required = false)
     private DynamicProvider<?> dynamicProvider;
@@ -42,18 +47,17 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
         Configuration configuration = new Configuration()
                 .setDataSource(this.getDataSource())
                 .setInterceptors(this.getInterceptors());
+        if (this.transactionFactory != null) {
+            configuration.setTransactionFactory(this.getTransactionFactory());
+        }
         if (this.dynamicProvider != null) {
-            this.dynamicProvider.setConfiguration(configuration);
-            configuration.setDynamicProvider(dynamicProvider);
+            this.dynamicProvider.setConfiguration(configuration.setDynamicProvider(dynamicProvider));
         }
         return new SqlSessionProxyFactory(configuration);
     }
 
     @Override
     public void afterPropertiesSet() {
-        if (this.dataSource == null) {
-            throw new IllegalStateException("data source can't null");
-        }
         if (this.interceptors != null) {
             interceptors.sort(Comparator.comparing(BeanUtil::getBeanOrder));
         }

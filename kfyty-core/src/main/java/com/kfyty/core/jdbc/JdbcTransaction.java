@@ -17,12 +17,11 @@ import java.sql.SQLException;
  */
 @Slf4j
 public class JdbcTransaction implements Transaction {
-    private final DataSource dataSource;
-    private final TransactionIsolationLevel level;
+    protected final DataSource dataSource;
+    protected final TransactionIsolationLevel level;
 
-    private Connection connection;
-    private boolean autoCommit;
-    private boolean curAutoCommit;
+    protected Connection connection;
+    protected boolean autoCommit;
 
     public JdbcTransaction(DataSource dataSource) {
         this(dataSource, null);
@@ -43,7 +42,7 @@ public class JdbcTransaction implements Transaction {
 
     @Override
     public void commit() throws SQLException {
-        if (this.connection != null && !this.connection.getAutoCommit()) {
+        if (this.connection != null && !this.isAutoCommit()) {
             if (log.isDebugEnabled()) {
                 log.debug("Committing JDBC Connection [" + this.connection + "]");
             }
@@ -53,7 +52,7 @@ public class JdbcTransaction implements Transaction {
 
     @Override
     public void rollback() throws SQLException {
-        if (this.connection != null && !this.connection.getAutoCommit()) {
+        if (this.connection != null && !this.isAutoCommit()) {
             if (log.isDebugEnabled()) {
                 log.debug("Rolling back JDBC Connection [" + this.connection + "]");
             }
@@ -64,9 +63,9 @@ public class JdbcTransaction implements Transaction {
     @Override
     public void close() throws SQLException {
         if (this.connection != null) {
-            this.connection.setAutoCommit(autoCommit);
+            this.connection.setAutoCommit(this.autoCommit);
             if (log.isDebugEnabled()) {
-                log.debug("Closing JDBC Connection [" + connection + "]");
+                log.debug("Closing JDBC Connection [" + this.connection + "]");
             }
             this.connection.close();
             this.connection = null;
@@ -74,8 +73,8 @@ public class JdbcTransaction implements Transaction {
     }
 
     @Override
-    public boolean isAutoCommit() {
-        return this.curAutoCommit;
+    public boolean isAutoCommit() throws SQLException {
+        return this.connection.getAutoCommit();
     }
 
     @Override
@@ -84,13 +83,11 @@ public class JdbcTransaction implements Transaction {
             this.openConnection();
         }
         this.connection.setAutoCommit(autoCommit);
-        this.curAutoCommit = autoCommit;
     }
 
-    private Connection openConnection() throws SQLException {
+    protected Connection openConnection() throws SQLException {
         this.connection = dataSource.getConnection();
         this.autoCommit = this.connection.getAutoCommit();
-        this.curAutoCommit = this.autoCommit;
         if (this.level != null) {
             this.connection.setTransactionIsolation(this.level.getLevel());
         }

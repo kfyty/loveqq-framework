@@ -2,7 +2,6 @@ package com.kfyty.database.jdbc.session;
 
 import com.kfyty.core.generic.Generic;
 import com.kfyty.core.generic.SimpleGeneric;
-import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.jdbc.TransactionHolder;
 import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.core.method.MethodParameter;
@@ -85,7 +84,7 @@ public class SqlSession implements InvocationHandler {
     public Transaction getTransaction() {
         Transaction transaction = TransactionHolder.currentTransaction(false);
         if (transaction == null) {
-            TransactionHolder.setCurrentTransaction(transaction = new JdbcTransaction(this.configuration.getDataSource()));
+            TransactionHolder.setCurrentTransaction(transaction = this.configuration.getTransactionFactory().get());
         }
         return transaction;
     }

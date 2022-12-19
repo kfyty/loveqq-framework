@@ -3,18 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.kfyty</groupId>
         <artifactId>kfyty-utils</artifactId>
+        <groupId>com.kfyty</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kfyty-database</artifactId>
+    <artifactId>kfyty-boot-starter-spring-tx</artifactId>
     <packaging>jar</packaging>
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
+        <spring.tx.version>5.2.22.RELEASE</spring.tx.version>
     </properties>
 
     <dependencies>
@@ -24,10 +24,6 @@
             <version>${kfyty.utils.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
                 </exclusion>
@@ -36,32 +32,20 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>kfyty-boot-starter-datasource</artifactId>
+            <artifactId>kfyty-aop</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>com.kfyty</groupId>
-            <artifactId>k-jte</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <optional>true</optional>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.tx.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-beans</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

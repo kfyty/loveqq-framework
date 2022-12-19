@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.session;
 
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
@@ -65,6 +67,12 @@ public class Configuration {
     private DataSource dataSource;
 
     /**
+     * 事务工厂
+     */
+    @Getter
+    private Supplier<Transaction> transactionFactory;
+
+    /**
      * 动态 SQL 提供者
      */
     @Getter
@@ -93,6 +101,17 @@ public class Configuration {
      */
     public Configuration setDataSource(DataSource dataSource) {
         this.dataSource = Objects.requireNonNull(dataSource);
+        return this;
+    }
+
+    /**
+     * 设置事务工厂
+     *
+     * @param transactionFactory 事务工厂
+     * @return this
+     */
+    public Configuration setTransactionFactory(Supplier<Transaction> transactionFactory) {
+        this.transactionFactory = Objects.requireNonNull(transactionFactory);
         return this;
     }
 

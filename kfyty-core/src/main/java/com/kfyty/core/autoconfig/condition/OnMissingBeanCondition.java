@@ -27,7 +27,7 @@ public class OnMissingBeanCondition extends OnBeanCondition {
     @Override
     protected Class<?>[] conditionTypes(AnnotationWrapper<?> metadata) {
         ConditionalOnMissingBean conditionalOnMissingBean = (ConditionalOnMissingBean) metadata.get();
-        if (CommonUtil.notEmpty(conditionalOnMissingBean.value())) {
+        if (CommonUtil.notEmpty(conditionalOnMissingBean.value()) || CommonUtil.notEmpty(conditionalOnMissingBean.name())) {
             return conditionalOnMissingBean.value();
         }
         return this.buildBeanTypes(metadata);

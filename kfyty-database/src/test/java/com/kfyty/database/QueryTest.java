@@ -1,6 +1,7 @@
 package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
@@ -29,6 +30,7 @@ public class QueryTest {
         FreemarkerDynamicProvider dynamicProvider = new FreemarkerDynamicProvider();
         Configuration configuration = new Configuration()
                 .setDataSource(dataSource)
+                .setTransactionFactory(() -> new JdbcTransaction(dataSource))
                 .addInterceptor(new GeneratedKeysInterceptor())
                 .setDynamicProvider(dynamicProvider, "/mapper");
         dynamicProvider.setConfiguration(configuration);

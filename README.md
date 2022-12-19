@@ -22,7 +22,7 @@ AOP 模块，支持 ant 路径匹配、支持注解类型匹配、集成 aspectJ
 
 ## kfyty-boot
 注解式 ioc、自动装配、作用域代理(单例/原型/刷新)、懒加载代理、配置文件属性自动绑定(支持嵌套的复杂类型绑定)、条件注解、异步事件、动态代理、spi 等。
-##### 集成 quartz、xxl-job、redisson、druid、HikariCP、tomcat-jdbc、jakarta.validation、百度 uid 生成器的自动配置 starter。
+##### 集成独立 spring-tx 事务管理器、quartz、xxl-job、redisson、druid、HikariCP、tomcat-jdbc、jakarta.validation、百度 uid 生成器的自动配置 starter。
 
 ```xml
 <dependency>
