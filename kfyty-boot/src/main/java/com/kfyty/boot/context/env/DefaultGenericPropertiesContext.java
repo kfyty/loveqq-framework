@@ -212,7 +212,8 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
                 continue;
             }
 
-            String key = entry.getKey().substring(replace.length(), entry.getKey().indexOf('.', replace.length()));
+            int keyIndex = entry.getKey().indexOf('.', replace.length());
+            String key = keyIndex < 0 ? entry.getKey().substring(replace.length()) : entry.getKey().substring(replace.length(), keyIndex);
 
             if (nestedTargetType != null) {
                 if (key.matches(".+\\[[0-9]+]")) {
