@@ -464,7 +464,7 @@ public abstract class ReflectUtil {
     public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
         final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
         return methodsCache.computeIfAbsent(new WeakKey<>(key), k -> {
-            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).collect(Collectors.toList());
+            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).filter(e -> !e.isBridge()).collect(Collectors.toList());
             list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
             return list;
         });
@@ -474,7 +474,7 @@ public abstract class ReflectUtil {
         if (clazz == null || Object.class.equals(clazz)) {
             return Collections.emptyList();
         }
-        Predicate<Method> methodPredicate = e -> containPrivate || !Modifier.isPrivate(e.getModifiers());
+        Predicate<Method> methodPredicate = e -> !e.isBridge() && (containPrivate || !Modifier.isPrivate(e.getModifiers()));
         List<Method> list = Arrays.stream(clazz.getInterfaces()).flatMap(e -> getMethods(e, containPrivate).stream()).filter(methodPredicate).collect(Collectors.toList());
         if (clazz.getSuperclass() != null) {
             list.addAll(getMethods(clazz.getSuperclass(), containPrivate).stream().filter(methodPredicate).collect(Collectors.toList()));
