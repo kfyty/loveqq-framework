@@ -9,8 +9,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -36,30 +38,32 @@ public abstract class PropertiesUtil {
     }
 
     public static Properties load(String path, ClassLoader classLoader) {
-        return load(path, classLoader, PropertiesUtil::include);
+        return load(path, classLoader, null, PropertiesUtil::include);
     }
 
     public static Properties load(InputStream stream, ClassLoader classLoader) {
-        return load(stream, classLoader, PropertiesUtil::include);
+        return load(stream, classLoader, null, PropertiesUtil::include);
     }
 
-    public static Properties load(String path, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
+    public static Properties load(String path, ClassLoader classLoader, Consumer<Properties> before, BiConsumer<Properties, ClassLoader> after) {
         Path resolvedPath = IOUtil.getPath(path);
         if (resolvedPath != null && resolvedPath.isAbsolute()) {
-            return load(IOUtil.newInputStream(resolvedPath.toFile()), classLoader, after);
+            return load(IOUtil.newInputStream(resolvedPath.toFile()), classLoader, before, after);
         }
-        return load(classLoader.getResourceAsStream(path), classLoader, after);
+        return load(classLoader.getResourceAsStream(path), classLoader, before, after);
     }
 
-    public static Properties load(InputStream stream, ClassLoader classLoader, BiConsumer<Properties, ClassLoader> after) {
+    public static Properties load(InputStream stream, ClassLoader classLoader, Consumer<Properties> before, BiConsumer<Properties, ClassLoader> after) {
         try {
             Properties properties = new Properties();
             if (stream == null) {
+                Optional.ofNullable(before).ifPresent(e -> e.accept(properties));
                 return properties;
             }
             properties.load(new BufferedReader(new InputStreamReader(stream, UTF_8)));
+            Optional.ofNullable(before).ifPresent(e -> e.accept(properties));
             processPlaceholder(properties);
-            after.accept(properties, classLoader);
+            Optional.ofNullable(after).ifPresent(e -> e.accept(properties, classLoader));
             return properties;
         } catch (IOException e) {
             throw new SupportException("load properties failed !", e);

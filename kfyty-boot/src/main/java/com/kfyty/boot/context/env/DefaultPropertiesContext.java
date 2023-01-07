@@ -85,8 +85,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void loadProperties(String path) {
-        load(path, Thread.currentThread().getContextClassLoader(), (p, c) -> {
-            p.putAll(this.propertySources);
+        load(path, Thread.currentThread().getContextClassLoader(), p -> p.putAll(this.propertySources), (p, c) -> {
             include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {
                 this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
