@@ -4,7 +4,6 @@ import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.BeanUtil;
-import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.mvc.handler.DefaultRequestMappingMatcher;
@@ -48,7 +47,19 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 @Getter
 public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
+    /**
+     * BeanFactory 属性 key
+     */
+    private static final String BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE = "BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE";
+
+    /**
+     * jsp 路径前缀配置 key
+     */
     private static final String PREFIX_PARAM_NAME = "prefix";
+
+    /**
+     * jsp 路径后缀配置 key
+     */
     private static final String SUFFIX_PARAM_NAME = "suffix";
 
     @Setter
@@ -72,13 +83,31 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
         this.beanFactory = beanFactory;
     }
 
+    public BeanFactory getBeanFactory() {
+        if (this.beanFactory == null) {
+            this.beanFactory = (BeanFactory) this.getServletContext().getAttribute(BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE);
+        }
+        return this.beanFactory;
+    }
+
+    @Override
+    public void init() throws ServletException {
+        DispatcherServlet bean = this.getBeanFactory().getBean(DispatcherServlet.class);
+        if (this != bean) {
+            this.setArgumentResolvers(bean.getArgumentResolvers());
+            this.setReturnValueProcessors(bean.getReturnValueProcessors());
+            this.setInterceptorChains(bean.getInterceptorChains());
+            this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
+        }
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
-            super.init();
+            super.init(config);
             log.info("initialize DispatcherServlet...");
-            prefix = ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(prefix);
-            suffix = ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).filter(CommonUtil::notEmpty).orElse(suffix);
+            this.setPrefix(ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).orElse(prefix));
+            this.setSuffix(ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).orElse(suffix));
             this.prepareDefaultArgumentResolversReturnValueProcessor();
             this.afterPropertiesSet();
             log.info("initialize DispatcherServlet success !");
@@ -178,7 +207,7 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
                 this.processReturnValue(o, new MethodParameter(methodMapping.getMappingMethod()), request, response, params);
             }
         } catch (Throwable e) {
-            log.error("process request error !");
+            log.error("process request error: {}", e.getMessage());
             exception = e;
             throw new ServletException(e);
         } finally {

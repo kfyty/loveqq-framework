@@ -7,8 +7,11 @@ import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import com.kfyty.mvc.servlet.DispatcherServlet;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -26,26 +29,47 @@ import javax.servlet.ServletContextListener;
         "com.kfyty.mvc.autoconfig.WebSocketAutoConfig"
 }))
 public class WebMvcAutoConfigListener implements ServletContextListener {
+    /**
+     * BeanFactory 属性 key
+     *
+     * @see DispatcherServlet#BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE
+     */
+    private static final String BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE = "BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE";
+
+    /**
+     * 扫描的基础包路径
+     */
     private static final String BASE_PACKAGE_PARAM_NAME = "basePackage";
 
+    /**
+     * ioc
+     */
     private volatile ApplicationContext applicationContext;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        if (this.applicationContext == null) {
-            synchronized (WebMvcAutoConfigListener.class) {
-                if (this.applicationContext == null) {
-                    String basePackage = sce.getServletContext().getInitParameter(BASE_PACKAGE_PARAM_NAME);
-                    ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
-                    ReflectUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
-                    this.applicationContext = K.run(WebMvcAutoConfigListener.class);
-                }
+        synchronized (WebMvcAutoConfigListener.class) {
+            if (this.applicationContext == null) {
+                this.scanBasePackageConfig(sce.getServletContext());
+                this.applicationContext = K.run(WebMvcAutoConfigListener.class);
+                sce.getServletContext().setAttribute(BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE, this.applicationContext);
             }
         }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        synchronized (WebMvcAutoConfigListener.class) {
+            if (this.applicationContext != null) {
+                IOUtil.close(this.applicationContext);
+                sce.getServletContext().removeAttribute(BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE);
+            }
+        }
+    }
 
+    protected void scanBasePackageConfig(ServletContext servletContext) {
+        String basePackage = servletContext.getInitParameter(BASE_PACKAGE_PARAM_NAME);
+        ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
+        ReflectUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
     }
 }
