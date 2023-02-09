@@ -44,8 +44,7 @@ public abstract class JdbcUtil {
     public static int execute(Transaction transaction, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
         try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params)) {
-            preparedStatement.execute();
-            int updateCount = preparedStatement.getUpdateCount();
+            int updateCount = preparedStatement.executeUpdate();
             if (log.isDebugEnabled()) {
                 log.debug("<== affected rows: {}", updateCount);
             }
