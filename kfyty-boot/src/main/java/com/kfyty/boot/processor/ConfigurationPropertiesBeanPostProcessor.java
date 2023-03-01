@@ -8,6 +8,7 @@ import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.autoconfig.env.DataBinder;
+import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 
@@ -29,7 +30,7 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
         ConfigurationProperties configurationProperties = this.obtainConfigurationPropertiesAnnotation(beanName);
         if (configurationProperties != null) {
-            this.dataBinder.bind(AopUtil.getTarget(bean), configurationProperties.value(), configurationProperties.ignoreInvalidFields(), configurationProperties.ignoreUnknownFields());
+            this.dataBinder.bind(new Instance(AopUtil.getTarget(bean)), configurationProperties.value(), configurationProperties.ignoreInvalidFields(), configurationProperties.ignoreUnknownFields());
         }
         return null;
     }

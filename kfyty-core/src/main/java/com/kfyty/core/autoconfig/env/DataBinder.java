@@ -1,5 +1,7 @@
 package com.kfyty.core.autoconfig.env;
 
+import com.kfyty.core.support.Instance;
+
 import java.lang.reflect.Field;
 
 /**
@@ -45,7 +47,7 @@ public interface DataBinder extends Cloneable {
      * @param target 目标 bean
      * @param prefix 属性前缀
      */
-    Object bind(Object target, String prefix);
+    Instance bind(Instance target, String prefix);
 
     /**
      * 绑定目标 bean 的属性
@@ -55,7 +57,7 @@ public interface DataBinder extends Cloneable {
      * @param ignoreInvalidFields 无法转换为目标字段类型时是否忽略
      * @param ignoreUnknownFields 目标字段在绑定属性中不存在时是否忽略
      */
-    Object bind(Object bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields);
+    Instance bind(Instance bean, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields);
 
     /**
      * 绑定目标 bean 属性
@@ -66,7 +68,7 @@ public interface DataBinder extends Cloneable {
      * @param ignoreInvalidFields 无法转换为目标字段类型时是否忽略
      * @param ignoreUnknownFields 目标字段在绑定属性中不存在时是否忽略
      */
-    <T extends Enum<T>> Object bind(Object bean, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields);
+    <T extends Enum<T>> Instance bind(Instance bean, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields);
 
     /**
      * 克隆数据绑定器，但清空属性配置

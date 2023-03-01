@@ -2,6 +2,7 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.mvc.annotation.bind.RequestParam;
@@ -50,7 +51,7 @@ public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArg
             return this.createDataBinder(paramName, param != null ? param : defaultValue).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
         }
         if (parameter.getParameterGeneric() instanceof Class) {
-            return this.createDataBinder(getRequestParametersMap(request, paramName)).bind(ReflectUtil.newInstance(parameter.getParamType()), paramName);
+            return this.createDataBinder(getRequestParametersMap(request, paramName)).bind(new Instance(ReflectUtil.newInstance(parameter.getParamType())), paramName).getTarget();
         }
         return this.createDataBinder(getRequestParametersMap(request, paramName)).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
     }

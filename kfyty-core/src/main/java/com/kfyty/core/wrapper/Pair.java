@@ -2,6 +2,7 @@ package com.kfyty.core.wrapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 描述: 一对值
@@ -11,6 +12,7 @@ import lombok.Data;
  * @email kfyty725@hotmail.com
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Pair<K, V> {
     /**

@@ -6,6 +6,7 @@ import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.ExceptionUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
@@ -49,13 +50,13 @@ public class DefaultDataBinder implements DataBinder {
     }
 
     @Override
-    public Object bind(Object target, String prefix) {
+    public Instance bind(Instance target, String prefix) {
         return this.bind(target, prefix, this.ignoreInvalidFields, this.ignoreUnknownFields);
     }
 
     @Override
-    public Object bind(Object target, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
-        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(target.getClass()).entrySet()) {
+    public Instance bind(Instance target, String prefix, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
+        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(target.getTarget().getClass()).entrySet()) {
             if (ReflectUtil.isStaticFinal(entry.getValue().getModifiers())) {
                 continue;
             }
@@ -66,17 +67,17 @@ public class DefaultDataBinder implements DataBinder {
     }
 
     @Override
-    public <T extends Enum<T>> Object bind(Object target, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
+    public <T extends Enum<T>> Instance bind(Instance target, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
         if (hasAnnotation(field, NestedConfigurationProperty.class)) {
             if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
                 Object fieldInstance = ReflectUtil.newInstance(field.getType());
-                ReflectUtil.setFieldValue(target, field, fieldInstance);
-                this.bind(fieldInstance, key, ignoreInvalidFields, ignoreUnknownFields);
+                ReflectUtil.setFieldValue(target.getTarget(), field, fieldInstance);
+                this.bind(new Instance(fieldInstance, field), key, ignoreInvalidFields, ignoreUnknownFields);
             }
             return target;
         }
 
-        if (!this.propertyContext.contains(key) && !(this.isMapProperties(key, field) || this.isCollectionProperties(key, field))) {
+        if (!this.propertyContext.contains(key) && !(isMapProperties(key, field) || isCollectionProperties(key, field))) {
             if (ignoreUnknownFields) {
                 return target;
             }
@@ -86,14 +87,14 @@ public class DefaultDataBinder implements DataBinder {
         if (field.getType().isEnum()) {
             @SuppressWarnings("unchecked")
             T enumValue = Enum.valueOf((Class<T>) field.getType(), this.propertyContext.getProperty(key, String.class));
-            ReflectUtil.setFieldValue(target, field, enumValue);
+            ReflectUtil.setFieldValue(target.getTarget(), field, enumValue);
             return target;
         }
 
         try {
-            Object property = this.propertyContext.getProperty(key, field.getGenericType());
+            Object property = this.propertyContext.getProperty(key, target.buildTargetGeneric(field));
             if (property != null) {
-                ReflectUtil.setFieldValue(target, field, property);
+                ReflectUtil.setFieldValue(target.getTarget(), field, property);
             }
         } catch (Exception e) {
             if (ignoreInvalidFields) {
@@ -115,11 +116,11 @@ public class DefaultDataBinder implements DataBinder {
         }
     }
 
-    protected boolean isMapProperties(String key, Field field) {
+    public static boolean isMapProperties(String key, Field field) {
         return Map.class.isAssignableFrom(field.getType());
     }
 
-    protected boolean isCollectionProperties(String key, Field field) {
+    public static boolean isCollectionProperties(String key, Field field) {
         return field.getType().isArray() || Collection.class.isAssignableFrom(field.getType());
     }
 }
