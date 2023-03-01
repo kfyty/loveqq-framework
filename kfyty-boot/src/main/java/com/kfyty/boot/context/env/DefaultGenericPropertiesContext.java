@@ -7,6 +7,7 @@ import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 
@@ -127,7 +128,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     @SuppressWarnings("unchecked")
     public Map<String, Object> bindMapProperties(String key, SimpleGeneric targetType) {
         Class<?> valueType = targetType.size() > 1 ? targetType.getMapValueType().get() : (Class<?>) targetType.getResolveType();
-        return convertAndBind(key, (Map<String, Object>) newInstance(getRawType(targetType.getResolveType())), valueType, targetType.resolveNestedGeneric());
+        return convertAndBind(key, (Map<String, Object>) newInstance(getRawType(targetType.getResolveType())), valueType, targetType, targetType.resolveNestedGeneric());
     }
 
     /**
@@ -146,7 +147,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         } else {
             Map<String, Map<String, String>> properties = this.searchCollectionProperties(key);
             if (CommonUtil.notEmpty(properties)) {
-                retValue = this.convertAndBind(key, targetType.getSimpleActualType(), targetType.resolveNestedGeneric(), properties);
+                retValue = this.convertAndBind(key, targetType.getSimpleActualType(), targetType, targetType.resolveNestedGeneric(), properties);
             }
         }
 
@@ -168,11 +169,12 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      *
      * @param prefix           属性前缀
      * @param elementType      绑定类型
+     * @param targetType       目标泛型
      * @param nestedTargetType 嵌套的泛型
      * @param properties       集合属性值
      * @return 绑定结果
      */
-    public Collection<?> convertAndBind(String prefix, Class<?> elementType, SimpleGeneric nestedTargetType, Map<String, Map<String, String>> properties) {
+    public Collection<?> convertAndBind(String prefix, Class<?> elementType, SimpleGeneric targetType, SimpleGeneric nestedTargetType, Map<String, Map<String, String>> properties) {
         List<Object> result = new ArrayList<>(properties.size());
         boolean isBaseType = elementType == Object.class || ReflectUtil.isBaseDataType(elementType);
         for (Map.Entry<String, Map<String, String>> entry : properties.entrySet()) {
@@ -185,9 +187,9 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
                 continue;
             }
             String key = prefix + entry.getKey();
-            Object instance = newInstance(elementType);
+            Instance instance = new Instance(newInstance(elementType), (SimpleGeneric) targetType.getGenericInfo().get(targetType.getFirst()));
             this.dataBinder.bind(instance, key);
-            result.add(instance);
+            result.add(instance.getTarget());
         }
         return result;
     }
@@ -198,10 +200,11 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      * @param prefix           前缀
      * @param target           绑定目标
      * @param valueType        Map 值类型
+     * @param targetType       目标泛型
      * @param nestedTargetType 嵌套的泛型
      * @return 绑定结果
      */
-    public Map<String, Object> convertAndBind(String prefix, Map<String, Object> target, Class<?> valueType, SimpleGeneric nestedTargetType) {
+    public Map<String, Object> convertAndBind(String prefix, Map<String, Object> target, Class<?> valueType, SimpleGeneric targetType, SimpleGeneric nestedTargetType) {
         String replace = prefix + ".";
         Set<String> bind = new HashSet<>(4);
         boolean isBaseType = valueType == Object.class || ReflectUtil.isBaseDataType(valueType);
@@ -225,9 +228,9 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
 
             String bindKey = replace + key;
             if (!bind.contains(bindKey)) {
-                Object instance = newInstance(valueType);
+                Instance instance = new Instance(newInstance(valueType), (SimpleGeneric) targetType.getGenericInfo().get(targetType.getSecond()));
                 this.dataBinder.bind(instance, bindKey);
-                target.put(key, instance);
+                target.put(key, instance.getTarget());
                 bind.add(bindKey);
             }
         }

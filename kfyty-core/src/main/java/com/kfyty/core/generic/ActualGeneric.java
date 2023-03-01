@@ -1,7 +1,6 @@
 package com.kfyty.core.generic;
 
 import com.kfyty.core.reflect.GenericArrayTypeImpl;
-import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -12,6 +11,8 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import static com.kfyty.core.utils.ReflectUtil.getActualGenericType;
 
 /**
  * 描述: 实际的泛型，用于推断父类泛型属性
@@ -47,7 +48,7 @@ public class ActualGeneric extends SimpleGeneric {
 
     protected void processActualGeneric() {
         if (this.resolveType instanceof TypeVariable) {
-            Class<?> actualFieldType = ReflectUtil.getActualGenericType(this.getFirst().getTypeVariable(), this.actualDeclaringClass);
+            Class<?> actualFieldType = getActualGenericType(this.getFirst().getTypeVariable(), this.actualDeclaringClass);
             this.sourceType = actualFieldType;
             this.resolveType = actualFieldType;
             this.genericInfo.clear();
@@ -58,7 +59,7 @@ public class ActualGeneric extends SimpleGeneric {
             if (!generic.isTypeVariable()) {
                 genericMap.put(generic, null);
             } else {
-                Class<?> actualFieldType = ReflectUtil.getActualGenericType(generic.getTypeVariable(), this.actualDeclaringClass);
+                Class<?> actualFieldType = getActualGenericType(generic.getTypeVariable(), this.actualDeclaringClass);
                 genericMap.put(new Generic(actualFieldType, generic.isArray()), null);
             }
         }
@@ -92,6 +93,17 @@ public class ActualGeneric extends SimpleGeneric {
 
     public static ActualGeneric from(Class<?> clazz, Parameter parameter) {
         return from(clazz, parameter.getType(), parameter.getParameterizedType());
+    }
+
+    public static ActualGeneric from(Field sourceField, Field field) {
+        return from(sourceField.getGenericType(), field);
+    }
+
+    public static ActualGeneric from(Type sourceGenericType, Field field) {
+        ActualGeneric actualGeneric = from(field);
+        actualGeneric.resolveType = getActualGenericType(actualGeneric.getResolveType().getTypeName(), sourceGenericType);
+        actualGeneric.genericInfo.clear();
+        return actualGeneric;
     }
 
     public static ActualGeneric from(Class<?> clazz, Class<?> type, Type genericType) {

@@ -95,7 +95,7 @@ public class QualifierGeneric {
      * @return this
      */
     public QualifierGeneric doResolve() {
-        if (this.sourceType == this.resolveType && this.sourceType != null && !this.sourceType.isArray()) {
+        if (this.sourceType == this.resolveType && this.sourceType != null && !this.sourceType.isArray() && !Map.class.isAssignableFrom(this.sourceType)) {
             return this;
         }
         return this.processGenericType(ofNullable(this.resolveType).orElse(this.sourceType));

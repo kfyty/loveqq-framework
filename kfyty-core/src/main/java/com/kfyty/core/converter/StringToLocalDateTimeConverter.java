@@ -3,6 +3,7 @@ package com.kfyty.core.converter;
 import com.kfyty.core.utils.CommonUtil;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 描述:
@@ -15,6 +16,6 @@ public class StringToLocalDateTimeConverter implements Converter<String, LocalDa
 
     @Override
     public LocalDateTime apply(String source) {
-        return CommonUtil.empty(source) ? null : LocalDateTime.parse(source);
+        return CommonUtil.empty(source) ? null : LocalDateTime.parse(source, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

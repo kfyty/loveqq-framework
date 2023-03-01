@@ -19,6 +19,7 @@ import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.core.wrapper.Pair;
 import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
@@ -100,9 +101,14 @@ class PropertiesConfig implements InitializingBean {
     @NestedConfigurationProperty
     private User user;
 
+    @NestedConfigurationProperty
+    private Pair<Long, String> pair;
+
     @Override
     public void afterPropertiesSet() {
         Assert.assertEquals(this.url, "http://127.0.0.1:8080/");
+        Assert.assertEquals(this.pair.getKey(), Long.valueOf(1L));
+        Assert.assertEquals(this.pair.getValue(), "name_of_1");
         Assert.assertEquals(this.ids, Arrays.asList(1, 2));
         Assert.assertEquals(this.users.size(), 2);
         Assert.assertEquals(this.user.getId(), "1");
