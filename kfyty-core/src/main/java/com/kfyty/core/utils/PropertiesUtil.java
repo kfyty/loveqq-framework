@@ -30,11 +30,11 @@ public abstract class PropertiesUtil {
     public static final String LOCATION_KEY = "k.config.location";
 
     public static Properties load(String path) {
-        return load(path, Thread.currentThread().getContextClassLoader());
+        return load(path, ClassLoaderUtil.classLoader(PropertiesUtil.class));
     }
 
     public static Properties load(InputStream stream) {
-        return load(stream, Thread.currentThread().getContextClassLoader());
+        return load(stream, ClassLoaderUtil.classLoader(PropertiesUtil.class));
     }
 
     public static Properties load(String path, ClassLoader classLoader) {

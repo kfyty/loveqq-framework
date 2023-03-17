@@ -18,6 +18,7 @@ import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
 
+import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 import static com.kfyty.core.utils.ReflectUtil.isAbstract;
 
 /**
@@ -60,7 +61,7 @@ public abstract class PackageUtil {
                 return cache;
             }
             Set<String> classes = new HashSet<>();
-            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(basePackage.replace(".", "/"));
+            Enumeration<URL> urls = ClassLoaderUtil.classLoader(PackageUtil.class).getResources(basePackage.replace('.', '/'));
             while (urls.hasMoreElements()) {
                 URL url = urls.nextElement();
                 if ("jar".equalsIgnoreCase(url.getProtocol())) {
@@ -97,7 +98,7 @@ public abstract class PackageUtil {
                 if (!("/" + classPath).startsWith(path) || !classPath.endsWith(".class")) {
                     continue;
                 }
-                classes.add(classPath.replace("/", ".").replace(".class", ""));
+                classes.add(classPath.replace('/', '.').replace(".class", EMPTY_STRING));
             }
             return classes;
         } catch (Exception e) {

@@ -1,6 +1,7 @@
 package com.kfyty.core.io;
 
 import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.core.wrapper.WeakKey;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 /**
  * 描述: spi 工厂加载机制
@@ -60,9 +62,8 @@ public abstract class FactoriesLoader {
         return loadedCache.computeIfAbsent(new WeakKey<>(factoriesResourceLocation), k -> {
             try {
                 Set<Properties> properties = new HashSet<>();
-                Enumeration<URL> urls = FactoriesLoader.class.getClassLoader().getResources(factoriesResourceLocation);
-                while (urls.hasMoreElements()) {
-                    URL url = urls.nextElement();
+                Set<URL> urls = loadURLResource(factoriesResourceLocation);
+                for (URL url : urls) {
                     properties.add(PropertiesUtil.load(url.openStream()));
                 }
                 return properties;
@@ -70,5 +71,25 @@ public abstract class FactoriesLoader {
                 throw new SupportException("unable to load factories from location [" + factoriesResourceLocation + "]", e);
             }
         });
+    }
+
+    public static Set<URL> loadURLResource(String urlResourceLocation) {
+        return loadURLResource(urlResourceLocation, e -> true);
+    }
+
+    public static Set<URL> loadURLResource(String urlResourceLocation, Predicate<URL> filter) {
+        try {
+            Set<URL> retValue = new HashSet<>();
+            Enumeration<URL> urls = ClassLoaderUtil.classLoader(FactoriesLoader.class).getResources(urlResourceLocation);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                if (filter.test(url)) {
+                    retValue.add(url);
+                }
+            }
+            return retValue;
+        } catch (IOException e) {
+            throw new SupportException("unable to load resource from location [" + urlResourceLocation + "]", e);
+        }
     }
 }

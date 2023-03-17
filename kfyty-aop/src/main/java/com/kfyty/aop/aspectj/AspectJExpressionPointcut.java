@@ -4,6 +4,7 @@ import com.kfyty.aop.ExpressionPointcut;
 import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +83,7 @@ public class AspectJExpressionPointcut implements MethodMatcher, ExpressionPoint
     @Override
     public ShadowMatch getShadowMatch(Method method) {
         return this.shadowMatchCache.computeIfAbsent(method, k -> {
-            PointcutParser pointcutParser = PointcutParser.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(SUPPORTED_PRIMITIVES, this.aspectClass.getClassLoader());
+            PointcutParser pointcutParser = PointcutParser.getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(SUPPORTED_PRIMITIVES, ClassLoaderUtil.classLoader(this.aspectClass));
             PointcutParameter[] pointcutParameters = this.buildPointcutParameters(pointcutParser);
             PointcutExpression pointcutExpression = pointcutParser.parsePointcutExpression(this.getExpression(), this.aspectClass, pointcutParameters);
             return pointcutExpression.matchesMethodExecution(method);
