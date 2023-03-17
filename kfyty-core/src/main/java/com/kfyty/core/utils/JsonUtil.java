@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -61,13 +63,30 @@ public abstract class JsonUtil {
         return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
     }
 
+    @SuppressWarnings("unchecked")
+    public static List<Map<String, Object>> toArray(CharSequence o) {
+        return (List<Map<String, Object>>) toObject((String) o, ArrayList.class);
+    }
+
     public static <T> T toObject(Map<?, ?> map, Class<T> clazz) {
         return DEFAULT_OBJECT_MAPPER.convertValue(map, clazz);
+    }
+
+    public static <T> T toObject(Map<?, ?> map, TypeReference<T> typeReference) {
+        return DEFAULT_OBJECT_MAPPER.convertValue(map, typeReference);
     }
 
     public static <T> T toObject(String json, Class<T> clazz) {
         try {
             return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    public static <T> T toObject(String json, TypeReference<T> typeReference) {
+        try {
+            return DEFAULT_OBJECT_MAPPER.readValue(json, typeReference);
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }

@@ -1,5 +1,6 @@
 package com.kfyty.database.util;
 
+import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
 import com.kfyty.database.generator.template.jsp.JspTemplate;
 import com.kfyty.kjte.JstlTemplateEngine;
@@ -40,7 +41,7 @@ public abstract class TemplateEngineUtil {
     private static Properties CONFIG = null;
 
     public static Properties loadGeneratorProperties() {
-        return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, TemplateEngineUtil.class.getClassLoader()));
+        return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, ClassLoaderUtil.classLoader(TemplateEngineUtil.class)));
     }
 
     public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) {

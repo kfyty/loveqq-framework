@@ -69,6 +69,16 @@ public abstract class IOUtil {
     }
 
     /**
+     * 读取输入流到字节数组
+     *
+     * @param in 输入流
+     * @return 字节数组
+     */
+    public static byte[] read(InputStream in) {
+        return copy(in, new ByteArrayOutputStream()).toByteArray();
+    }
+
+    /**
      * 将输入流复制到输出流
      *
      * @param in  输入流

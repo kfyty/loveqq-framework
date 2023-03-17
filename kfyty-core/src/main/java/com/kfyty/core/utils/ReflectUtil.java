@@ -108,11 +108,11 @@ public abstract class ReflectUtil {
     }
 
     public static Class<?> load(String className, boolean initialize) {
-        return load(className, initialize, Thread.currentThread().getContextClassLoader());
+        return load(className, initialize, ClassLoaderUtil.classLoader(ReflectUtil.class));
     }
 
     public static Class<?> load(String className, boolean initialize, boolean throwIfFailed) {
-        return load(className, initialize, Thread.currentThread().getContextClassLoader(), throwIfFailed);
+        return load(className, initialize, ClassLoaderUtil.classLoader(ReflectUtil.class), throwIfFailed);
     }
 
     public static Class<?> load(String className, boolean initialize, ClassLoader classLoader) {

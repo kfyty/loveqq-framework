@@ -1,5 +1,6 @@
 package org.springframework.jdbc.datasource;
 
+import com.kfyty.core.utils.ClassLoaderUtil;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -115,7 +116,7 @@ public class TransactionAwareDataSourceProxy extends DelegatingDataSource {
      */
     protected Connection getTransactionAwareConnectionProxy(DataSource targetDataSource) {
         return (Connection) Proxy.newProxyInstance(
-                ConnectionProxy.class.getClassLoader(),
+                ClassLoaderUtil.classLoader(ConnectionProxy.class),
                 new Class<?>[] {ConnectionProxy.class},
                 new TransactionAwareInvocationHandler(targetDataSource));
     }

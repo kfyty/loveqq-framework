@@ -2,6 +2,7 @@ package com.kfyty.core.proxy.factory;
 
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.NoArgsConstructor;
 
@@ -29,6 +30,6 @@ public class JdkDynamicProxyFactory extends DynamicProxyFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
-        return (T) Proxy.newProxyInstance(targetClass.getClassLoader(), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source, ofNullable(this.points).orElse(emptyList())));
+        return (T) Proxy.newProxyInstance(ClassLoaderUtil.classLoader(targetClass), ReflectUtil.getInterfaces(targetClass), new MethodInterceptorChain(source, ofNullable(this.points).orElse(emptyList())));
     }
 }

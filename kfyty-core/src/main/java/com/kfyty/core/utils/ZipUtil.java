@@ -25,7 +25,7 @@ public abstract class ZipUtil {
      */
     public static ZipFile createZip(String path) {
         try {
-            URLConnection connection = ZipUtil.class.getClassLoader().getResource(path).openConnection();
+            URLConnection connection = ClassLoaderUtil.classLoader(ZipUtil.class).getResource(path).openConnection();
             if (!(connection instanceof JarURLConnection)) {
                 return new ZipFile(Paths.get(connection.getURL().toURI()).toFile());
             }

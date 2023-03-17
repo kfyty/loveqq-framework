@@ -1,9 +1,10 @@
 package com.kfyty.mvc.tomcat;
 
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ClassLoaderUtil;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
-import com.kfyty.core.utils.AnnotationUtil;
-import com.kfyty.core.utils.CommonUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -19,11 +20,13 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.JarResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.naming.ContextBindings;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
+import javax.naming.NamingException;
 import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 import javax.servlet.annotation.WebFilter;
@@ -110,7 +113,7 @@ public class TomcatWebServer implements WebServer {
             tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
             tomcat.getHost().setAutoDeploy(false);
             this.prepareContext();
-            this.tomcat.start();                // 提前启动 tomcat 使监听器生效
+            this.tomcat.start();                                                                                        // 提前启动 tomcat 以触发一些必要的监听器
         } catch (Throwable e) {
             throw new RuntimeException("config tomcat failed !", e);
         }
@@ -133,6 +136,7 @@ public class TomcatWebServer implements WebServer {
         context.setFailCtxIfServletStartFails(true);
         context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
+        this.bindContextClassLoader(context);
         this.skipTldScanning(context);
         this.prepareResources(context);
         this.prepareDefaultServlet(context);
@@ -142,6 +146,16 @@ public class TomcatWebServer implements WebServer {
         this.prepareWebListener(context);
         this.tomcat.getHost().addChild(context);
         this.servletContext = context.getServletContext();
+    }
+
+    private void bindContextClassLoader(Context context) {
+        try {
+            ClassLoader classLoader = ClassLoaderUtil.classLoader(this.getClass());
+            context.setParentClassLoader(classLoader);
+            ContextBindings.bindClassLoader(context, context.getNamingToken(), classLoader);
+        } catch (NamingException ex) {
+            // Naming is not enabled. Continue
+        }
     }
 
     private void skipTldScanning(Context context) {
