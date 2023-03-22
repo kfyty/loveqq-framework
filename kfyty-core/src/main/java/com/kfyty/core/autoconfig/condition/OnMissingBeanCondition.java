@@ -2,7 +2,7 @@ package com.kfyty.core.autoconfig.condition;
 
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 /**
  * 描述:
@@ -14,18 +14,18 @@ import com.kfyty.core.wrapper.AnnotationWrapper;
 public class OnMissingBeanCondition extends OnBeanCondition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> annotationWrapper) {
-        return !super.isMatch(context, annotationWrapper);
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> annotationMetadata) {
+        return !super.isMatch(context, annotationMetadata);
     }
 
     @Override
-    protected String[] conditionNames(AnnotationWrapper<?> metadata) {
+    protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         ConditionalOnMissingBean conditionalOnMissingBean = (ConditionalOnMissingBean) metadata.get();
         return conditionalOnMissingBean.name();
     }
 
     @Override
-    protected Class<?>[] conditionTypes(AnnotationWrapper<?> metadata) {
+    protected Class<?>[] conditionTypes(AnnotationMetadata<?> metadata) {
         ConditionalOnMissingBean conditionalOnMissingBean = (ConditionalOnMissingBean) metadata.get();
         if (CommonUtil.notEmpty(conditionalOnMissingBean.value()) || CommonUtil.notEmpty(conditionalOnMissingBean.name())) {
             return conditionalOnMissingBean.value();

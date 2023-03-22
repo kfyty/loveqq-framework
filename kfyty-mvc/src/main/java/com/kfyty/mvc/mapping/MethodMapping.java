@@ -1,7 +1,7 @@
 package com.kfyty.mvc.mapping;
 
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 import com.kfyty.mvc.request.RequestMethod;
 import lombok.Data;
 import lombok.NoArgsConstructor;

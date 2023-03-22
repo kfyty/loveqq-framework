@@ -5,7 +5,7 @@ import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;

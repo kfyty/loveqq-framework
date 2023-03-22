@@ -9,7 +9,7 @@ import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.JdbcUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 import com.kfyty.database.jdbc.BaseMapper;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;

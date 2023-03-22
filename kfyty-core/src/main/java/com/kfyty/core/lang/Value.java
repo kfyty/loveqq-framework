@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper;
+package com.kfyty.core.lang;
 
 import lombok.AllArgsConstructor;
 
@@ -12,7 +12,7 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 @AllArgsConstructor
-public class ValueWrapper<T> {
+public class Value<T> {
     private T value;
 
     public T get() {
@@ -30,7 +30,7 @@ public class ValueWrapper<T> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof ValueWrapper && Objects.equals(this.value, ((ValueWrapper<?>) obj).value);
+        return obj instanceof Value && Objects.equals(this.value, ((Value<?>) obj).value);
     }
 
     @Override

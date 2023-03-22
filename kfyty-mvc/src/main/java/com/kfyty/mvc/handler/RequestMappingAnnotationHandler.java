@@ -4,7 +4,7 @@ import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 import com.kfyty.mvc.annotation.RequestMapping;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.request.RequestMethod;

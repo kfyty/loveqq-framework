@@ -1,6 +1,6 @@
 package com.kfyty.core.autoconfig.condition;
 
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 /**
  * 描述: 条件匹配接口
@@ -17,5 +17,5 @@ public interface Condition {
      * @param metadata 条件注解元数据
      * @return true is matched
      */
-    boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata);
+    boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata);
 }

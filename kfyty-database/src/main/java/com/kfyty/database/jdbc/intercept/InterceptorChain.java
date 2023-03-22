@@ -7,7 +7,7 @@ import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.JdbcUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ResultSetUtil;
-import com.kfyty.core.wrapper.ValueWrapper;
+import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
 public class InterceptorChain implements AutoCloseable {
     private final MethodParameter mapperMethod;
     private final Annotation annotation;
-    private final ValueWrapper<String> sql;
+    private final Value<String> sql;
     private final SimpleGeneric returnType;
     private final MethodParameter[] methodParameters;
     private final Iterator<Map.Entry<Method, Interceptor>> interceptors;
@@ -48,7 +48,7 @@ public class InterceptorChain implements AutoCloseable {
     public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, MethodParameter[] methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
         this.mapperMethod = method;
         this.annotation = annotation;
-        this.sql = new ValueWrapper<>(sql);
+        this.sql = new Value<>(sql);
         this.returnType = returnType;
         this.methodParameters = methodParameters;
         this.interceptors = interceptors;
@@ -117,7 +117,7 @@ public class InterceptorChain implements AutoCloseable {
         if (Annotation.class.isAssignableFrom(parameterType)) {
             return this.annotation;
         }
-        if (ValueWrapper.class.isAssignableFrom(parameterType)) {
+        if (Value.class.isAssignableFrom(parameterType)) {
             return this.sql;
         }
         if (SimpleGeneric.class.isAssignableFrom(parameterType)) {

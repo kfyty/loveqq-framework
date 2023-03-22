@@ -22,8 +22,6 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
-import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
-
 /**
  * 描述: jar 索引
  *
@@ -66,7 +64,7 @@ public class JarIndex {
 
     @SneakyThrows(MalformedURLException.class)
     public URL getJarURL(JarFile jarFile) {
-        return new URL("file", EMPTY_STRING, -1, '/' + jarFile.getName());                             // 必须使用 file 协议，否则读取不到 resources
+        return new URL("file", "", -1, '/' + jarFile.getName());                                   // 必须使用 file 协议，否则读取不到 resources
     }
 
     public List<String> getJars(String name) {

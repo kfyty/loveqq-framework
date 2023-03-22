@@ -98,7 +98,10 @@ public abstract class CommonUtil {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
 
     public static boolean empty(Object obj) {
-        return obj instanceof CharSequence ? ((CharSequence) obj).toString().trim().length() < 1 : size(obj) < 1;
+        if (obj instanceof CharSequence) {
+            return ((CharSequence) obj).length() < 1;
+        }
+        return size(obj) < 1;
     }
 
     public static boolean notEmpty(Object obj) {
@@ -284,7 +287,7 @@ public abstract class CommonUtil {
         int paramIndex = 0;
         StringBuilder sb = new StringBuilder(s);
         while ((index = sb.indexOf("{}", index)) != -1) {
-            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(""));
+            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
         }
         return sb.toString();
     }
@@ -301,7 +304,7 @@ public abstract class CommonUtil {
 
     public static String removePrefix(String prefix, String target) {
         if (target.startsWith(prefix)) {
-            return target.replaceFirst(prefix, "");
+            return target.substring(prefix.length());
         }
         return target;
     }

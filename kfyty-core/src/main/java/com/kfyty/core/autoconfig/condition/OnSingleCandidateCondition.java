@@ -3,7 +3,7 @@ package com.kfyty.core.autoconfig.condition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnSingleCandidate;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class OnSingleCandidateCondition extends AbstractBeanCondition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         BeanFactory beanFactory = context.getBeanFactory();
         for (String conditionName : this.conditionNames(metadata)) {
             if (!beanFactory.containsBeanDefinition(conditionName)) {
@@ -34,13 +34,13 @@ public class OnSingleCandidateCondition extends AbstractBeanCondition {
     }
 
     @Override
-    protected String[] conditionNames(AnnotationWrapper<?> metadata) {
+    protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         ConditionalOnSingleCandidate conditionalOnBean = (ConditionalOnSingleCandidate) metadata.get();
         return conditionalOnBean.name();
     }
 
     @Override
-    protected Class<?>[] conditionTypes(AnnotationWrapper<?> metadata) {
+    protected Class<?>[] conditionTypes(AnnotationMetadata<?> metadata) {
         ConditionalOnSingleCandidate conditionalOnBean = (ConditionalOnSingleCandidate) metadata.get();
         if (CommonUtil.notEmpty(conditionalOnBean.value())) {
             return conditionalOnBean.value();

@@ -17,8 +17,8 @@ import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.Pair;
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.support.Pair;
+import com.kfyty.core.lang.WeakKey;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -5,8 +5,6 @@ import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.lang.JarIndex;
 import com.kfyty.core.lang.JarIndexClassLoader;
 import com.kfyty.core.utils.ClassLoaderUtil;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.Pair;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,8 +17,6 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.jar.Manifest;
-
-import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
 
 /**
  * 描述: 启动类引导
@@ -115,11 +111,11 @@ public class BootLauncher {
         for (URL url : FactoriesLoader.loadURLResource(JAR_MANIFEST_LOCATION)) {
             Manifest manifest = new Manifest(url.openStream());
             String startClass = manifest.getMainAttributes().getValue(START_CLASS_KEY);
-            if (CommonUtil.notEmpty(startClass)) {
+            if (startClass != null && startClass.length() > 0) {
                 if (url.getProtocol().equals("file")) {
                     return new Pair<>(manifest, new FileInputStream(new File(Paths.get(url.toURI()).getParent().toString(), "INDEX.LIST")));
                 }
-                return new Pair<>(manifest, new URL("jar", EMPTY_STRING, -1, url.getFile().replace(JAR_MANIFEST_LOCATION, JAR_INDEX_LOCATION)).openStream());
+                return new Pair<>(manifest, new URL("jar", "", -1, url.getFile().replace(JAR_MANIFEST_LOCATION, JAR_INDEX_LOCATION)).openStream());
             }
         }
         throw new SupportException("Start-Class does not exists in manifest");
@@ -134,13 +130,13 @@ public class BootLauncher {
     protected String findMainJarPath(Manifest manifest) {
         String mainClassPath = manifest.getMainAttributes().getValue(START_CLASS_KEY).replace('.', '/') + ".class";
         Set<URL> urls = FactoriesLoader.loadURLResource(mainClassPath);
-        if (CommonUtil.empty(urls)) {
+        if (urls.isEmpty()) {
             throw new SupportException("start class resource does not exists: " + mainClassPath);
         }
         URL url = urls.iterator().next();
         if (url.getProtocol().equals("file")) {
-            return Paths.get(url.getFile().substring(1).replace(mainClassPath, EMPTY_STRING)).toString();
+            return Paths.get(url.getFile().substring(1).replace(mainClassPath, "")).toString();
         }
-        return url.getFile().substring(6).replace("!/" + mainClassPath, EMPTY_STRING);
+        return url.getFile().substring(6).replace("!/" + mainClassPath, "");
     }
 }

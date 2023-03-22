@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper;
+package com.kfyty.core.support;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
