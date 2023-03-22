@@ -1,7 +1,7 @@
 package com.kfyty.core.autoconfig.condition;
 
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnClass;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 import static com.kfyty.core.utils.ReflectUtil.isPresent;
 
@@ -15,7 +15,7 @@ import static com.kfyty.core.utils.ReflectUtil.isPresent;
 public class OnClassCondition implements Condition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         for (String conditionName : this.conditionNames(metadata)) {
             if (!isPresent(conditionName)) {
                 return false;
@@ -24,7 +24,7 @@ public class OnClassCondition implements Condition {
         return true;
     }
 
-    protected String[] conditionNames(AnnotationWrapper<?> metadata) {
+    protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         return ((ConditionalOnClass) metadata.get()).value();
     }
 }

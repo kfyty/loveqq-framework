@@ -17,7 +17,7 @@ import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.lang.WeakKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

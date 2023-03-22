@@ -5,7 +5,7 @@ import com.kfyty.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -78,7 +78,7 @@ public class ConditionContext {
             if (CommonUtil.empty(conditionDeclare.getConditions())) {
                 return this.shouldSkip(conditionalBeanDefinition.getParent());                      // 无条件时，应该是 Bean 方法，此时应校验父定义
             }
-            AnnotationWrapper<?> metadata = conditionDeclare.buildMetadata();
+            AnnotationMetadata<?> metadata = conditionDeclare.buildMetadata();
             for (Condition condition : conditionDeclare.getConditions()) {
                 Map<String, ConditionalBeanDefinition> nestedConditions = null;
                 if (condition.isMatch(this, metadata)) {                                     // 匹配成功，可能是真的成功，也可能是被依赖的条件还未检验
@@ -134,7 +134,7 @@ public class ConditionContext {
      * @param condition 条件
      * @return 嵌套的条件
      */
-    private Map<String, ConditionalBeanDefinition> findNestedConditional(ConditionalBeanDefinition current, AnnotationWrapper<?> metadata, Condition condition) {
+    private Map<String, ConditionalBeanDefinition> findNestedConditional(ConditionalBeanDefinition current, AnnotationMetadata<?> metadata, Condition condition) {
         Map<String, ConditionalBeanDefinition> nested = new HashMap<>(4);
         if (!(condition instanceof AbstractBeanCondition)) {
             return nested;                                                      // 无可校验的嵌套条件，默认跳过

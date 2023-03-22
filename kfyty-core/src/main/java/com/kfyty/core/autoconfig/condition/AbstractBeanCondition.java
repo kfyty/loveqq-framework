@@ -1,6 +1,6 @@
 package com.kfyty.core.autoconfig.condition;
 
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 import java.lang.reflect.Method;
 
@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  */
 public abstract class AbstractBeanCondition implements Condition {
 
-    protected Class<?>[] buildBeanTypes(AnnotationWrapper<?> metadata) {
+    protected Class<?>[] buildBeanTypes(AnnotationMetadata<?> metadata) {
         if (metadata.isDeclaringClass()) {
             return new Class<?>[]{metadata.getDeclaring()};
         }
@@ -23,7 +23,7 @@ public abstract class AbstractBeanCondition implements Condition {
         throw new UnsupportedOperationException();
     }
 
-    protected abstract String[] conditionNames(AnnotationWrapper<?> metadata);
+    protected abstract String[] conditionNames(AnnotationMetadata<?> metadata);
 
-    protected abstract Class<?>[] conditionTypes(AnnotationWrapper<?> metadata);
+    protected abstract Class<?>[] conditionTypes(AnnotationMetadata<?> metadata);
 }

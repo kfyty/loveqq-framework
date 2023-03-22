@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;

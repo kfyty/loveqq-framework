@@ -1,7 +1,7 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.wrapper.function.SerializableFunction;
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.lang.function.SerializableFunction;
+import com.kfyty.core.lang.WeakKey;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;

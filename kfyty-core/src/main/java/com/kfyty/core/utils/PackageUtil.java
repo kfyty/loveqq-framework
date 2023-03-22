@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.lang.WeakKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

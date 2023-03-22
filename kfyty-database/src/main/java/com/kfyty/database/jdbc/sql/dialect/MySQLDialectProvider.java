@@ -5,7 +5,7 @@ import com.kfyty.database.jdbc.annotation.ForEach;
 import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
 import com.kfyty.core.method.MethodParameter;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 
 import java.lang.reflect.Method;
 import java.util.Map;

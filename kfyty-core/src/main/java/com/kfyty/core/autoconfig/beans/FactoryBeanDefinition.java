@@ -1,7 +1,7 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.lang.WeakKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

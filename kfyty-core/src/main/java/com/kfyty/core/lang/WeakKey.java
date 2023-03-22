@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper;
+package com.kfyty.core.lang;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;

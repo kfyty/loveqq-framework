@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper.function;
+package com.kfyty.core.lang.function;
 
 import java.io.Serializable;
 

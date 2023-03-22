@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper.function;
+package com.kfyty.core.lang.function;
 
 /**
  * 描述: 支持四个参数的函数

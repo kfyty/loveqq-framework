@@ -19,7 +19,7 @@ import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
-import com.kfyty.core.wrapper.Pair;
+import com.kfyty.core.support.Pair;
 import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;

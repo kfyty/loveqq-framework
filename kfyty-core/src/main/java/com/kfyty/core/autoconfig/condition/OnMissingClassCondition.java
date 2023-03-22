@@ -1,7 +1,7 @@
 package com.kfyty.core.autoconfig.condition;
 
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingClass;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 /**
  * 描述:
@@ -13,12 +13,12 @@ import com.kfyty.core.wrapper.AnnotationWrapper;
 public class OnMissingClassCondition extends OnClassCondition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         return !super.isMatch(context, metadata);
     }
 
     @Override
-    protected String[] conditionNames(AnnotationWrapper<?> metadata) {
+    protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         return ((ConditionalOnMissingClass) metadata.get()).value();
     }
 }

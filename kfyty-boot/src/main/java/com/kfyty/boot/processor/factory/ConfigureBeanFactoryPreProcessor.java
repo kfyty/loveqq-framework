@@ -17,7 +17,7 @@ import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -93,7 +93,7 @@ public class ConfigureBeanFactoryPreProcessor implements InstantiationAwareBeanP
         }
     }
 
-    protected void processAutoConfiguration(Class<?> clazz, AnnotationWrapper<?> wrapper, boolean autoconfig) {
+    protected void processAutoConfiguration(Class<?> clazz, AnnotationMetadata<?> wrapper, boolean autoconfig) {
         if (AnnotationUtil.hasAnnotation(clazz, Import.class)) {
             Arrays.stream(AnnotationUtil.findAnnotation(clazz, Import.class).config()).forEach(e -> this.processScanBean(e, autoconfig));
         }
@@ -123,7 +123,7 @@ public class ConfigureBeanFactoryPreProcessor implements InstantiationAwareBeanP
 
         if (!AnnotationUtil.isMetaAnnotation(clazz)) {
             for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(clazz)) {
-                this.processAutoConfiguration(nestedAnnotation.annotationType(), new AnnotationWrapper<>(declaring, nestedAnnotation), autoconfig);
+                this.processAutoConfiguration(nestedAnnotation.annotationType(), new AnnotationMetadata<>(declaring, nestedAnnotation), autoconfig);
             }
         }
     }

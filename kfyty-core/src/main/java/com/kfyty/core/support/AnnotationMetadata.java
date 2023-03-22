@@ -1,4 +1,4 @@
-package com.kfyty.core.wrapper;
+package com.kfyty.core.support;
 
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -22,7 +22,7 @@ import java.util.Objects;
  */
 @ToString
 @EqualsAndHashCode
-public class AnnotationWrapper<T extends Annotation> {
+public class AnnotationMetadata<T extends Annotation> {
     /**
      * 注解声明对象，支持 Class，Constructor，Field，Method，Parameter，Annotation
      */
@@ -33,7 +33,7 @@ public class AnnotationWrapper<T extends Annotation> {
      */
     private final T annotation;
 
-    public AnnotationWrapper(Object declaring, T annotation) {
+    public AnnotationMetadata(Object declaring, T annotation) {
         this.declaring = Objects.requireNonNull(declaring);
         this.annotation = Objects.requireNonNull(annotation);
     }
@@ -63,20 +63,20 @@ public class AnnotationWrapper<T extends Annotation> {
     }
 
     public T get() {
-        return annotation;
+        return this.annotation;
     }
 
     @SuppressWarnings("unchecked")
     public <D> D getDeclaring() {
-        return (D) declaring;
+        return (D) this.declaring;
     }
 
-    public static <T extends Annotation> boolean contains(Collection<AnnotationWrapper<T>> wrappers, Annotation other) {
-        if (CommonUtil.empty(wrappers)) {
+    public static <T extends Annotation> boolean contains(Collection<AnnotationMetadata<T>> metadata, Annotation other) {
+        if (CommonUtil.empty(metadata)) {
             return false;
         }
-        for (AnnotationWrapper<T> wrapper : wrappers) {
-            if (wrapper.get().equals(other)) {
+        for (AnnotationMetadata<T> element : metadata) {
+            if (element.get().equals(other)) {
                 return true;
             }
         }

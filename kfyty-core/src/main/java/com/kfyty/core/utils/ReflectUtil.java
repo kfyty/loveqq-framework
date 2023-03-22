@@ -1,9 +1,9 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.SupportException;
-import com.kfyty.core.wrapper.WeakKey;
-import com.kfyty.core.wrapper.function.Function3;
-import com.kfyty.core.wrapper.function.Function4;
+import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.lang.function.Function3;
+import com.kfyty.core.lang.function.Function4;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;

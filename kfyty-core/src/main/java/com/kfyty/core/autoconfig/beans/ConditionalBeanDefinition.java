@@ -4,7 +4,7 @@ import com.kfyty.core.autoconfig.condition.Condition;
 import com.kfyty.core.autoconfig.condition.annotation.Conditional;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -101,11 +101,11 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
          *
          * @return 条件注解元数据
          */
-        public AnnotationWrapper<?> buildMetadata() {
+        public AnnotationMetadata<?> buildMetadata() {
             if (beanDefinition instanceof MethodBeanDefinition) {
-                return new AnnotationWrapper<>(((MethodBeanDefinition) beanDefinition).getBeanMethod(), this.annotation);
+                return new AnnotationMetadata<>(((MethodBeanDefinition) beanDefinition).getBeanMethod(), this.annotation);
             }
-            return new AnnotationWrapper<>(beanDefinition.getBeanType(), this.annotation);
+            return new AnnotationMetadata<>(beanDefinition.getBeanType(), this.annotation);
         }
     }
 }

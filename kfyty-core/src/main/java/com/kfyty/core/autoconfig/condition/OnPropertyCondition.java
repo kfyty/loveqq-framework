@@ -3,7 +3,7 @@ package com.kfyty.core.autoconfig.condition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 import java.util.Objects;
 
@@ -19,7 +19,7 @@ import static java.util.Optional.ofNullable;
 public class OnPropertyCondition implements Condition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         ConditionalOnProperty conditional = (ConditionalOnProperty) metadata.get();
         PropertyContext propertyContext = context.getBeanFactory().getBean(PropertyContext.class);
         String propertyKey = this.obtainPropertyKey(conditional);

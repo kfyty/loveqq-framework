@@ -4,7 +4,7 @@ import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PropertiesUtil;
-import com.kfyty.core.wrapper.WeakKey;
+import com.kfyty.core.lang.WeakKey;
 
 import java.io.IOException;
 import java.net.URL;

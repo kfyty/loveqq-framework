@@ -1,6 +1,6 @@
 package com.kfyty.core.autoconfig.condition;
 
-import com.kfyty.core.wrapper.AnnotationWrapper;
+import com.kfyty.core.support.AnnotationMetadata;
 
 /**
  * 描述:
@@ -12,7 +12,7 @@ import com.kfyty.core.wrapper.AnnotationWrapper;
 public class OnNotWebApplicationCondition extends OnWebApplicationCondition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationWrapper<?> metadata) {
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         return !super.isMatch(context, metadata);
     }
 }

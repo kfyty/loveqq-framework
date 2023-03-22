@@ -18,8 +18,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
-
 /**
  * 描述: 支持 jar 索引的类加载器
  *
@@ -106,7 +104,7 @@ public class JarIndexClassLoader extends URLClassLoader {
             File classFile = new File(this.jarIndex.getMainJarPath(), jarClassPath);
             if (classFile.exists()) {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
-                    String codeSourceLocation = classFile.getAbsolutePath().replace(jarClassPath.replace('/', File.separatorChar), EMPTY_STRING);
+                    String codeSourceLocation = classFile.getAbsolutePath().replace(jarClassPath.replace('/', File.separatorChar), "");
                     byte[] classBytes = IOUtil.read(inputStream);
                     Class<?> loadedClass = super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(Paths.get(codeSourceLocation).toUri().toURL(), (CodeSigner[]) null));
                     this.definePackageIfNecessary(name, classFile);
