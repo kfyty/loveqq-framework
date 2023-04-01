@@ -1,15 +1,21 @@
 package com.kfyty.core.utils;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +39,11 @@ public abstract class JsonUtil {
 
         configureWriter()
                 .with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(String.class, new com.kfyty.core.utils.JsonUtil.StringDeserializer());
+
+        configure().registerModule(module);
     }
 
     public static ObjectMapper configure() {
@@ -94,5 +105,97 @@ public abstract class JsonUtil {
 
     public static <T> T convert(String str, Class<T> rawClass) {
         return DEFAULT_OBJECT_MAPPER.convertValue(str, rawClass);
+    }
+
+    /**
+     * 自定义字符串反序列化
+     * 支持使用 String 字段接收一个子 json 对象，而不是默认的抛出异常
+     */
+    public static class StringDeserializer extends com.fasterxml.jackson.databind.deser.std.StringDeserializer {
+
+        @Override
+        public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            JsonToken currentToken = p.getCurrentToken();
+            if (currentToken != JsonToken.START_OBJECT && currentToken != JsonToken.START_ARRAY) {
+                return super.deserialize(p, ctxt);
+            }
+
+            StringBuilder builder = new StringBuilder();
+            Deque<JsonToken> stack = new ArrayDeque<>();
+
+            builder.append(p.getText());
+            stack.push(currentToken);
+
+            boolean isArray = currentToken == JsonToken.START_ARRAY;
+            while (!stack.isEmpty()) {
+                /**
+                 * 栈为空表示当前子 json 串已搜索完成
+                 */
+                JsonToken nextToken = p.nextToken();
+                if (isArray && nextToken == JsonToken.END_ARRAY || !isArray && nextToken == JsonToken.END_OBJECT) {
+                    stack.pop();
+                }
+                if (isArray && nextToken == JsonToken.START_ARRAY || !isArray && nextToken == JsonToken.START_OBJECT) {
+                    stack.push(nextToken);
+                }
+
+                /**
+                 * 结构开始，按需添加逗号
+                 */
+                if (nextToken.isStructStart()) {
+                    appendCommaIfNecessary(builder).append(p.getText());
+                }
+
+                /**
+                 * 结构结束，按需删除逗号
+                 */
+                else if (nextToken.isStructEnd()) {
+                    deleteCommaIfNecessary(builder).append(p.getText());
+                }
+
+                /**
+                 * 数字、布尔类型，不添加双引号
+                 * 而且一定是值，也不需要按需添加逗号
+                 */
+                else if (nextToken.isNumeric() || nextToken.isBoolean()) {
+                    builder.append(p.getText());
+                }
+
+                /**
+                 * 其他类型自动添加双引号
+                 */
+                else {
+                    appendCommaIfNecessary(builder).append('"').append(p.getText()).append('"');
+                }
+
+                /**
+                 * 属性自动添加冒号
+                 * 值自动添加逗号
+                 */
+                if (nextToken == JsonToken.FIELD_NAME) {
+                    builder.append(':');
+                } else if (nextToken.isScalarValue()) {
+                    builder.append(',');
+                }
+            }
+
+            return builder.toString();
+        }
+
+        private static StringBuilder appendCommaIfNecessary(StringBuilder builder) {
+            char lastChar = builder.charAt(builder.length() - 1);
+            if (lastChar != '{' && lastChar != '[' && lastChar != ':' && lastChar != ',') {
+                builder.append(',');
+            }
+            return builder;
+        }
+
+        private static StringBuilder deleteCommaIfNecessary(StringBuilder builder) {
+            int lastIndex = builder.length() - 1;
+            if (builder.charAt(lastIndex) == ',') {
+                builder.deleteCharAt(lastIndex);
+            }
+            return builder;
+        }
     }
 }
