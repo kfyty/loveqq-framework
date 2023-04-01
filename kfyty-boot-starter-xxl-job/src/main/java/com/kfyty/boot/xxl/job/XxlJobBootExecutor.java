@@ -1,21 +1,24 @@
 package com.kfyty.boot.xxl.job;
 
+import com.kfyty.boot.xxl.job.annotation.XxlJob;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.DestroyBean;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.xxl.job.core.executor.XxlJobExecutor;
-import com.xxl.job.core.handler.annotation.XxlJob;
+import lombok.RequiredArgsConstructor;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 描述:
+ * 描述: xxl job 执行器
  *
  * @author kfyty725
  * @date 2022/9/3 18:02
@@ -56,16 +59,46 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         if (applicationContext == null) {
             return;
         }
-        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions(true);
-        for (String beanName : beanDefinitions.keySet()) {
-            Object bean = this.applicationContext.getBean(beanName);
+        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions();
+        for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
+            if (!entry.getValue().isAutowireCandidate() || !AnnotationUtil.hasAnnotation(entry.getValue().getBeanType(), XxlJob.class)) {
+                continue;
+            }
+            Object bean = this.applicationContext.getBean(entry.getKey());
             for (Method executeMethod : ReflectUtil.getMethods(bean.getClass())) {
                 XxlJob xxlJob = AnnotationUtil.findAnnotation(executeMethod, XxlJob.class);
                 if (xxlJob != null) {
-                    registJobHandler(xxlJob, bean, executeMethod);
+                    registJobHandler(new XxlJobAnnotationAdapter(xxlJob, executeMethod), bean, executeMethod);
                     this.jobCnt++;
                 }
             }
+        }
+    }
+
+    @RequiredArgsConstructor
+    @SuppressWarnings("ClassExplicitlyAnnotation")
+    private static class XxlJobAnnotationAdapter implements com.xxl.job.core.handler.annotation.XxlJob {
+        private final XxlJob xxlJob;
+        private final Method executeMethod;
+
+        @Override
+        public String value() {
+            return CommonUtil.EMPTY_STRING.equals(this.xxlJob.value()) ? this.executeMethod.getName() : this.xxlJob.value();
+        }
+
+        @Override
+        public String init() {
+            return this.xxlJob.init();
+        }
+
+        @Override
+        public String destroy() {
+            return this.xxlJob.destroy();
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return com.xxl.job.core.handler.annotation.XxlJob.class;
         }
     }
 }

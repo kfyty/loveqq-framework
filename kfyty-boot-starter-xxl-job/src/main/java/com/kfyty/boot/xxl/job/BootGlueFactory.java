@@ -8,7 +8,7 @@ import com.xxl.job.core.glue.GlueFactory;
 import java.lang.reflect.Field;
 
 /**
- * 描述:
+ * 描述: BootGlueFactory
  *
  * @author kfyty725
  * @date 2022/9/3 21:42
