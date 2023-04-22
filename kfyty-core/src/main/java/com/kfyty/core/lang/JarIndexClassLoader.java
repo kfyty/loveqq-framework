@@ -1,5 +1,6 @@
 package com.kfyty.core.lang;
 
+import com.kfyty.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.core.utils.IOUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
@@ -26,7 +26,7 @@ import java.util.jar.Manifest;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class JarIndexClassLoader extends URLClassLoader {
+public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
      * jar index
      */
@@ -75,12 +75,12 @@ public class JarIndexClassLoader extends URLClassLoader {
      * @return class
      */
     @SneakyThrows(IOException.class)
-    protected Class<?> findJarClass(String name, List<JarFile> jarFiles) {
+    protected Class<?> findJarClass(String name, List<JarFile> jarFiles) throws ClassNotFoundException {
         String jarClassPath = name.replace('.', '/') + ".class";
         for (JarFile jarFile : jarFiles) {
             try (InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
                 if (inputStream != null) {
-                    byte[] classBytes = IOUtil.read(inputStream);
+                    byte[] classBytes = this.transform(name, IOUtil.read(inputStream));
                     Class<?> loadedClass = super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(Paths.get(jarFile.getName()).toUri().toURL(), (CodeSigner[]) null));
                     this.definePackageIfNecessary(name, jarFile);
                     return loadedClass;
@@ -98,14 +98,14 @@ public class JarIndexClassLoader extends URLClassLoader {
      * @return class
      */
     @SneakyThrows(IOException.class)
-    protected Class<?> findExplodedClass(String name) {
+    protected Class<?> findExplodedClass(String name) throws ClassNotFoundException {
         if (this.isExploded()) {
             String jarClassPath = name.replace('.', '/') + ".class";
             File classFile = new File(this.jarIndex.getMainJarPath(), jarClassPath);
             if (classFile.exists()) {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
                     String codeSourceLocation = classFile.getAbsolutePath().replace(jarClassPath.replace('/', File.separatorChar), "");
-                    byte[] classBytes = IOUtil.read(inputStream);
+                    byte[] classBytes = this.transform(name, IOUtil.read(inputStream));
                     Class<?> loadedClass = super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(Paths.get(codeSourceLocation).toUri().toURL(), (CodeSigner[]) null));
                     this.definePackageIfNecessary(name, classFile);
                     return loadedClass;

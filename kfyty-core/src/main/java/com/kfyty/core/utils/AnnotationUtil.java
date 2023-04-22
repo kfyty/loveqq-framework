@@ -49,6 +49,10 @@ public abstract class AnnotationUtil {
     }
 
     public static Annotation[] flatRepeatableAnnotation(Annotation[] annotations) {
+        return flatRepeatableAnnotation(annotations, EMPTY_ANNOTATIONS);
+    }
+
+    public static Annotation[] flatRepeatableAnnotation(Annotation[] annotations, Annotation[] targetAnnotation) {
         List<Annotation> flatAnnotations = new ArrayList<>(annotations.length);
         for (Annotation annotation : annotations) {
             Object value = null;
@@ -64,7 +68,7 @@ public abstract class AnnotationUtil {
             }
             flatAnnotations.addAll(Arrays.asList((Annotation[]) value));
         }
-        return flatAnnotations.toArray(EMPTY_ANNOTATIONS);
+        return flatAnnotations.toArray(targetAnnotation);
     }
 
     /* ------------------------------------------ 处理对象注解 ------------------------------------------ */

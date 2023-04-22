@@ -1,13 +1,13 @@
 package com.kfyty.core.io;
 
 import com.kfyty.core.exception.SupportException;
-import com.kfyty.core.utils.ClassLoaderUtil;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.utils.ClassLoaderUtil;
+import com.kfyty.core.utils.PropertiesUtil;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -50,7 +50,7 @@ public abstract class FactoriesLoader {
             for (Properties property : properties) {
                 for (Map.Entry<Object, Object> entry : property.entrySet()) {
                     if (entry.getKey().toString().equals(key)) {
-                        factories.addAll(CommonUtil.split(entry.getValue().toString(), ","));
+                        factories.addAll(Arrays.asList(entry.getValue().toString().split(",")));
                     }
                 }
             }
