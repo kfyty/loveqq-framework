@@ -28,6 +28,8 @@
 
     <properties>
         <cglib.version>3.3.0</cglib.version>
+        <javassist.version>3.28.0-GA</javassist.version>
+        <ognl.version>3.3.4</ognl.version>
         <jackson.version>2.12.5</jackson.version>
         <freemarker.version>2.3.30</freemarker.version>
         <commons.compress.version>1.21</commons.compress.version>
@@ -197,6 +199,18 @@
                 <groupId>cglib</groupId>
                 <artifactId>cglib</artifactId>
                 <version>${cglib.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ognl</groupId>
+                <artifactId>ognl</artifactId>
+                <version>${ognl.version}</version>
             </dependency>
 
             <dependency>
