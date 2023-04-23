@@ -3,16 +3,22 @@ package com.kfyty.boot.validator.autoconfig;
 import com.kfyty.boot.validator.context.IOCContext;
 import com.kfyty.boot.validator.context.ValidatorContext;
 import com.kfyty.boot.validator.processor.MethodValidationBeanPostProcessor;
+import com.kfyty.boot.validator.proxy.ValidatorAccess;
+import com.kfyty.boot.validator.proxy.ValidatorProxy;
 import com.kfyty.boot.validator.support.IOC;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.core.event.ApplicationListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
+import com.kfyty.core.utils.ClassLoaderUtil;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.hibernate.validator.BaseHibernateValidatorConfiguration;
+
+import java.lang.reflect.Proxy;
 
 /**
  * 描述: 校验器配置
@@ -23,6 +29,8 @@ import org.hibernate.validator.BaseHibernateValidatorConfiguration;
  */
 @Configuration
 public class ValidationAutoConfiguration implements ApplicationListener<ContextRefreshedEvent> {
+    @Value("${k.validator.proxy:true}")
+    private boolean isProxyValidator;
 
     @Bean
     @ConditionalOnMissingBean
@@ -41,7 +49,8 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
     @Bean
     @ConditionalOnMissingBean
     public Validator validator() {
-        return this.validatorFactory().getValidator();
+        Validator validator = this.validatorFactory().getValidator();
+        return this.isProxyValidator ? this.createValidatorProxy(validator) : validator;
     }
 
     @Bean
@@ -60,5 +69,12 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
                 return event.getSource().getBean(clazz);
             }
         });
+    }
+
+    /**
+     * 为了方便无感使用，为 {@link Validator} 创建代理
+     */
+    protected Validator createValidatorProxy(Validator validator) {
+        return (Validator) Proxy.newProxyInstance(ClassLoaderUtil.classLoader(this.getClass()), new Class[]{Validator.class}, new ValidatorProxy(new ValidatorAccess(validator)));
     }
 }

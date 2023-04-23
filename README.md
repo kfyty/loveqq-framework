@@ -21,7 +21,7 @@ AOP 模块，支持 ant 路径匹配、支持注解类型匹配、集成 aspectJ
 基于 xml 解析，实现了处理数据和导出 excel 同时进行，避免处理数据过大导致客户端超时。
 
 ## kfyty-boot
-注解式 ioc、自动装配、作用域代理(单例/原型/刷新)、懒加载代理、配置文件属性自动绑定(支持嵌套的复杂类型绑定)、条件注解、异步事件、动态代理、spi、自定义 jar index 类加载器 等。
+注解式 ioc、自动装配、作用域代理(单例/原型/刷新)、懒加载代理、配置文件属性自动绑定(支持嵌套的复杂类型绑定)、条件注解、jsr 条件注解校验器、异步事件、动态代理、spi、自定义 jar index 类加载器 等。
 ##### 集成独立 spring-tx 事务管理器、quartz、xxl-job、redisson、druid、HikariCP、tomcat-jdbc、jakarta.validation、百度 uid 生成器的自动配置 starter。
 
 ```xml
@@ -35,13 +35,18 @@ AOP 模块，支持 ant 路径匹配、支持注解类型匹配、集成 aspectJ
 package com.kfyty.demo;
 
 import com.kfyty.boot.K;
+import com.kfyty.boot.validator.annotation.Condition;
 import com.kfyty.core.autoconfig.annotation.Async;
 import com.kfyty.core.autoconfig.annotation.BootApplication;
 import com.kfyty.core.autoconfig.annotation.EventListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
+import com.kfyty.mvc.annotation.GetMapping;
+import com.kfyty.mvc.autoconfig.annotation.EnableWebMvc;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@EnableWebMvc
 @BootApplication
 public class Main {
 
@@ -49,10 +54,23 @@ public class Main {
         K.run(Main.class, args);
     }
 
+    @GetMapping
+    public User hello(@Valid User user) {
+        return user;
+    }
+
     @Async
     @EventListener
     public void onStarted(ContextRefreshedEvent event) {
         log.info("started succeed !");
+    }
+
+    @Data
+    public static class User {
+        @Condition(when = "type == 1", then = "photo != null", message = "type=1时，图片不能为空")
+        private Integer type;
+
+        private String photo;
     }
 }
 ```

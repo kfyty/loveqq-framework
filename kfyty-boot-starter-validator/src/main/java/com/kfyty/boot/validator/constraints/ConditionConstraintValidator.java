@@ -3,16 +3,19 @@ package com.kfyty.boot.validator.constraints;
 import com.kfyty.boot.validator.annotation.Condition;
 import com.kfyty.boot.validator.context.ValidatorContext;
 import com.kfyty.boot.validator.exception.ConditionConstraintException;
-import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.OgnlUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.hibernate.validator.internal.engine.valuecontext.ValueContext;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
+import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.flatRepeatableAnnotation;
 import static com.kfyty.core.utils.CommonUtil.notEmpty;
 
 /**
@@ -23,11 +26,15 @@ import static com.kfyty.core.utils.CommonUtil.notEmpty;
  * @email kfyty725@hotmail.com
  */
 public class ConditionConstraintValidator implements ConstraintValidator<Condition, Object> {
+    /**
+     * {@link ConstraintValidatorContextImpl#basePath} 属性缓存
+     */
+    private static final Field PATH_FIELD = ReflectUtil.getField(ConstraintValidatorContextImpl.class, "basePath");
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         try {
-            Condition[] conditions = this.getConditions();
+            Condition[] conditions = this.getConditions(context);
             for (Condition condition : conditions) {
                 if (!this.isMatch(value, condition, context)) {
                     return false;
@@ -67,8 +74,10 @@ public class ConditionConstraintValidator implements ConstraintValidator<Conditi
                 }
             }
             return true;
+        } catch (ConditionConstraintException e) {
+            throw e;
         } catch (RuntimeException e) {
-            throw new ConditionConstraintException(e.getMessage(), e.getCause() == null ? e : e.getCause());
+            throw new ConditionConstraintException(e.getCause() == null ? e.getMessage() : e.getCause().getMessage(), e.getCause() == null ? e : e.getCause());
         }
     }
 
@@ -77,16 +86,17 @@ public class ConditionConstraintValidator implements ConstraintValidator<Conditi
      *
      * @return 条件注解
      */
-    public Condition[] getConditions() {
+    public Condition[] getConditions(ConstraintValidatorContext context) {
         ValueContext<?, ?> valueContext = ValidatorContext.getValueContext();
         if (valueContext == null) {
             return new Condition[0];
         }
-        Field field = ReflectUtil.getField(valueContext.getCurrentBean().getClass(), valueContext.getPropertyPath().getLeafNode().getName());
-        Condition condition = AnnotationUtil.findAnnotation(field, Condition.class);
+        PathImpl path = (PathImpl) ReflectUtil.getFieldValue(context, context instanceof ConstraintValidatorContextImpl ? PATH_FIELD : ReflectUtil.getField(context.getClass(), "basePath"));
+        Field field = ReflectUtil.getField(valueContext.getCurrentBean().getClass(), path.getLeafNode().getName());
+        Condition condition = findAnnotation(field, Condition.class);
         if (condition != null) {
             return new Condition[]{condition};
         }
-        return (Condition[]) AnnotationUtil.flatRepeatableAnnotation(new Annotation[]{AnnotationUtil.findAnnotation(field, Condition.List.class)}, new Condition[0]);
+        return (Condition[]) flatRepeatableAnnotation(new Annotation[]{findAnnotation(field, Condition.List.class)}, new Condition[0]);
     }
 }
