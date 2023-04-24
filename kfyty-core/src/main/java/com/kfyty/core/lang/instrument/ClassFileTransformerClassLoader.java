@@ -21,6 +21,14 @@ import java.util.Set;
  * @email kfyty725@hotmail.com
  */
 public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
+    /**
+     * 是否读取 {@link ClassFileTransformer}
+     */
+    private static final boolean LOAD_TRANSFORMER = Boolean.parseBoolean(System.getProperty("k.transformer.load", "false"));
+
+    /**
+     * @see this#obtainClassFileTransformer()
+     */
     private volatile List<ClassFileTransformer> classFileTransformers;
 
     public ClassFileTransformerClassLoader(URL[] urls) {
@@ -47,6 +55,9 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
      * 执行自定义字节码逻辑
      */
     protected byte[] transform(String className, byte[] classBytes) throws ClassNotFoundException {
+        if (!LOAD_TRANSFORMER) {
+            return classBytes;
+        }
         try {
             className = className.replace('.', '/');
             List<ClassFileTransformer> classFileTransformers = this.obtainClassFileTransformer();
