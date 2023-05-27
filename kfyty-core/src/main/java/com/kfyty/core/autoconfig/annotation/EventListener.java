@@ -2,6 +2,7 @@ package com.kfyty.core.autoconfig.annotation;
 
 import com.kfyty.core.event.ApplicationEvent;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -14,6 +15,7 @@ import java.lang.annotation.Target;
  * @date 2021/6/21 16:45
  * @email kfyty725@hotmail.com
  */
+@Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EventListener {

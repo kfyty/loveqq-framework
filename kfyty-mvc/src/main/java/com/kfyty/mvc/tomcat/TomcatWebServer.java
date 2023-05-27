@@ -166,11 +166,11 @@ public class TomcatWebServer implements WebServer {
 
     private void prepareResources(Context context) throws URISyntaxException {
         WebResourceRoot resources = new StandardRoot(context);
-        URL pathURL = config.getPrimarySource().getProtectionDomain().getCodeSource().getLocation();
-        if (Files.isDirectory(Paths.get(pathURL.toURI()))) {
-            resources.addPreResources(new DirResourceSet(resources, "/", pathURL.getPath(), "/"));
-        } else if (pathURL.getPath().endsWith(".jar")) {
+        URL pathURL = this.config.getPrimarySource().getProtectionDomain().getCodeSource().getLocation();
+        if (pathURL.getPath().endsWith(".jar")) {
             resources.addJarResources(new JarResourceSet(resources, "/", pathURL.getPath(), "/"));
+        } else if (Files.isDirectory(Paths.get(pathURL.toURI()))) {
+            resources.addPreResources(new DirResourceSet(resources, "/", pathURL.getPath(), "/"));
         } else {
             resources.addPreResources(new EmptyResourceSet(resources));
             log.warn("add empty source set !");

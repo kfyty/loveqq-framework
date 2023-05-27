@@ -1,7 +1,6 @@
 package com.kfyty.core.lang;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,11 +12,11 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -29,8 +28,12 @@ import java.util.stream.Collectors;
  * @date 2023/3/15 19:10
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public class JarIndex {
+    /**
+     * jar index 文件索引名称
+     */
+    public static final String JAR_INDEX_FILE_NAME = "jar.idx";
+
     /**
      * 启动 jar 包路径
      */
@@ -48,8 +51,8 @@ public class JarIndex {
 
     public JarIndex(String mainJarPath, Manifest manifest, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
-        this.jarMap = new ConcurrentHashMap<>();
-        this.jarIndex = new ConcurrentHashMap<>();
+        this.jarMap = new HashMap<>(256);
+        this.jarIndex = new HashMap<>(256);
         this.loadJarFile(mainJarPath, manifest);
         this.loadJarIndex(mainJarPath, jarIndex);
     }
@@ -68,6 +71,9 @@ public class JarIndex {
     }
 
     public List<String> getJars(String name) {
+        if (name.startsWith("META-INF")) {
+            return this.jarIndex.getOrDefault(name, Collections.emptyList());
+        }
         int lastDot = name.lastIndexOf('.');
         if (lastDot < 0) {
             return Collections.emptyList();
@@ -79,6 +85,11 @@ public class JarIndex {
     public List<JarFile> getJarFiles(String name) {
         List<String> jars = this.getJars(name);
         return jars.stream().map(this.jarMap::get).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
+        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jar);
+        this.jarMap.put(jar, jarFile);
     }
 
     @SneakyThrows(IOException.class)
@@ -94,28 +105,26 @@ public class JarIndex {
     @SneakyThrows(IOException.class)
     protected void loadJarIndex(String mainJarPath, InputStream jarIndex) {
         String line = null;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(jarIndex));
-        while ((line = reader.readLine()) != null) {
-            this.loadJarIndex(mainJarPath, line, reader);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(jarIndex))) {
+            while ((line = reader.readLine()) != null) {
+                this.loadJarIndex(mainJarPath, line, reader);
+            }
         }
     }
 
-    @SneakyThrows(IOException.class)
-    protected void loadJarIndex(String mainJarPath, String currentLine, BufferedReader reader) {
+    protected void loadJarIndex(String mainJarPath, String currentLine, BufferedReader reader) throws IOException {
         if (!currentLine.endsWith(".jar")) {
             return;
         }
 
         String jar = currentLine;
         while ((currentLine = reader.readLine()) != null) {
-            if (currentLine.equals("") || currentLine.equals("\n") || currentLine.equals("\r\n")) {
+            if (currentLine.length() < 1 || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕
             }
-            if (!currentLine.startsWith("META-INF")) {
-                this.jarIndex.computeIfAbsent(currentLine, k -> new LinkedList<>()).add(jar);
-                if (mainJarPath.contains(jar)) {
-                    this.jarMap.put(jar, new JarFile(mainJarPath));
-                }
+            this.jarIndex.computeIfAbsent(currentLine, k -> new LinkedList<>()).add(jar);
+            if (mainJarPath.contains(jar)) {
+                this.jarMap.put(jar, new JarFile(mainJarPath));
             }
         }
     }

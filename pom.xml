@@ -61,6 +61,7 @@
         <source.plugin.version>3.2.1</source.plugin.version>
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
         <jar.plugin.version>3.2.2</jar.plugin.version>
+        <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <dependency.plugin.version>3.3.0</dependency.plugin.version>
         <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
 
@@ -116,7 +117,6 @@
                 <version>${jar.plugin.version}</version>
                 <configuration>
                     <archive>
-                        <index>true</index>
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>${boot-lib-output}/</classpathPrefix>
@@ -162,6 +162,33 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>${antrun.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <java classname="com.kfyty.core.lang.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
+                                        <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
+                                        <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
+                                        <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
+                                    </java>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <dependencies>
