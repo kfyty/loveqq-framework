@@ -4,7 +4,7 @@ import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.lang.JarIndex;
 import com.kfyty.core.lang.JarIndexClassLoader;
-import com.kfyty.core.utils.ClassLoaderUtil;
+import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +15,8 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 /**
@@ -37,9 +38,9 @@ public class BootLauncher {
     public static final String JAR_MANIFEST_LOCATION = META_INFO_LOCATION + "/MANIFEST.MF";
 
     /**
-     * INDEX.LIST 文件路径
+     * jar.idx 文件路径
      */
-    public static final String JAR_INDEX_LOCATION = META_INFO_LOCATION + "/INDEX.LIST";
+    public static final String JAR_INDEX_LOCATION = META_INFO_LOCATION + "/" + JarIndex.JAR_INDEX_FILE_NAME;
 
     /**
      * 用户启动类属性 key
@@ -62,13 +63,12 @@ public class BootLauncher {
      * @throws Throwable 启动异常
      */
     public void launch(String[] args) throws Throwable {
-        Pair<Manifest, InputStream> manifestJarIndex = this.findManifestJarIndex();
-        Manifest manifest = manifestJarIndex.getKey();
-        InputStream jarIndexStream = manifestJarIndex.getValue();
-        String mainJarPath = this.findMainJarPath(manifest);
+        JarManifest manifest = this.resolveMainJarManifest();
+        InputStream jarIndexStream = this.openJarIndexInputStream(manifest.getJar());
+        String mainJarPath = this.resolveMainJarPath(manifest);
 
         JarIndex jarIndex = new JarIndex(mainJarPath, manifest, jarIndexStream);
-        JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, ClassLoaderUtil.classLoader(BootLauncher.class));
+        JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, Thread.currentThread().getContextClassLoader());
 
         this.setContextClassLoader(jarIndexClassLoader);
         this.invokeMainClass(manifest.getMainAttributes().getValue(START_CLASS_KEY), args);
@@ -92,7 +92,7 @@ public class BootLauncher {
      */
     public void invokeMainClass(String mainClassName, String[] args) throws Throwable {
         try {
-            Class<?> mainClass = Class.forName(mainClassName, false, ClassLoaderUtil.classLoader(BootLauncher.class));
+            Class<?> mainClass = Class.forName(mainClassName, false, Thread.currentThread().getContextClassLoader());
             Method mainMethod = mainClass.getDeclaredMethod("main", String[].class);
             mainMethod.invoke(null, new Object[]{args});
         } catch (InvocationTargetException e) {
@@ -101,42 +101,47 @@ public class BootLauncher {
     }
 
     /**
-     * 查找用户启动 jar 包的 MANIFEST.MF 文件。以及 INDEX.LIST 文件的输入流
+     * 查找用户启动 jar 包的 MANIFEST.MF 文件
      *
-     * @return key: MANIFEST.MF, value: INDEX.LIST
-     * @throws IOException        IOException
-     * @throws URISyntaxException URISyntaxException
+     * @return key: MANIFEST.MF
+     * @throws IOException IOException
      */
-    protected Pair<Manifest, InputStream> findManifestJarIndex() throws IOException, URISyntaxException {
+    @SneakyThrows(URISyntaxException.class)
+    protected JarManifest resolveMainJarManifest() throws IOException {
         for (URL url : FactoriesLoader.loadURLResource(JAR_MANIFEST_LOCATION)) {
             Manifest manifest = new Manifest(url.openStream());
             String startClass = manifest.getMainAttributes().getValue(START_CLASS_KEY);
             if (startClass != null && startClass.length() > 0) {
                 if (url.getProtocol().equals("file")) {
-                    return new Pair<>(manifest, new FileInputStream(new File(Paths.get(url.toURI()).getParent().toString(), "INDEX.LIST")));
+                    return new JarManifest(manifest, Paths.get(url.toURI()).getParent().getParent().toUri().toURL());
                 }
-                return new Pair<>(manifest, new URL("jar", "", -1, url.getFile().replace(JAR_MANIFEST_LOCATION, JAR_INDEX_LOCATION)).openStream());
+                return new JarManifest(manifest, new URL(url.getFile().replace("!/" + JAR_MANIFEST_LOCATION, "")));
             }
         }
         throw new SupportException("Start-Class does not exists in manifest");
     }
 
     /**
+     * 获取 jar.idx 的输入流
+     *
+     * @return jar.idx 输入流
+     * @throws IOException IOException
+     */
+    protected InputStream openJarIndexInputStream(URL jarURL) throws IOException {
+        if (jarURL.getFile().endsWith(".jar")) {
+            return new JarFile(jarURL.getFile()).getInputStream(new JarEntry(JAR_INDEX_LOCATION));
+        }
+        return new FileInputStream(new File(jarURL.getFile(), JAR_INDEX_LOCATION));
+    }
+
+    /**
      * 查找用户启动 jar 包所在路径
      *
-     * @param manifest 用户启动 jar 的 MANIFEST.MF 文件
+     * @param manifest {@link JarManifest}
      * @return 用户启动 jar 包所在路径
      */
-    protected String findMainJarPath(Manifest manifest) {
-        String mainClassPath = manifest.getMainAttributes().getValue(START_CLASS_KEY).replace('.', '/') + ".class";
-        Set<URL> urls = FactoriesLoader.loadURLResource(mainClassPath);
-        if (urls.isEmpty()) {
-            throw new SupportException("start class resource does not exists: " + mainClassPath);
-        }
-        URL url = urls.iterator().next();
-        if (url.getProtocol().equals("file")) {
-            return Paths.get(url.getFile().substring(1).replace(mainClassPath, "")).toString();
-        }
-        return url.getFile().substring(6).replace("!/" + mainClassPath, "");
+    @SneakyThrows(URISyntaxException.class)
+    protected String resolveMainJarPath(JarManifest manifest) {
+        return Paths.get(manifest.getJar().toURI()).toString();
     }
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +123,20 @@ public abstract class CommonUtil {
             return ((Map<?, ?>) obj).size();
         }
         return 1;
+    }
+
+    public static Map<String, String> loadCommandLineProperties(String[] commandLineArgs, String keySeparator) {
+        Map<String, String> propertySources = new HashMap<>(8);
+        for (String key : commandLineArgs) {
+            if (key.startsWith(keySeparator)) {
+                int index = key.indexOf('=');
+                if (index == -1) {
+                    throw new IllegalArgumentException("please set property value of key: " + key);
+                }
+                propertySources.put(key.substring(keySeparator.length(), index), key.substring(index + 1));
+            }
+        }
+        return propertySources;
     }
 
     public static String getGetter(String name) {

@@ -143,7 +143,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void afterPropertiesSet() {
-        this.loadCommandLineProperties();
+        this.propertySources.putAll(CommonUtil.loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
         if (this.contains(LOCATION_KEY)) {
             this.addConfig(this.getProperty(LOCATION_KEY));
         }
@@ -160,18 +160,5 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     public void close() {
         this.configs.clear();
         this.propertySources.clear();
-    }
-
-    protected void loadCommandLineProperties() {
-        String[] commandLineArgs = this.applicationContext.getCommandLineArgs();
-        for (String key : commandLineArgs) {
-            if (key.startsWith("--")) {
-                int index = key.indexOf('=');
-                if (index == -1) {
-                    throw new IllegalArgumentException("please set property value of key: " + key);
-                }
-                this.propertySources.put(key.substring(2, index), key.substring(index + 1));
-            }
-        }
     }
 }
