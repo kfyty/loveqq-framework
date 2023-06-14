@@ -40,6 +40,8 @@
         <validation.api.version>3.0.0</validation.api.version>
         <glassfish.jakarta.el.version>4.0.2</glassfish.jakarta.el.version>
         <hibernate.validator.version>7.0.0.Final</hibernate.validator.version>
+        <protobuf.java.version>3.23.2</protobuf.java.version>
+        <java.websocket.version>1.5.3</java.websocket.version>
 
         <druid.version>1.1.15</druid.version>
         <hikari.version>4.0.3</hikari.version>
@@ -56,12 +58,14 @@
         <slf4j.log4j12.version>1.7.12</slf4j.log4j12.version>
 
         <junit.version>4.12</junit.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.26</lombok.version>
 
         <source.plugin.version>3.2.1</source.plugin.version>
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
         <jar.plugin.version>3.2.2</jar.plugin.version>
         <antrun.plugin.version>3.1.0</antrun.plugin.version>
+        <os.maven.version>1.5.0.Final</os.maven.version>
+        <protobuf.maven.version>0.5.1</protobuf.maven.version>
         <dependency.plugin.version>3.3.0</dependency.plugin.version>
         <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
 
@@ -83,6 +87,14 @@
                 <directory>src/main/webapp</directory>
             </resource>
         </resources>
+
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${os.maven.version}</version>
+            </extension>
+        </extensions>
 
         <plugins>
             <plugin>
@@ -184,6 +196,27 @@
                                     </java>
                                 </target>
                             </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <artifactId>protobuf-maven-plugin</artifactId>
+                    <version>${protobuf.maven.version}</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <protocArtifact>com.google.protobuf:protoc:${protobuf.java.version}:exe:${os.detected.classifier}</protocArtifact>
+                        <protoSourceRoot>${project.basedir}/src/main/resources/proto</protoSourceRoot>
+                        <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+                        <clearOutputDirectory>false</clearOutputDirectory>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
                         </execution>
                     </executions>
                 </plugin>
@@ -340,6 +373,18 @@
                 <groupId>io.lettuce</groupId>
                 <artifactId>lettuce-core</artifactId>
                 <version>${lettuce.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.java.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.java-websocket</groupId>
+                <artifactId>Java-WebSocket</artifactId>
+                <version>${java.websocket.version}</version>
             </dependency>
 
             <!-- jsp 模板引擎：https://github.com/kfyty/k-jte.git -->
