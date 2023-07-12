@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.kfyty.core.support.json.Array;
+import com.kfyty.core.support.json.JSON;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -77,6 +79,15 @@ public abstract class JsonUtil {
     @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> toArray(CharSequence o) {
         return (List<Map<String, Object>>) toObject((String) o, ArrayList.class);
+    }
+
+    public static JSON toJSON(Object o) {
+        return new JSON(toMap(o));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Array toJSONArray(CharSequence o) {
+        return new Array((List) toArray(o));
     }
 
     public static <T> T toObject(Map<?, ?> map, Class<T> clazz) {
