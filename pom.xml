@@ -29,8 +29,10 @@
     <properties>
         <cglib.version>3.3.0</cglib.version>
         <javassist.version>3.28.0-GA</javassist.version>
+        <reactor.core.version>3.5.7</reactor.core.version>
         <ognl.version>3.3.4</ognl.version>
-        <jackson.version>2.12.5</jackson.version>
+        <jackson.version>2.15.2</jackson.version>
+        <jfinal.enjoy.version>5.1.1</jfinal.enjoy.version>
         <freemarker.version>2.3.30</freemarker.version>
         <commons.compress.version>1.21</commons.compress.version>
 
@@ -274,9 +276,27 @@
             </dependency>
 
             <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-core</artifactId>
+                <version>${reactor.core.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jfinal</groupId>
+                <artifactId>enjoy</artifactId>
+                <version>${jfinal.enjoy.version}</version>
             </dependency>
 
             <dependency>
