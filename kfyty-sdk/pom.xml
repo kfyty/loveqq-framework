@@ -7,16 +7,21 @@
         <groupId>com.kfyty</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
+    <modelVersion>4.0.0</modelVersion>
     <artifactId>kfyty-sdk</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>kfyty-sdk-core</module>
+        <module>kfyty-sdk-http</module>
+        <module>kfyty-sdk-reactive-http</module>
+    </modules>
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
 
-        <hutool.version>5.7.0</hutool.version>
-        <fastjson.version>1.2.76</fastjson.version>
+        <hutool.version>5.8.20</hutool.version>
     </properties>
 
     <dependencies>
@@ -26,29 +31,10 @@
             <version>${kfyty.utils.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-http</artifactId>
-            <version>${hutool.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-json</artifactId>
-            <version>${hutool.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>${fastjson.version}</version>
-            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

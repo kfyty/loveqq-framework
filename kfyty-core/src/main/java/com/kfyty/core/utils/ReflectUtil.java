@@ -264,8 +264,8 @@ public abstract class ReflectUtil {
 
     /*----------------------------------------- 构造器/属性/方法相关方法 -----------------------------------------*/
 
-    public static Object getFieldValue(Object obj, String fieldName) {
-        return getFieldValue(obj, getField(obj.getClass(), fieldName));
+    public static void setFieldValue(Object obj, String fieldName, Object value) {
+        setFieldValue(obj, getField(obj.getClass(), fieldName), value);
     }
 
     public static void setFieldValue(Object obj, Field field, Object value) {
@@ -296,6 +296,10 @@ public abstract class ReflectUtil {
         setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
         setFieldValue(obj, field, value);
         setFieldValue(field, modifiersField, modifiers);
+    }
+
+    public static Object getFieldValue(Object obj, String fieldName) {
+        return getFieldValue(obj, getField(obj.getClass(), fieldName));
     }
 
     public static Object getFieldValue(Object obj, Field field) {
@@ -350,7 +354,7 @@ public abstract class ReflectUtil {
     }
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+        if (clazz == Object.class || (clazz = clazz.getSuperclass()) == null) {
             return null;
         }
         Field field = getField(clazz, fieldName, containPrivate);
@@ -373,22 +377,18 @@ public abstract class ReflectUtil {
     }
 
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
-        if (clazz == null || Object.class.equals(clazz)) {
+        if (clazz == null || clazz == Object.class) {
             return null;
         }
         final Predicate<Method> methodPredicate = m -> containPrivate || !Modifier.isPrivate(m.getModifiers());
         return ofNullable(clazz.getSuperclass())
                 .map(e -> getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes))
                 .filter(methodPredicate)
-                .orElseGet(() -> {
-                    for (Class<?> clazzInterface : clazz.getInterfaces()) {
-                        Method method = getMethod(clazzInterface, methodName, containPrivate, parameterTypes);
-                        if (method != null) {
-                            return methodPredicate.test(method) ? method : null;
-                        }
-                    }
-                    return null;
-                });
+                .orElseGet(() -> Arrays.stream(getInterfaces(clazz))
+                        .map(clazzInterface -> getMethod(clazzInterface, methodName, containPrivate, parameterTypes))
+                        .filter(Objects::nonNull)
+                        .findAny()
+                        .orElse(null));
     }
 
     public static Method getSuperMethod(Method method) {
@@ -413,7 +413,7 @@ public abstract class ReflectUtil {
     }
 
     public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+        if (clazz == Object.class || (clazz = clazz.getSuperclass()) == null) {
             return null;
         }
         Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
@@ -451,7 +451,7 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
-        if (Object.class.equals(clazz) || (clazz = clazz.getSuperclass()) == null) {
+        if (clazz == Object.class || (clazz = clazz.getSuperclass()) == null) {
             return Collections.emptyMap();
         }
         return getFieldMap(clazz, containPrivate).values().stream().filter(e -> containPrivate || !Modifier.isPrivate(e.getModifiers())).collect(Collectors.toMap(Field::getName, e -> e));
@@ -471,7 +471,7 @@ public abstract class ReflectUtil {
     }
 
     public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {
-        if (clazz == null || Object.class.equals(clazz)) {
+        if (clazz == null || clazz == Object.class) {
             return Collections.emptyList();
         }
         Predicate<Method> methodPredicate = e -> !e.isBridge() && (containPrivate || !Modifier.isPrivate(e.getModifiers()));
