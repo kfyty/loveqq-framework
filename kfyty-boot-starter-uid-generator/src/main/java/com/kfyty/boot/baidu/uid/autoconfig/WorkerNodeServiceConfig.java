@@ -1,7 +1,7 @@
 package com.kfyty.boot.baidu.uid.autoconfig;
 
-import com.baidu.fsg.uid.worker.dao.WorkerNodeService;
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
+import com.baidu.fsg.uid.worker.service.WorkerNodeService;
 import com.kfyty.boot.baidu.uid.autoconfig.entity.WorkerNode;
 import com.kfyty.boot.baidu.uid.autoconfig.mapper.WorkerNodeMapper;
 import com.kfyty.core.autoconfig.annotation.Autowired;
