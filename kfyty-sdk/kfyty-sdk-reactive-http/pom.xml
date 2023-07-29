@@ -12,6 +12,11 @@
     <artifactId>kfyty-sdk-reactive-http</artifactId>
     <description>sdk 响应式异步实现</description>
 
+    <properties>
+        <maven.source.version>17</maven.source.version>
+        <maven.target.version>17</maven.target.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
