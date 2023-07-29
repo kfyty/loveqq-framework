@@ -384,7 +384,7 @@ public abstract class ReflectUtil {
         return ofNullable(clazz.getSuperclass())
                 .map(e -> getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes))
                 .filter(methodPredicate)
-                .orElseGet(() -> Arrays.stream(getInterfaces(clazz))
+                .orElseGet(() -> Arrays.stream(clazz.getInterfaces())
                         .map(clazzInterface -> getMethod(clazzInterface, methodName, containPrivate, parameterTypes))
                         .filter(Objects::nonNull)
                         .findAny()
