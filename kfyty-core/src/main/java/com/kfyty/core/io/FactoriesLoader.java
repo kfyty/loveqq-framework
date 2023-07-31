@@ -1,20 +1,18 @@
 package com.kfyty.core.io;
 
 import com.kfyty.core.exception.SupportException;
-import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.PropertiesUtil;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
 /**
@@ -27,9 +25,9 @@ import java.util.function.Predicate;
 public abstract class FactoriesLoader {
     public static final String DEFAULT_FACTORIES_RESOURCE_LOCATION = "META-INF/k.factories";
 
-    private static final Map<WeakKey<String>, Set<Properties>> loadedCache = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<String, Set<Properties>> loadedCache = new WeakConcurrentHashMap<>(4);
 
-    private static final Map<WeakKey<String>, Set<String>> factoriesCache = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<String, Set<String>> factoriesCache = new WeakConcurrentHashMap<>(4);
 
     public static Set<String> loadFactories(Class<?> clazz) {
         return loadFactories(clazz.getName());
@@ -44,9 +42,9 @@ public abstract class FactoriesLoader {
     }
 
     public static Set<String> loadFactories(String key, String factoriesResourceLocation) {
-        return factoriesCache.computeIfAbsent(new WeakKey<>(key), k -> {
+        return factoriesCache.computeIfAbsent(key, k -> {
             Set<String> factories = new HashSet<>();
-            Set<Properties> properties = loadedCache.getOrDefault(new WeakKey<>(factoriesResourceLocation), loadFactoriesResource(factoriesResourceLocation));
+            Set<Properties> properties = loadedCache.getOrDefault(factoriesResourceLocation, loadFactoriesResource(factoriesResourceLocation));
             for (Properties property : properties) {
                 for (Map.Entry<Object, Object> entry : property.entrySet()) {
                     if (entry.getKey().toString().equals(key)) {
@@ -59,7 +57,7 @@ public abstract class FactoriesLoader {
     }
 
     public static Set<Properties> loadFactoriesResource(String factoriesResourceLocation) {
-        return loadedCache.computeIfAbsent(new WeakKey<>(factoriesResourceLocation), k -> {
+        return loadedCache.computeIfAbsent(factoriesResourceLocation, k -> {
             try {
                 Set<Properties> properties = new HashSet<>();
                 Set<URL> urls = loadURLResource(factoriesResourceLocation);

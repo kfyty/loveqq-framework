@@ -1,4 +1,4 @@
-package com.kfyty.core.lang;
+package com.kfyty.core.lang.util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

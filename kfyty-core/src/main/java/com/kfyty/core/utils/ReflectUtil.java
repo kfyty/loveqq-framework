@@ -1,9 +1,9 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.SupportException;
-import com.kfyty.core.lang.WeakKey;
 import com.kfyty.core.lang.function.Function3;
 import com.kfyty.core.lang.function.Function4;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -44,7 +44,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -84,22 +83,22 @@ public abstract class ReflectUtil {
     /**
      * 属性缓存
      */
-    private static final Map<WeakKey<String>, Field> fieldCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<String, Field> fieldCache = new WeakConcurrentHashMap<>();
 
     /**
      * 方法缓存
      */
-    private static final Map<WeakKey<String>, Method> methodCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<String, Method> methodCache = new WeakConcurrentHashMap<>();
 
     /**
      * 所有属性缓存
      */
-    private static final Map<WeakKey<String>, Map<String, Field>> fieldMapCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<String, Map<String, Field>> fieldMapCache = new WeakConcurrentHashMap<>();
 
     /**
      * 所有方法缓存
      */
-    private static final Map<WeakKey<String>, List<Method>> methodsCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<String, List<Method>> methodsCache = new WeakConcurrentHashMap<>();
 
     /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
@@ -337,14 +336,14 @@ public abstract class ReflectUtil {
 
     public static Field getField(Class<?> clazz, String fieldName) {
         final String fieldMapKey = fieldsMethodsCacheKeyGenerator.apply(clazz, true);
-        return ofNullable(fieldMapCache.get(new WeakKey<>(fieldMapKey)))
+        return ofNullable(fieldMapCache.get(fieldMapKey))
                 .map(e -> e.get(fieldName))
                 .orElseGet(() -> getField(clazz, fieldName, true));
     }
 
     public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
         final String key = fieldCacheKeyGenerator.apply(clazz, fieldName, containPrivate);
-        return fieldCache.computeIfAbsent(new WeakKey<>(key), k -> {
+        return fieldCache.computeIfAbsent(key, k -> {
             try {
                 return clazz.getDeclaredField(fieldName);
             } catch (NoSuchFieldException e) {
@@ -367,7 +366,7 @@ public abstract class ReflectUtil {
 
     public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
         final String key = methodCacheKeyGenerator.apply(clazz, methodName, parameterTypes, containPrivate);
-        return methodCache.computeIfAbsent(new WeakKey<>(key), k -> {
+        return methodCache.computeIfAbsent(key, k -> {
             try {
                 return clazz.getDeclaredMethod(methodName, parameterTypes);
             } catch (NoSuchMethodException e) {
@@ -442,7 +441,7 @@ public abstract class ReflectUtil {
 
     public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
         final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
-        return fieldMapCache.computeIfAbsent(new WeakKey<>(key), k -> {
+        return fieldMapCache.computeIfAbsent(key, k -> {
             Map<String, Field> map = new HashMap<>();
             map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
             getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
@@ -463,7 +462,7 @@ public abstract class ReflectUtil {
 
     public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
         final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
-        return methodsCache.computeIfAbsent(new WeakKey<>(key), k -> {
+        return methodsCache.computeIfAbsent(key, k -> {
             List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).filter(e -> !e.isBridge()).collect(Collectors.toList());
             list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
             return list;

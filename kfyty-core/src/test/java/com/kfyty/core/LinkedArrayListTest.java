@@ -1,6 +1,6 @@
 package com.kfyty.core;
 
-import com.kfyty.core.lang.LinkedArrayList;
+import com.kfyty.core.lang.util.LinkedArrayList;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.IOUtil;
 import lombok.SneakyThrows;

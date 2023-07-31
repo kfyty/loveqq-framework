@@ -1,13 +1,11 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.lang.function.SerializableFunction;
-import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import static java.util.Optional.ofNullable;
 
@@ -22,7 +20,7 @@ public abstract class SerializableLambdaUtil {
     /**
      * SerializedLambda 缓存
      */
-    private static final Map<WeakKey<Class<?>>, SerializedLambda> SERIALIZED_LAMBDA_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Class<?>, SerializedLambda> SERIALIZED_LAMBDA_CACHE = new WeakConcurrentHashMap<>();
 
     public static <T> String resolveFieldName(SerializableFunction<T, ?> serializableFunction) {
         String implMethodName = serializeLambda(serializableFunction).getImplMethodName();
@@ -34,12 +32,11 @@ public abstract class SerializableLambdaUtil {
 
     public static <T> SerializedLambda serializeLambda(SerializableFunction<T, ?> serializableFunction) {
         final Class<?> clazz = serializableFunction.getClass();
-        final WeakKey<Class<?>> key = new WeakKey<>(clazz);
-        return ofNullable(SERIALIZED_LAMBDA_CACHE.get(key))
+        return ofNullable(SERIALIZED_LAMBDA_CACHE.get(clazz))
                 .orElseGet(() -> {
                     Method method = ReflectUtil.getMethod(clazz, "writeReplace");
                     SerializedLambda serializedLambda = (SerializedLambda) ReflectUtil.invokeMethod(serializableFunction, method);
-                    SERIALIZED_LAMBDA_CACHE.put(key, serializedLambda);
+                    SERIALIZED_LAMBDA_CACHE.put(clazz, serializedLambda);
                     return serializedLambda;
                 });
     }

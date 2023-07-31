@@ -1,19 +1,17 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
@@ -30,7 +28,7 @@ import static com.kfyty.core.utils.ReflectUtil.isAbstract;
  */
 @Slf4j
 public abstract class PackageUtil {
-    private static final Map<WeakKey<String>, Set<String>> SCAN_PACKAGE_CACHE = Collections.synchronizedMap(new WeakHashMap<>(4));
+    private static final Map<String, Set<String>> SCAN_PACKAGE_CACHE = new WeakConcurrentHashMap<>(4);
 
     public static Set<String> scanClassName(Class<?> mainClass) {
         return scanClassName(mainClass.getPackage().getName());
@@ -56,7 +54,7 @@ public abstract class PackageUtil {
 
     public static Set<String> scanClassName(String basePackage) {
         try {
-            Set<String> cache = SCAN_PACKAGE_CACHE.get(new WeakKey<>(basePackage));
+            Set<String> cache = SCAN_PACKAGE_CACHE.get(basePackage);
             if (cache != null) {
                 return cache;
             }
@@ -70,7 +68,7 @@ public abstract class PackageUtil {
                 }
                 classes.addAll(scanClassNameByFile(url));
             }
-            return SCAN_PACKAGE_CACHE.computeIfAbsent(new WeakKey<>(basePackage), k -> classes);
+            return SCAN_PACKAGE_CACHE.computeIfAbsent(basePackage, k -> classes);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

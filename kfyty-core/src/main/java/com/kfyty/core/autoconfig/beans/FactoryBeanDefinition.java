@@ -1,15 +1,13 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.lang.WeakKey;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import static com.kfyty.core.utils.BeanUtil.removeFactoryBeanNamePrefix;
 import static com.kfyty.core.utils.ReflectUtil.newInstance;
@@ -33,7 +31,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     /**
      * 临时 FactoryBean 对象缓存，用于获取目标 bean 定义信息
      */
-    private static final Map<WeakKey<String>, FactoryBean<?>> snapFactoryBeanCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<String, FactoryBean<?>> snapFactoryBeanCache = new WeakConcurrentHashMap<>();
 
     /**
      * 该 bean 定义所在的工厂 bean 定义
@@ -72,15 +70,15 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     public static Class<?> getSnapBeanType(String beanName, Class<?> defaultBeanType) {
-        FactoryBean<?> factoryBean = snapFactoryBeanCache.get(new WeakKey<>(beanName));
+        FactoryBean<?> factoryBean = snapFactoryBeanCache.get(beanName);
         return factoryBean == null ? defaultBeanType : factoryBean.getBeanType();
     }
 
     public static FactoryBean<?> getSnapFactoryBean(BeanDefinition beanDefinition) {
-        return snapFactoryBeanCache.computeIfAbsent(new WeakKey<>(beanDefinition.getBeanName()), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
+        return snapFactoryBeanCache.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
     }
 
     public static void addSnapFactoryBeanCache(String beanName, FactoryBean<?> factoryBean) {
-        snapFactoryBeanCache.putIfAbsent(new WeakKey<>(beanName), factoryBean);
+        snapFactoryBeanCache.putIfAbsent(beanName, factoryBean);
     }
 }
