@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class ReactiveAbstractApi<T extends ReactiveAbstractApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> {
+public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> {
 
     @Override
     public R exchange() {
