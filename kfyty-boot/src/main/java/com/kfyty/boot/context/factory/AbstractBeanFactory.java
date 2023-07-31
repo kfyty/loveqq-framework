@@ -13,11 +13,11 @@ import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.lang.WeakKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -70,7 +69,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     /**
      * 同一类型的 bean 定义缓存
      */
-    protected final Map<WeakKey<Class<?>>, Map<String, BeanDefinition>> beanDefinitionsForType;
+    protected final Map<Class<?>, Map<String, BeanDefinition>> beanDefinitionsForType;
 
     /**
      * 应用上下文
@@ -82,7 +81,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.beanInstances = new ConcurrentHashMap<>();
         this.beanReference = new ConcurrentHashMap<>();
         this.beanPostProcessors = Collections.synchronizedMap(new LinkedHashMap<>());
-        this.beanDefinitionsForType = Collections.synchronizedMap(new WeakHashMap<>());
+        this.beanDefinitionsForType = new WeakConcurrentHashMap<>();
     }
 
     public void registerBeanPostProcessors(String beanName, BeanPostProcessor beanPostProcessor) {
@@ -165,7 +164,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return this.beanDefinitionsForType.computeIfAbsent(new WeakKey<>(beanType), k -> this.getBeanDefinitions(e -> beanType.isAssignableFrom(e.getValue().getBeanType())));
+        return this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.getBeanDefinitions(e -> beanType.isAssignableFrom(e.getValue().getBeanType())));
     }
 
     @Override
