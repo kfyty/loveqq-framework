@@ -1,5 +1,6 @@
-package com.kfyty.core.utils;
+package com.kfyty.excel.utils;
 
+import com.kfyty.core.utils.ExceptionUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 

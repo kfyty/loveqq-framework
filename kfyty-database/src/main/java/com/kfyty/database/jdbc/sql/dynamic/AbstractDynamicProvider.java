@@ -1,13 +1,26 @@
 package com.kfyty.database.jdbc.sql.dynamic;
 
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.IOUtil;
+import com.kfyty.core.utils.XmlUtil;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
 import lombok.Data;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
+import java.io.File;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.kfyty.core.utils.XmlUtil.resolveAttribute;
+import static com.kfyty.database.jdbc.session.Configuration.EXECUTE_LABEL;
+import static com.kfyty.database.jdbc.session.Configuration.MAPPER_NAMESPACE;
+import static com.kfyty.database.jdbc.session.Configuration.MAPPER_STATEMENT_ID;
+import static com.kfyty.database.jdbc.session.Configuration.SELECT_LABEL;
 
 /**
  * 描述: 动态 SQL 提供基础实现
@@ -19,6 +32,22 @@ import java.util.Map;
 @Data
 public abstract class AbstractDynamicProvider<TS extends TemplateStatement> implements DynamicProvider<TS> {
     protected Configuration configuration;
+
+    @Override
+    public List<TS> resolve(List<String> paths) {
+        List<TS> templateStatements = new ArrayList<>();
+        for (String path : paths) {
+            for (File file : IOUtil.scanFiles(path, f -> f.getName().endsWith(this.getTemplateSuffix()))) {
+                Element rootElement = XmlUtil.create(file).getDocumentElement();
+                String namespace = resolveAttribute(rootElement, MAPPER_NAMESPACE, () -> new IllegalArgumentException("namespace can't empty"));
+                NodeList select = rootElement.getElementsByTagName(SELECT_LABEL);
+                NodeList execute = rootElement.getElementsByTagName(EXECUTE_LABEL);
+                templateStatements.addAll(this.resolveInternal(namespace, SELECT_LABEL, select));
+                templateStatements.addAll(this.resolveInternal(namespace, EXECUTE_LABEL, execute));
+            }
+        }
+        return templateStatements;
+    }
 
     @Override
     public String resolveTemplateStatementId(Class<?> mapperClass, Method mapperMethod) {
@@ -45,4 +74,19 @@ public abstract class AbstractDynamicProvider<TS extends TemplateStatement> impl
         }
         return params;
     }
+
+    protected List<TS> resolveInternal(String namespace, String labelType, NodeList nodeList) {
+        List<TS> templateStatements = new ArrayList<>(nodeList.getLength());
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Element element = (Element) nodeList.item(i);
+            String id = namespace + "." + resolveAttribute(element, MAPPER_STATEMENT_ID, () -> new IllegalArgumentException("id can't empty"));
+            String xml = element.getTextContent();
+            templateStatements.add(this.buildTemplateStatement(id, labelType, xml));
+        }
+        return templateStatements;
+    }
+
+    protected abstract String getTemplateSuffix();
+
+    protected abstract TS buildTemplateStatement(String id, String labelType, String content);
 }

@@ -1,12 +1,12 @@
 package com.kfyty.database.util;
 
 import com.kfyty.core.utils.ClassLoaderUtil;
-import com.kfyty.database.generator.template.freemarker.FreemarkerTemplate;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.PropertiesUtil;
+import com.kfyty.database.generator.template.enjoy.EnjoyTemplate;
 import com.kfyty.database.generator.template.jsp.JspTemplate;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -44,7 +44,7 @@ public abstract class TemplateEngineUtil {
         return CONFIG != null ? CONFIG : (CONFIG = PropertiesUtil.load(CONFIG_PATH, ClassLoaderUtil.classLoader(TemplateEngineUtil.class)));
     }
 
-    public static List<? extends FreemarkerTemplate> loadFreemarkerTemplates(FreemarkerTemplate template, String prefix) {
+    public static List<? extends EnjoyTemplate> loadEnjoyTemplates(EnjoyTemplate template, String prefix) {
         String templateNames = getTemplateNames(prefix);
         if (CommonUtil.empty(templateNames)) {
             return Collections.emptyList();

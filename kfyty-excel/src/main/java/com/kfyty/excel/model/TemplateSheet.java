@@ -33,8 +33,8 @@ import static com.kfyty.excel.processor.TemplateExcelParallelExport.EXCEL_SHEET_
 import static com.kfyty.excel.processor.TemplateExcelParallelExport.TEMPLATE_CURRENT_ROW_PARAM_NAME;
 import static com.kfyty.excel.processor.TemplateExcelParallelExport.TEMPLATE_ROWS_PARAM_NAME;
 import static com.kfyty.excel.processor.TemplateExcelParallelExport.TEMPLATE_TITLES_PARAM_NAME;
-import static com.kfyty.core.utils.FreemarkerUtil.buildTemplate;
-import static com.kfyty.core.utils.FreemarkerUtil.renderTemplate;
+import static com.kfyty.excel.utils.FreemarkerUtil.buildTemplate;
+import static com.kfyty.excel.utils.FreemarkerUtil.renderTemplate;
 import static com.kfyty.core.utils.StreamUtil.throwMergeFunction;
 import static com.kfyty.core.utils.XmlUtil.resolveAttribute;
 import static com.kfyty.core.utils.XmlUtil.resolveChildAttribute;

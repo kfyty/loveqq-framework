@@ -1,15 +1,16 @@
 package com.kfyty.database.jdbc.autoconfig;
 
-import com.kfyty.core.jdbc.transaction.Transaction;
-import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
-import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
+import com.jfinal.template.Engine;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
+import com.kfyty.database.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
 import com.kfyty.database.jdbc.transaction.ManagedJdbcTransaction;
 
 import javax.sql.DataSource;
@@ -31,11 +32,7 @@ public class MapperAutoConfig implements ImportBeanDefinition {
     @Bean
     @ConditionalOnMissingBean
     public DynamicProvider<?> dynamicProvider() {
-        freemarker.template.Configuration configuration = new freemarker.template.Configuration(freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
-        configuration.setDefaultEncoding("UTF-8");
-        configuration.setOutputEncoding("UTF-8");
-        configuration.setClassicCompatible(true);
-        return new FreemarkerDynamicProvider().setFreemarkerConfiguration(configuration);
+        return new EnjoyDynamicProvider().setEngine(Engine.create("dynamicProvider"));
     }
 
     @Bean
