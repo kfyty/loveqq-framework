@@ -1,0 +1,12 @@
+<mapper namespace="com.kfyty.database.mapper.UserMapper">
+    <select id="findLikeName">
+        select
+            *
+        from
+            user
+        where 1
+        #if(name != null)
+            and username like concat('%', #{name}, '%')
+        #end
+    </select>
+</mapper>

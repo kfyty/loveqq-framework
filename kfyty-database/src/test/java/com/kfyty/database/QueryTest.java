@@ -1,13 +1,15 @@
 package com.kfyty.database;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.jfinal.template.Engine;
 import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
-import com.kfyty.database.jdbc.sql.dynamic.freemarker.FreemarkerDynamicProvider;
+import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
+import com.kfyty.database.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
 import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.vo.UserVo;
 import org.junit.Before;
@@ -27,7 +29,7 @@ public class QueryTest {
     @Before
     public void prepare() throws Exception {
         DataSource dataSource = DruidDataSourceFactory.createDataSource(PropertiesUtil.load(PATH));
-        FreemarkerDynamicProvider dynamicProvider = new FreemarkerDynamicProvider();
+        DynamicProvider<?> dynamicProvider = new EnjoyDynamicProvider().setEngine(Engine.create("test"));
         Configuration configuration = new Configuration()
                 .setDataSource(dataSource)
                 .setTransactionFactory(() -> new JdbcTransaction(dataSource))

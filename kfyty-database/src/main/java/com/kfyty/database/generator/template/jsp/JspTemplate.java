@@ -1,22 +1,23 @@
 package com.kfyty.database.generator.template.jsp;
 
-import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.core.io.SimpleBufferedWriter;
+import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
-import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
+import com.kfyty.database.generator.template.GeneratorTemplate;
+import com.kfyty.database.util.TemplateEngineUtil;
 import com.kfyty.kjte.JstlRenderEngine;
 import com.kfyty.kjte.JstlTemplateEngine;
 import com.kfyty.kjte.config.JstlTemplateEngineConfig;
-import com.kfyty.database.util.TemplateEngineUtil;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -61,7 +62,7 @@ public class JspTemplate extends AbstractTemplateEngine {
     }
 
     @Override
-    public void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) throws IOException {
+    public void doGenerate(AbstractTableStructInfo tableInfo, GeneratorConfiguration configuration, SimpleBufferedWriter out) {
         this.initClass();
         this.loadVariables(tableInfo, configuration);
         this.templateEngine.getConfig().clearVar().putVar(this.variable);
@@ -74,7 +75,7 @@ public class JspTemplate extends AbstractTemplateEngine {
         if (this.jspClass == null) {
             try {
                 String clazz = this.classPath.replace(CLASS_SUFFIX, "").replace(".", "_") + CLASS_SUFFIX;
-                this.jspClass = ClassPool.getDefault().makeClass(new FileInputStream(clazz)).toClass();
+                this.jspClass = ClassPool.getDefault().makeClass(Files.newInputStream(Paths.get(clazz))).toClass();
             } catch (IOException | CannotCompileException e) {
                 throw new RuntimeException(e);
             }

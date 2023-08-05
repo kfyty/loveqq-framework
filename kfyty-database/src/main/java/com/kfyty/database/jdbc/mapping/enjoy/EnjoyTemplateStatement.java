@@ -1,7 +1,7 @@
-package com.kfyty.database.jdbc.mapping.freemarker;
+package com.kfyty.database.jdbc.mapping.enjoy;
 
+import com.jfinal.template.Template;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
-import freemarker.template.Template;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,14 +18,14 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public class FreemarkerTemplateStatement extends TemplateStatement {
+public class EnjoyTemplateStatement extends TemplateStatement {
     private Template template;
 
-    public FreemarkerTemplateStatement(String id, String labelType) {
+    public EnjoyTemplateStatement(String id, String labelType) {
         super(id, labelType);
     }
 
-    public FreemarkerTemplateStatement(String id, String labelType, Template template) {
+    public EnjoyTemplateStatement(String id, String labelType, Template template) {
         this(id, labelType);
         this.template = template;
     }
