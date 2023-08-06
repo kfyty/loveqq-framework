@@ -1,5 +1,6 @@
 package com.kfyty.core.utils;
 
+import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.core.support.Pair;
 
 import java.lang.annotation.Annotation;
@@ -11,12 +12,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
 import static com.kfyty.core.utils.CommonUtil.EMPTY_ANNOTATIONS;
@@ -36,7 +35,7 @@ public abstract class AnnotationUtil {
     /**
      * Class 注解元素缓存
      */
-    private static final Map<Pair<Object, Class<? extends Annotation>>, Boolean> HAS_ANNOTATION_ELEMENT_CACHE = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Pair<Object, Class<? extends Annotation>>, Boolean> HAS_ANNOTATION_ELEMENT_CACHE = new WeakConcurrentHashMap<>();
 
     /* ------------------------------------------ 基础方法 ------------------------------------------ */
 

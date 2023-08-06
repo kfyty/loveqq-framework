@@ -34,6 +34,6 @@ public class WeakConcurrentHashMap<K, V> extends ReferenceConcurrentHashMap<K, V
     }
 
     public WeakConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel, ReferenceType referenceType) {
-        super(initialCapacity, loadFactor, concurrencyLevel, referenceType);
+        super(initialCapacity, loadFactor, concurrencyLevel, referenceType, ReferenceType.STRONG, null);
     }
 }
