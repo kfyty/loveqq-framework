@@ -1,7 +1,11 @@
 package com.kfyty.database.generator.template.enjoy;
 
+import com.jfinal.template.Directive;
 import com.jfinal.template.Engine;
+import com.jfinal.template.Env;
 import com.jfinal.template.Template;
+import com.jfinal.template.io.Writer;
+import com.jfinal.template.stat.Scope;
 import com.kfyty.core.io.SimpleBufferedWriter;
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
@@ -12,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,10 +58,18 @@ public class EnjoyTemplate extends AbstractTemplateEngine {
     protected void initTemplate() {
         if (engine == null) {
             engine = Engine.create("enjoyTemplateGenerator");
+            engine.addDirective("now", NowDirective.class);
         }
         if (this.template == null) {
             URL resource = this.getClass().getResource(TemplateEngineUtil.getTemplatePath(prefix) + "/" + super.template);
             this.template = engine.getTemplate(Objects.requireNonNull(resource, "enjoy template not found").getFile());
+        }
+    }
+
+    public static class NowDirective extends Directive {
+
+        public void exec(Env env, Scope scope, Writer writer) {
+            write(writer, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         }
     }
 }
