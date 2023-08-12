@@ -1,7 +1,7 @@
 package com.kfyty.sdk.api.core.decorate;
 
-import com.kfyty.sdk.api.core.Api;
 import com.kfyty.sdk.api.core.ApiResponse;
+import com.kfyty.sdk.api.core.ReactorApi;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.exception.ApiRetryException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class ReactiveApiRetryDecorate<T extends Api<T, R>, R extends ApiResponse> {
+public class ReactiveApiRetryDecorate<T extends ReactorApi<T, R>, R extends ApiResponse> {
     /**
      * 重试次数
      * 默认 3 次
@@ -48,9 +48,9 @@ public class ReactiveApiRetryDecorate<T extends Api<T, R>, R extends ApiResponse
     /**
      * api
      */
-    private final Api<T, R> decorate;
+    private final ReactorApi<T, R> decorate;
 
-    public ReactiveApiRetryDecorate(Api<T, R> api) {
+    public ReactiveApiRetryDecorate(ReactorApi<T, R> api) {
         this.decorate = api;
     }
 
@@ -69,15 +69,15 @@ public class ReactiveApiRetryDecorate<T extends Api<T, R>, R extends ApiResponse
         return this;
     }
 
-    public Mono<R> exchange() {
+    public Mono<R> exchangeAsync() {
         return this.doRetry(0, this.decorate::exchangeAsync);
     }
 
-    public Mono<byte[]> execute() {
+    public Mono<byte[]> executeAsync() {
         return this.doRetry(0, this.decorate::executeAsync);
     }
 
-    public Mono<Object> favorite() {
+    public Mono<Object> favoriteAsync() {
         return this.doRetry(0, this.decorate::favoriteAsync);
     }
 
@@ -93,7 +93,7 @@ public class ReactiveApiRetryDecorate<T extends Api<T, R>, R extends ApiResponse
                 });
     }
 
-    public static <T extends Api<T, R>, R extends ApiResponse> ReactiveApiRetryDecorate<T, R> of(Api<T, R> api) {
+    public static <T extends ReactorApi<T, R>, R extends ApiResponse> ReactiveApiRetryDecorate<T, R> of(ReactorApi<T, R> api) {
         return new ReactiveApiRetryDecorate<>(Objects.requireNonNull(api));
     }
 }

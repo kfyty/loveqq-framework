@@ -2,6 +2,8 @@ package com.kfyty.sdk.api.core.reactive.http;
 
 import com.kfyty.sdk.api.core.AbstractConfigurableApi;
 import com.kfyty.sdk.api.core.ApiResponse;
+import com.kfyty.sdk.api.core.ReactorApi;
+import com.kfyty.sdk.api.core.decorate.ReactiveApiRetryDecorate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -19,7 +21,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> {
+public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> implements ReactorApi<T, R> {
 
     @Override
     public R exchange() {
@@ -50,6 +52,15 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
         this.preProcessor();
         return this.executeInternal()
                 .doOnNext(response -> log.debug("request api: {}, waste time: {} ms, parameters: {}, response body: {}", this.requestURL(), System.currentTimeMillis() - start, this.formData(), new String(response)));
+    }
+
+    /**
+     * 返回重试的装饰 api
+     *
+     * @return 重试 api
+     */
+    public ReactiveApiRetryDecorate<T, R> reactiveRetried() {
+        return ReactiveApiRetryDecorate.of(this);
     }
 
     protected Mono<byte[]> executeInternal() {

@@ -5,7 +5,6 @@ import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.sdk.api.core.config.ApiConfiguration;
 import com.kfyty.sdk.api.core.decorate.ApiRetryDecorate;
-import com.kfyty.sdk.api.core.decorate.ReactiveApiRetryDecorate;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.exception.BaseApiException;
 import com.kfyty.sdk.api.core.http.AbstractHttpRequest;
@@ -102,15 +101,6 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
      */
     public ApiRetryDecorate<T, R> retried() {
         return ApiRetryDecorate.of(this);
-    }
-
-    /**
-     * 返回重试的装饰 api
-     *
-     * @return 重试 api
-     */
-    public ReactiveApiRetryDecorate<T, R> reactiveRetried() {
-        return ReactiveApiRetryDecorate.of(this);
     }
 
     @SuppressWarnings("unchecked")
