@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.sql.dynamic;
 
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.XmlUtil;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
@@ -9,8 +10,8 @@ import lombok.Data;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +37,12 @@ public abstract class AbstractDynamicProvider<TS extends TemplateStatement> impl
     @Override
     public List<TS> resolve(List<String> paths) {
         List<TS> templateStatements = new ArrayList<>();
+        String templateSuffix = this.getTemplateSuffix();
         for (String path : paths) {
-            for (File file : IOUtil.scanFiles(path, f -> f.getName().endsWith(this.getTemplateSuffix()))) {
+            for (URL file : IOUtil.scanFiles(path, ClassLoaderUtil.classLoader(this.getClass()))) {
+                if (!file.getFile().endsWith(templateSuffix)) {
+                    continue;
+                }
                 Element rootElement = XmlUtil.create(file).getDocumentElement();
                 String namespace = resolveAttribute(rootElement, MAPPER_NAMESPACE, () -> new IllegalArgumentException("namespace can't empty"));
                 NodeList select = rootElement.getElementsByTagName(SELECT_LABEL);

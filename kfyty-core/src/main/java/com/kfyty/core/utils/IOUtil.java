@@ -3,6 +3,7 @@ package com.kfyty.core.utils;
 import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.support.FilePart;
 import com.kfyty.core.support.FilePartDescription;
+import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -10,28 +11,28 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -221,46 +222,29 @@ public abstract class IOUtil {
     }
 
     /**
-     * 扫描路径下的文件
+     * 构建 jar 中的文件 url
      *
-     * @param path 路径
-     * @return 文件列表
+     * @param jarFile  jar
+     * @param jarEntry jar 中的文件
+     * @return url
      */
-    public static List<File> scanFiles(String path) {
-        return scanFiles(path, e -> true);
-    }
-
-    /**
-     * 根据断言扫描路径下的文件
-     *
-     * @param path          路径
-     * @param filePredicate 文件断言
-     * @return 文件列表
-     */
-    public static List<File> scanFiles(String path, Predicate<File> filePredicate) {
-        return scanFiles(path, filePredicate, Thread.currentThread().getContextClassLoader());
-    }
-
-    /**
-     * 根据断言扫描路径下的文件
-     *
-     * @param path          路径
-     * @param filePredicate 文件断言
-     * @param classLoader   ClassLoader
-     * @return 文件列表
-     */
-    public static List<File> scanFiles(String path, Predicate<File> filePredicate, ClassLoader classLoader) {
+    public static URL buildFileURLInJar(JarFile jarFile, JarEntry jarEntry) {
         try {
-            URL root = Objects.requireNonNull(classLoader.getResource(""));
-            File file = new File(root.getPath() + path);
-            if (file.isFile()) {
-                return filePredicate.test(file) ? singletonList(file) : emptyList();
-            }
-            File[] files = file.listFiles();
-            return files == null ? emptyList() : Arrays.stream(files).filter(File::isFile).filter(filePredicate).collect(Collectors.toList());
-        } catch (Exception e) {
+            return new URL("jar:file:/" + jarFile.getName() + "!/" + jarEntry.getName());
+        } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    /**
+     * 扫描路径下的文件
+     *
+     * @param pattern 匹配路径
+     * @return 文件列表
+     */
+    public static Set<URL> scanFiles(String pattern, ClassLoader classLoader) {
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resolveAllClassPath(classLoader));
+        return resolver.findResources(pattern);
     }
 
     /**
@@ -308,7 +292,7 @@ public abstract class IOUtil {
             conn.connect();
 
             BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
-            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+            BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
 
             IOUtil.copy(bis, bos);
 
@@ -372,7 +356,7 @@ public abstract class IOUtil {
                         continue;
                     }
                     File filePart = new File(splitDir, i + "_" + srcFile.getName());
-                    try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(filePart))) {
+                    try (BufferedOutputStream out = new BufferedOutputStream(Files.newOutputStream(filePart.toPath()))) {
                         byte[] bs = new byte[length];
                         rf.read(bs);
                         out.write(bs);
@@ -410,5 +394,46 @@ public abstract class IOUtil {
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    /**
+     * 获取类路径下所有 jar URL
+     *
+     * @param classLoader class loader
+     * @return jar urls
+     */
+    public static Set<URL> resolveAllClassPath(ClassLoader classLoader) {
+        return resolveAllClassPath(classLoader, new HashSet<>());
+    }
+
+    /**
+     * 获取类路径下所有 jar URL
+     *
+     * @param classLoader class loader
+     * @param result      结果集合
+     * @return jar urls
+     */
+    public static Set<URL> resolveAllClassPath(ClassLoader classLoader, Set<URL> result) {
+        if (classLoader instanceof URLClassLoader) {
+            result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
+        }
+
+        if (classLoader == ClassLoader.getSystemClassLoader()) {
+            try {
+                String javaClassPath = System.getProperty("java.class.path");
+                String pathSeparator = System.getProperty("path.separator");
+                for (String path : CommonUtil.split(javaClassPath, pathSeparator)) {
+                    result.add(new File(path).toURI().toURL());
+                }
+            } catch (MalformedURLException e) {
+                throw ExceptionUtil.wrap(e);
+            }
+        }
+
+        if (classLoader != null) {
+            resolveAllClassPath(classLoader.getParent(), result);
+        }
+
+        return result;
     }
 }

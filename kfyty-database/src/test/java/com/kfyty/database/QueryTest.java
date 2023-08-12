@@ -34,7 +34,7 @@ public class QueryTest {
                 .setDataSource(dataSource)
                 .setTransactionFactory(() -> new JdbcTransaction(dataSource))
                 .addInterceptor(new GeneratedKeysInterceptor())
-                .setDynamicProvider(dynamicProvider, "/mapper");
+                .setDynamicProvider(dynamicProvider, "/mapper/*.xml");
         dynamicProvider.setConfiguration(configuration);
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
         this.userMapper = proxyFactory.createProxy(UserMapper.class);

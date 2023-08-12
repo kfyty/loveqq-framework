@@ -4,11 +4,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -62,6 +65,20 @@ public abstract class XmlUtil {
     }
 
     /**
+     * 从 URL 创建一个 xml 文档
+     *
+     * @param url 文件
+     * @return xml 文档
+     */
+    public static Document create(URL url) {
+        try {
+            return create(url.openStream());
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
      * 从输入流创建一个 xml 文档
      *
      * @param inputStream 输入流
@@ -70,7 +87,7 @@ public abstract class XmlUtil {
     public static Document create(InputStream inputStream) {
         try {
             return builder().parse(inputStream);
-        } catch (Exception e) {
+        } catch (SAXException | IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }

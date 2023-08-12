@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -50,19 +49,20 @@ public class ReactiveHttpClientHttpRequestExecutor implements HttpRequestExecuto
 
     @Override
     public Mono<HttpResponse> exchangeAsync(HttpRequest<?> api, boolean validStatusCode) {
-        HttpClient client = this.findHttpClient(api);
-        CompletableFuture<HttpResponse> future = client
-                .sendAsync(this.buildHttpRequest(api), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
-                .thenApplyAsync(this::wrapResponse)
-                .whenComplete((response, ex) -> {
-                    if (ex != null) {
-                        throw new ApiException(ex.getMessage(), ex);
-                    }
-                    if (validStatusCode && !response.isSuccess()) {
-                        throw new ApiException(format("request failed with api: %s, status: %s, body: %s", api.requestURL(), response.code(), new String(response.body())));
-                    }
-                });
-        return Mono.fromCompletionStage(future);
+        return Mono.fromCompletionStage(() -> {
+            HttpClient client = this.findHttpClient(api);
+            return client
+                    .sendAsync(this.buildHttpRequest(api), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
+                    .thenApplyAsync(this::wrapResponse)
+                    .whenComplete((response, ex) -> {
+                        if (ex != null) {
+                            throw new ApiException(ex.getMessage(), ex);
+                        }
+                        if (validStatusCode && !response.isSuccess()) {
+                            throw new ApiException(format("request failed with api: %s, status: %s, body: %s", api.requestURL(), response.code(), new String(response.body())));
+                        }
+                    });
+        });
     }
 
     protected HttpClient findHttpClient(HttpRequest<?> api) {
