@@ -66,39 +66,80 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public abstract class ReflectUtil {
     /**
+     * 属性提供者
+     */
+    private static final Function3<Field, Class<?>, String, Boolean> FIELD_SUPPLIER = (clazz, fieldName, containPrivate) -> {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            return getSuperField(clazz, fieldName, containPrivate);
+        }
+    };
+
+    /**
+     * 方法提供者
+     */
+    private static final Function4<Method, Class<?>, String, Boolean, Class<?>[]> METHOD_SUPPLIER = (clazz, methodName, containPrivate, parameterTypes) -> {
+        try {
+            return clazz.getDeclaredMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
+        }
+    };
+
+    /**
+     * 属性集合提供者
+     */
+    private static final BiFunction<Class<?>, Boolean, Map<String, Field>> FIELD_MAP_SUPPLIER = (clazz, containPrivate) -> {
+        Map<String, Field> map = new HashMap<>();
+        map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
+        getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
+        return map;
+    };
+
+    /**
+     * 方法集合提供者
+     */
+    private static final BiFunction<Class<?>, Boolean, List<Method>> METHODS_SUPPLIER = (clazz, containPrivate) -> {
+        List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).filter(e -> !e.isBridge()).collect(Collectors.toList());
+        list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
+        return list;
+    };
+
+    /**
      * 属性缓存 key 生成器
      */
-    private static final Function3<String, Class<?>, String, Boolean> fieldCacheKeyGenerator = (clazz, fieldName, containPrivate) -> clazz.getName() + "#" + fieldName + "@" + containPrivate;
+    private static final Function3<String, Class<?>, String, Boolean> FIELD_CACHE_KEY_GENERATOR = (clazz, fieldName, containPrivate) -> clazz.getName() + "#" + fieldName + "@" + containPrivate;
 
     /**
      * 方法缓存 key 生成器
      */
-    public static final Function4<String, Class<?>, String, Class<?>[], Boolean> methodCacheKeyGenerator = (clazz, methodName, parameterTypes, containPrivate) -> CommonUtil.format("{}#{}({})@{}", clazz.getName(), methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
+    public static final Function4<String, Class<?>, String, Class<?>[], Boolean> METHOD_CACHE_KEY_GENERATOR = (clazz, methodName, parameterTypes, containPrivate) -> CommonUtil.format("{}#{}({})@{}", clazz.getName(), methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
 
     /**
      * 所有属性/方法缓存 key 生成器
      */
-    public static final BiFunction<Class<?>, Boolean, String> fieldsMethodsCacheKeyGenerator = (clazz, containPrivate) -> clazz.getName() + "@" + containPrivate;
+    public static final BiFunction<Class<?>, Boolean, String> FIELDS_METHODS_CACHE_KEY_GENERATOR = (clazz, containPrivate) -> clazz.getName() + "@" + containPrivate;
 
     /**
      * 属性缓存
      */
-    private static final Map<String, Field> fieldCache = new WeakConcurrentHashMap<>();
+    private static final Map<String, Field> FIELD_CACHE = new WeakConcurrentHashMap<>();
 
     /**
      * 方法缓存
      */
-    private static final Map<String, Method> methodCache = new WeakConcurrentHashMap<>();
+    private static final Map<String, Method> METHOD_CACHE = new WeakConcurrentHashMap<>();
 
     /**
      * 所有属性缓存
      */
-    private static final Map<String, Map<String, Field>> fieldMapCache = new WeakConcurrentHashMap<>();
+    private static final Map<String, Map<String, Field>> FIELD_MAP_CACHE = new WeakConcurrentHashMap<>();
 
     /**
      * 所有方法缓存
      */
-    private static final Map<String, List<Method>> methodsCache = new WeakConcurrentHashMap<>();
+    private static final Map<String, List<Method>> METHODS_CACHE = new WeakConcurrentHashMap<>();
 
     /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
@@ -278,12 +319,12 @@ public abstract class ReflectUtil {
                 field.set(obj, value);
                 return;
             }
-            Method method = getMethod(obj.getClass(), CommonUtil.getSetter(field.getName()), field.getType());
-            if (method == null) {
+            Method setter = getMethod(obj.getClass(), CommonUtil.getSetter(field.getName()), field.getType());
+            if (setter == null) {
                 setFieldValue(obj, field, value, false);
                 return;
             }
-            invokeMethod(obj, method, value);
+            invokeMethod(obj, setter, value);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
@@ -311,9 +352,11 @@ public abstract class ReflectUtil {
                 makeAccessible(field);
                 return field.get(obj);
             }
-            return ofNullable(getMethod(obj.getClass(), CommonUtil.getGetter(field.getName())))
-                    .map(method -> invokeMethod(obj, method))
-                    .orElseGet(() -> getFieldValue(obj, field, false));
+            Method getter = getMethod(obj.getClass(), CommonUtil.getGetter(field.getName()));
+            if (getter == null) {
+                return getFieldValue(obj, field, false);
+            }
+            return invokeMethod(obj, getter);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
@@ -335,21 +378,22 @@ public abstract class ReflectUtil {
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
-        final String fieldMapKey = fieldsMethodsCacheKeyGenerator.apply(clazz, true);
-        return ofNullable(fieldMapCache.get(fieldMapKey))
+        final String fieldMapKey = FIELDS_METHODS_CACHE_KEY_GENERATOR.apply(clazz, true);
+        return ofNullable(FIELD_MAP_CACHE.get(fieldMapKey))
                 .map(e -> e.get(fieldName))
                 .orElseGet(() -> getField(clazz, fieldName, true));
     }
 
     public static Field getField(Class<?> clazz, String fieldName, boolean containPrivate) {
-        final String key = fieldCacheKeyGenerator.apply(clazz, fieldName, containPrivate);
-        return fieldCache.computeIfAbsent(key, k -> {
-            try {
-                return clazz.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                return getSuperField(clazz, fieldName, containPrivate);
+        final String key = FIELD_CACHE_KEY_GENERATOR.apply(clazz, fieldName, containPrivate);
+        Field field = FIELD_CACHE.get(key);
+        if (field == null) {
+            field = FIELD_SUPPLIER.apply(clazz, fieldName, containPrivate);
+            if (field != null) {
+                FIELD_CACHE.putIfAbsent(key, field);
             }
-        });
+        }
+        return field;
     }
 
     public static Field getSuperField(Class<?> clazz, String fieldName, boolean containPrivate) {
@@ -365,14 +409,15 @@ public abstract class ReflectUtil {
     }
 
     public static Method getMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
-        final String key = methodCacheKeyGenerator.apply(clazz, methodName, parameterTypes, containPrivate);
-        return methodCache.computeIfAbsent(key, k -> {
-            try {
-                return clazz.getDeclaredMethod(methodName, parameterTypes);
-            } catch (NoSuchMethodException e) {
-                return getSuperMethod(clazz, methodName, containPrivate, parameterTypes);
+        final String key = METHOD_CACHE_KEY_GENERATOR.apply(clazz, methodName, parameterTypes, containPrivate);
+        Method method = METHOD_CACHE.get(key);
+        if (method == null) {
+            method = METHOD_SUPPLIER.apply(clazz, methodName, containPrivate, parameterTypes);
+            if (method != null) {
+                METHOD_CACHE.putIfAbsent(key, method);
             }
-        });
+        }
+        return method;
     }
 
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
@@ -440,13 +485,15 @@ public abstract class ReflectUtil {
     }
 
     public static Map<String, Field> getFieldMap(Class<?> clazz, boolean containPrivate) {
-        final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
-        return fieldMapCache.computeIfAbsent(key, k -> {
-            Map<String, Field> map = new HashMap<>();
-            map.putAll(Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toMap(Field::getName, e -> e)));
-            getSuperFieldMap(clazz, containPrivate).forEach(map::putIfAbsent);
-            return map;
-        });
+        final String key = FIELDS_METHODS_CACHE_KEY_GENERATOR.apply(clazz, containPrivate);
+        Map<String, Field> fieldMap = FIELD_MAP_CACHE.get(key);
+        if (fieldMap == null) {
+            fieldMap = FIELD_MAP_SUPPLIER.apply(clazz, containPrivate);
+            if (fieldMap != null) {
+                FIELD_MAP_CACHE.putIfAbsent(key, fieldMap);
+            }
+        }
+        return fieldMap;
     }
 
     public static Map<String, Field> getSuperFieldMap(Class<?> clazz, boolean containPrivate) {
@@ -461,12 +508,15 @@ public abstract class ReflectUtil {
     }
 
     public static List<Method> getMethods(Class<?> clazz, boolean containPrivate) {
-        final String key = fieldsMethodsCacheKeyGenerator.apply(clazz, containPrivate);
-        return methodsCache.computeIfAbsent(key, k -> {
-            List<Method> list = Arrays.stream(clazz.getDeclaredMethods()).filter(e -> !e.isBridge()).collect(Collectors.toList());
-            list.addAll(getSuperMethods(clazz, containPrivate).stream().filter(superMethod -> list.stream().noneMatch(e -> isSuperMethod(superMethod, e))).collect(Collectors.toList()));
-            return list;
-        });
+        final String key = FIELDS_METHODS_CACHE_KEY_GENERATOR.apply(clazz, containPrivate);
+        List<Method> methods = METHODS_CACHE.get(key);
+        if (methods == null) {
+            methods = METHODS_SUPPLIER.apply(clazz, containPrivate);
+            if (methods != null) {
+                METHODS_CACHE.putIfAbsent(key, methods);
+            }
+        }
+        return methods;
     }
 
     public static List<Method> getSuperMethods(Class<?> clazz, boolean containPrivate) {

@@ -10,30 +10,14 @@ package com.kfyty.core.lang.util.concurrent;
 public class WeakConcurrentHashMap<K, V> extends ReferenceConcurrentHashMap<K, V> {
 
     public WeakConcurrentHashMap() {
-        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, ReferenceType.WEAK);
+        super();
     }
 
     public WeakConcurrentHashMap(int initialCapacity) {
-        this(initialCapacity, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, ReferenceType.WEAK);
+        super(ReferenceType.WEAK, initialCapacity);
     }
 
     public WeakConcurrentHashMap(int initialCapacity, float loadFactor) {
-        this(initialCapacity, loadFactor, DEFAULT_CONCURRENCY_LEVEL, ReferenceType.WEAK);
-    }
-
-    public WeakConcurrentHashMap(int initialCapacity, int concurrencyLevel) {
-        this(initialCapacity, DEFAULT_LOAD_FACTOR, concurrencyLevel, ReferenceType.WEAK);
-    }
-
-    public WeakConcurrentHashMap(int initialCapacity, ReferenceType referenceType) {
-        this(initialCapacity, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL, referenceType);
-    }
-
-    public WeakConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel) {
-        this(initialCapacity, loadFactor, concurrencyLevel, ReferenceType.WEAK);
-    }
-
-    public WeakConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel, ReferenceType referenceType) {
-        super(initialCapacity, loadFactor, concurrencyLevel, referenceType, ReferenceType.STRONG, null);
+        super(ReferenceType.WEAK, initialCapacity, loadFactor);
     }
 }
