@@ -5,8 +5,8 @@ import com.kfyty.core.utils.JsonUtil;
 import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.http.HttpRequest;
-import com.kfyty.sdk.api.core.http.HttpRequestExecutor;
 import com.kfyty.sdk.api.core.http.HttpResponse;
+import com.kfyty.sdk.api.core.http.ReactiveHttpRequestExecutor;
 import reactor.core.publisher.Mono;
 
 import java.net.HttpCookie;
@@ -30,7 +30,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @date 2021/11/11 18:12
  * @email kfyty725@hotmail.com
  */
-public class ReactiveHttpClientHttpRequestExecutor implements HttpRequestExecutor {
+public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpRequestExecutor {
     /**
      * {@link HttpClient}
      */
