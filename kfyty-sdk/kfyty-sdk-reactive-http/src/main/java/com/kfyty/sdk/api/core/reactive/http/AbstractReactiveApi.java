@@ -45,23 +45,14 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
 
     @Override
     public Mono<R> exchangeAsync() {
-        long start = System.currentTimeMillis();
         this.preProcessor();
-        return this.exchangeInternal()
-                .doOnNext(response -> log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}",
-                        this.requestURL(),
-                        System.currentTimeMillis() - start,
-                        this.formData(),
-                        new String(this.getConfiguration().getApiSerializer().serialize(response))))
-                .doOnNext(this::postProcessor);
+        return this.exchangeInternal().doOnNext(this::postProcessor);
     }
 
     @Override
     public Mono<byte[]> executeAsync() {
-        long start = System.currentTimeMillis();
         this.preProcessor();
-        return this.executeInternal()
-                .doOnNext(response -> log.debug("request api: {}, waste time: {} ms, parameters: {}, response body: {}", this.requestURL(), System.currentTimeMillis() - start, this.formData(), new String(response)));
+        return this.executeInternal();
     }
 
     /**

@@ -29,11 +29,8 @@ public abstract class AbstractApi<T extends AbstractApi<T, R>, R extends ApiResp
     @Override
     public R exchange() {
         try {
-            long start = System.currentTimeMillis();
             this.preProcessor();
             R response = this.exchangeInternal();
-            log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}", this.requestURL(), System.currentTimeMillis() - start,
-                    this.formData(), new String(this.getConfiguration().getApiSerializer().serialize(response)));
             this.postProcessor(response);
             return response;
         } catch (BaseApiException e) {
@@ -46,11 +43,8 @@ public abstract class AbstractApi<T extends AbstractApi<T, R>, R extends ApiResp
     @Override
     public byte[] execute() {
         try {
-            long start = System.currentTimeMillis();
             this.preProcessor();
-            byte[] bytes = this.executeInternal();
-            log.debug("request api: {}, waste time: {} ms, parameters: {}, response body: {}", this.requestURL(), System.currentTimeMillis() - start, this.formData(), new String(bytes));
-            return bytes;
+            return this.executeInternal();
         } catch (BaseApiException e) {
             throw e;
         } catch (Throwable throwable) {

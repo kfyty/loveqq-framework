@@ -7,6 +7,7 @@ import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.http.HttpRequest;
 import com.kfyty.sdk.api.core.http.HttpResponse;
 import com.kfyty.sdk.api.core.http.ReactiveHttpRequestExecutor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.net.HttpCookie;
@@ -30,6 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @date 2021/11/11 18:12
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpRequestExecutor {
     /**
      * {@link HttpClient}
@@ -50,6 +52,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
     @Override
     public Mono<HttpResponse> exchangeAsync(HttpRequest<?> api, boolean validStatusCode) {
         return Mono.fromCompletionStage(() -> {
+            long start = System.currentTimeMillis();
             HttpClient client = this.findHttpClient(api);
             return client
                     .sendAsync(this.buildHttpRequest(api), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
@@ -61,6 +64,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
                         if (validStatusCode && !response.isSuccess()) {
                             throw new ApiException(format("request failed with api: %s, status: %s, body: %s", api.requestURL(), response.code(), new String(response.body())));
                         }
+                        log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}", api.requestURL(), System.currentTimeMillis() - start, api.formData(), new String(response.body()));
                     });
         });
     }
