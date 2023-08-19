@@ -4,6 +4,8 @@ import com.kfyty.sdk.api.core.AbstractConfigurableApi;
 import com.kfyty.sdk.api.core.ApiResponse;
 import com.kfyty.sdk.api.core.ReactorApi;
 import com.kfyty.sdk.api.core.decorate.ReactiveApiRetryDecorate;
+import com.kfyty.sdk.api.core.http.HttpRequestExecutor;
+import com.kfyty.sdk.api.core.http.ReactiveHttpRequestExecutor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -22,6 +24,14 @@ import reactor.core.publisher.Mono;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> implements ReactorApi<T, R> {
+
+    public ReactiveHttpRequestExecutor getReactiveRequestExecutor() {
+        HttpRequestExecutor requestExecutor = this.getConfiguration().getRequestExecutor();
+        if (!(requestExecutor instanceof ReactiveHttpRequestExecutor)) {
+            throw new IllegalArgumentException("require ReactiveHttpRequestExecutor");
+        }
+        return (ReactiveHttpRequestExecutor) requestExecutor;
+    }
 
     @Override
     public R exchange() {
@@ -64,12 +74,11 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
     }
 
     protected Mono<byte[]> executeInternal() {
-        return this.getConfiguration().getRequestExecutor().executeAsync(this);
+        return this.getReactiveRequestExecutor().executeAsync(this);
     }
 
     protected Mono<R> exchangeInternal() {
-        return this.getConfiguration()
-                .getRequestExecutor()
+        return this.getReactiveRequestExecutor()
                 .exchangeAsync(this)
                 .map(this::exchangeInternal);
     }

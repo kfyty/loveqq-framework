@@ -1,7 +1,5 @@
 package com.kfyty.sdk.api.core.http;
 
-import reactor.core.publisher.Mono;
-
 /**
  * 描述: http 请求执行器
  *
@@ -30,6 +28,8 @@ public interface HttpRequestExecutor {
     /**
      * 返回 http 响应
      *
+     * @param api             {@link com.kfyty.sdk.api.core.Api}
+     * @param validStatusCode 是否校验 http 状态码
      * @return response
      */
     HttpResponse exchange(HttpRequest<?> api, boolean validStatusCode);
@@ -44,26 +44,5 @@ public interface HttpRequestExecutor {
         try (HttpResponse response = this.exchange(api)) {
             return response.body();
         }
-    }
-
-    /**
-     * @see this#exchange(HttpRequest)
-     */
-    default Mono<HttpResponse> exchangeAsync(HttpRequest<?> api) {
-        return this.exchangeAsync(api, true);
-    }
-
-    /**
-     * @see this#exchange(HttpRequest, boolean)
-     */
-    default Mono<HttpResponse> exchangeAsync(HttpRequest<?> api, boolean validStatusCode) {
-        return Mono.fromCallable(() -> this.exchange(api, validStatusCode));
-    }
-
-    /**
-     * @see this#execute(HttpRequest)
-     */
-    default Mono<byte[]> executeAsync(HttpRequest<?> api) {
-        return this.exchangeAsync(api).map(HttpResponse::body);
     }
 }
