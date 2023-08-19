@@ -12,6 +12,7 @@ import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.http.HttpRequest;
 import com.kfyty.sdk.api.core.http.HttpRequestExecutor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.HttpCookie;
 import java.util.List;
@@ -27,6 +28,7 @@ import static java.lang.String.format;
  * @date 2021/11/11 18:12
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
 
     @Override
@@ -36,8 +38,10 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
 
     @Override
     public com.kfyty.sdk.api.core.http.HttpResponse exchange(HttpRequest<?> api, boolean validStatusCode) {
+        long start = System.currentTimeMillis();
         URLConnectionHttpResponse response = this.wrapResponse(this.buildRequest(api).execute());
         if (!validStatusCode || response.isSuccess()) {
+            log.debug("request api: {}, waste time: {} ms, parameters: {}, exchange body: {}", api.requestURL(), System.currentTimeMillis() - start, api.formData(), new String(response.body()));
             return response;
         }
         IoUtil.close(response);
