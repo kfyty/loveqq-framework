@@ -143,7 +143,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
-        return ofNullable(this.getBeanDefinitions().get(beanName)).orElseThrow(() -> new BeansException("no such bean definition found of name: " + beanName));
+        return ofNullable(this.beanDefinitions.get(beanName)).orElseThrow(() -> new BeansException("No such bean definition found of name: " + beanName));
     }
 
     @Override
@@ -221,8 +221,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getBean(String name, boolean isLazyInit) {
-        if (this.contains(name)) {
-            return (T) this.beanInstances.get(name);
+        T bean = (T) this.beanInstances.get(name);
+        if (bean != null) {
+            return bean;
         }
         return (T) this.registerBean(this.getBeanDefinition(name), isLazyInit);
     }

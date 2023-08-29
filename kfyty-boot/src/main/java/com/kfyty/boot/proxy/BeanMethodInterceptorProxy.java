@@ -45,8 +45,8 @@ public class BeanMethodInterceptorProxy implements MethodInterceptorChainPoint {
         }
 
         String requiredBeanName = getCurrentRequiredBeanName();
-        String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING) +
-                BeanUtil.getBeanName(method, annotation);
+        String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType())
+                ? FACTORY_BEAN_PREFIX : EMPTY_STRING) + BeanUtil.getBeanName(method, annotation);
 
         if (requiredBeanName != null && !requiredBeanName.equals(beanName)) {
             return chain.proceed(methodProxy);
