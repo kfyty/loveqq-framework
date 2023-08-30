@@ -1,6 +1,6 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.boot.proxy.BeanMethodInterceptorProxy;
+import com.kfyty.boot.proxy.ConfigurationBeanInterceptorProxy;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Order;
@@ -28,6 +28,6 @@ public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcesso
 
     @Override
     public MethodInterceptorChainPoint createProxyPoint() {
-        return new BeanMethodInterceptorProxy(this.applicationContext);
+        return new ConfigurationBeanInterceptorProxy(this.applicationContext);
     }
 }

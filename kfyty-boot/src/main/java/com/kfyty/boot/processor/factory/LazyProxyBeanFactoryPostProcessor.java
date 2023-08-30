@@ -41,7 +41,7 @@ public class LazyProxyBeanFactoryPostProcessor implements BeanFactoryPostProcess
 
             postProcessBeanDefinition.setAutowireCandidate(false);
             postProcessBeanDefinition.setBeanName(LAZY_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName());
-            beanFactory.registerBeanDefinition(postProcessBeanDefinition);
+            beanFactory.registerBeanDefinition(postProcessBeanDefinition, false);
         }
     }
 }

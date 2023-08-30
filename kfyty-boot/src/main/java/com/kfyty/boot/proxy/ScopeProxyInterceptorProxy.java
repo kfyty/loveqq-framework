@@ -27,13 +27,13 @@ public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        String requiredBeanName = BeanMethodInterceptorProxy.getCurrentRequiredBeanName();
+        String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
         try {
-            BeanMethodInterceptorProxy.setCurrentRequiredBeanName(this.beanDefinition.getBeanName());
+            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(this.beanDefinition.getBeanName());
             methodProxy.setTarget(this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory));
             return chain.proceed(methodProxy);
         } finally {
-            BeanMethodInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
+            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
         }
     }
 }

@@ -44,14 +44,4 @@ public class LazyProxyFactoryBean<T> implements FactoryBean<T> {
                 .addInterceptorPoint(new LazyProxyInterceptorProxy(this.lazedTarget.getBeanName(), this.beanFactory))
                 .createProxy(this.getBeanType());
     }
-
-    public static boolean isLazyProxy(BeanDefinition beanDefinition) {
-        if (!(beanDefinition instanceof FactoryBeanDefinition)) {
-            return false;
-        }
-
-        BeanDefinition factoryBeanDefinition = ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition();
-
-        return LazyProxyFactoryBean.class.isAssignableFrom(factoryBeanDefinition.getBeanType());
-    }
 }

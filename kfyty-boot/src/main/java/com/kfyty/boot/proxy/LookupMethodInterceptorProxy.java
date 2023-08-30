@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
  * @date 2021/7/11 12:30
  * @email kfyty725@hotmail.com
  */
-@Order(BeanMethodInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
+@Order(ConfigurationBeanInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
 public class LookupMethodInterceptorProxy implements MethodInterceptorChainPoint {
     private final AutowiredProcessor autowiredProcessor;
 

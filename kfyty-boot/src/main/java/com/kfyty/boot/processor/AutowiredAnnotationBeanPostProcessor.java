@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.kfyty.boot.autoconfig.factory.LazyProxyFactoryBean.isLazyProxy;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
@@ -52,10 +51,6 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        ApplicationContext context = this.autowiredProcessor.getContext();
-        if (beanName != null && isLazyProxy(context.getBeanDefinition(beanName))) {
-            return;
-        }
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
         this.autowiredBeanField(targetClass, target);

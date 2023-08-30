@@ -20,13 +20,13 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        String requiredBeanName = BeanMethodInterceptorProxy.getCurrentRequiredBeanName();
+        String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
         try {
-            BeanMethodInterceptorProxy.setCurrentRequiredBeanName(this.beanName);
+            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(this.beanName);
             methodProxy.setTarget(this.beanFactory.getBean(this.beanName));
             return chain.proceed(methodProxy);
         } finally {
-            BeanMethodInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
+            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
         }
     }
 }

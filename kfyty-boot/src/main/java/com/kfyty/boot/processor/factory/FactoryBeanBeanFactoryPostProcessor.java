@@ -47,7 +47,7 @@ public class FactoryBeanBeanFactoryPostProcessor implements BeanFactoryPostProce
         if (beanDefinition.isAutowireCandidate() && beanDefinition.isFactoryBean()) {
             if (!this.addPostProcessed(beanDefinition.getBeanName())) {
                 BeanDefinition factoryBeanDefinition = factoryBeanDefinition(beanDefinition).getBeanDefinition();
-                beanFactory.registerBeanDefinition(factoryBeanDefinition);
+                beanFactory.registerBeanDefinition(factoryBeanDefinition, false);
                 return factoryBeanDefinition;
             }
         }
