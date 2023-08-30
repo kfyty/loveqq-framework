@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.concurrent.CompletionException;
 
 /**
  * 描述: 异常工具类
@@ -40,6 +41,9 @@ public abstract class ExceptionUtil {
             if (targetException != null) {
                 return wrap(targetException);
             }
+        }
+        if (throwable instanceof CompletionException && throwable.getCause() != null) {
+            return wrap(throwable.getCause());
         }
         return new SupportException(throwable);
     }

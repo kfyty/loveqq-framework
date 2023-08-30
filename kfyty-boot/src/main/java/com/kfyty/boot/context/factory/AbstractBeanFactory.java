@@ -17,6 +17,7 @@ import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
@@ -99,7 +100,15 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(BeanDefinition beanDefinition) {
+        this.registerBeanDefinition(beanDefinition, true);
+    }
+
+    @Override
+    public void registerBeanDefinition(BeanDefinition beanDefinition, boolean resolveNested) {
         this.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, true);
+        if (!resolveNested) {
+            return;
+        }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
@@ -110,8 +119,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(String name, BeanDefinition beanDefinition) {
-        if (this.containsBeanDefinition(beanDefinition.getBeanName())) {
-            throw new BeansException("conflicting bean definition: " + beanDefinition.getBeanName());
+        BeanDefinition exists = this.beanDefinitions.get(beanDefinition.getBeanName());
+        if (exists != null) {
+            throw new BeansException(CommonUtil.format("Conflicting bean definition: [{}:{}] -> [{}:{}]", beanDefinition.getBeanName(), beanDefinition.getBeanType(), exists.getBeanName(), exists.getBeanType()));
         }
         this.beanDefinitions.putIfAbsent(name, beanDefinition);
     }
@@ -289,7 +299,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public Object registerBean(String name, Object bean) {
         synchronized (this.beanInstances) {
             if (this.contains(name)) {
-                throw new BeansException("conflicting bean name: " + name);
+                throw new BeansException("Conflicting bean name: " + name);
             }
             if (!this.containsBeanDefinition(name)) {
                 this.registerBeanDefinition(InstantiatedBeanDefinition.from(name, bean.getClass()));

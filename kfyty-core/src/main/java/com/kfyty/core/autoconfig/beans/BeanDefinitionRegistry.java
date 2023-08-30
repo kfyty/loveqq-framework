@@ -16,6 +16,8 @@ public interface BeanDefinitionRegistry {
 
     void registerBeanDefinition(BeanDefinition beanDefinition);
 
+    void registerBeanDefinition(BeanDefinition beanDefinition, boolean resolveNested);
+
     void registerBeanDefinition(String name, BeanDefinition beanDefinition);
 
     void registerBeanDefinition(String name, BeanDefinition beanDefinition, boolean resolveCondition);

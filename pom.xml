@@ -28,6 +28,7 @@
 
     <properties>
         <cglib.version>3.3.0</cglib.version>
+        <asm.version>9.5</asm.version>
         <javassist.version>3.28.0-GA</javassist.version>
         <reactor.core.version>3.5.7</reactor.core.version>
         <ognl.version>3.3.4</ognl.version>
@@ -71,8 +72,8 @@
         <dependency.plugin.version>3.3.0</dependency.plugin.version>
         <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
 
-        <maven.source.version>8</maven.source.version>
-        <maven.target.version>8</maven.target.version>
+        <maven.source.version>17</maven.source.version>
+        <maven.target.version>17</maven.target.version>
 
         <boot-lib-output>boot-lib</boot-lib-output>
         <boot-main-class>com.kfyty.core.support.BootLauncher</boot-main-class>
@@ -257,6 +258,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>cglib</groupId>
                 <artifactId>cglib</artifactId>

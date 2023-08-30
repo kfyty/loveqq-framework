@@ -48,7 +48,7 @@ public class ScopeProxyBeanFactoryPostProcessor implements BeanFactoryPostProces
 
             postProcessBeanDefinition.setAutowireCandidate(false);
             postProcessBeanDefinition.setBeanName(SCOPE_PROXY_SOURCE_PREFIX + beanDefinition.getBeanName());
-            beanFactory.registerBeanDefinition(postProcessBeanDefinition);
+            beanFactory.registerBeanDefinition(postProcessBeanDefinition, false);
         }
     }
 }
