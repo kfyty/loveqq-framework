@@ -1,4 +1,4 @@
-package com.kfyty.component;
+package com.kfyty.lazy;
 
 import com.kfyty.boot.K;
 import com.kfyty.core.autoconfig.CommandLineRunner;
