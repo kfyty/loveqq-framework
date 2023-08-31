@@ -1,6 +1,7 @@
 package com.kfyty.mvc.autoconfig;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
@@ -9,8 +10,6 @@ import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.core.autoconfig.annotation.Import;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.core.event.ApplicationListener;
-import com.kfyty.core.event.ContextRefreshedEvent;
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.tomcat.TomcatConfig;
@@ -32,7 +31,7 @@ import java.util.Optional;
  */
 @Configuration
 @Import(config = WebSocketAutoConfig.class)
-public class TomcatAutoConfig implements DestroyBean, ApplicationListener<ContextRefreshedEvent> {
+public class TomcatAutoConfig implements DestroyBean, ContextAfterRefreshed {
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -60,9 +59,9 @@ public class TomcatAutoConfig implements DestroyBean, ApplicationListener<Contex
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        WebServer server = this.applicationContext.getBean(WebServer.class);
-        if (server != null) {
+    public void onAfterRefreshed(ApplicationContext applicationContext) {
+        WebServer server = applicationContext.getBean(WebServer.class);
+        if (server != null && !server.isStart()) {
             server.start();
         }
     }

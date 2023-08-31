@@ -46,7 +46,7 @@ public class K {
             try {
                 commandLineRunner.run(this.commandLineArgs);
             } catch (Exception ex) {
-                throw new IllegalStateException("failed to execute CommandLineRunner", ex);
+                throw new IllegalStateException("Failed to execute CommandLineRunner", ex);
             }
         }
     }

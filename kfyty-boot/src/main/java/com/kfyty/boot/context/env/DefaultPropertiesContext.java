@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.kfyty.core.utils.ClassLoaderUtil.classLoader;
 import static com.kfyty.core.utils.PropertiesUtil.LOCATION_KEY;
 import static com.kfyty.core.utils.PropertiesUtil.include;
 import static com.kfyty.core.utils.PropertiesUtil.load;
@@ -85,7 +86,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void loadProperties(String path) {
-        load(path, Thread.currentThread().getContextClassLoader(), p -> p.putAll(this.propertySources), (p, c) -> {
+        load(path, classLoader(this.getClass()), p -> p.putAll(this.propertySources), (p, c) -> {
             include(p, c);
             for (Map.Entry<Object, Object> entry : p.entrySet()) {
                 this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());

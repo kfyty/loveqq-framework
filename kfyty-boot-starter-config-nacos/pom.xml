@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kfyty</groupId>
+        <artifactId>kfyty-utils</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kfyty-boot-starter-config-nacos</artifactId>
+    <description>nacos 配置服务</description>
+
+    <properties>
+        <nacos.version>2.2.3</nacos.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>kfyty-boot</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
+    </dependencies>
+</project>
