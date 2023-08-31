@@ -11,6 +11,7 @@ import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.utils.AopUtil;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,8 +53,12 @@ public class BeanCustomizerBeanPostProcessor implements ApplicationContextAware,
             this.beanCustomizerMap = new HashMap<>();
             for (Map.Entry<String, BeanCustomizer> entry : this.applicationContext.getBeanOfType(BeanCustomizer.class).entrySet()) {
                 BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(entry.getKey());
-                SimpleGeneric generic = beanDefinition instanceof MethodBeanDefinition
-                        ? SimpleGeneric.from(((MethodBeanDefinition) beanDefinition).getBeanMethod()) : SimpleGeneric.from(beanDefinition.getBeanType());
+                if (!(beanDefinition instanceof MethodBeanDefinition)) {
+                    this.beanCustomizerMap.computeIfAbsent(SimpleGeneric.from(beanDefinition.getBeanType()).getFirst().get(), k -> new LinkedList<>()).add(entry.getValue());
+                    continue;
+                }
+                Method beanMethod = ((MethodBeanDefinition) beanDefinition).getBeanMethod();
+                SimpleGeneric generic = BeanCustomizer.class == beanMethod.getReturnType() ? SimpleGeneric.from(beanMethod) : SimpleGeneric.from(beanMethod.getReturnType());
                 this.beanCustomizerMap.computeIfAbsent(generic.getFirst().get(), k -> new LinkedList<>()).add(entry.getValue());
             }
         }

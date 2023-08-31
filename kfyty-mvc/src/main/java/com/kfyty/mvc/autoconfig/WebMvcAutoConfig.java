@@ -19,6 +19,7 @@ import com.kfyty.mvc.servlet.DispatcherServlet;
 import com.kfyty.mvc.servlet.HandlerInterceptor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 描述: mvc 自动配置
@@ -66,9 +67,11 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
         RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
-        for (Object controller : applicationContext.getBeanWithAnnotation(Controller.class).values()) {
-            List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(controller);
-            requestMappingMatcher.registryMethodMapping(methodMappings);
+        for (Map.Entry<String, Object> entry : applicationContext.getBeanWithAnnotation(Controller.class).entrySet()) {
+            if (applicationContext.getBeanDefinition(entry.getKey()).isAutowireCandidate()) {
+                List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue());
+                requestMappingMatcher.registryMethodMapping(methodMappings);
+            }
         }
     }
 }
