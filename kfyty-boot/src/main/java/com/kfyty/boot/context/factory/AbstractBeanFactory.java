@@ -241,9 +241,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanOfType(Class<T> clazz) {
-        Map<String, Object> beans = new LinkedHashMap<>(2);
+        Map<String, Object> beans = new LinkedHashMap<>(4);
         for (BeanDefinition beanDefinition : this.getBeanDefinitions(clazz).values()) {
-            beans.put(beanDefinition.getBeanName(), this.registerBean(beanDefinition));
+            if (beanDefinition.isAutowireCandidate()) {
+                beans.put(beanDefinition.getBeanName(), this.getBean(beanDefinition.getBeanName()));
+            }
         }
         return (Map<String, T>) beans;
     }
