@@ -45,6 +45,11 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     }
 
     @Override
+    public DataBinder getDataBinder() {
+        return this.dataBinder;
+    }
+
+    @Override
     public <T> T getProperty(String key, Type targetType) {
         return this.getProperty(key, targetType, null);
     }

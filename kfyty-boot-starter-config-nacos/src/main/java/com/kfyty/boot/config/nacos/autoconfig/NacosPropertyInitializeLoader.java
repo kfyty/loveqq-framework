@@ -63,6 +63,7 @@ public class NacosPropertyInitializeLoader implements BeanFactoryPostProcessor {
      */
     public void loadConfig(String config, PropertyContext propertyContext) {
         PropertiesUtil.load(
+                PropertiesUtil.isYaml(this.configProperties.getFileExtension()),
                 new ByteArrayInputStream(config.getBytes(UTF_8)),
                 classLoader(this.getClass()),
                 null,

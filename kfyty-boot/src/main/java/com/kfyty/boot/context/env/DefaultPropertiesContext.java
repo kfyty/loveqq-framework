@@ -33,6 +33,8 @@ import static java.util.Collections.unmodifiableMap;
  */
 @Slf4j
 public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
+    protected static final String DEFAULT_YML_LOCATION = "application.yml";
+    protected static final String DEFAULT_YAML_LOCATION = "application.yaml";
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
@@ -148,6 +150,8 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
         if (this.contains(LOCATION_KEY)) {
             this.addConfig(this.getProperty(LOCATION_KEY));
         }
+        this.addConfig(DEFAULT_YML_LOCATION);
+        this.addConfig(DEFAULT_YAML_LOCATION);
         this.addConfig(DEFAULT_PROPERTIES_LOCATION);
         this.loadProperties();
     }
