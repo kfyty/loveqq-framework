@@ -20,6 +20,13 @@ public interface GenericPropertiesContext extends PropertyContext {
     void setDataBinder(DataBinder dataBinder);
 
     /**
+     * 获取数据绑定器
+     *
+     * @return {@link DataBinder}
+     */
+    DataBinder getDataBinder();
+
+    /**
      * 获取并转换属性值
      *
      * @param key        属性 key
