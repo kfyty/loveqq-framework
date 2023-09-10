@@ -5,18 +5,23 @@ import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.core.autoconfig.boostrap.Bootstrap;
+import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.support.AntPathMatcher;
 import com.kfyty.core.support.PatternMatcher;
+import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.support.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
@@ -143,9 +148,28 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     protected void beforeRefresh() {
         super.beforeRefresh();
+        this.invokeBootstrap();
         this.loadBeanFactoryPreProcessorBeanDefinition();
     }
 
+    /**
+     * 执行启动引导
+     */
+    protected void invokeBootstrap() {
+        List<Class<?>> bootstrapClasses = FactoriesLoader.loadFactories(Bootstrap.class).stream().map(ReflectUtil::load).sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+        for (Class<?> bootstrapClass : bootstrapClasses) {
+            try {
+                Bootstrap bootstrap = (Bootstrap) ReflectUtil.newInstance(bootstrapClass);
+                bootstrap.bootstrap(this);
+            } catch (Exception e) {
+                throw new SupportException("Bootstrap failed, because " + e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * 加载 {@link BeanFactoryPreProcessor}，前置处理 {@link com.kfyty.core.autoconfig.beans.BeanFactory}
+     */
     protected void loadBeanFactoryPreProcessorBeanDefinition() {
         for (String beanFactoryPreProcessorClassName : FactoriesLoader.loadFactories(BeanFactoryPreProcessor.class)) {
             Class<?> beanFactoryPreProcessorClass = ReflectUtil.load(beanFactoryPreProcessorClassName);

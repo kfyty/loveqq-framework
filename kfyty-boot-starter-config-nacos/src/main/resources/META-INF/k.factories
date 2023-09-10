@@ -1,1 +1,3 @@
-com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.boot.config.nacos.autoconfig.NacosConfigAutoConfiguration
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.boot.config.nacos.autoconfig.NacosConfigProperties,\
+    com.kfyty.boot.config.nacos.autoconfig.NacosConfigAutoConfiguration

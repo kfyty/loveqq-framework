@@ -5,14 +5,10 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.kfyty.boot.config.nacos.autoconfig.listener.NacosConfigListener;
-import com.kfyty.boot.context.env.DefaultDataBinder;
-import com.kfyty.boot.context.env.DefaultGenericPropertiesContext;
 import com.kfyty.core.autoconfig.annotation.Bean;
-import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
-import com.kfyty.core.autoconfig.env.PropertyContext;
-import com.kfyty.core.support.Instance;
 
 import java.util.Properties;
 
@@ -23,24 +19,9 @@ import java.util.Properties;
  * @date 2022/5/30 14:55
  * @email kfyty725@hotmail.com
  */
-@Configuration
-@ConditionalOnProperty(value = "k.nacos.config.serverAddr", matchIfNonNull = true)
+@BootstrapConfiguration
+@ConditionalOnBean(NacosConfigProperties.class)
 public class NacosConfigAutoConfiguration {
-    private static final String NACOS_CONFIG_PREFIX = "k.nacos.config";
-
-    @Bean
-    public NacosConfigProperties nacosConfigProperties(PropertyContext propertyContext) {
-        EarlyDataBinder dataBinder = new EarlyDataBinder();
-        NacosConfigProperties nacosConfigProperties = new NacosConfigProperties();
-        try (DefaultGenericPropertiesContext genericPropertiesContext = new DefaultGenericPropertiesContext()) {
-            genericPropertiesContext.setDataBinder(dataBinder);
-            propertyContext.getProperties().forEach(genericPropertiesContext::setProperty);
-
-            dataBinder.setPropertyContext(genericPropertiesContext);
-            dataBinder.bind(new Instance(nacosConfigProperties), NACOS_CONFIG_PREFIX);
-            return nacosConfigProperties;
-        }
-    }
 
     @Bean(destroyMethod = "shutDown")
     public ConfigService nacosConfigService(NacosConfigProperties configProperties) throws NacosException {
@@ -52,20 +33,13 @@ public class NacosConfigAutoConfiguration {
     }
 
     @Bean
-    public NacosPropertyInitializeLoader nacosPropertyInitializeLoader() {
-        return new NacosPropertyInitializeLoader();
+    public NacosPropertyLoaderBeanPostProcessor nacosPropertyLoaderBeanPostProcessor() {
+        return new NacosPropertyLoaderBeanPostProcessor();
     }
 
     @Bean
     @ConditionalOnMissingBean
     public Listener nacosConfigListener() {
         return new NacosConfigListener();
-    }
-
-    private static class EarlyDataBinder extends DefaultDataBinder {
-        public EarlyDataBinder() {
-            this.ignoreInvalidFields = false;
-            this.ignoreUnknownFields = true;
-        }
     }
 }

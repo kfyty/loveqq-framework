@@ -85,10 +85,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.beanDefinitionsForType = new WeakConcurrentHashMap<>();
     }
 
-    public void registerBeanPostProcessors(String beanName, BeanPostProcessor beanPostProcessor) {
-        this.beanPostProcessors.put(beanName, beanPostProcessor);
-    }
-
     public Collection<BeanPostProcessor> getBeanPostProcessors() {
         return Collections.unmodifiableCollection(this.beanPostProcessors.values());
     }
@@ -263,6 +259,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
+    public void registerBeanPostProcessors(String beanName, BeanPostProcessor beanPostProcessor) {
+        this.beanPostProcessors.putIfAbsent(beanName, beanPostProcessor);
+    }
+
+    @Override
     public Object registerBean(BeanDefinition beanDefinition) {
         return this.registerBean(beanDefinition, false);
     }
@@ -320,13 +321,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
-    public void replaceBean(Class<?> clazz, Object bean) {
-        this.replaceBean(BeanUtil.getBeanName(clazz), bean);
-    }
-
-    @Override
     public void replaceBean(String name, Object bean) {
-        if (bean != null && this.contains(name)) {
+        if (bean != null && this.containsBeanDefinition(name)) {
             this.beanInstances.put(name, bean);
         }
     }

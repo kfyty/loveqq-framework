@@ -16,6 +16,7 @@
         <module>kfyty-mvc</module>
         <module>kfyty-aop</module>
         <module>kfyty-sdk</module>
+        <module>kfyty-cloud-bootstrap</module>
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-spring-tx</module>
         <module>kfyty-boot-starter-validator</module>
