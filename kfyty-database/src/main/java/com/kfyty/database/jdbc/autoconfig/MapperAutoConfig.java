@@ -32,7 +32,7 @@ public class MapperAutoConfig implements ImportBeanDefinition {
     @Bean
     @ConditionalOnMissingBean
     public DynamicProvider<?> dynamicProvider() {
-        return new EnjoyDynamicProvider().setEngine(Engine.create("dynamicProvider"));
+        return new EnjoyDynamicProvider().setEngine(Engine.createIfAbsent("dynamicProvider", e -> {}));
     }
 
     @Bean

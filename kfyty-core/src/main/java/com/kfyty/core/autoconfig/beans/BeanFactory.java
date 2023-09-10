@@ -1,5 +1,7 @@
 package com.kfyty.core.autoconfig.beans;
 
+import com.kfyty.core.autoconfig.BeanPostProcessor;
+
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
@@ -26,6 +28,8 @@ public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoClosea
 
     <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass);
 
+    void registerBeanPostProcessors(String beanName, BeanPostProcessor beanPostProcessor);
+
     Object registerBean(BeanDefinition beanDefinition);
 
     Object registerBean(BeanDefinition beanDefinition, boolean isLazyInit);
@@ -33,8 +37,6 @@ public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoClosea
     Object registerBean(Class<?> clazz, Object bean);
 
     Object registerBean(String name, Object bean);
-
-    void replaceBean(Class<?> clazz, Object bean);
 
     void replaceBean(String name, Object bean);
 
