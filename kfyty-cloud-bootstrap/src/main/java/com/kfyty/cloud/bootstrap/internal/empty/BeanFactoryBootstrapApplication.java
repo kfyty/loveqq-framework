@@ -1,6 +1,5 @@
 package com.kfyty.cloud.bootstrap.internal.empty;
 
-import com.kfyty.core.autoconfig.annotation.BootApplication;
 import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
@@ -13,7 +12,6 @@ import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@BootApplication
-@ComponentFilter(annotations = BootstrapConfiguration.class)
+@ComponentFilter(value = {"com.kfyty.aop.**", "com.kfyty.boot.context.**", "com.kfyty.boot.event.**", "com.kfyty.boot.processor.**", "com.kfyty.boot.autoconfig.**"}, annotations = BootstrapConfiguration.class)
 public class BeanFactoryBootstrapApplication {
 }
