@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +48,7 @@ public abstract class IOUtil {
     /**
      * 默认的缓冲区大小
      */
-    public static final int DEFAULT_BUFFER_SIZE = 1024;
+    public static final int DEFAULT_BUFFER_SIZE = 4096;
 
     /**
      * 临时文件夹位置
@@ -148,8 +149,8 @@ public abstract class IOUtil {
      * @return 字节数组输入流
      */
     public static InputStream repeatable(InputStream inputStream) {
-        if (inputStream == null) {
-            return null;
+        if (inputStream == null || inputStream instanceof ByteArrayInputStream) {
+            return inputStream;
         }
         return new ByteArrayInputStream(copy(inputStream, new ByteArrayOutputStream()).toByteArray());
     }
@@ -260,6 +261,47 @@ public abstract class IOUtil {
     }
 
     /**
+     * 获取类路径下所有 jar URL
+     *
+     * @param classLoader class loader
+     * @return jar urls
+     */
+    public static Set<URL> resolveAllClassPath(ClassLoader classLoader) {
+        return resolveAllClassPath(classLoader, new HashSet<>());
+    }
+
+    /**
+     * 获取类路径下所有 jar URL
+     *
+     * @param classLoader class loader
+     * @param result      结果集合
+     * @return jar urls
+     */
+    public static Set<URL> resolveAllClassPath(ClassLoader classLoader, Set<URL> result) {
+        if (classLoader instanceof URLClassLoader) {
+            result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
+        }
+
+        if (classLoader == ClassLoader.getSystemClassLoader()) {
+            try {
+                String javaClassPath = System.getProperty("java.class.path");
+                String pathSeparator = System.getProperty("path.separator");
+                for (String path : CommonUtil.split(javaClassPath, pathSeparator)) {
+                    result.add(new File(path).toURI().toURL());
+                }
+            } catch (MalformedURLException e) {
+                throw ExceptionUtil.wrap(e);
+            }
+        }
+
+        if (classLoader != null) {
+            resolveAllClassPath(classLoader.getParent(), result);
+        }
+
+        return result;
+    }
+
+    /**
      * 下载到指定目录
      *
      * @param url     url
@@ -279,29 +321,23 @@ public abstract class IOUtil {
      * @return 文件
      */
     public static File download(String url, String dirName, String fileName) {
+        ensureFolderExists(dirName);
+        File file = new File(dirName + "/" + fileName);
         try {
-            long start = System.currentTimeMillis();
-            ensureFolderExists(dirName);
-
-            File file = new File(dirName + "/" + fileName);
             URL httpUrl = new URL(url.replace(" ", "%20"));
-            HttpURLConnection conn = (HttpURLConnection) httpUrl.openConnection();
+            URLConnection conn = httpUrl.openConnection();
             conn.setDoInput(true);
             conn.setDoOutput(true);
             conn.setUseCaches(false);
             conn.connect();
-
-            BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
-            BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()));
-
-            IOUtil.copy(bis, bos);
-
-            bos.close();
-            bis.close();
-            conn.disconnect();
-            log.info("下载文件耗时: {} -> {} ms", url, System.currentTimeMillis() - start);
-
-            return file;
+            try (BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
+                 BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
+                IOUtil.copy(bis, bos);
+                if (conn instanceof HttpURLConnection) {
+                    ((HttpURLConnection) conn).disconnect();
+                }
+                return file;
+            }
         } catch (IOException e) {
             throw new SupportException(e);
         }
@@ -327,18 +363,18 @@ public abstract class IOUtil {
      * @return 分片文件描述
      */
     public static List<FilePart> split(File srcFile, int splitSizeMB, boolean onlyDescription) {
+        List<FilePart> fileParts = new ArrayList<>();
+        String splitDir = UUID.randomUUID().toString().replace("-", "");
+        ensureFolderExists(splitDir);
+
+        long totalSize = srcFile.length();                                                          // 文件
+        long size = splitSizeMB * 1024L * 1024L;                                                    // 每个分片大小
+
+        if (size >= totalSize) {
+            return Collections.singletonList(new FilePart(srcFile));
+        }
+
         try {
-            List<FilePart> fileParts = new ArrayList<>();
-            String splitDir = UUID.randomUUID().toString().replace("-", "");
-            ensureFolderExists(splitDir);
-
-            long totalSize = srcFile.length();                                                          // 文件
-            long size = splitSizeMB * 1024L * 1024L;                                                    // 每个分片大小
-
-            if (size >= totalSize) {
-                return Collections.singletonList(new FilePart(srcFile));
-            }
-
             long splitSize = 0L;
             int fileCount = (int) (totalSize / size);                                                   // 计算分片数量
             boolean isOdd = totalSize % size != 0;                                                      // 是否不能整除
@@ -394,46 +430,5 @@ public abstract class IOUtil {
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
-    }
-
-    /**
-     * 获取类路径下所有 jar URL
-     *
-     * @param classLoader class loader
-     * @return jar urls
-     */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader) {
-        return resolveAllClassPath(classLoader, new HashSet<>());
-    }
-
-    /**
-     * 获取类路径下所有 jar URL
-     *
-     * @param classLoader class loader
-     * @param result      结果集合
-     * @return jar urls
-     */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader, Set<URL> result) {
-        if (classLoader instanceof URLClassLoader) {
-            result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
-        }
-
-        if (classLoader == ClassLoader.getSystemClassLoader()) {
-            try {
-                String javaClassPath = System.getProperty("java.class.path");
-                String pathSeparator = System.getProperty("path.separator");
-                for (String path : CommonUtil.split(javaClassPath, pathSeparator)) {
-                    result.add(new File(path).toURI().toURL());
-                }
-            } catch (MalformedURLException e) {
-                throw ExceptionUtil.wrap(e);
-            }
-        }
-
-        if (classLoader != null) {
-            resolveAllClassPath(classLoader.getParent(), result);
-        }
-
-        return result;
     }
 }
