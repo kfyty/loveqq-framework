@@ -9,6 +9,7 @@ import com.kfyty.sdk.api.core.exception.ApiException;
 import com.kfyty.sdk.api.core.exception.BaseApiException;
 import com.kfyty.sdk.api.core.http.AbstractHttpRequest;
 import com.kfyty.sdk.api.core.http.HttpResponse;
+import com.kfyty.sdk.api.core.http.HttpResponseAware;
 
 import java.util.List;
 
@@ -117,6 +118,9 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
     }
 
     protected R exchangeInternal(HttpResponse response, R retValue) {
+        if (retValue instanceof HttpResponseAware) {
+            ((HttpResponseAware) retValue).setHttpResponse(response);
+        }
         return retValue;
     }
 }

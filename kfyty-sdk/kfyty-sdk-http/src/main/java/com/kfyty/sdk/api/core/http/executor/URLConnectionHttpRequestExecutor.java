@@ -132,6 +132,11 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
         }
 
         @Override
+        public Object source() {
+            return this.response;
+        }
+
+        @Override
         public void close() {
             this.response.close();
         }

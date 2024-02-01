@@ -6,8 +6,8 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import jakarta.annotation.PreDestroy;
 
-import javax.annotation.PreDestroy;
 import java.lang.reflect.Method;
 
 /**

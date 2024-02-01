@@ -1,12 +1,12 @@
 package com.kfyty.mvc.multipart;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.tomcat.util.http.fileupload.FileItem;
+import org.apache.tomcat.util.http.fileupload.FileUpload;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,8 +81,8 @@ public class DefaultMultipartFile implements MultipartFile {
     public static List<MultipartFile> from(HttpServletRequest request) {
         try {
             DiskFileItemFactory fileItemFactory = new DiskFileItemFactory();
-            ServletFileUpload fileUpload = new ServletFileUpload();
             fileItemFactory.setDefaultCharset(request.getCharacterEncoding());
+            FileUpload fileUpload = new FileUpload();
             fileUpload.setHeaderEncoding(StandardCharsets.UTF_8.name());
             fileUpload.setFileItemFactory(fileItemFactory);
             List<FileItem> fileItems = fileUpload.parseRequest(new ServletRequestContext(request));

@@ -4,9 +4,9 @@ import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.autoconfig.annotation.Import;
 import com.kfyty.mvc.autoconfig.TomcatAutoConfig;
 import com.kfyty.mvc.autoconfig.WebMvcAutoConfig;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebListener;
 
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebListener;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

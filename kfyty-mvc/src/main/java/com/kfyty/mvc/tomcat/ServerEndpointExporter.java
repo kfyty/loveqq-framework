@@ -1,10 +1,10 @@
 package com.kfyty.mvc.tomcat;
 
+import jakarta.servlet.ServletContext;
+import jakarta.websocket.DeploymentException;
+import jakarta.websocket.server.ServerContainer;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.ServletContext;
-import javax.websocket.DeploymentException;
-import javax.websocket.server.ServerContainer;
 import java.util.HashSet;
 import java.util.Set;
 

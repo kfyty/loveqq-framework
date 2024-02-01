@@ -6,8 +6,8 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import jakarta.annotation.PostConstruct;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
 
 /**

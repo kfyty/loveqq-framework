@@ -100,7 +100,7 @@ public abstract class CommonUtil {
 
     public static boolean empty(Object obj) {
         if (obj instanceof CharSequence) {
-            return ((CharSequence) obj).length() < 1;
+            return ((CharSequence) obj).isEmpty();
         }
         return size(obj) < 1;
     }
