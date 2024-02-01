@@ -2,9 +2,9 @@ package com.kfyty.core.autoconfig.beans.autowired;
 
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.utils.AnnotationUtil;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 
-import javax.annotation.Resource;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;

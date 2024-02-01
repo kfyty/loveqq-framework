@@ -10,10 +10,9 @@ import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.mvc.servlet.DispatcherServlet;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 
 /**
  * 描述: mvc 监听器，用于从 tomcat 中启动自动配置

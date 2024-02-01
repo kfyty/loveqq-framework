@@ -46,6 +46,7 @@
             <groupId>com.kfyty</groupId>
             <artifactId>k-jte</artifactId>
             <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

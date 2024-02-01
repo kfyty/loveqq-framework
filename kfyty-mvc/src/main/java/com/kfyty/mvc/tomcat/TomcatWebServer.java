@@ -5,6 +5,10 @@ import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
+import jakarta.servlet.Filter;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebInitParam;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -27,10 +31,6 @@ import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
 import javax.naming.NamingException;
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebInitParam;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.EventListener;
+import java.util.concurrent.Executors;
 
 /**
  * 描述: 嵌入式 tomcat
@@ -124,6 +125,9 @@ public class TomcatWebServer implements WebServer {
         connector.setPort(getPort());
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
+        if (this.config.isVirtualThread() && TomcatConfig.VIRTUAL_THREAD_SUPPORTED) {
+            connector.getProtocolHandler().setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        }
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
     }

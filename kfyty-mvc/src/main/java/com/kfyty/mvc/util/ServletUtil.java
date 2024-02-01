@@ -3,9 +3,9 @@ package com.kfyty.mvc.util;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.mvc.multipart.DefaultMultipartFile;
 import com.kfyty.mvc.multipart.MultipartFile;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.Arrays;
@@ -97,7 +97,7 @@ public class ServletUtil {
             builder.append(file.getName()).append("=").append(new String(file.getBytes())).append("&");
             i.remove();
         }
-        String body = builder.length() < 1 ? CommonUtil.EMPTY_STRING : builder.deleteCharAt(builder.length() - 1).toString();
+        String body = builder.isEmpty() ? CommonUtil.EMPTY_STRING : builder.deleteCharAt(builder.length() - 1).toString();
         request.setAttribute(CURRENT_REQUEST_PARAM, body);
         request.setAttribute(CURRENT_REQUEST_FILES, files);
         return body;

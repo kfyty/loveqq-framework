@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 
 /**
  * 描述: xxl job 执行器
@@ -42,7 +42,7 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         try {
             if (this.jobCnt > 0) {
                 super.start();
-                ThreadPoolExecutor executor = this.applicationContext.getBean("defaultThreadPoolExecutor");
+                ExecutorService executor = this.applicationContext.getBean("defaultThreadPoolExecutor");
                 executor.execute(() -> {});
             }
         } catch (Exception e) {

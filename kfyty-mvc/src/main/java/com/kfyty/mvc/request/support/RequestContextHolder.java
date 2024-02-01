@@ -1,6 +1,6 @@
 package com.kfyty.mvc.request.support;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 描述:

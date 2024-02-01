@@ -14,7 +14,7 @@
 
     <properties>
         <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-        <tomcat.version>9.0.35</tomcat.version>
+        <tomcat.version>11.0.0-M15</tomcat.version>
     </properties>
 
     <dependencies>
@@ -55,8 +55,8 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

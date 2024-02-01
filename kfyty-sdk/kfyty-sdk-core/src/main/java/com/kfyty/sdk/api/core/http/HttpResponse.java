@@ -71,6 +71,15 @@ public interface HttpResponse extends AutoCloseable {
     }
 
     /**
+     * 获取原始 http 响应
+     *
+     * @return 原始 http 响应对象
+     */
+    default Object source() {
+        return null;
+    }
+
+    /**
      * 关闭资源
      */
     @Override

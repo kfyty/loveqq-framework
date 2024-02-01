@@ -1,8 +1,9 @@
 package com.kfyty.mvc.tomcat;
 
+import jakarta.servlet.Filter;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.Filter;
 import java.util.EventListener;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,11 +16,23 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Data
+@Slf4j
 public class TomcatConfig {
     public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
     public static final String DEFAULT_DISPATCHER_MAPPING = "/";
+    public static boolean VIRTUAL_THREAD_SUPPORTED = false;
+
+    static {
+        try {
+            Class.forName("java.lang.BaseVirtualThread", false, TomcatConfig.class.getClassLoader());
+            VIRTUAL_THREAD_SUPPORTED = true;
+        } catch (Throwable e) {
+            log.warn("virtual thread doesn't supported");
+        }
+    }
 
     private int port;
+    private boolean virtualThread;
     private String protocol;
     private String contextPath;
     private List<String> staticPattern;
@@ -34,6 +47,7 @@ public class TomcatConfig {
 
     public TomcatConfig(Class<?> primarySource) {
         this.port = 8080;
+        this.virtualThread = true;
         this.protocol = DEFAULT_PROTOCOL;
         this.contextPath = DEFAULT_DISPATCHER_MAPPING;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;

@@ -72,7 +72,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
     protected HttpClient findHttpClient(HttpRequest<?> api) {
         return HTTP_CLIENT_CACHE.computeIfAbsent(api.connectTimeout(), k -> {
             HttpClient.Builder builder = HttpClient.newBuilder()
-                    .version(HttpClient.Version.HTTP_1_1)
+                    .version(HttpClient.Version.HTTP_2)
                     .connectTimeout(Duration.ofMillis(api.connectTimeout()))
                     .proxy(api.proxySelector());
             this.postProcessClient(builder);
@@ -158,13 +158,18 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
 
         @Override
         public List<HttpCookie> cookies() {
-            String cookie = this.header("Cookie");
-            return CommonUtil.split(cookie, ";").stream().map(e -> e.split("=")).map(e -> new HttpCookie(e[0], e[1].trim())).collect(Collectors.toList());
+            String cookie = this.header("Set-Cookie");
+            return CommonUtil.split(cookie, ";").stream().map(e -> e.split("=")).map(e -> new HttpCookie(e[0].trim(), e[1].trim())).collect(Collectors.toList());
         }
 
         @Override
         public void clearCookies() {
-            throw new UnsupportedOperationException();
+            // nothing
+        }
+
+        @Override
+        public Object source() {
+            return this.response;
         }
     }
 }

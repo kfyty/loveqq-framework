@@ -7,8 +7,8 @@ import com.kfyty.mvc.annotation.bind.RequestParam;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
