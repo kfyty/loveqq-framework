@@ -1,5 +1,6 @@
 package com.kfyty.core.support;
 
+import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NestedConfigurationProperty
 public class Pair<K, V> {
     /**
      * key

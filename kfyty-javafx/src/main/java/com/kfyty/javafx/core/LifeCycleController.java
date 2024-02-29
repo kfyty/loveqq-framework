@@ -72,7 +72,7 @@ public interface LifeCycleController extends LifeCycleBinder {
      * @param child      子窗口
      * @param controller 子窗口控制器
      */
-    default void onChildClose(String name, Node child, Object controller) {
+    default void onChildClose(String name, Node child, AbstractController controller) {
 
     }
 

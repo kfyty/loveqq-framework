@@ -71,8 +71,8 @@ public interface LifeCycleBinder {
         EventHandler<WindowEvent> childEventHandler = child.getOnCloseRequest();
         child.setOnCloseRequest(event -> {
             childEventHandler.handle(event);
-            if (this instanceof LifeCycleController parent) {
-                parent.onChildClose(component.getId(), component, controller);
+            if (this instanceof LifeCycleController parent && controller instanceof AbstractController childController) {
+                parent.onChildClose(component.getId(), component, childController);
             }
             if (this instanceof AbstractController parent) {
                 parent.removeChild(component.getId(), component);

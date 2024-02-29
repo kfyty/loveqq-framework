@@ -6,13 +6,16 @@ import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.support.Instance;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ExceptionUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 
@@ -70,16 +73,18 @@ public class DefaultDataBinder implements DataBinder {
 
     @Override
     public <T extends Enum<T>> Instance bind(Instance target, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
-        if (hasAnnotation(field, NestedConfigurationProperty.class) || hasAnnotation(field.getType(), NestedConfigurationProperty.class)) {
+        SimpleGeneric simpleGeneric = target.buildTargetGeneric(field);
+        Pair<Boolean, Class<?>> hasNested = hasNestedConfigurationProperty(field, simpleGeneric);
+        if (hasNested.getKey()) {
             if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
-                Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> ReflectUtil.newInstance(field.getType()));
+                Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> ReflectUtil.newInstance(hasNested.getValue()));
                 ReflectUtil.setFieldValue(target.getTarget(), field, fieldInstance);
                 this.bind(new Instance(AopUtil.getTarget(fieldInstance), field), key, ignoreInvalidFields, ignoreUnknownFields);
             }
             return target;
         }
 
-        if (!this.propertyContext.contains(key) && !(isMapProperties(key, field) || isCollectionProperties(key, field))) {
+        if (!this.propertyContext.contains(key) && !(isMapProperties(field) || isCollectionProperties(field) || hasNestedGeneric(simpleGeneric))) {
             if (ignoreUnknownFields) {
                 return target;
             }
@@ -118,11 +123,26 @@ public class DefaultDataBinder implements DataBinder {
         }
     }
 
-    public static boolean isMapProperties(String key, Field field) {
+    public static Pair<Boolean, Class<?>> hasNestedConfigurationProperty(Field field, SimpleGeneric simpleGeneric) {
+        if (hasAnnotation(field, NestedConfigurationProperty.class) || hasAnnotation(field.getType(), NestedConfigurationProperty.class)) {
+            return new Pair<>(true, field.getType());
+        }
+        Type resolveType = simpleGeneric.getResolveType();
+        if (resolveType instanceof Class<?> && hasAnnotation(resolveType, NestedConfigurationProperty.class)) {
+            return new Pair<>(true, (Class<?>) simpleGeneric.getResolveType());
+        }
+        return new Pair<>(false, null);
+    }
+
+    public static boolean isMapProperties(Field field) {
         return Map.class.isAssignableFrom(field.getType());
     }
 
-    public static boolean isCollectionProperties(String key, Field field) {
+    public static boolean isCollectionProperties(Field field) {
         return field.getType().isArray() || Collection.class.isAssignableFrom(field.getType());
+    }
+
+    public static boolean hasNestedGeneric(SimpleGeneric simpleGeneric) {
+        return simpleGeneric.hasGeneric();
     }
 }

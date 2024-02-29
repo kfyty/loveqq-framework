@@ -1,5 +1,6 @@
 package com.kfyty.core.generic;
 
+import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.reflect.GenericArrayTypeImpl;
 
 import java.lang.reflect.Array;
@@ -7,8 +8,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -96,6 +99,21 @@ public class ActualGeneric extends SimpleGeneric {
     }
 
     public static ActualGeneric from(Field sourceField, Field field) {
+        Type genericType = sourceField.getGenericType();
+        if (!(genericType instanceof ParameterizedType)) {
+            throw new SupportException("unable to get the source field generic type !");
+        }
+        ActualGeneric source = ActualGeneric.from(sourceField);
+        String typeName = field.getGenericType().getTypeName();
+        TypeVariable<?>[] typeParameters = ((Class<?>) ((ParameterizedType) genericType).getRawType()).getTypeParameters();
+        for (int i = 0; i < typeParameters.length; i++) {
+            if (typeName.equals(typeParameters[i].getName())) {
+                QualifierGeneric generic = new ArrayList<>(source.getGenericInfo().values()).get(i);
+                if (generic != null && generic.hasGeneric()) {
+                    return (ActualGeneric) generic;
+                }
+            }
+        }
         return from(sourceField.getGenericType(), field);
     }
 
