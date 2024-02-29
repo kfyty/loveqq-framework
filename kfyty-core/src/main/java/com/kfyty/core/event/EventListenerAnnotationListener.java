@@ -1,9 +1,8 @@
-package com.kfyty.boot.event;
+package com.kfyty.core.event;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.event.ApplicationEvent;
-import com.kfyty.core.event.ApplicationListener;
 import com.kfyty.core.utils.ReflectUtil;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -19,11 +18,12 @@ import java.lang.reflect.Parameter;
  */
 @Getter
 @ToString(exclude = "context")
+@EqualsAndHashCode(exclude = "context")
 public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
-    private final String beanName;
-    private final Method listenerMethod;
-    private final Class<?> listenerType;
-    private final ApplicationContext context;
+    protected final String beanName;
+    protected final Method listenerMethod;
+    protected final Class<?> listenerType;
+    protected final ApplicationContext context;
 
     public EventListenerAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext context) {
         this.beanName = beanName;
@@ -41,10 +41,19 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
         Object[] params = new Object[this.listenerMethod.getParameterCount()];
         for (Parameter parameter : this.listenerMethod.getParameters()) {
             index++;
-            if(event.getClass().equals(parameter.getType())) {
+            if (event.getClass().equals(parameter.getType())) {
                 params[index] = event;
             }
         }
+        this.invokeListener(params);
+    }
+
+    /**
+     * 执行监听器
+     *
+     * @param params 方法参数
+     */
+    protected void invokeListener(Object[] params) {
         ReflectUtil.invokeMethod(this.context.getBean(this.beanName), this.listenerMethod, params);
     }
 }

@@ -1,5 +1,7 @@
 package com.kfyty.core.generic;
 
+import com.kfyty.core.autoconfig.LaziedObject;
+import com.kfyty.core.lang.Value;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -112,7 +114,7 @@ public class SimpleGeneric extends QualifierGeneric {
         if (isMapGeneric()) {
             return this.getMapValueType().get();
         }
-        if (!isSimpleGeneric() || !this.isGeneric(Collection.class) && !this.isGeneric(Class.class) && !this.isSimpleArray()) {
+        if (!isSimpleGeneric() || !this.isGeneric(Collection.class) && !this.isGeneric(Class.class) && !this.isGeneric(LaziedObject.class) && !this.isGeneric(Value.class) && !this.isSimpleArray()) {
             return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
         }
         return this.getFirst().get();

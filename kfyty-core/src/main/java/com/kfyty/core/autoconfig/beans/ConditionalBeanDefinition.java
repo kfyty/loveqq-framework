@@ -55,7 +55,7 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
     }
 
     public ConditionalBeanDefinition(BeanDefinition beanDefinition, ConditionalBeanDefinition parent) {
-        super(beanDefinition.getBeanName(), beanDefinition.getBeanType(), beanDefinition.getScope());
+        super(beanDefinition.getBeanName(), beanDefinition.getBeanType(), beanDefinition.getScope(), beanDefinition.isScopeProxy());
         this.beanDefinition = beanDefinition;
         this.parent = parent;
         this.conditionDeclares = new ArrayList<>();

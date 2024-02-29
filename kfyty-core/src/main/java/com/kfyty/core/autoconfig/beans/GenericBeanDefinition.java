@@ -1,10 +1,12 @@
 package com.kfyty.core.autoconfig.beans;
 
-import com.kfyty.core.autoconfig.annotation.Autowired;
-import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Scope;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.core.generic.ActualGeneric;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -16,8 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
@@ -50,9 +52,19 @@ public class GenericBeanDefinition implements BeanDefinition {
     protected String scope;
 
     /**
+     * 是否启用作用域代理
+     */
+    private boolean isScopeProxy;
+
+    /**
      * 是否延迟初始化
      */
     protected boolean isLazyInit;
+
+    /**
+     * 是否代理懒加载的 bean
+     */
+    protected boolean isLazyProxy;
 
     /**
      * 是否是自动装配的候选者
@@ -67,7 +79,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     /**
      * 默认构造器参数
      */
-    protected Map<Class<?>, Object> defaultConstructorArgs;
+    protected List<Pair<Class<?>, Object>> defaultConstructorArgs;
 
     /**
      * 自动注入处理器，所有实例共享，以处理循环依赖
@@ -75,6 +87,8 @@ public class GenericBeanDefinition implements BeanDefinition {
     protected static AutowiredProcessor autowiredProcessor = null;
 
     public GenericBeanDefinition() {
+        this.setScopeProxy(true);
+        this.setLazyProxy(true);
         this.setAutowireCandidate(true);
     }
 
@@ -83,19 +97,25 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType) {
-        this(beanName, beanType, ScopeUtil.resolveScope(beanType).value());
+        this(beanName, beanType, ScopeUtil.resolveScope(beanType));
     }
 
-    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope) {
-        this(beanName, beanType, scope, false);
+    public GenericBeanDefinition(String beanName, Class<?> beanType, Scope scope) {
+        this(beanName, beanType, scope.value(), scope.scopeProxy());
     }
 
-    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope, boolean isLazyInit) {
+    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope, boolean isScopeProxy) {
+        this(beanName, beanType, scope, isScopeProxy, false, true);
+    }
+
+    public GenericBeanDefinition(String beanName, Class<?> beanType, String scope, boolean isScopeProxy, boolean isLazyInit, boolean isLazyProxy) {
         this();
         this.setBeanName(beanName);
         this.setBeanType(beanType);
         this.setScope(scope);
+        this.setScopeProxy(isScopeProxy);
         this.setLazyInit(isLazyInit);
+        this.setLazyProxy(isLazyProxy);
     }
 
     @Override
@@ -124,8 +144,18 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isScopeProxy() {
+        return this.isScopeProxy;
+    }
+
+    @Override
     public void setScope(String scope) {
         this.scope = Objects.requireNonNull(scope);
+    }
+
+    @Override
+    public void setScopeProxy(boolean isScopeProxy) {
+        this.isScopeProxy = isScopeProxy;
     }
 
     @Override
@@ -134,8 +164,18 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isLazyProxy() {
+        return this.isLazyProxy;
+    }
+
+    @Override
     public void setLazyInit(boolean isLazyInit) {
         this.isLazyInit = isLazyInit;
+    }
+
+    @Override
+    public void setLazyProxy(boolean isLazyProxy) {
+        this.isLazyProxy = isLazyProxy;
     }
 
     @Override
@@ -161,14 +201,14 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public BeanDefinition addConstructorArgs(Class<?> argType, Object arg) {
         if (this.defaultConstructorArgs == null) {
-            this.defaultConstructorArgs = new LinkedHashMap<>(4);
+            this.defaultConstructorArgs = new LinkedList<>();
         }
-        this.defaultConstructorArgs.put(argType, arg);
+        this.defaultConstructorArgs.add(new Pair<>(argType, arg));
         return this;
     }
 
     @Override
-    public Map<Class<?>, Object> getConstructArgs() {
+    public List<Pair<Class<?>, Object>> getConstructArgs() {
         return this.prepareConstructorArgs();
     }
 
@@ -180,7 +220,7 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     @Override
     public Object[] getConstructArgValues() {
-        return this.getConstructArgs().values().toArray();
+        return this.getConstructArgs().stream().map(Pair::getValue).toArray();
     }
 
     @Override
@@ -208,19 +248,19 @@ public class GenericBeanDefinition implements BeanDefinition {
         }
     }
 
-    protected Map<Class<?>, Object> prepareConstructorArgs() {
+    protected List<Pair<Class<?>, Object>> prepareConstructorArgs() {
         this.ensureConstructor();
         if (this.constructor.getParameterCount() == 0) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         Parameter[] parameters = this.constructor.getParameters();
         Autowired constructorAnnotation = findAnnotation(this.constructor, Autowired.class);
-        Map<Class<?>, Object> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedHashMap::new).orElse(new LinkedHashMap<>(4));
+        List<Pair<Class<?>, Object>> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedList::new).orElseGet(LinkedList::new);
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(constructorAnnotation);
             Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired));
-            constructorArgs.put(parameter.getType(), resolveBean);
+            constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }
         return constructorArgs;
     }

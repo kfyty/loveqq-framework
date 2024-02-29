@@ -1,11 +1,12 @@
 package com.kfyty.core.autoconfig.beans;
 
-import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.support.Pair;
 
 import java.util.Comparator;
-import java.util.Map;
+import java.util.List;
 
 import static com.kfyty.core.utils.BeanUtil.getBeanOrder;
 
@@ -66,9 +67,23 @@ public interface BeanDefinition {
     String getScope();
 
     /**
+     * 是否启用作用域代理
+     *
+     * @return true if scope proxy
+     */
+    boolean isScopeProxy();
+
+    /**
      * 设置 bean 作用域
      */
     void setScope(String scope);
+
+    /**
+     * 设置是否启用作用域代理
+     *
+     * @param isScopeProxy 是否启用作用域代理
+     */
+    void setScopeProxy(boolean isScopeProxy);
 
     /**
      * 是否延迟初始化
@@ -78,11 +93,25 @@ public interface BeanDefinition {
     boolean isLazyInit();
 
     /**
+     * 是否代理懒加载的 bean
+     *
+     * @return true if lazy proxy
+     */
+    boolean isLazyProxy();
+
+    /**
      * 设置是否延迟初始化
      *
      * @param isLazyInit 是否延迟初始化
      */
     void setLazyInit(boolean isLazyInit);
+
+    /**
+     * 设置是否代理懒加载的 bean
+     *
+     * @param isLazyProxy 是否代理懒加载
+     */
+    void setLazyProxy(boolean isLazyProxy);
 
     /**
      * 是否单例
@@ -115,7 +144,7 @@ public interface BeanDefinition {
     /**
      * 获取构造器参数
      */
-    Map<Class<?>, Object> getConstructArgs();
+    List<Pair<Class<?>, Object>> getConstructArgs();
 
     /**
      * 获取构造器参数类型

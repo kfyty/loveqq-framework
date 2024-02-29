@@ -48,7 +48,7 @@ public class ThreadPoolExecutorAutoConfig {
     @Bean(DEFAULT_THREAD_POOL_EXECUTOR)
     public ExecutorService defaultThreadPoolExecutor() {
         if (VIRTUAL_THREAD_SUPPORTED) {
-            return Executors.newVirtualThreadPerTaskExecutor();
+            return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("thread-handler").factory());
         }
         return new DefaultThreadPoolExecutor();
     }

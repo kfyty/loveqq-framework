@@ -7,15 +7,16 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.event.ApplicationEvent;
 import com.kfyty.core.event.ApplicationEventPublisher;
 import com.kfyty.core.event.ApplicationListener;
+import com.kfyty.core.event.EventListenerAnnotationListener;
+import com.kfyty.core.event.GenericApplicationEvent;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Predicate;
 
 /**
@@ -37,17 +38,17 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     /**
      * 上下文是否刷新完成
      */
-    private boolean isRefreshed = false;
+    private volatile boolean isRefreshed = false;
 
     /**
      * 过早发布的事件
      */
-    private List<ApplicationEvent<?>> earlyPublishedEvent = new LinkedList<>();
+    private Queue<ApplicationEvent<?>> earlyPublishedEvent = new ConcurrentLinkedQueue<>();
 
     /**
      * 注册的事件监听器
      */
-    private final List<ApplicationListener> applicationListeners = new ArrayList<>();
+    private final Queue<ApplicationListener> applicationListeners = new ConcurrentLinkedQueue<>();
 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
@@ -73,11 +74,15 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
         }
         for (ApplicationListener applicationListener : this.applicationListeners) {
             Class<?> listenerType = null;
-            Class<?> listenerClass = AopUtil.getTargetClass(applicationListener);
             if (applicationListener instanceof EventListenerAnnotationListener) {
                 listenerType = ((EventListenerAnnotationListener) applicationListener).getListenerType();
             } else {
+                Class<?> listenerClass = AopUtil.getTargetClass(applicationListener);
                 listenerType = ReflectUtil.getSuperGeneric(listenerClass, SUPER_GENERIC_FILTER);
+            }
+            if (event instanceof GenericApplicationEvent<?, ?> && listenerType.equals(((GenericApplicationEvent) event).getEventType())) {
+                applicationListener.onApplicationEvent(event);
+                continue;
             }
             if (listenerType.equals(ApplicationEvent.class) || listenerType.equals(event.getClass())) {
                 applicationListener.onApplicationEvent(event);

@@ -7,6 +7,7 @@ import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.support.Instance;
+import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ExceptionUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 数据绑定器
@@ -68,11 +70,11 @@ public class DefaultDataBinder implements DataBinder {
 
     @Override
     public <T extends Enum<T>> Instance bind(Instance target, String key, Field field, boolean ignoreInvalidFields, boolean ignoreUnknownFields) {
-        if (hasAnnotation(field, NestedConfigurationProperty.class)) {
+        if (hasAnnotation(field, NestedConfigurationProperty.class) || hasAnnotation(field.getType(), NestedConfigurationProperty.class)) {
             if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
-                Object fieldInstance = ReflectUtil.newInstance(field.getType());
+                Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> ReflectUtil.newInstance(field.getType()));
                 ReflectUtil.setFieldValue(target.getTarget(), field, fieldInstance);
-                this.bind(new Instance(fieldInstance, field), key, ignoreInvalidFields, ignoreUnknownFields);
+                this.bind(new Instance(AopUtil.getTarget(fieldInstance), field), key, ignoreInvalidFields, ignoreUnknownFields);
             }
             return target;
         }

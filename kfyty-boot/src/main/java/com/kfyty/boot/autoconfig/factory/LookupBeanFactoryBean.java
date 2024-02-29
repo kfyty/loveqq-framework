@@ -2,11 +2,10 @@ package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
-import com.kfyty.core.utils.ScopeUtil;
 import lombok.NoArgsConstructor;
 
 /**
@@ -19,13 +18,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LookupBeanFactoryBean<T> implements ApplicationContextAware, FactoryBean<T> {
     private Class<?> beanType;
-    private String beanScope;
     private ApplicationContext applicationContext;
 
     @Autowired
     public LookupBeanFactoryBean(Class<?> beanType) {
         this.beanType = beanType;
-        this.beanScope = ScopeUtil.resolveScope(beanType).value();
     }
 
     @Override
@@ -45,10 +42,5 @@ public class LookupBeanFactoryBean<T> implements ApplicationContextAware, Factor
                 .create(true)
                 .addInterceptorPoint(new LookupMethodInterceptorProxy(this.applicationContext))
                 .createProxy(this.getBeanType());
-    }
-
-    @Override
-    public String getScope() {
-        return this.beanScope;
     }
 }

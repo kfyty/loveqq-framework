@@ -6,6 +6,8 @@ import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
 import lombok.RequiredArgsConstructor;
 
+import java.lang.reflect.Method;
+
 /**
  * 描述: 延迟初始化代理
  *
@@ -20,6 +22,9 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+        if (!this.beanFactory.contains(beanName) && this.isToStringHashCode(methodProxy)) {
+            return chain.proceed(methodProxy);
+        }
         String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
         try {
             ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(this.beanName);
@@ -28,5 +33,16 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
         } finally {
             ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
         }
+    }
+
+    protected boolean isToStringHashCode(MethodProxy methodProxy) {
+        Method method = methodProxy.getTargetMethod();
+        if (method.getName().equals("toString") && method.getParameterCount() == 0) {
+            return true;
+        }
+        if (method.getName().equals("hashCode") && method.getParameterCount() == 0) {
+            return true;
+        }
+        return false;
     }
 }

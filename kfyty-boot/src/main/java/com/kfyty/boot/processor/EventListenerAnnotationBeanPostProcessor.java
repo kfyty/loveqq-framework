@@ -1,14 +1,17 @@
 package com.kfyty.boot.processor;
 
-import com.kfyty.boot.event.EventListenerAnnotationListener;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.EventListener;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.event.ApplicationEvent;
 import com.kfyty.core.event.ApplicationEventPublisher;
+import com.kfyty.core.event.ApplicationListener;
+import com.kfyty.core.event.EventListenerAnnotationListenerFactory;
+import com.kfyty.core.event.GenericApplicationEvent;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -16,6 +19,10 @@ import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 描述: EventListener 注解处理器
@@ -34,14 +41,29 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Autowired
+    private EventListenerAnnotationListenerFactory eventListenerAnnotationListenerFactory;
+
+    /**
+     * 已经解析的非单例 bean name
+     */
+    private final Set<String> resolvePrototypeEvent = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        Class<?> beanClass = AopUtil.getTargetClass(bean);
+        BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName);
+        if (this.resolvePrototypeEvent.contains(beanName) || !beanDefinition.isAutowireCandidate()) {
+            return null;
+        }
+        Class<?> beanClass = beanDefinition.getBeanType();
         for (Method method : ReflectUtil.getMethods(beanClass)) {
-            if(AnnotationUtil.hasAnnotation(method, EventListener.class)) {
+            if (AnnotationUtil.hasAnnotation(method, EventListener.class)) {
                 Method listenerMethod = AopUtil.getInterfaceMethod(bean, method);
                 this.createEventListener(beanName, listenerMethod, AnnotationUtil.findAnnotation(method, EventListener.class));
             }
+        }
+        if (!beanDefinition.isSingleton()) {
+            this.resolvePrototypeEvent.add(beanName);
         }
         return null;
     }
@@ -49,11 +71,16 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
     @SuppressWarnings("unchecked")
     private void createEventListener(String beanName, Method listenerMethod, EventListener eventListener) {
         Class<? extends ApplicationEvent<?>>[] eventTypes = eventListener.value();
-        if(CommonUtil.empty(eventTypes)) {
+        if (CommonUtil.empty(eventTypes)) {
             eventTypes = (Class<? extends ApplicationEvent<?>>[]) listenerMethod.getParameterTypes();
         }
-        for (Class<? extends ApplicationEvent<?>> eventType : eventTypes) {
-            EventListenerAnnotationListener annotationListener = new EventListenerAnnotationListener(beanName, listenerMethod, eventType, this.context);
+        Type[] parameterTypes = listenerMethod.getGenericParameterTypes();
+        for (int i = 0; i < eventTypes.length; i++) {
+            Class<?> eventType = eventTypes[i];
+            if (GenericApplicationEvent.class.isAssignableFrom(eventType)) {
+                eventType = ReflectUtil.getActualGenericType("T", parameterTypes[i]);
+            }
+            ApplicationListener<?> annotationListener = this.eventListenerAnnotationListenerFactory.createEventListener(beanName, listenerMethod, eventType);
             this.applicationEventPublisher.registerEventListener(annotationListener);
             log.info("register annotation event listener: {}", annotationListener);
         }

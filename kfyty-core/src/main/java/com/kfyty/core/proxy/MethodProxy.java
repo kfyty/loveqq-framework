@@ -56,23 +56,49 @@ public class MethodProxy {
         this.methodProxy = methodProxy;
     }
 
+    /**
+     * 获取代理目标，即原代理对象
+     * 如果目标不存在，则返回代理对象
+     *
+     * @return 代理目标
+     */
     public Object getTarget() {
         return this.target == null ? this.proxy : this.target;
     }
 
+    /**
+     * 获取代理目标的 class 对象。该返回值和 {@link this#getTarget()} 可能不一致，因为抽象方法代理时，{@link this#getTarget()} 是代理对象
+     *
+     * @return 代理目标的 class 对象
+     */
     public Class<?> getTargetClass() {
-        Object target = this.getTarget();
-        return AopUtil.isJdkProxy(target) ? this.getTargetMethod().getDeclaringClass() : target.getClass();
+        return this.getTargetMethod().getDeclaringClass();
     }
 
+    /**
+     * 获取代理目标中声明的方法
+     *
+     * @return 代理目标中声明的方法
+     */
     public Method getTargetMethod() {
         return this.target == null ? this.method : AopUtil.getTargetMethod(this.target.getClass(), this.method);
     }
 
+    /**
+     * 执行方法
+     *
+     * @return 方法执行结果
+     */
     public Object invoke() throws Throwable {
         return this.invoke(this.arguments);
     }
 
+    /**
+     * 执行方法
+     *
+     * @param args 方法参数
+     * @return 方法执行结果
+     */
     public Object invoke(Object[] args) throws Throwable {
         if (this.target == null || AnnotationUtil.hasAnnotationElement(this.target, Configuration.class)) {
             return this.methodProxy.invokeSuper(this.proxy, args);

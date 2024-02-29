@@ -54,18 +54,18 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @SneakyThrows(MalformedURLException.class)
     public URL getResource(String name) {
         List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
-        return jarFiles.size() == 1 ? new URL("jar:file:/" + jarFiles.get(0).getName() + "!/" + name) : super.getResource(name);
+        return jarFiles.isEmpty() ? null : new URL("jar:file:/" + jarFiles.get(0).getName() + "!/" + name);
     }
 
     @Override
-    public Enumeration<URL> getResources(String name) throws IOException {
+    public Enumeration<URL> getResources(String name) {
         AtomicInteger index = new AtomicInteger(0);
         List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
-        return jarFiles.isEmpty() ? super.getResources(name) : new Enumeration<URL>() {
+        return new Enumeration<URL>() {
 
             @Override
             public boolean hasMoreElements() {
-                return index.get() < jarFiles.size();
+                return !jarFiles.isEmpty() && index.get() < jarFiles.size();
             }
 
             @Override

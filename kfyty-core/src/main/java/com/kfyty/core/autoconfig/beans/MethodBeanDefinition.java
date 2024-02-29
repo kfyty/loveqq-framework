@@ -1,6 +1,7 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.generic.ActualGeneric;
@@ -70,10 +71,10 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
-        this(beanName, beanType, parentDefinition, beanMethod, ScopeUtil.resolveScope(beanMethod).value());
+        this(beanName, beanType, parentDefinition, beanMethod, ScopeUtil.resolveScope(beanMethod));
     }
 
-    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, String scope) {
+    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, Scope scope) {
         super(beanName, beanType, scope);
         this.parentDefinition = parentDefinition;
         this.beanMethod = beanMethod;
