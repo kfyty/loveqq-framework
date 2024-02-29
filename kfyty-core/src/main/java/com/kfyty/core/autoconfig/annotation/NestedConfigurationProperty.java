@@ -7,14 +7,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述:
+ * 描述: 标记是一个嵌套的配置属性
  *
  * @author kfyty725
  * @date 2022/5/25 22:44
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.FIELD})
 public @interface NestedConfigurationProperty {
 }

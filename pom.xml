@@ -14,6 +14,7 @@
         <module>kfyty-boot</module>
         <module>kfyty-database</module>
         <module>kfyty-mvc</module>
+        <module>kfyty-javafx</module>
         <module>kfyty-aop</module>
         <module>kfyty-sdk</module>
         <module>kfyty-cloud-bootstrap</module>
@@ -126,6 +127,7 @@
                     <source>${maven.source.version}</source>
                     <target>${maven.target.version}</target>
                     <parameters>true</parameters>
+                    <enablePreview>true</enablePreview>
                 </configuration>
             </plugin>
 
@@ -171,6 +173,7 @@
                 <version>${surefire.plugin.version}</version>
                 <configuration>
                     <argLine>
+                        --enable-preview
                         --add-opens java.base/java.lang=ALL-UNNAMED
                         --add-opens java.base/java.io=ALL-UNNAMED
                         --add-opens=java.base/java.nio=ALL-UNNAMED

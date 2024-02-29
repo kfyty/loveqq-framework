@@ -155,7 +155,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     protected void finishBeanFactoryInitialization() {
         this.sortBeanDefinition();
         for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
-            if (beanDefinition.isSingleton() && !beanDefinition.isLazyInit()) {
+            if (beanDefinition.isSingleton() && beanDefinition.isAutowireCandidate() && !beanDefinition.isLazyInit()) {
                 this.registerBean(beanDefinition);
             }
         }

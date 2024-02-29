@@ -3,6 +3,7 @@ package com.kfyty.core.proxy;
 import com.kfyty.core.utils.BeanUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -34,6 +35,10 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
 
     public static MethodInterceptorChain currentChain() {
         return CURRENT_INTERCEPTOR_CHAIN.get();
+    }
+
+    public List<MethodInterceptorChainPoint> getChainPoints() {
+        return Collections.unmodifiableList(this.chainPoints);
     }
 
     public MethodInterceptorChain addInterceptorPoint(MethodInterceptorChainPoint chainPoint) {

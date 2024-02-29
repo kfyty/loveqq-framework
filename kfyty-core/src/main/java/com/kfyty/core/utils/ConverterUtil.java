@@ -50,6 +50,6 @@ public abstract class ConverterUtil {
         if (converter != null) {
             return ((Converter<S, T>) converter).apply(source);
         }
-        throw new IllegalArgumentException("no corresponding converter is available");
+        throw new IllegalArgumentException("no suitable converter is available");
     }
 }

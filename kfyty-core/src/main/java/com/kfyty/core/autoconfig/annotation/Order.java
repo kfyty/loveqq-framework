@@ -22,5 +22,5 @@ public @interface Order {
 
     int LOWEST_PRECEDENCE = Integer.MAX_VALUE - 1;
 
-    int value() default LOWEST_PRECEDENCE;
+    int value() default LOWEST_PRECEDENCE >> 1;
 }

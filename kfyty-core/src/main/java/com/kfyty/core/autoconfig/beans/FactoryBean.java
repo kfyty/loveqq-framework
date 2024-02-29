@@ -23,11 +23,13 @@ public interface FactoryBean<T> {
     T getObject();
 
     /**
-     * 返回 bean 作用域
+     * 返回该工厂 Bean 是否是单例模式
+     * 如果返回 true，则每次使用相同的实例调用 {@link this#getObject()} 返回真实 bean，不影响真实 bean 的作用域
+     * 如果返回 false，则该工厂 bean 的作用域跟随真实 bean 的作用域
      *
-     * @return {@link BeanDefinition}
+     * @return true if singleton
      */
-    default String getScope() {
-        return BeanDefinition.SCOPE_SINGLETON;
+    default boolean isSingleton() {
+        return true;
     }
 }

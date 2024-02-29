@@ -4,11 +4,12 @@ import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
 import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
+import com.kfyty.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.io.FactoriesLoader;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -17,8 +18,8 @@ import com.kfyty.core.utils.ScopeUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 import static com.kfyty.core.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
 import static com.kfyty.core.autoconfig.beans.FactoryBeanDefinition.addSnapFactoryBeanCache;
@@ -33,11 +34,11 @@ import static com.kfyty.core.utils.ReflectUtil.newInstance;
  */
 public class BeanDefinitionBuilder {
     private final GenericBeanDefinition beanDefinition;
-    private final Map<Class<?>, Object> defaultConstructorArgs;
+    private final List<Pair<Class<?>, Object>> defaultConstructorArgs;
 
     private BeanDefinitionBuilder(GenericBeanDefinition beanDefinition) {
         this.beanDefinition = beanDefinition;
-        this.defaultConstructorArgs = new LinkedHashMap<>();
+        this.defaultConstructorArgs = new LinkedList<>();
     }
 
     public BeanDefinitionBuilder setBeanName(String beanName) {
@@ -55,8 +56,18 @@ public class BeanDefinitionBuilder {
         return this;
     }
 
+    public BeanDefinitionBuilder setScopeProxy(boolean isScopeProxy) {
+        this.beanDefinition.setScopeProxy(isScopeProxy);
+        return this;
+    }
+
     public BeanDefinitionBuilder setLazyInit(boolean isLazyInit) {
         this.beanDefinition.setLazyInit(isLazyInit);
+        return this;
+    }
+
+    public BeanDefinitionBuilder setLazyProxy(boolean isLazyProxy) {
+        this.beanDefinition.setLazyProxy(isLazyProxy);
         return this;
     }
 
@@ -66,7 +77,7 @@ public class BeanDefinitionBuilder {
     }
 
     public BeanDefinitionBuilder addConstructorArgs(Class<?> argType, Object arg) {
-        this.defaultConstructorArgs.put(argType, arg);
+        this.defaultConstructorArgs.add(new Pair<>(argType, arg));
         return this;
     }
 
@@ -95,7 +106,7 @@ public class BeanDefinitionBuilder {
             this.setScope(BeanDefinition.SCOPE_SINGLETON);
         }
         if (CommonUtil.notEmpty(this.defaultConstructorArgs)) {
-            this.defaultConstructorArgs.forEach(this.beanDefinition::addConstructorArgs);
+            this.defaultConstructorArgs.forEach(e -> this.beanDefinition.addConstructorArgs(e.getKey(), e.getValue()));
         }
         if (FactoryBean.class.isAssignableFrom(this.beanDefinition.getBeanType())) {
             if (!(this.beanDefinition instanceof MethodBeanDefinition) && this.beanDefinition.getBeanName().equals(resolveBeanName(this.beanDefinition.getBeanType()))) {
@@ -115,7 +126,7 @@ public class BeanDefinitionBuilder {
     }
 
     public static BeanDefinitionBuilder genericBeanDefinition(String beanName, Class<?> beanType) {
-        return new BeanDefinitionBuilder(new GenericBeanDefinition(beanName, beanType, ScopeUtil.resolveScope(beanType).value()));
+        return new BeanDefinitionBuilder(new GenericBeanDefinition(beanName, beanType, ScopeUtil.resolveScope(beanType)));
     }
 
     public static BeanDefinitionBuilder genericBeanDefinition(BeanDefinition source, Method beanMethod, Bean bean) {

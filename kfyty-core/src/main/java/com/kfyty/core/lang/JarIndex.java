@@ -71,15 +71,12 @@ public class JarIndex {
     }
 
     public List<String> getJars(String name) {
-        if (name.startsWith("META-INF")) {
-            return this.jarIndex.getOrDefault(name, Collections.emptyList());
-        }
         int lastDot = name.lastIndexOf('.');
         if (lastDot < 0) {
-            return Collections.emptyList();
+            return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
         String path = name.substring(0, lastDot).replace('.', '/');
-        return this.jarIndex.getOrDefault(path, Collections.emptyList());
+        return this.jarIndex.getOrDefault(path, this.jarIndex.getOrDefault(name, Collections.emptyList()));
     }
 
     public List<JarFile> getJarFiles(String name) {

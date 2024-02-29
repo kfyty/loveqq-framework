@@ -1,9 +1,11 @@
 package com.kfyty.core.utils;
 
+import com.kfyty.core.converter.Converter;
 import com.kfyty.core.exception.SupportException;
 import com.kfyty.core.lang.function.Function3;
 import com.kfyty.core.lang.function.Function4;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.core.support.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -52,7 +54,6 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.kfyty.core.utils.CommonUtil.EMPTY_CLASS_ARRAY;
 import static com.kfyty.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 import static java.util.Optional.ofNullable;
 
@@ -270,9 +271,9 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static <T> T newInstance(Class<T> clazz, Map<Class<?>, Object> constructorArgs) {
-        Object[] parameterClasses = CommonUtil.empty(constructorArgs) ? null : constructorArgs.keySet().toArray(EMPTY_CLASS_ARRAY);
-        Object[] parameterValues = parameterClasses == null ? EMPTY_OBJECT_ARRAY : constructorArgs.values().toArray();
+    public static <T> T newInstance(Class<T> clazz, List<Pair<Class<?>, Object>> constructorArgs) {
+        Object[] parameterClasses = CommonUtil.empty(constructorArgs) ? null : constructorArgs.stream().map(Pair::getKey).toArray(Class[]::new);
+        Object[] parameterValues = parameterClasses == null ? EMPTY_OBJECT_ARRAY : constructorArgs.stream().map(Pair::getValue).toArray();
         Predicate<Constructor<T>> constructorPredicate = parameterClasses == null ? null : c -> Arrays.equals(parameterClasses, c.getParameterTypes());
         return newInstance(searchSuitableConstructor(clazz, constructorPredicate), parameterValues);
     }
@@ -721,24 +722,29 @@ public abstract class ReflectUtil {
         String[] fields = param.split("\\.");
         for (String field : fields) {
             obj = getFieldValue(obj, field);
+            if (obj == null) {
+                return null;
+            }
         }
         return obj;
     }
 
     /**
-     * 根据属性参数，将 value 设置到 obj 中，与 parseValue() 过程相反
+     * 根据属性参数，将 value 设置到 obj 中，与 {@link ReflectUtil#parseValue(String, Object)} 过程相反
      *
      * @param param 属性参数 eg: obj.field
      * @param obj   包含 obj 属性的对象
      * @param value 属性对象 obj 中的 field 属性的值
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void setNestedFieldValue(String param, Object obj, Object value) {
         Class<?> clazz = obj.getClass();
         String[] fields = param.split("\\.");
         for (int i = 0; i < fields.length; i++) {
             Field field = getField(clazz, fields[i]);
             if (i == fields.length - 1) {
-                setFieldValue(obj, field, value);
+                Converter converter = ConverterUtil.getTypeConverter(value.getClass(), field.getType());
+                setFieldValue(obj, field, converter == null ? value : converter.apply(value));
                 break;
             }
             Object fieldValue = getFieldValue(obj, field);

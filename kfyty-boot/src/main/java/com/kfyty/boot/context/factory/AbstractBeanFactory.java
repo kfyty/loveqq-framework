@@ -14,11 +14,16 @@ import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.MethodProxy;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -469,19 +474,33 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     protected Object createLazied(BeanDefinition beanDefinition, Object bean) {
-        return DynamicProxyFactory
-                .create(true)
-                .addInterceptorPoint((methodProxy, chain) -> {
-                    if (!this.contains(beanDefinition.getBeanName())) {
-                        synchronized (this.beanInstances) {
-                            if (!this.contains(beanDefinition.getBeanName())) {
-                                this.registerBean(beanDefinition.getBeanName(), bean);
-                            }
-                        }
+        LazyInjectProxy proxy = new LazyInjectProxy(beanDefinition.getBeanName(), bean);
+        if (AopUtil.addProxyInterceptorPoint(bean, proxy)) {
+            return bean;
+        }
+        return DynamicProxyFactory.create(true).addInterceptorPoint(proxy).createProxy(bean, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
+    }
+
+    /**
+     * 自动注入的懒加载代理
+     * 仅创建了 bean 示例，后续初始化操作懒加载进行
+     */
+    @RequiredArgsConstructor
+    private class LazyInjectProxy implements MethodInterceptorChainPoint {
+        private final String beanName;
+        private final Object bean;
+
+        @Override
+        public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+            if (!AbstractBeanFactory.this.contains(beanName)) {
+                synchronized (AbstractBeanFactory.this.beanInstances) {
+                    if (!AbstractBeanFactory.this.contains(beanName)) {
+                        AbstractBeanFactory.this.registerBean(beanName, bean);
                     }
-                    methodProxy.setTarget(this.getBean(beanDefinition.getBeanName()));
-                    return chain.proceed(methodProxy);
-                })
-                .createProxy(bean, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
+                }
+            }
+            methodProxy.setTarget(AbstractBeanFactory.this.getBean(beanName));
+            return chain.proceed(methodProxy);
+        }
     }
 }

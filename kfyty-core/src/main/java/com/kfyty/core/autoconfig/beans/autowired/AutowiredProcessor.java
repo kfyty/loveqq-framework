@@ -1,5 +1,6 @@
 package com.kfyty.core.autoconfig.beans.autowired;
 
+import com.kfyty.core.autoconfig.LaziedObject;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.ApplicationContext;
@@ -7,6 +8,7 @@ import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.generic.Generic;
 import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.lang.Lazy;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -25,7 +27,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isLazied;
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isRequired;
@@ -69,7 +73,8 @@ public class AutowiredProcessor {
         }
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), description.value());
-        Object targetBean = this.doResolveBean(beanName, actualGeneric, description);
+        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, actualGeneric, description);
+        Object targetBean = LaziedObject.class.isAssignableFrom(actualGeneric.getSourceType()) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
         if (targetBean != null && isJdkProxy(targetBean) && field.getType().equals(getTargetClass(targetBean))) {
             targetBean = AopUtil.getTarget(targetBean);
         }
@@ -159,7 +164,12 @@ public class AutowiredProcessor {
 
     private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, AutowiredDescription autowired) {
         Map<String, Object> beanOfType = new LinkedHashMap<>(2);
-        Map<String, BeanDefinition> targetBeanDefinitions = this.context.getBeanDefinitions(targetType);
+        Map<String, BeanDefinition> targetBeanDefinitions = new LinkedHashMap<>();
+        if (this.context.containsBeanDefinition(targetBeanName)) {
+            Optional.of(this.context.getBeanDefinition(targetBeanName)).ifPresent(bd -> targetBeanDefinitions.put(bd.getBeanName(), bd));
+        } else {
+            targetBeanDefinitions.putAll(this.context.getBeanDefinitions(targetType));
+        }
         for (Iterator<Map.Entry<String, BeanDefinition>> i = targetBeanDefinitions.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String, BeanDefinition> entry = i.next();
             if (!entry.getValue().isAutowireCandidate()) {

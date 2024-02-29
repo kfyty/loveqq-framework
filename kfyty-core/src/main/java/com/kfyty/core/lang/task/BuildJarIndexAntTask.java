@@ -83,9 +83,9 @@ public class BuildJarIndexAntTask {
         for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
             String entryName = entry.getName();
 
-            // 非 class 文件，仅保留 META-INF 资源索引
+            // 非 class 文件，不保留 META-INF/maven 资源索引
             if (!entryName.endsWith(".class")) {
-                if (entryName.length() > 9 && entryName.startsWith("META-INF/") && !entryName.startsWith("META-INF/maven")) {
+                if (!entryName.startsWith("META-INF/maven")) {
                     indexContainer.computeIfAbsent(jarPath, k -> new HashSet<>()).add(entryName);
                 }
                 continue;

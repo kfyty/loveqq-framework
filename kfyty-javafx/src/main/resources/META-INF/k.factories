@@ -1,0 +1,1 @@
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.javafx.core.autoconfig.JavaFXAutoConfig

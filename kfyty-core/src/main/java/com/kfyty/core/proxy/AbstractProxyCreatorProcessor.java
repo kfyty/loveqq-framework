@@ -26,7 +26,11 @@ public abstract class AbstractProxyCreatorProcessor implements ApplicationContex
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        if (this.canCreateProxy(beanName, this.getBeanDefinition(beanName).getBeanType(), bean)) {
+        BeanDefinition beanDefinition = this.getBeanDefinition(beanName);
+        if (!beanDefinition.isAutowireCandidate()) {
+            return null;
+        }
+        if (this.canCreateProxy(beanName, beanDefinition.getBeanType(), bean)) {
             return this.createProxy(bean, beanName, this.createProxyPoint());
         }
         return null;
