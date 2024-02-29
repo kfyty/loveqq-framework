@@ -11,12 +11,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -208,6 +210,7 @@ public abstract class AbstractController implements ViewBindCapableController, L
 
     public void close() {
         if (this.window != null) {
+            Optional.ofNullable(this.window.getOnCloseRequest()).ifPresent(onClose -> onClose.handle(new WindowEvent(this.window, WindowEvent.WINDOW_CLOSE_REQUEST)));
             this.window.close();
         }
     }

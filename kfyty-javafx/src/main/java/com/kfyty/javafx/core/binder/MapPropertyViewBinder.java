@@ -1,5 +1,6 @@
 package com.kfyty.javafx.core.binder;
 
+import com.kfyty.core.utils.CommonUtil;
 import javafx.beans.value.WritableObjectValue;
 import javafx.beans.value.WritableValue;
 
@@ -27,7 +28,7 @@ public class MapPropertyViewBinder implements ViewPropertyBinder {
     public void bind(WritableValue<?> view, Object model) {
         Map<Object, Object> target = (Map<Object, Object>) view.getValue();
         Map<Object, Object> source = (Map<Object, Object>) model;
-        if (target == model) {
+        if (target == model || CommonUtil.empty(target) && CommonUtil.empty(source)) {
             return;
         }
         target.clear();

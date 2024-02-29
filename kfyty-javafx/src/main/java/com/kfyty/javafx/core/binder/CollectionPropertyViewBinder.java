@@ -1,5 +1,6 @@
 package com.kfyty.javafx.core.binder;
 
+import com.kfyty.core.utils.CommonUtil;
 import javafx.beans.value.WritableObjectValue;
 import javafx.beans.value.WritableValue;
 
@@ -27,7 +28,7 @@ public class CollectionPropertyViewBinder implements ViewPropertyBinder {
     public void bind(WritableValue<?> view, Object model) {
         Collection<Object> target = (Collection<Object>) view.getValue();
         Collection<Object> source = (Collection<Object>) model;
-        if (target == model) {
+        if (target == model || CommonUtil.empty(target) && CommonUtil.empty(source)) {
             return;
         }
         target.clear();

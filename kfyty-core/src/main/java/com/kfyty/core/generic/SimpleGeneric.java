@@ -32,7 +32,8 @@ import java.util.concurrent.ConcurrentMap;
 public class SimpleGeneric extends QualifierGeneric {
     public static final Class<?>[] SIMPLE_NESTED_GENERIC_CLASSES = new Class<?>[]{
             Collection.class, List.class, Set.class, SortedSet.class, Queue.class, Deque.class,
-            Map.class, SortedMap.class, TreeMap.class, ConcurrentMap.class, ConcurrentHashMap.class
+            Map.class, SortedMap.class, TreeMap.class, ConcurrentMap.class, ConcurrentHashMap.class,
+            Value.class
     };
 
     @Getter @Setter

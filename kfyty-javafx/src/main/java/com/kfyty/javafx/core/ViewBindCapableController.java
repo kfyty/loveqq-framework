@@ -1,8 +1,6 @@
 package com.kfyty.javafx.core;
 
-import com.kfyty.core.proxy.MethodInterceptorChain;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
-import com.kfyty.core.proxy.factory.DynamicProxyFactory;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -10,7 +8,6 @@ import com.kfyty.javafx.core.annotation.FView;
 import com.kfyty.javafx.core.proxy.ViewModelBindProxy;
 import com.kfyty.javafx.core.utils.ViewModelBindUtil;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -44,10 +41,22 @@ import static com.kfyty.core.utils.AnnotationUtil.flatRepeatableAnnotation;
  * @email kfyty725@hotmail.com
  */
 public interface ViewBindCapableController extends LifeCycleBinder, Initializable {
-
+    /**
+     * 初始化视图模型绑定
+     * <p>
+     * 自定义初始化请实现 {@link this#init()} 方法
+     */
     @Override
     default void initialize(URL location, ResourceBundle resources) {
         this.initViewBind();
+        this.init();
+    }
+
+    /**
+     * 自定义初始化回调
+     */
+    default void init() {
+
     }
 
     private void initViewBind() {
@@ -77,46 +86,24 @@ public interface ViewBindCapableController extends LifeCycleBinder, Initializabl
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     private void initModelBind(String property, String bindPath, Node viewNode, FView view) {
         // 获取绑定的属性
-        boolean hasInitValue = true;
-        Field modelProp = ReflectUtil.getField(this.getClass(), bindPath.split("\\.")[0]);
         ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
-        Object modelValue = ReflectUtil.getFieldValue(this, modelProp);
+        Pair<Field, Object> fieldValuePair = ViewModelBindUtil.resolveModel(this, bindPath, view);
+        Field modelProp = fieldValuePair.getKey();
+        Object modelValue = fieldValuePair.getValue();
 
         // 空值时初始化一个默认值
         if (modelValue == null) {
-            hasInitValue = false;
             modelValue = ReflectUtil.newInstance(modelProp.getType());
         }
 
         // 添加模型绑定代理
-        // 还不是代理，创建代理
-        if (!AopUtil.isProxy(modelValue)) {
-            modelValue = DynamicProxyFactory.create(true).addInterceptorPoint(new ViewModelBindProxy(this, new LinkedList<>())).createProxy(modelValue);
-        }
-        // 已经是代理，但可能不是上面创建的代理，添加拦截点
-        MethodInterceptorChain chain = AopUtil.getProxyInterceptorChain(modelValue);
-        Optional<MethodInterceptorChainPoint> anyChainPoint = chain.getChainPoints().stream().filter(e -> e instanceof ViewModelBindProxy).findAny();
-        if (anyChainPoint.isEmpty()) {
-            chain.addInterceptorPoint(new ViewModelBindProxy(this, new LinkedList<>()));
-        }
-        ViewModelBindProxy proxy = (ViewModelBindProxy) chain.getChainPoints().stream().filter(e -> e instanceof ViewModelBindProxy).findAny().get();
+        ViewModelBindProxy proxy = ViewModelBindUtil.bindModelProxy(this, modelProp, modelValue);
         proxy.addBindView(bindPath, propertyValue);
-
-        // 更新视图默认值
-        if (hasInitValue) {
-            Object defaultValue = ReflectUtil.parseValue(bindPath, this);
-            if (defaultValue != null) {
-                proxy.viewBind(propertyValue, defaultValue);
-            }
-        }
-
-        // 更新属性为代理
-        ReflectUtil.setFieldValue(this, modelProp, modelValue);
     }
 
     private void initViewBind(String property, String bindPath, Node viewNode, FView view) {
         ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
-        Object modelValue = ReflectUtil.getFieldValue(this, bindPath.split("\\.")[0]);
+        Object modelValue = ViewModelBindUtil.resolveModel(this, bindPath, view).getValue();
 
         ViewBindEventHandler viewBindEventHandler = new ViewBindEventHandler(bindPath.substring(bindPath.indexOf('.') + 1), AopUtil.getTarget(modelValue), this);
         propertyValue.addListener(viewBindEventHandler);

@@ -101,8 +101,13 @@ class PropertiesConfig implements InitializingBean {
     @NestedConfigurationProperty
     private User user;
 
-    @NestedConfigurationProperty
+    private com.kfyty.core.lang.Value<User> valueUser;
+
+    private com.kfyty.core.lang.Value<List<String>> values;
+
     private Pair<Long, String> pair;
+
+    private Pair<String, List<String>> listPair;
 
     @Override
     public void afterPropertiesSet() {
@@ -120,9 +125,13 @@ class PropertiesConfig implements InitializingBean {
         Assert.assertEquals(this.listConfigMap.get(0).get("map").getId(), "unique_list_map");
         Assert.assertEquals(this.configMapMap.get("map").get("nested").getId(), "unique_map_map");
         Assert.assertEquals(this.configListMap.get("list").get(0).getId(), "unique_map_list");
+        Assert.assertEquals(this.values.get(), Arrays.asList("1", "2"));
+        Assert.assertEquals(this.valueUser.get().getId(), "id");
+        Assert.assertEquals(this.listPair.getValue(), Arrays.asList("1", "2"));
     }
 
     @Data
+    @NestedConfigurationProperty
     public static class User {
         private String id;
 
