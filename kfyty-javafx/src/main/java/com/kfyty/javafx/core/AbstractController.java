@@ -49,6 +49,11 @@ public abstract class AbstractController implements ViewBindCapableController, L
     private DataBinder dataBinder;
 
     /**
+     * 是否已经初始化
+     */
+    protected boolean isInit;
+
+    /**
      * 控制器所属视图
      */
     protected Node view;
@@ -97,6 +102,11 @@ public abstract class AbstractController implements ViewBindCapableController, L
         if (!(componentController instanceof AbstractController controller)) {
             throw new IllegalArgumentException("The controller is not subclass of " + AbstractController.class.getName());
         }
+        if (controller.isInit()) {
+            controller.show();
+            this.addChild(component.getId(), component);
+            return (T) controller;
+        }
 
         // 参数解析
         List<String> split = parameter == null ? Collections.emptyList() : CommonUtil.split(parameter, "&");
@@ -113,6 +123,7 @@ public abstract class AbstractController implements ViewBindCapableController, L
             ViewModelBindProxy.triggerViewBind(controller);
         }
         this.registerChild(child);
+        controller.setInit(true);
         return (T) controller;
     }
 
@@ -130,7 +141,9 @@ public abstract class AbstractController implements ViewBindCapableController, L
     public void addChild(String name, Node view) {
         List<Node> nodes = this.children.computeIfAbsent(name, k -> new ArrayList<>());
         synchronized (nodes) {
-            nodes.add(view);
+            if (nodes.stream().noneMatch(e -> e == view)) {
+                nodes.add(view);
+            }
         }
     }
 

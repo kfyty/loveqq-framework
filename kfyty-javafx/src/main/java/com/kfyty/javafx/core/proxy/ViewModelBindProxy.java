@@ -117,7 +117,8 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
                         .stream()
                         .filter(e -> e instanceof ViewModelBindProxy)
                         .map(e -> (ViewModelBindProxy) e)
-                        .findAny().ifPresent(proxy -> proxy.viewBind(null));
+                        .findAny()
+                        .ifPresent(proxy -> proxy.viewBind(null));
             }
         }
     }
