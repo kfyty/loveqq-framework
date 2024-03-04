@@ -252,6 +252,7 @@ import com.kfyty.core.autoconfig.annotation.NestedConfigurationProperty;
 import lombok.Data;
 
 @Data
+@NestedConfigurationProperty
 public class User {
     private String name;
 

@@ -29,7 +29,7 @@ public @interface FView {
      * <p>
      * <b>最终返回值必须是 {@link javafx.beans.value.ObservableValue} 类型</b>
      *
-     * @see com.kfyty.javafx.core.ViewBindCapableController
+     * @see com.kfyty.javafx.core.AbstractViewModelBindCapableController
      * @see com.kfyty.javafx.core.binder.ViewPropertyBinder
      */
     String value();

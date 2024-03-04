@@ -9,7 +9,7 @@ import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.javafx.core.BootstrapApplication;
 import com.kfyty.javafx.core.LifeCycleController;
-import com.kfyty.javafx.core.ViewBindCapableController;
+import com.kfyty.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.javafx.core.binder.ViewPropertyBinder;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WritableValue;
@@ -32,7 +32,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
     /**
      * 控制器
      */
-    private final ViewBindCapableController controller;
+    private final AbstractViewModelBindCapableController controller;
 
     /**
      * 视图模型绑定列表
@@ -62,7 +62,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
     public void viewBind(MethodProxy methodProxy) {
         // 事件过来的不处理
         for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
-            if (stackTraceElement.getClassName().equals(ViewBindCapableController.ViewBindEventHandler.class.getName())) {
+            if (stackTraceElement.getClassName().equals(AbstractViewModelBindCapableController.ViewBindEventHandler.class.getName())) {
                 return;
             }
         }

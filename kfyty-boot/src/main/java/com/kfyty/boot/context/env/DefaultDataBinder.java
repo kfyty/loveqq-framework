@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.utils.ReflectUtil.newInstance;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -77,7 +78,7 @@ public class DefaultDataBinder implements DataBinder {
         Pair<Boolean, Class<?>> hasNested = hasNestedConfigurationProperty(field, simpleGeneric);
         if (hasNested.getKey()) {
             if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
-                Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> ReflectUtil.newInstance(hasNested.getValue()));
+                Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> newInstance(hasNested.getValue()));
                 ReflectUtil.setFieldValue(target.getTarget(), field, fieldInstance);
                 this.bind(new Instance(AopUtil.getTarget(fieldInstance), field), key, ignoreInvalidFields, ignoreUnknownFields);
             }
@@ -116,7 +117,8 @@ public class DefaultDataBinder implements DataBinder {
     public DataBinder clone() {
         try {
             DataBinder clone = (DataBinder) super.clone();
-            clone.setPropertyContext(null);
+            clone.setPropertyContext(newInstance(this.propertyContext.getClass()));
+            clone.getPropertyContext().setDataBinder(clone);
             return clone;
         } catch (CloneNotSupportedException e) {
             throw ExceptionUtil.wrap(e);

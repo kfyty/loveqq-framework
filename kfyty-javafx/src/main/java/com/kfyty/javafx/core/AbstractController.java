@@ -1,11 +1,8 @@
 package com.kfyty.javafx.core;
 
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.env.DataBinder;
-import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.CommonUtil;
-import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.javafx.core.proxy.ViewModelBindProxy;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -13,6 +10,8 @@ import javafx.scene.Parent;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,25 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @email kfyty725@hotmail.com
  */
 @Data
-public abstract class AbstractController implements ViewBindCapableController, LifeCycleController {
-    /**
-     * 参数key前缀
-     */
-    protected static final String PARAMETER_PREFIX = "controller";
-
-    /**
-     * 默认的泛型配置属性解析器
-     */
-    protected static final Class<?> DEFAULT_GENERIC_PROPERTIES_CONTEXT_CLASS = ReflectUtil.load("com.kfyty.boot.context.env.DefaultGenericPropertiesContext");
-
-    /**
-     * 数据绑定器
-     *
-     * @see this#createDataBinder()
-     */
-    @Autowired
-    private DataBinder dataBinder;
-
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public abstract class AbstractController extends AbstractViewModelBindCapableController implements LifeCycleController {
     /**
      * 是否已经初始化
      */
@@ -116,7 +99,7 @@ public abstract class AbstractController implements ViewBindCapableController, L
         }
 
         // 数据绑定
-        DataBinder dataBinder = this.createDataBinder();
+        DataBinder dataBinder = this.getDataBinder();
         if (CommonUtil.notEmpty(parameter) && CommonUtil.notEmpty(controller.context)) {
             controller.context.forEach((k, v) -> dataBinder.setProperty(k, v.toString()));
             dataBinder.bind(new Instance(controller), PARAMETER_PREFIX);
@@ -226,17 +209,5 @@ public abstract class AbstractController implements ViewBindCapableController, L
             Optional.ofNullable(this.window.getOnCloseRequest()).ifPresent(onClose -> onClose.handle(new WindowEvent(this.window, WindowEvent.WINDOW_CLOSE_REQUEST)));
             this.window.close();
         }
-    }
-
-    protected DataBinder createDataBinder() {
-        DataBinder dataBinder = this.dataBinder.clone();
-        GenericPropertiesContext propertiesContext = this.createPropertiesContext();
-        propertiesContext.setDataBinder(dataBinder);
-        dataBinder.setPropertyContext(propertiesContext);
-        return dataBinder;
-    }
-
-    protected GenericPropertiesContext createPropertiesContext() {
-        return (GenericPropertiesContext) ReflectUtil.newInstance(DEFAULT_GENERIC_PROPERTIES_CONTEXT_CLASS);
     }
 }

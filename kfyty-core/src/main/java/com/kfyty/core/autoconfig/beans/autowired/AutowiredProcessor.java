@@ -179,9 +179,12 @@ public class AutowiredProcessor {
             if (this.context.contains(entry.getKey())) {
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
             } else if (isGeneric) {
-                this.prepareResolving(targetBeanName, targetType, true);
-                this.context.registerBeanReference(entry.getValue());
-                this.removeResolving(targetBeanName, targetType, true);
+                try {
+                    this.prepareResolving(targetBeanName, targetType, true);
+                    this.context.registerBeanReference(entry.getValue());
+                } finally {
+                    this.removeResolving(targetBeanName, targetType, true);
+                }
             }
         }
         if (beanOfType.size() < targetBeanDefinitions.size()) {
