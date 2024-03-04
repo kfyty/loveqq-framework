@@ -7,7 +7,7 @@ import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.javafx.core.ViewBindCapableController;
+import com.kfyty.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.javafx.core.annotation.FView;
 import com.kfyty.javafx.core.proxy.ViewModelBindProxy;
 import javafx.beans.value.ObservableValue;
@@ -63,7 +63,7 @@ public class ViewModelBindUtil {
         return (ObservableValue<?>) value;
     }
 
-    public static ViewModelBindProxy bindModelProxy(ViewBindCapableController controller, Field modelProp, Object modelValue) {
+    public static ViewModelBindProxy bindModelProxy(AbstractViewModelBindCapableController controller, Field modelProp, Object modelValue) {
         return bindModelProxy(controller, modelProp, modelValue, new ViewModelBindProxy(controller, new LinkedList<>()));
     }
 

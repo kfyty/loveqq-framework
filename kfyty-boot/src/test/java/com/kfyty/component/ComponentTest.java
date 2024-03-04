@@ -18,6 +18,7 @@ import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.FactoryBean;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.core.support.Pair;
 import lombok.Data;
@@ -255,6 +256,18 @@ class ComplexBean implements CommandLineRunner {
     private PrototypeCCC ccc2;
 
     @Autowired
+    private PrototypeDDD ddd;
+
+    @Autowired
+    private PrototypeDDD ddd2;
+
+    @Autowired
+    private ProtoTypeDDDFactory protoTypeDDDFactory;
+
+    @Autowired
+    private ProtoTypeDDDFactory protoTypeDDDFactory2;
+
+    @Autowired
     private LazyAAA lazyAAA;
 
     @Override
@@ -266,6 +279,9 @@ class ComplexBean implements CommandLineRunner {
         Assert.assertSame(this.aaa.getBBB(), this.bbb);
         Assert.assertNotSame(this.ccc1, this.ccc2);
         Assert.assertEquals(this.ccc1.getTime(), this.ccc1.getTime());
+        Assert.assertSame(this.protoTypeDDDFactory, this.protoTypeDDDFactory2);
+        Assert.assertSame(this.ddd, this.ddd2);
+        Assert.assertNotEquals(this.ddd.getTime(), this.ddd2.getTime());
         Assert.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
     }
 
@@ -299,6 +315,29 @@ class ComplexBean implements CommandLineRunner {
 
         public long getTime() {
             return time;
+        }
+    }
+
+    public static class PrototypeDDD {
+        private final long time = System.nanoTime();
+
+        public long getTime() {
+            return time;
+        }
+    }
+
+    @Component
+    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
+    public static class ProtoTypeDDDFactory implements FactoryBean<PrototypeDDD> {
+
+        @Override
+        public Class<?> getBeanType() {
+            return PrototypeDDD.class;
+        }
+
+        @Override
+        public PrototypeDDD getObject() {
+            return new PrototypeDDD();
         }
     }
 

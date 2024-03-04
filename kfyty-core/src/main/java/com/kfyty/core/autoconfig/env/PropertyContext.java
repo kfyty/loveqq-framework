@@ -104,4 +104,9 @@ public interface PropertyContext extends AutoCloseable {
      * @return 属性值
      */
     <T> T getProperty(String key, Class<T> targetType, T defaultValue);
+
+    /**
+     * 关闭这个属性上下文
+     */
+    void close();
 }

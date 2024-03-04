@@ -1,5 +1,9 @@
 package com.kfyty.javafx.core;
 
+import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.env.DataBinder;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.core.support.Instance;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -24,10 +28,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.core.utils.AnnotationUtil.flatRepeatableAnnotation;
@@ -40,36 +44,66 @@ import static com.kfyty.core.utils.AnnotationUtil.flatRepeatableAnnotation;
  * @date 2024/2/21 11:56
  * @email kfyty725@hotmail.com
  */
-public interface ViewBindCapableController extends LifeCycleBinder, Initializable {
+public abstract class AbstractViewModelBindCapableController implements LifeCycleBinder, Initializable {
+    /**
+     * 参数key前缀
+     */
+    public static final String PARAMETER_PREFIX = "controller";
+
+    /**
+     * 数据绑定器
+     */
+    private DataBinder dataBinder;
+
     /**
      * 初始化视图模型绑定
      * <p>
-     * 自定义初始化请实现 {@link this#init()} 方法
+     * 自定义初始化请实现 {@link this#init(URL, ResourceBundle)} 方法
      */
     @Override
-    default void initialize(URL location, ResourceBundle resources) {
+    public final void initialize(URL location, ResourceBundle resources) {
         this.initViewBind();
-        this.init();
+        this.init(location, resources);
     }
 
     /**
      * 自定义初始化回调
      */
-    default void init() {
+    public void init(URL location, ResourceBundle resources) {
 
     }
 
-    private void initViewBind() {
+    /**
+     * 获取数据绑定器
+     *
+     * @return {@link DataBinder}
+     */
+    public DataBinder getDataBinder() {
+        return this.dataBinder.clone();
+    }
+
+    /**
+     * 设置数据绑定器
+     *
+     * @param dataBinder {@link DataBinder}
+     */
+    @Autowired
+    public void setDataBinder(DataBinder dataBinder) {
+        this.dataBinder = dataBinder.clone();
+    }
+
+    protected void initViewBind() {
+        DataBinder dataBinder = this.getDataBinder();
         Map<String, Field> fieldMap = ReflectUtil.getFieldMap(AopUtil.getTargetClass(this));
         for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
             Annotation[] annotations = Arrays.stream(flatRepeatableAnnotation(findAnnotations(entry.getValue()))).filter(e -> e.annotationType().equals(FView.class)).toArray(Annotation[]::new);
             for (Annotation view : annotations) {
-                this.initViewBind(entry.getValue(), (FView) view);
+                this.initViewBind(entry.getValue(), (FView) view, dataBinder);
             }
         }
     }
 
-    private void initViewBind(Field field, FView view) {
+    protected void initViewBind(Field field, FView view, DataBinder dataBinder) {
         if (CommonUtil.empty(view.value())) {
             return;
         }
@@ -80,11 +114,10 @@ public interface ViewBindCapableController extends LifeCycleBinder, Initializabl
         Node viewNode = (Node) ReflectUtil.getFieldValue(this, field);
 
         this.initModelBind(property, bindPath, viewNode, view);
-        this.initViewBind(property, bindPath, viewNode, view);
+        this.initViewBind(property, bindPath, viewNode, view, dataBinder);
     }
 
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    private void initModelBind(String property, String bindPath, Node viewNode, FView view) {
+    protected void initModelBind(String property, String bindPath, Node viewNode, FView view) {
         // 获取绑定的属性
         ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
         Pair<Field, Object> fieldValuePair = ViewModelBindUtil.resolveModel(this, bindPath, view);
@@ -101,53 +134,52 @@ public interface ViewBindCapableController extends LifeCycleBinder, Initializabl
         proxy.addBindView(bindPath, propertyValue);
     }
 
-    private void initViewBind(String property, String bindPath, Node viewNode, FView view) {
+    protected void initViewBind(String property, String bindPath, Node viewNode, FView view, DataBinder dataBinder) {
         ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
-        Object modelValue = ViewModelBindUtil.resolveModel(this, bindPath, view).getValue();
+        ViewBindEventHandler viewBindEventHandler = new ViewBindEventHandler(bindPath, dataBinder, this);
 
-        ViewBindEventHandler viewBindEventHandler = new ViewBindEventHandler(bindPath.substring(bindPath.indexOf('.') + 1), AopUtil.getTarget(modelValue), this);
         propertyValue.addListener(viewBindEventHandler);
 
         if (propertyValue instanceof ObjectProperty<?> objectProperty) {
             Object value = objectProperty.getValue();
             if (value instanceof ObservableList<?> observableList) {
-                observableList.addListener(new ListChangeListener<Object>() {
-                    @Override
-                    public void onChanged(Change<?> c) {
-                        viewBindEventHandler.changed(propertyValue, c.getList(), c.getList());
-                    }
-                });
+                observableList.addListener((ListChangeListener<Object>) c -> viewBindEventHandler.changed(propertyValue, c.getList(), c.getList()));
             }
             if (value instanceof ObservableSet<?> observableSet) {
-                observableSet.addListener(new SetChangeListener<Object>() {
-                    @Override
-                    public void onChanged(Change<?> c) {
-                        viewBindEventHandler.changed(propertyValue, c.getSet(), c.getSet());
-                    }
-                });
+                observableSet.addListener((SetChangeListener<Object>) c -> viewBindEventHandler.changed(propertyValue, c.getSet(), c.getSet()));
             }
             if (value instanceof ObservableMap<?, ?> observableMap) {
-                observableMap.addListener(new MapChangeListener<Object, Object>() {
-                    @Override
-                    public void onChanged(Change<?, ?> c) {
-                        viewBindEventHandler.changed(propertyValue, c.getMap(), c.getMap());
-                    }
-                });
+                observableMap.addListener((MapChangeListener<Object, Object>) c -> viewBindEventHandler.changed(propertyValue, c.getMap(), c.getMap()));
             }
         }
     }
 
     @RequiredArgsConstructor
-    class ViewBindEventHandler implements ChangeListener<Object> {
+    public static class ViewBindEventHandler implements ChangeListener<Object> {
         private final String bindPath;
-        private final Object model;
-        private final ViewBindCapableController controller;
+        private final DataBinder dataBinder;
+        private final AbstractViewModelBindCapableController controller;
+
+        /**
+         * Collection/Map 类型是否已初始化
+         * 集合类型不做代理，因此直接设置 javafx 集合对象到绑定模型，以实现直接操作集合即可直接操作视图
+         */
+        private boolean isInit;
 
         @Override
         public void changed(ObservableValue<?> observable, Object oldValue, Object newValue) {
-            try {
+            if (newValue instanceof Collection<?> || newValue instanceof Map<?,?>) {
+                if (!this.isInit) {
+                    ReflectUtil.setNestedFieldValue(this.bindPath, this.controller, newValue);
+                    this.isInit = true;
+                }
+                return;
+            }
+            try (GenericPropertiesContext context = this.dataBinder.getPropertyContext()) {
                 if (newValue != null) {
-                    ReflectUtil.setNestedFieldValue(this.bindPath, this.model, newValue);
+                    String virtual = UUID.randomUUID().toString();
+                    context.setProperty(virtual + '.' + bindPath, newValue.toString());
+                    this.dataBinder.bind(new Instance(this.controller), virtual);
                 }
             } catch (Throwable e) {
                 if (this.controller instanceof LifeCycleController lifeCycleController) {
