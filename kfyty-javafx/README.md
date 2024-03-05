@@ -57,6 +57,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -65,8 +66,8 @@ import javafx.stage.WindowEvent;
  * <p>
  * 添加 {@link com.kfyty.javafx.core.annotation.FPrototypeScope} 注解可标识一个原型作用域，每次新开窗口都创建新的窗口
  */
-@FController(value = "root", path = "/fxml/hello-view.fxml", componentType = Scene.class, title = "hello")
-public class HelloController extends AbstractController {
+@FController(value = "root", path = "/fxml/hello-view.fxml", title = "hello", main = true)
+public class HelloController extends AbstractController<FlowPane> {
     /**
      * 文本框的 text 绑定到 user 对象的 name 属性
      */
@@ -108,7 +109,7 @@ public class HelloController extends AbstractController {
      */
     @FXML
     protected void getFormData() {
-        NewWindowController childController = this.getChildController("newWindow", NewWindowController.class);
+        NewWindowController childController = this.getChildController(NewWindowController.class);
         System.out.println(STR."\{this.user}, child form: \{childController == null ? null : childController.getSelected().get()}");
     }
 
@@ -117,7 +118,7 @@ public class HelloController extends AbstractController {
      */
     @FXML
     protected void showSelectedWindow() {
-        this.openWindow(this.newWindow.create(), "deptNames.value[0]=dept1&deptNames.value[1]=dept2");
+        this.openWindow(NewWindowController.class, "deptNames.value[0]=dept1&deptNames.value[1]=dept2");
     }
 
     /**
@@ -184,7 +185,7 @@ import java.util.List;
  * 示例添加了 icon，可自动添加图片，或删除该属性
  */
 @FController(value = "newWindow", path = "/fxml/new-window.fxml", show = true, icon = "/icon/icon.ico")
-public class NewWindowController extends AbstractController {
+public class NewWindowController extends AbstractController<AnchorPane> {
     /**
      * 列表数据绑定到 deptNames 属性
      * 列表选择的数据绑定到 selected 属性
@@ -266,32 +267,7 @@ public class User {
 }
 ```
 
-编写 HelloApplication
-```java
-package com.kfyty.javafx.demo;
-
-import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.lang.Lazy;
-import com.kfyty.javafx.core.AbstractApplication;
-import jakarta.annotation.Resource;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-
-@Component
-public class HelloApplication extends AbstractApplication {
-    @Resource
-    private Lazy<Scene> root;
-
-    public void start(Stage stage) throws IOException {
-        this.bindLifeCycle(stage, root.get());
-        stage.show();
-    }
-}
-```
-
-由于 javafx 模块化，再编写一个启动类
+编写一个启动类
 ```java
 package com.kfyty.javafx.demo;
 

@@ -16,6 +16,7 @@ import lombok.Getter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -102,7 +103,7 @@ public class DefaultDataBinder implements DataBinder {
         try {
             Object property = this.propertyContext.getProperty(key, target.buildTargetGeneric(field));
             if (property != null) {
-                ReflectUtil.setFieldValue(target.getTarget(), field, property);
+                mergeOrUpdateFieldValue(property, field, target);
             }
         } catch (Exception e) {
             if (ignoreInvalidFields) {
@@ -145,6 +146,25 @@ public class DefaultDataBinder implements DataBinder {
     }
 
     public static boolean hasNestedGeneric(SimpleGeneric simpleGeneric) {
-        return simpleGeneric.hasGeneric();
+        return simpleGeneric.hasGeneric() && !(simpleGeneric.getResolveType() instanceof TypeVariable);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static void mergeOrUpdateFieldValue(Object bindValue, Field field, Instance target) {
+        // 获取原属性值
+        Object oldValue = ReflectUtil.getFieldValue(target.getTarget(), field);
+
+        // 集合
+        if (oldValue instanceof Collection<?>) {
+            ((Collection<?>) oldValue).addAll((Collection) bindValue);
+        }
+        // map
+        else if (oldValue instanceof Map<?, ?>) {
+            ((Map<?, ?>) oldValue).putAll((Map) bindValue);
+        }
+        // 其他情况
+        else {
+            ReflectUtil.setFieldValue(target.getTarget(), field, bindValue);
+        }
     }
 }

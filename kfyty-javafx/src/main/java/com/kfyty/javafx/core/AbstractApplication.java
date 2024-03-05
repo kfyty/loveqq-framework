@@ -16,8 +16,8 @@ public abstract class AbstractApplication extends Application implements LifeCyc
      */
     @Override
     public void init() throws Exception {
+        super.init();
         AbstractApplication iocManaged = BootstrapApplication.getBean(this.getClass());
         BeanUtil.copyProperties(iocManaged, this);
-        super.init();
     }
 }

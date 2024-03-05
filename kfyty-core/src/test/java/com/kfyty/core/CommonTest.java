@@ -9,7 +9,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,12 +33,27 @@ public class CommonTest {
     }
 
     @Test
+    public void resolveURLParamTest() {
+        Map<String, String> map = CommonUtil.resolveURLParameters("http://aaa.com/aaa?p.a=1");
+        Map<String, String> map2 = CommonUtil.resolveURLParameters("a=1", "p");
+        Assert.assertEquals(map, map2);
+    }
+
+    @Test
     public void weakTest() {
         Map<Class<?>, Integer> cache = new WeakConcurrentHashMap<>();
         cache.put(BootApplication.class, 1);
         System.out.println(cache.get(BootApplication.class));
         System.gc();
         System.out.println(cache.get(BootApplication.class));
+    }
+
+    @Test
+    public void iteratorSplitTest() {
+        String s = "<a><b><c>";
+        List<String> r = new ArrayList<>();
+        CommonUtil.iteratorSplit(s, "<", ">", r::add);
+        Assert.assertEquals(r, Arrays.asList("a", "b", "c"));
     }
 
     @Test

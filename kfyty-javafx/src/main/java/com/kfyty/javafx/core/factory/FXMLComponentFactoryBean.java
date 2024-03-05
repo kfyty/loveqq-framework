@@ -48,10 +48,11 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
 
     @Override
     public Class<?> getBeanType() {
-        return this.fController.componentType();
+        return this.fController.main() ? Scene.class : this.fController.window() ? Stage.class : this.fController.componentType();
     }
 
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Object getObject() {
         try {
             // 加载 fxml 文件
@@ -78,15 +79,8 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
                 return component;
             }
 
-            Stage window = new Stage(this.fController.stageStyle());
-            window.setTitle(this.fController.title());
-            window.setFullScreen(this.fController.fullScreen());
-            window.setResizable(this.fController.resizable());
-            window.setAlwaysOnTop(this.fController.alwaysOnTop());
-            if (CommonUtil.notEmpty(this.fController.icon())) {
-                window.getIcons().clear();
-                window.getIcons().add(new Image(this.fController.icon()));
-            }
+            Stage window = new Stage();
+            initWindowProperties(window, this.fController);
 
             // 绑定生命周期
             if (fxmlLoader.getController() instanceof LifeCycleController controller) {
@@ -115,5 +109,17 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
             scene.getStylesheets().addAll(this.fController.css());
         }
         return scene;
+    }
+
+    public static void initWindowProperties(Stage window, FController fController) {
+        window.initStyle(fController.stageStyle());
+        window.setTitle(fController.title());
+        window.setFullScreen(fController.fullScreen());
+        window.setResizable(fController.resizable());
+        window.setAlwaysOnTop(fController.alwaysOnTop());
+        if (CommonUtil.notEmpty(fController.icon())) {
+            window.getIcons().clear();
+            window.getIcons().add(new Image(fController.icon()));
+        }
     }
 }

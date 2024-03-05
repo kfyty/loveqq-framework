@@ -2,10 +2,11 @@ package com.kfyty.javafx.core;
 
 import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.support.Instance;
+import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.javafx.core.annotation.FController;
 import com.kfyty.javafx.core.proxy.ViewModelBindProxy;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -14,11 +15,11 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * 描述: 抽象控制器
@@ -30,7 +31,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class AbstractController extends AbstractViewModelBindCapableController implements LifeCycleController {
+public abstract class AbstractController<View extends Parent> extends AbstractViewModelBindCapableController implements LifeCycleController {
+    /**
+     * 子窗口索引 key 生成器
+     */
+    protected static final Function<String, String> CHILD_VIEW_INDEX_KEY = id -> id + "_index";
+
+    /**
+     * 子窗口索引映射
+     */
+    protected static final Function<Parent, Integer> CHILD_VIEW_INDEX_MAP = v -> (Integer) v.getProperties().get(CHILD_VIEW_INDEX_KEY.apply(v.getId()));
+
     /**
      * 是否已经初始化
      */
@@ -39,7 +50,7 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
     /**
      * 控制器所属视图
      */
-    protected Node view;
+    protected View view;
 
     /**
      * 控制器所属窗口
@@ -47,9 +58,14 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
     protected Stage window;
 
     /**
+     * 所属父控制器
+     */
+    protected AbstractController<?> parent;
+
+    /**
      * 子窗口
      */
-    protected Map<String, List<Node>> children;
+    protected Map<String, List<Parent>> children;
 
     /**
      * 父窗口传来的参数上下文
@@ -66,9 +82,30 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
     /**
      * 打开新窗口
      *
+     * @param childWindowControllerClass 子窗口控制类型
+     */
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass) {
+        return this.openWindow(childWindowControllerClass, null);
+    }
+
+    /**
+     * 打开新窗口
+     *
+     * @param childWindowControllerClass 子窗口控制类型
+     * @param parameters                 子窗口参数
+     */
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass, String parameters) {
+        FController fController = AnnotationUtil.findAnnotation(childWindowControllerClass, FController.class);
+        Stage child = BootstrapApplication.getBean(fController.value());
+        return this.openWindow(child, parameters);
+    }
+
+    /**
+     * 打开新窗口
+     *
      * @param child 窗口
      */
-    public <T extends AbstractController> T openWindow(Stage child) {
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child) {
         return this.openWindow(child, null);
     }
 
@@ -79,35 +116,41 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
      * @param parameter url 风格参数
      */
     @SuppressWarnings("unchecked")
-    public <T extends AbstractController> T openWindow(Stage child, String parameter) {
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child, String parameter) {
         Parent component = child.getScene().getRoot();
-        Object componentController = ((FXMLLoader) component.getProperties().get(component)).getController();
-        if (!(componentController instanceof AbstractController controller)) {
+        Object componentController = this.getController(component);
+        if (!(componentController instanceof AbstractController<?> controller)) {
             throw new IllegalArgumentException("The controller is not subclass of " + AbstractController.class.getName());
         }
+
         if (controller.isInit()) {
             controller.show();
             this.addChild(component.getId(), component);
             return (T) controller;
         }
 
-        // 参数解析
-        List<String> split = parameter == null ? Collections.emptyList() : CommonUtil.split(parameter, "&");
-        for (String params : split) {
-            String[] paramPair = params.split("=");
-            controller.addParameters(PARAMETER_PREFIX + '.' + paramPair[0], paramPair[1]);
-        }
-
         // 数据绑定
         DataBinder dataBinder = this.getDataBinder();
-        if (CommonUtil.notEmpty(parameter) && CommonUtil.notEmpty(controller.context)) {
-            controller.context.forEach((k, v) -> dataBinder.setProperty(k, v.toString()));
+        Map<String, String> parameters = CommonUtil.resolveURLParameters(parameter, PARAMETER_PREFIX);
+        if (CommonUtil.notEmpty(parameters)) {
+            parameters.forEach(dataBinder::setProperty);
             dataBinder.bind(new Instance(controller), PARAMETER_PREFIX);
             ViewModelBindProxy.triggerViewBind(controller);
         }
+
+        // 注册子窗口
         this.registerChild(child);
         controller.setInit(true);
         return (T) controller;
+    }
+
+    public int getIndex() {
+        Integer index = CHILD_VIEW_INDEX_MAP.apply(this.view);
+        return index == null ? 0 : index;
+    }
+
+    public <V extends Parent, T extends AbstractController<V>> T getController(Parent component) {
+        return ((FXMLLoader) component.getProperties().get(component)).getController();
     }
 
     public void addParameters(String key, Object value) {
@@ -121,11 +164,12 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
         this.context.put(key, value);
     }
 
-    public void addChild(String name, Node view) {
-        List<Node> nodes = this.children.computeIfAbsent(name, k -> new ArrayList<>());
+    public void addChild(String name, Parent view) {
+        List<Parent> nodes = this.children.computeIfAbsent(name, k -> new ArrayList<>());
         synchronized (nodes) {
             if (nodes.stream().noneMatch(e -> e == view)) {
                 nodes.add(view);
+                view.getProperties().put(CHILD_VIEW_INDEX_KEY.apply(view.getId()), nodes.size() - 1);
             }
         }
     }
@@ -134,8 +178,8 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
         this.removeChild(name, 0);
     }
 
-    public void removeChild(String name, Node view) {
-        List<Node> nodes = this.children.get(name);
+    public void removeChild(String name, Parent view) {
+        List<Parent> nodes = this.children.get(name);
         if (nodes != null) {
             synchronized (nodes) {
                 nodes.removeIf(e -> e == view);
@@ -144,52 +188,48 @@ public abstract class AbstractController extends AbstractViewModelBindCapableCon
     }
 
     public void removeChild(String name, int index) {
-        List<Node> nodes = this.children.get(name);
+        List<Parent> nodes = this.children.get(name);
         if (nodes != null) {
             synchronized (nodes) {
-                if (index < nodes.size()) {
-                    nodes.remove(index);
-                }
+                nodes.removeIf(v -> CHILD_VIEW_INDEX_MAP.apply(v) == index);
             }
         }
     }
 
-    public <T extends Node> T getChild(String name) {
+    public <V extends Parent> V getChild(String name) {
         return this.getChild(name, 0);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Node> T getChild(String name, int index) {
-        List<Node> nodes = this.children.get(name);
+    public <V extends Parent> V getChild(String name, int index) {
+        List<Parent> nodes = this.children.get(name);
         if (nodes != null) {
             synchronized (nodes) {
-                if (index < nodes.size()) {
-                    return (T) nodes.get(index);
-                }
+                return (V) nodes.stream().filter(v -> CHILD_VIEW_INDEX_MAP.apply(v) == index).findAny().orElse(null);
             }
         }
         return null;
     }
 
-    public <T> T getChildController(String name) {
+    public <V extends Parent, T extends AbstractController<V>> T getChildController(Class<T> clazz) {
+        return this.getChildController(clazz, 0);
+    }
+
+    public <V extends Parent, T extends AbstractController<V>> T getChildController(Class<T> clazz, int index) {
+        FController fController = AnnotationUtil.findAnnotation(clazz, FController.class);
+        return this.getChildController(fController.value(), index);
+    }
+
+    public <V extends Parent, T extends AbstractController<V>> T getChildController(String name) {
         return this.getChildController(name, 0);
     }
 
-    public <T> T getChildController(String name, int index) {
-        return this.getChildController(name, null, index);
-    }
-
-    public <T> T getChildController(String name, Class<T> clazz) {
-        return this.getChildController(name, clazz, 0);
-    }
-
-    public <T> T getChildController(String name, Class<T> clazz, int index) {
-        Node child = this.getChild(name, index);
+    public <V extends Parent, T extends AbstractController<V>> T getChildController(String name, int index) {
+        Parent child = this.getChild(name, index);
         if (child == null) {
             return null;
         }
-        FXMLLoader fxmlLoader = (FXMLLoader) child.getProperties().get(child);
-        return fxmlLoader.getController();
+        return this.getController(child);
     }
 
     public void hide() {
