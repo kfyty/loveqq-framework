@@ -39,7 +39,9 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
     private final Map<String, Queue<Pair<Node, Object>>> viewController = new ConcurrentHashMap<>();
 
     public void addController(String beanName, Node view, Object controller) {
-        this.viewController.computeIfAbsent(beanName, k -> new ConcurrentLinkedQueue<>()).add(new Pair<>(view, controller));
+        if (!this.applicationContext.getBeanDefinition(beanName).isSingleton()) {
+            this.viewController.computeIfAbsent(beanName, k -> new ConcurrentLinkedQueue<>()).add(new Pair<>(view, controller));
+        }
     }
 
     @Override

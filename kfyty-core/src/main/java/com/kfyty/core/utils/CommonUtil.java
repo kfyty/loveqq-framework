@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -198,7 +199,7 @@ public abstract class CommonUtil {
         int startIndex = source.indexOf(start);
         int endIndex = source.indexOf(end, startIndex);
         while (startIndex != -1 && endIndex != -1) {
-            substring.accept(source.substring(startIndex, endIndex));
+            substring.accept(source.substring(startIndex + start.length(), endIndex));
             startIndex = source.indexOf(start, endIndex);
             endIndex = source.indexOf(end, startIndex);
         }
@@ -322,6 +323,25 @@ public abstract class CommonUtil {
             return target.substring(prefix.length());
         }
         return target;
+    }
+
+    public static Map<String, String> resolveURLParameters(String url) {
+        return resolveURLParameters(url, EMPTY_STRING);
+    }
+
+    public static Map<String, String> resolveURLParameters(String url, String prefix) {
+        if (empty(url)) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> query = new HashMap<>();
+        String parameter = url.contains("?") ? url.substring(url.indexOf('?') + 1) : url;
+        String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
+        List<String> split = split(parameter, "&");
+        for (String params : split) {
+            String[] paramPair = params.split("=");
+            query.put(paramPrefix + paramPair[0], paramPair[1]);
+        }
+        return query;
     }
 
     public static void sleep(long time) {

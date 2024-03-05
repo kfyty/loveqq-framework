@@ -52,6 +52,9 @@ public class Instance {
         if (this.sourceField != null) {
             return ActualGeneric.from(this.sourceField, targetField);
         }
+        if (this.sourceGeneric == null) {
+            return ActualGeneric.from(targetField);
+        }
         return ActualGeneric.from(this.sourceGeneric.getResolveType(), targetField);
     }
 }

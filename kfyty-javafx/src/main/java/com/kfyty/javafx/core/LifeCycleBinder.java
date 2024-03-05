@@ -65,16 +65,19 @@ public interface LifeCycleBinder {
     default Stage registerChild(Stage child) {
         Parent component = child.getScene().getRoot();
         Object controller = ((FXMLLoader) component.getProperties().get(component)).getController();
-        if (this instanceof AbstractController parent) {
+        if (this instanceof AbstractController<?> parent) {
             parent.addChild(component.getId(), component);
+            if (controller instanceof AbstractController<?> childController) {
+                childController.setParent(parent);
+            }
         }
         EventHandler<WindowEvent> childEventHandler = child.getOnCloseRequest();
         child.setOnCloseRequest(event -> {
             childEventHandler.handle(event);
-            if (this instanceof LifeCycleController parent && controller instanceof AbstractController childController) {
+            if (this instanceof LifeCycleController parent && controller instanceof AbstractController<?> childController) {
                 parent.onChildClose(component.getId(), component, childController);
             }
-            if (this instanceof AbstractController parent) {
+            if (this instanceof AbstractController<?> parent) {
                 parent.removeChild(component.getId(), component);
             }
         });

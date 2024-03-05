@@ -107,6 +107,11 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
         }
     }
 
+    /**
+     * 触发一次控制器中模型到视图的绑定
+     *
+     * @param controller 控制器
+     */
     public static void triggerViewBind(Object controller) {
         Map<String, Field> fieldMap = ReflectUtil.getFieldMap(controller.getClass());
         for (Field value : fieldMap.values()) {
