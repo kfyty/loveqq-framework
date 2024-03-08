@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -48,6 +49,7 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
     /**
      * 是否已注册 BeanDefinition
      */
+    @Setter
     private boolean registered;
 
     public ConditionalBeanDefinition(BeanDefinition beanDefinition) {
@@ -60,10 +62,6 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
         this.parent = parent;
         this.conditionDeclares = new ArrayList<>();
         this.resolveConditionDeclare(beanDefinition);
-    }
-
-    public void setRegistered(boolean registered) {
-        this.registered = registered;
     }
 
     private void resolveConditionDeclare(BeanDefinition beanDefinition) {

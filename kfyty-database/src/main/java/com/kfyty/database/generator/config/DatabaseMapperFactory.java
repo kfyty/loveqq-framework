@@ -1,9 +1,8 @@
 package com.kfyty.database.generator.config;
 
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
-import lombok.NoArgsConstructor;
+import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 描述:
@@ -12,14 +11,9 @@ import lombok.NoArgsConstructor;
  * @date 2021/6/12 12:41
  * @email kfyty725@hotmail.com
  */
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class DatabaseMapperFactory implements FactoryBean<Class<AbstractDatabaseMapper>> {
-    private Class<AbstractDatabaseMapper> databaseClass;
-
-    @Autowired
-    public DatabaseMapperFactory(Class<AbstractDatabaseMapper> databaseClass) {
-        this.databaseClass = databaseClass;
-    }
+    private final Class<AbstractDatabaseMapper> databaseClass;
 
     @Override
     public Class<?> getBeanType() {

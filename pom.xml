@@ -25,6 +25,7 @@
         <module>kfyty-boot-starter-quartz</module>
         <module>kfyty-boot-starter-xxl-job</module>
         <module>kfyty-boot-starter-uid-generator</module>
+        <module>kfyty-boot-starter-feign</module>
 		<module>kfyty-boot-starter-config-nacos</module>
     </modules>
 
