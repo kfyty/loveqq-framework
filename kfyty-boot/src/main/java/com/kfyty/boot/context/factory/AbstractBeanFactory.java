@@ -5,7 +5,6 @@ import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.DestroyBean;
 import com.kfyty.core.autoconfig.InitializingBean;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
@@ -18,7 +17,6 @@ import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
-import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -26,7 +24,6 @@ import com.kfyty.core.utils.ReflectUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -38,7 +35,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.kfyty.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
-import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 import static com.kfyty.core.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.unmodifiableMap;
@@ -106,16 +102,16 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void registerBeanDefinition(BeanDefinition beanDefinition, boolean resolveNested) {
+        // 注册 bean 定义
         this.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, true);
-        if (!resolveNested) {
+
+        // 如果不解析嵌套的，或者注册为了条件 bean 定义，则直接返回
+        if (!resolveNested || !this.containsBeanDefinition(beanDefinition.getBeanName())) {
             return;
         }
-        for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
-            Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
-            if (beanAnnotation != null) {
-                this.registerBeanDefinition(genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
-            }
-        }
+
+        // 解析嵌套的 bean 定义
+        this.resolveRegisterNestedBeanDefinition(beanDefinition);
     }
 
     @Override

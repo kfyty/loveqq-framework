@@ -103,8 +103,9 @@ public class ConditionContext {
                     if (this.shouldSkip(nestedCondition)) {
                         this.skippedCondition.add(conditionBeanName);                               // 依赖条件不成立，该条件也不成立
                     } else {                                                                        // 更新 bean 定义缓存，用于二次条件校验
-                        this.beanFactory.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition.getBeanDefinition());
                         nestedCondition.setRegistered(true);
+                        this.beanFactory.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition.getBeanDefinition());
+                        this.beanFactory.resolveRegisterNestedBeanDefinition(nestedCondition.getBeanDefinition());
                     }
                 }
 

@@ -3,6 +3,7 @@ package com.kfyty.boot.data.jdbc.autoconfig;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
+import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.core.autoconfig.annotation.Import;
@@ -24,45 +25,61 @@ import javax.sql.DataSource;
 @Import(config = DataSourceProperties.class)
 @ConditionalOnBean(DataSourceProperties.class)
 public class DataSourceAutoConfiguration {
-    @Autowired
-    private DataSourceProperties dataSourceProperties;
 
-    @Bean(destroyMethod = "close")
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.alibaba.druid.pool.DruidDataSource")
-    @ConfigurationProperties("k.datasource.druid")
-    public DataSource druidDataSource() {
-        DruidDataSource druidDataSource = new DruidDataSource();
-        druidDataSource.setUsername(this.dataSourceProperties.getUsername());
-        druidDataSource.setPassword(this.dataSourceProperties.getPassword());
-        druidDataSource.setUrl(this.dataSourceProperties.getUrl());
-        druidDataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
-        return druidDataSource;
-    }
-
-    @Bean(destroyMethod = "close")
-    @ConditionalOnMissingBean
+    @Component
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.zaxxer.hikari.HikariDataSource")
-    @ConfigurationProperties("k.datasource.hikari")
-    public DataSource hikariDataSource() {
-        HikariDataSource hikariDataSource = new HikariDataSource();
-        hikariDataSource.setUsername(this.dataSourceProperties.getUsername());
-        hikariDataSource.setPassword(this.dataSourceProperties.getPassword());
-        hikariDataSource.setJdbcUrl(this.dataSourceProperties.getUrl());
-        hikariDataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
-        return hikariDataSource;
+    public static class HikariDataSourceAutoConfig {
+        @Autowired
+        private DataSourceProperties dataSourceProperties;
+
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("k.datasource.hikari")
+        public DataSource hikariDataSource() {
+            HikariDataSource hikariDataSource = new HikariDataSource();
+            hikariDataSource.setUsername(this.dataSourceProperties.getUsername());
+            hikariDataSource.setPassword(this.dataSourceProperties.getPassword());
+            hikariDataSource.setJdbcUrl(this.dataSourceProperties.getUrl());
+            hikariDataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
+            return hikariDataSource;
+        }
     }
 
-    @Bean(destroyMethod = "close")
-    @ConditionalOnMissingBean
+    @Component
+    @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.alibaba.druid.pool.DruidDataSource")
+    public static class DruidDataSourceAutoConfig {
+        @Autowired
+        private DataSourceProperties dataSourceProperties;
+
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("k.datasource.druid")
+        public DataSource druidDataSource() {
+            DruidDataSource druidDataSource = new DruidDataSource();
+            druidDataSource.setUsername(this.dataSourceProperties.getUsername());
+            druidDataSource.setPassword(this.dataSourceProperties.getPassword());
+            druidDataSource.setUrl(this.dataSourceProperties.getUrl());
+            druidDataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
+            return druidDataSource;
+        }
+    }
+
+    @Component
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "org.apache.tomcat.jdbc.pool.DataSource")
-    @ConfigurationProperties("k.datasource.tomcat")
-    public DataSource tomcatJdbcPoolDataSource() {
-        org.apache.tomcat.jdbc.pool.DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
-        dataSource.setUsername(this.dataSourceProperties.getUsername());
-        dataSource.setPassword(this.dataSourceProperties.getPassword());
-        dataSource.setUrl(this.dataSourceProperties.getUrl());
-        dataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
-        return dataSource;
+    public static class TomcatDataSourceAutoConfig {
+        @Autowired
+        private DataSourceProperties dataSourceProperties;
+
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("k.datasource.tomcat")
+        public DataSource tomcatJdbcPoolDataSource() {
+            org.apache.tomcat.jdbc.pool.DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
+            dataSource.setUsername(this.dataSourceProperties.getUsername());
+            dataSource.setPassword(this.dataSourceProperties.getPassword());
+            dataSource.setUrl(this.dataSourceProperties.getUrl());
+            dataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
+            return dataSource;
+        }
     }
 }

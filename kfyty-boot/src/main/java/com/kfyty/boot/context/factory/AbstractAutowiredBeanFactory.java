@@ -2,6 +2,7 @@ package com.kfyty.boot.context.factory;
 
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.ConditionalBeanDefinition;
@@ -10,14 +11,18 @@ import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.autoconfig.condition.ConditionContext;
 import com.kfyty.core.autoconfig.condition.annotation.Conditional;
 import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import static com.kfyty.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
+import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.unmodifiableMap;
@@ -70,6 +75,16 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     }
 
     @Override
+    public void resolveRegisterNestedBeanDefinition(BeanDefinition beanDefinition) {
+        for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
+            Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
+            if (beanAnnotation != null) {
+                this.registerBeanDefinition(genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
+            }
+        }
+    }
+
+    @Override
     public void registerConditionBeanDefinition(String name, BeanDefinition beanDefinition) {
         if (beanDefinition instanceof MethodBeanDefinition) {
             ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
@@ -110,11 +125,16 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     @Override
     public void resolveConditionBeanDefinitionRegistry() {
         Map<String, ConditionalBeanDefinition> conditionalBeanDefinition = CommonUtil.sort(this.conditionBeanMap, (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
-        for (ConditionalBeanDefinition value : conditionalBeanDefinition.values()) {
-            if (!this.conditionContext.shouldSkip(value) && !value.isRegistered()) {
+        Map<String, ConditionalBeanDefinition> currentConditionalMap = new LinkedHashMap<>(conditionalBeanDefinition);
+        for (ConditionalBeanDefinition value : currentConditionalMap.values()) {
+            if (!value.isRegistered() && !this.conditionContext.shouldSkip(value)) {
                 value.setRegistered(true);
                 this.registerBeanDefinition(value.getBeanName(), value.getBeanDefinition());
+                this.resolveRegisterNestedBeanDefinition(value.getBeanDefinition());
             }
+        }
+        if (currentConditionalMap.size() != conditionalBeanDefinition.size()) {
+            this.resolveConditionBeanDefinitionRegistry();
         }
     }
 

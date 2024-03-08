@@ -1,13 +1,12 @@
 package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.LazyProxyInterceptorProxy;
-import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
-import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 描述: 为延迟初始化 bean 创建代理
@@ -16,19 +15,21 @@ import lombok.NoArgsConstructor;
  * @date 2021/7/11 12:43
  * @email kfyty725@hotmail.com
  */
-@NoArgsConstructor
-public class LazyProxyFactoryBean<T> implements FactoryBean<T> {
+@RequiredArgsConstructor
+public class LazyProxyFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware {
     /**
      * 延迟初始化代理目标 bean 定义
      */
-    private BeanDefinition lazedTarget;
+    private final BeanDefinition lazedTarget;
 
-    @Autowired
+    /**
+     * bean 工厂
+     */
     private BeanFactory beanFactory;
 
-    @Autowired
-    public LazyProxyFactoryBean(BeanDefinition lazedTarget) {
-        this.lazedTarget = lazedTarget;
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 
     @Override

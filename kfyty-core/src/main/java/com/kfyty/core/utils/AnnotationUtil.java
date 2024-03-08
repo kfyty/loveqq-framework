@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -44,7 +45,8 @@ public abstract class AnnotationUtil {
     }
 
     public static boolean isMetaAnnotation(Class<?> clazz) {
-        return isAnnotation(clazz) && "java.lang.annotation".equals(ofNullable(clazz.getPackage()).map(Package::getName).orElse(null));
+        String packageName = ofNullable(clazz.getPackage()).map(Package::getName).orElse(null);
+        return isAnnotation(clazz) && (Objects.equals(packageName, "java.lang.annotation") || Objects.equals(packageName, "kotlin.annotation") || Objects.equals(clazz.getName(), "kotlin.Metadata"));
     }
 
     public static Annotation[] flatRepeatableAnnotation(Annotation[] annotations) {

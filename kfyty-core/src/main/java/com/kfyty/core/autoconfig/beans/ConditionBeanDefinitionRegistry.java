@@ -17,6 +17,8 @@ public interface ConditionBeanDefinitionRegistry extends BeanDefinitionRegistry 
 
     void registerConditionBeanDefinition(BeanDefinition beanDefinition);
 
+    void resolveRegisterNestedBeanDefinition(BeanDefinition beanDefinition);
+
     void registerConditionBeanDefinition(String name, BeanDefinition beanDefinition);
 
     void registerConditionBeanDefinition(String name, ConditionalBeanDefinition conditionalBeanDefinition);

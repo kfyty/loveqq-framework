@@ -3,6 +3,7 @@ package com.kfyty.boot.autoconfig.support;
 import com.kfyty.boot.autoconfig.factory.LookupBeanFactoryBean;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
+import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Lookup;
@@ -40,6 +41,7 @@ public class LookupBeanDefinitionImport implements ConfigurableApplicationContex
 
     @Override
     public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
-        return genericBeanDefinition(LookupBeanFactoryBean.class).setScope(ScopeUtil.resolveScope(clazz).value()).addConstructorArgs(Class.class, clazz).getBeanDefinition();
+        Scope scope = ScopeUtil.resolveScope(clazz);
+        return genericBeanDefinition(LookupBeanFactoryBean.class).setScope(scope.value()).setScopeProxy(scope.scopeProxy()).addConstructorArgs(Class.class, clazz).getBeanDefinition();
     }
 }

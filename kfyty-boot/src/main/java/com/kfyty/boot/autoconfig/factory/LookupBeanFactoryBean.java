@@ -2,11 +2,10 @@ package com.kfyty.boot.autoconfig.factory;
 
 import com.kfyty.boot.proxy.LookupMethodInterceptorProxy;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 描述: 导入存在 Lookup 注解的方法的 bean 的 FactoryBean
@@ -15,15 +14,17 @@ import lombok.NoArgsConstructor;
  * @date 2021/7/11 12:43
  * @email kfyty725@hotmail.com
  */
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class LookupBeanFactoryBean<T> implements ApplicationContextAware, FactoryBean<T> {
-    private Class<?> beanType;
-    private ApplicationContext applicationContext;
+    /**
+     * bean type
+     */
+    private final Class<?> beanType;
 
-    @Autowired
-    public LookupBeanFactoryBean(Class<?> beanType) {
-        this.beanType = beanType;
-    }
+    /**
+     * 应用上下文
+     */
+    private ApplicationContext applicationContext;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
