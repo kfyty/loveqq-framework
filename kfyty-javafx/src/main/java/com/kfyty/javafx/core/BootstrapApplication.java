@@ -10,6 +10,7 @@ import com.kfyty.javafx.core.annotation.FController;
 import com.kfyty.javafx.core.event.PrimaryStageLoadedEvent;
 import com.kfyty.javafx.core.factory.FXMLComponentFactoryBean;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -32,6 +33,11 @@ public class BootstrapApplication extends AbstractApplication implements Command
     private static ApplicationContext applicationContext;
 
     /**
+     * {@link HostServices}
+     */
+    private static HostServices hostServices;
+
+    /**
      * javafx 应用是否已启动
      */
     private final CountDownLatch startedLatch = new CountDownLatch(1);
@@ -43,6 +49,7 @@ public class BootstrapApplication extends AbstractApplication implements Command
 
     @Override
     public void start(Stage primaryStage) {
+        BootstrapApplication.hostServices = this.getHostServices();
         Collection<BeanDefinition> beanDefinitions = applicationContext.getBeanDefinitionWithAnnotation(FController.class, true).values();
         for (BeanDefinition beanDefinition : beanDefinitions) {
             FController annotation = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), FController.class);
