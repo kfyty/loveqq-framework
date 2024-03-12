@@ -1,4 +1,5 @@
 com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.boot.feign.autoconfig.FeignProperties,\
     com.kfyty.boot.feign.autoconfig.FeignAutoConfiguration,\
     com.kfyty.boot.feign.autoconfig.FeignProxyBeanDefinitionImport,\
     com.kfyty.boot.feign.autoconfig.FeignAutoConfiguration$OkHttpClientAutoConfig,\

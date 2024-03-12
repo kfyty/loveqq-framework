@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
+        <kfyty.version>1.0-SNAPSHOT</kfyty.version>
         <feign.version>13.2</feign.version>
     </properties>
 
@@ -21,12 +21,25 @@
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-core</artifactId>
-            <version>${kfyty.utils.version}</version>
+            <version>${kfyty.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>kfyty-cloud-bootstrap</artifactId>
+            <version>${kfyty.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
+            <version>${feign.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-ribbon</artifactId>
             <version>${feign.version}</version>
         </dependency>
 
