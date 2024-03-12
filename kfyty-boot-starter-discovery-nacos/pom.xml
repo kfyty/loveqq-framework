@@ -9,8 +9,8 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kfyty-boot-starter-config-nacos</artifactId>
-    <description>nacos 配置服务</description>
+    <artifactId>kfyty-boot-starter-discovery-nacos</artifactId>
+    <description>nacos 服务发现</description>
 
     <properties>
         <kfyty.version>1.0-SNAPSHOT</kfyty.version>
@@ -28,6 +28,7 @@
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-cloud-bootstrap</artifactId>
             <version>${kfyty.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

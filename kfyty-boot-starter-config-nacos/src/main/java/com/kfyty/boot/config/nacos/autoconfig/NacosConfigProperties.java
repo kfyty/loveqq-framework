@@ -5,7 +5,7 @@ import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import lombok.Data;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,12 +26,13 @@ public class NacosConfigProperties {
 
     private String fileExtension;
 
-    private List<Extension> extensionConfigs = Collections.emptyList();
+    private List<Extension> extensionConfigs = new LinkedList<>();
 
     @Data
     public static class Extension {
         private String group;
         private String dataId;
         private Boolean refresh;
+        private Long timeout = 10_000L;
     }
 }
