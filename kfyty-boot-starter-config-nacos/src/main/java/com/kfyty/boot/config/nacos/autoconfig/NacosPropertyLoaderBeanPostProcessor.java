@@ -78,7 +78,7 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
     protected void loadNacosPropertyConfig(PropertyContext propertyContext) {
         try {
             for (NacosConfigProperties.Extension extensionConfig : this.configProperties.getExtensionConfigs()) {
-                String config = this.configService.getConfig(extensionConfig.getDataId(), extensionConfig.getGroup(), 1000 * 10);
+                String config = this.configService.getConfig(extensionConfig.getDataId(), extensionConfig.getGroup(), extensionConfig.getTimeout());
 
                 this.loadConfig(config);
 
