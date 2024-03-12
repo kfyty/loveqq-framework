@@ -1,11 +1,14 @@
 package com.kfyty.cloud.discovery.nacos.autoconfig;
 
 import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.kfyty.cloud.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnClass;
 
 import java.util.Properties;
 
@@ -17,13 +20,18 @@ import java.util.Properties;
  * @email kfyty725@hotmail.com
  */
 @Configuration
+@ConditionalOnBean(NacosDiscoveryProperties.class)
 public class NacosDiscoveryAutoConfiguration {
 
     @Bean(destroyMethod = "shutDown")
     public NamingService nacosDiscoveryService(NacosDiscoveryProperties discoveryProperties) throws NacosException {
         Properties properties = new Properties();
-        properties.put("serverAddr", discoveryProperties.getServerAddr());
-        properties.put("namespace", discoveryProperties.getNamespace());
+        properties.put(PropertyKeyConst.SERVER_ADDR, discoveryProperties.getServerAddr());
+        properties.put(PropertyKeyConst.NAMESPACE, discoveryProperties.getNamespace());
+        if (discoveryProperties.getUsername() != null && discoveryProperties.getPassword() != null) {
+            properties.put(PropertyKeyConst.USERNAME, discoveryProperties.getUsername());
+            properties.put(PropertyKeyConst.PASSWORD, discoveryProperties.getPassword());
+        }
         return NacosFactory.createNamingService(properties);
     }
 
@@ -33,6 +41,7 @@ public class NacosDiscoveryAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnClass("com.kfyty.cloud.bootstrap.event.ServerEvent")
     public NacosNamingEventListener serviceChangedEventListener() {
         return new NacosNamingEventListener();
     }

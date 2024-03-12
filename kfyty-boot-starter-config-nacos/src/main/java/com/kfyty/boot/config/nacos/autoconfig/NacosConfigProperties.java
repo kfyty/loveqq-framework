@@ -20,6 +20,10 @@ import java.util.List;
 @ConfigurationProperties("k.nacos.config")
 @ConditionalOnProperty(value = "k.nacos.config.serverAddr", matchIfNonNull = true)
 public class NacosConfigProperties {
+    private String username;
+
+    private String password;
+
     private String serverAddr;
 
     private String namespace;

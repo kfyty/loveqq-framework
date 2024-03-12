@@ -34,7 +34,7 @@ public class NacosDiscoveryRegisterService implements ApplicationListener<Contex
     @Autowired
     private PropertyContext propertyContext;
 
-    @Autowired
+    @Autowired(required = false)
     private NacosNamingEventListener nacosNamingEventListener;
 
     public void registerService() {
@@ -45,7 +45,9 @@ public class NacosDiscoveryRegisterService implements ApplicationListener<Contex
             String serverPort = this.propertyContext.getProperty(SERVER_PORT_KEY);
             String serverIp = CommonUtil.empty(this.discoveryProperties.getIp()) ? NetUtils.localIP() : this.discoveryProperties.getIp();
             this.namingService.registerInstance(application, groupName, serverIp, Integer.parseInt(serverPort), clusterName);
-            this.namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
+            if (this.nacosNamingEventListener != null) {
+                this.namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
+            }
         } catch (NacosException e) {
             throw new SupportException("Register service discovery failed", e);
         }

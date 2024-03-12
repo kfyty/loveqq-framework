@@ -1,6 +1,7 @@
 package com.kfyty.boot.config.nacos.autoconfig;
 
 import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
@@ -26,9 +27,13 @@ public class NacosConfigAutoConfiguration {
     @Bean(destroyMethod = "shutDown")
     public ConfigService nacosConfigService(NacosConfigProperties configProperties) throws NacosException {
         Properties properties = new Properties();
-        properties.put("serverAddr", configProperties.getServerAddr());
-        properties.put("namespace", configProperties.getNamespace());
+        properties.put(PropertyKeyConst.SERVER_ADDR, configProperties.getServerAddr());
+        properties.put(PropertyKeyConst.NAMESPACE, configProperties.getNamespace());
         properties.put("fileExtension", configProperties.getFileExtension());
+        if (configProperties.getUsername() != null && configProperties.getPassword() != null) {
+            properties.put(PropertyKeyConst.USERNAME, configProperties.getUsername());
+            properties.put(PropertyKeyConst.PASSWORD, configProperties.getPassword());
+        }
         return NacosFactory.createConfigService(properties);
     }
 

@@ -1,6 +1,8 @@
 package com.kfyty.boot.feign.autoconfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kfyty.boot.feign.autoconfig.factory.LoadBalancerClientFactory;
+import com.kfyty.boot.feign.autoconfig.listener.ServerListener;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -8,6 +10,11 @@ import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.ReflectUtil;
+import com.netflix.loadbalancer.IRule;
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
 import feign.Client;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -15,6 +22,7 @@ import feign.httpclient.ApacheHttpClient;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
+import feign.ribbon.LBClientFactory;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -29,6 +37,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class FeignAutoConfiguration {
     @Autowired(required = false)
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private FeignProperties feignProperties;
 
     @Bean
     @ConditionalOnMissingBean
@@ -52,6 +63,29 @@ public class FeignAutoConfiguration {
     @ConditionalOnMissingBean
     public Client defaultClient() {
         return new Client.Default(null, null);
+    }
+
+    @Bean
+    @ConditionalOnClass("com.kfyty.cloud.bootstrap.event.ServerEvent")
+    public ServerListener serverListener() {
+        return new ServerListener();
+    }
+
+    @Bean
+    @ConditionalOnClass("com.kfyty.cloud.bootstrap.event.ServerEvent")
+    public LBClientFactory loadBalancerClientFactory() {
+        return new LoadBalancerClientFactory();
+    }
+
+    @Bean(destroyMethod = "shutdown")
+    @ConditionalOnClass("com.kfyty.cloud.bootstrap.event.ServerEvent")
+    public ZoneAwareLoadBalancer<Server> zoneAwareLoadBalancer() {
+        ZoneAwareLoadBalancer<Server> loadBalancer = new ZoneAwareLoadBalancer<>();
+        if (CommonUtil.notEmpty(this.feignProperties.getRule())) {
+            IRule rule = (IRule) ReflectUtil.newInstance(ReflectUtil.load(this.feignProperties.getRule()));
+            rule.setLoadBalancer(loadBalancer);
+        }
+        return loadBalancer;
     }
 
     @Order

@@ -17,6 +17,8 @@ import lombok.Data;
 @ConfigurationProperties("k.nacos.discovery")
 @ConditionalOnProperty(value = "k.nacos.discovery.serverAddr", matchIfNonNull = true)
 public class NacosDiscoveryProperties {
+    private String username;
+    private String password;
     private String serverAddr;
     private String namespace;
     private String ip;

@@ -173,7 +173,12 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isPresent(String className) {
-        return load(className, false, false) != null;
+        try {
+            Class.forName(className, false, ClassLoaderUtil.classLoader(ReflectUtil.class));
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public static boolean isAbstract(Class<?> clazz) {

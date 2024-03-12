@@ -1,7 +1,7 @@
 package com.kfyty.boot.feign.autoconfig;
 
 import com.kfyty.boot.feign.autoconfig.annotation.FeignClient;
-import com.kfyty.boot.feign.autoconfig.factory.FeignFactoryBean;
+import com.kfyty.boot.feign.autoconfig.factory.RibbonFeignFactoryBean;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -31,7 +31,7 @@ public class FeignProxyBeanDefinitionImport implements ImportBeanDefinition {
     @Override
     public BeanDefinition buildBeanDefinition(ApplicationContext applicationContext, Class<?> clazz) {
         Scope scope = ScopeUtil.resolveScope(clazz);
-        return BeanDefinitionBuilder.genericBeanDefinition(FeignFactoryBean.class)
+        return BeanDefinitionBuilder.genericBeanDefinition(RibbonFeignFactoryBean.class)
                 .setScope(scope.value())
                 .setScopeProxy(scope.scopeProxy())
                 .addConstructorArgs(Class.class, clazz)

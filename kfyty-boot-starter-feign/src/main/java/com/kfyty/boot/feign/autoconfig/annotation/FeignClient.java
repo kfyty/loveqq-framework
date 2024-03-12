@@ -20,8 +20,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FeignClient {
     /**
-     * url 基础路径
-     * @return url
+     * 注册中心服务名称
+     *
+     * @return service name
      */
-    String url();
+    String value() default "";
+
+    /**
+     * 使用注册中心时，为基础路径
+     * 为使用注册中心时，为 ip+port+基础路径
+     *
+     * @return host
+     */
+    String url() default "";
 }
