@@ -7,11 +7,16 @@ import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PropertiesUtil;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Properties;
 
 import static com.kfyty.core.utils.ClassLoaderUtil.classLoader;
+import static com.kfyty.core.utils.PropertiesUtil.IMPORT_KEY;
 import static com.kfyty.core.utils.PropertiesUtil.isYaml;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -51,12 +56,12 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
      *
      * @param config 配置
      */
-    public void loadConfig(String config) {
+    public void loadConfig(String config, String group, boolean isRefresh) {
         PropertiesUtil.load(
-                isYaml(this.configProperties.getFileExtension()),
+                isYaml('.' + this.configProperties.getFileExtension()),
                 new ByteArrayInputStream(config.getBytes(UTF_8)),
                 classLoader(this.getClass()),
-                null,
+                p -> this.loadIncludePropertyConfig(p, group, isRefresh),
                 (p, c) -> p.forEach((k, v) -> this.propertyContext.setProperty(k.toString(), v.toString()))
         );
     }
@@ -76,18 +81,36 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
      * @param propertyContext 属性配置上下文
      */
     protected void loadNacosPropertyConfig(PropertyContext propertyContext) {
+        for (NacosConfigProperties.Extension extensionConfig : this.configProperties.getExtensionConfigs()) {
+            boolean isRefresh = extensionConfig.getRefresh() == null || extensionConfig.getRefresh();
+            this.loadNacosPropertyConfig(extensionConfig.getDataId(), extensionConfig.getGroup(), extensionConfig.getTimeout(), isRefresh);
+        }
+    }
+
+    /**
+     * 加载 nacos 配置
+     */
+    protected void loadNacosPropertyConfig(String dataId, String group, long timeout, boolean isRefresh) {
         try {
-            for (NacosConfigProperties.Extension extensionConfig : this.configProperties.getExtensionConfigs()) {
-                String config = this.configService.getConfig(extensionConfig.getDataId(), extensionConfig.getGroup(), extensionConfig.getTimeout());
+            String config = this.configService.getConfig(dataId, group, timeout);
 
-                this.loadConfig(config);
+            this.loadConfig(config, group, isRefresh);
 
-                if (extensionConfig.getRefresh() == null || extensionConfig.getRefresh()) {
-                    this.configService.addListener(extensionConfig.getDataId(), extensionConfig.getGroup(), this.configListener);
-                }
+            if (isRefresh) {
+                this.configService.addListener(dataId, group, this.configListener);
             }
         } catch (NacosException e) {
             throw new SupportException("load nacos config failed", e);
+        }
+    }
+
+    /**
+     * 加载导入的嵌套的配置
+     */
+    protected void loadIncludePropertyConfig(Properties config, String group, boolean isRefresh) {
+        Collection<String> imports = config.containsKey(IMPORT_KEY) ? CommonUtil.split(config.getProperty(IMPORT_KEY), ",", true) : Collections.emptyList();
+        for (String importDataId : imports) {
+            this.loadNacosPropertyConfig(importDataId, group, 10_000, isRefresh);
         }
     }
 }

@@ -49,7 +49,7 @@ public class BootstrapApplication extends AbstractApplication implements Command
 
     @Override
     public void start(Stage primaryStage) {
-        BootstrapApplication.hostServices = this.getHostServices();
+        BootstrapApplication.hostServices = super.getHostServices();
         Collection<BeanDefinition> beanDefinitions = applicationContext.getBeanDefinitionWithAnnotation(FController.class, true).values();
         for (BeanDefinition beanDefinition : beanDefinitions) {
             FController annotation = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), FController.class);
@@ -68,6 +68,10 @@ public class BootstrapApplication extends AbstractApplication implements Command
     public void run(String... args) throws Exception {
         new Thread(() -> Application.launch(this.getClass(), args)).start();
         this.startedLatch.await();
+    }
+
+    public static HostServices getHostService() {
+        return hostServices;
     }
 
     public static <T> T getBean(Class<T> clazz) {
