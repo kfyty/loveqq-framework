@@ -29,7 +29,6 @@ public class NacosConfigAutoConfiguration {
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, configProperties.getServerAddr());
         properties.put(PropertyKeyConst.NAMESPACE, configProperties.getNamespace());
-        properties.put("fileExtension", configProperties.getFileExtension());
         if (configProperties.getUsername() != null && configProperties.getPassword() != null) {
             properties.put(PropertyKeyConst.USERNAME, configProperties.getUsername());
             properties.put(PropertyKeyConst.PASSWORD, configProperties.getPassword());
