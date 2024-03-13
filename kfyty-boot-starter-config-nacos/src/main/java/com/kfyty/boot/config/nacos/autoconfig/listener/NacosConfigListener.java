@@ -5,7 +5,7 @@ import com.kfyty.boot.config.nacos.autoconfig.NacosPropertyLoaderBeanPostProcess
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
-import com.kfyty.core.event.ContextRefreshedEvent;
+import com.kfyty.core.event.PropertyConfigRefreshedEvent;
 import com.kfyty.core.exception.SupportException;
 
 /**
@@ -35,8 +35,8 @@ public class NacosConfigListener extends AbstractSharedListener implements Appli
     @Override
     public void innerReceive(String dataId, String group, String configInfo) {
         try {
-            this.nacosPropertyLoaderBeanPostProcessor.loadConfig(configInfo);
-            this.applicationContext.publishEvent(new ContextRefreshedEvent(this.applicationContext));
+            this.nacosPropertyLoaderBeanPostProcessor.loadConfig(configInfo, group, true);
+            this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
         } catch (Exception e) {
             throw new SupportException("refresh config failed", e);
         }
