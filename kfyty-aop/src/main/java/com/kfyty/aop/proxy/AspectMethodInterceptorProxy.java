@@ -5,8 +5,8 @@ import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
 import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
-import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.kfyty.aop.utils.AspectJAnnotationUtil.findAspectOrder;
+import static com.kfyty.core.proxy.MethodInterceptorChain.METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR;
+
 /**
  * 描述: 切面代理
  *
@@ -31,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Order(Order.HIGHEST_PRECEDENCE)
-public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint {
+public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint, InternalPriority {
     private final List<Advisor> advisors;
     private final List<AdviceInterceptorPointAdapter> adapters;
     private final Map<Method, List<MethodInterceptorChainPoint>> advisorPointCache;
@@ -96,6 +99,7 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
     }
 
     protected Comparator<MethodInterceptorChainPoint> getAdviceChainPointsComparator() {
-        return Comparator.comparing((MethodInterceptorChainPoint e) -> AspectJAnnotationUtil.findAspectOrder(e.getClass()));
+        return Comparator.comparing((MethodInterceptorChainPoint e) -> findAspectOrder(e.getClass()))
+                .thenComparing(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
     }
 }

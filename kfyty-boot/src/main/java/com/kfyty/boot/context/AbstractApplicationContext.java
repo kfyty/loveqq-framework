@@ -1,13 +1,14 @@
 package com.kfyty.boot.context;
 
 import com.kfyty.boot.context.factory.AbstractAutowiredBeanFactory;
+import com.kfyty.boot.processor.factory.internal.HardCodeBeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.annotation.Autowired;
+import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.event.ApplicationEvent;
@@ -137,10 +138,20 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void invokeBeanFactoryPostProcessor() {
+        HardCodeBeanFactoryPostProcessor hardCodeBeanFactoryPostProcessor = null;
         Map<String, BeanDefinition> beanFactoryPostProcessors = this.getBeanDefinitions(BeanFactoryPostProcessor.class);
         for (BeanDefinition beanDefinition : beanFactoryPostProcessors.values()) {
             BeanFactoryPostProcessor beanFactoryPostProcessor = (BeanFactoryPostProcessor) this.registerBean(beanDefinition);
+            if (beanFactoryPostProcessor.getClass() == HardCodeBeanFactoryPostProcessor.class) {
+                hardCodeBeanFactoryPostProcessor = (HardCodeBeanFactoryPostProcessor) beanFactoryPostProcessor;
+            }
+            if (beanFactoryPostProcessor instanceof HardCodeBeanFactoryPostProcessor) {
+                continue;
+            }
             beanFactoryPostProcessor.postProcessBeanFactory(this);
+        }
+        if (hardCodeBeanFactoryPostProcessor != null) {
+            hardCodeBeanFactoryPostProcessor.postProcessBeanFactory(this);
         }
         this.resolveConditionBeanDefinitionRegistry();
     }

@@ -2,11 +2,11 @@ package com.kfyty.boot.processor.factory;
 
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.core.utils.ReflectUtil.isAbstract;
@@ -20,7 +20,7 @@ import static com.kfyty.core.utils.ReflectUtil.isAbstract;
  */
 @Component
 @Order(Integer.MIN_VALUE)
-public class ScanBeanDefinitionBeanFactoryPreProcessor implements InstantiationAwareBeanPostProcessor, BeanFactoryPreProcessor {
+public class ScanBeanDefinitionBeanFactoryPreProcessor implements BeanFactoryPreProcessor, InternalPriority {
 
     @Override
     public void preProcessBeanFactory(BeanFactory beanFactory) {

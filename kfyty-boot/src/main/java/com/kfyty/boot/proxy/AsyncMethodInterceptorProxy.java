@@ -3,6 +3,7 @@ package com.kfyty.boot.proxy;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Async;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.exception.AsyncMethodException;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
@@ -21,6 +22,14 @@ import static com.kfyty.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THR
 
 /**
  * 描述: async 注解代理，优先级必须设为最高，否则若其他拦截代理使用了 ThreadLocal 会失效
+ * <p>
+ * 原则上代理顺序应如下：
+ * <p>
+ * {@link com.kfyty.boot.proxy.AsyncMethodInterceptorProxy}
+ * {@link com.kfyty.aop.proxy.AspectMethodInterceptorProxy}
+ * {@link com.kfyty.boot.proxy.ScopeProxyInterceptorProxy}
+ * <p>
+ * ... 其他代理
  *
  * @author kfyty725
  * @date 2021/6/26 11:38
@@ -28,7 +37,7 @@ import static com.kfyty.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THR
  */
 @Slf4j
 @Order(Integer.MIN_VALUE)
-public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint {
+public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint, InternalPriority {
     private final ApplicationContext context;
 
     public AsyncMethodInterceptorProxy(ApplicationContext context) {

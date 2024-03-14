@@ -3,6 +3,7 @@ package com.kfyty.boot.proxy;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
@@ -17,10 +18,8 @@ import lombok.RequiredArgsConstructor;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-@Order(ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER)
-public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint {
-    public static final int SCOPE_PROXY_ORDER = -1 << 15;
-
+@Order(Order.HIGHEST_PRECEDENCE)
+public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint, InternalPriority {
     private final BeanDefinition beanDefinition;
     private final BeanFactory beanFactory;
     private final ScopeProxyFactory scopeProxyFactory;

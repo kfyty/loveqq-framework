@@ -7,11 +7,20 @@ import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 
 import java.util.Map;
 
 /**
  * 描述: 导入自定义 bean 定义
+ * <p>
+ * {@link ImportBeanDefinitionBeanFactoryPostProcessor}
+ * <p>
+ * ... 其他
+ * <p>
+ * {@link ScopeProxyBeanFactoryPostProcessor}
+ * {@link LazyProxyBeanFactoryPostProcessor}
+ * {@link FactoryBeanBeanFactoryPostProcessor}
  *
  * @author kfyty
  * @date 2022/10/23 15:30
@@ -19,7 +28,7 @@ import java.util.Map;
  */
 @Component
 @Order(Integer.MIN_VALUE)
-public class ImportBeanDefinitionBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class ImportBeanDefinitionBeanFactoryPostProcessor implements BeanFactoryPostProcessor, InternalPriority {
 
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {

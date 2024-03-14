@@ -2,7 +2,6 @@ package com.kfyty.boot.processor.factory;
 
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.BootApplication;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.ComponentFilter;
@@ -12,12 +11,13 @@ import com.kfyty.core.autoconfig.annotation.Import;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.io.FactoriesLoader;
+import com.kfyty.core.support.AnnotationMetadata;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.support.AnnotationMetadata;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ import static com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription.
  */
 @Component
 @Order(Integer.MIN_VALUE)
-public class ConfigureBeanFactoryPreProcessor implements InstantiationAwareBeanPostProcessor, BeanFactoryPreProcessor {
+public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor, InternalPriority {
     protected Set<String> excludeQualifierAutoConfigNames;
 
     protected ConfigurableApplicationContext applicationContext;

@@ -38,9 +38,10 @@ public class BeanFactoryBootstrap implements Bootstrap {
         if (applicationContext.getPrimarySource() == BeanFactoryBootstrapApplication.class) {
             return;
         }
-        ApplicationContext bootstrapContext = new ApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class).refresh();
-        this.copyBeanFactory(bootstrapContext, applicationContext);
-        bootstrapContext.close();
+        try (ApplicationContext bootstrapContext = new ApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
+            bootstrapContext.refresh();
+            this.copyBeanFactory(bootstrapContext, applicationContext);
+        }
     }
 
     /**
