@@ -24,16 +24,11 @@ import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
  * @date 2021/6/13 17:30
  * @email kfyty725@hotmail.com
  */
-@Order(ConfigurationBeanInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
+@Order
 public class ConfigurationBeanInterceptorProxy implements MethodInterceptorChainPoint {
     /**
-     * 代理排序
-     */
-    public static final int BEAN_METHOD_PROXY_ORDER = ScopeProxyInterceptorProxy.SCOPE_PROXY_ORDER >> 1;
-
-    /**
      * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
-     * 因此需要设置线程上下文 bean name，是的解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
+     * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
      */
     public static final ThreadLocal<String> CURRENT_REQUIRED_BEAN_NAME = new ThreadLocal<>();
 
@@ -55,8 +50,8 @@ public class ConfigurationBeanInterceptorProxy implements MethodInterceptorChain
         }
 
         String requiredBeanName = getCurrentRequiredBeanName();
-        String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType())
-                ? FACTORY_BEAN_PREFIX : EMPTY_STRING) + BeanUtil.getBeanName(method, annotation);
+        String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING)
+                + BeanUtil.getBeanName(method, annotation);
 
         if (requiredBeanName != null && !requiredBeanName.equals(beanName)) {
             return chain.proceed(methodProxy);

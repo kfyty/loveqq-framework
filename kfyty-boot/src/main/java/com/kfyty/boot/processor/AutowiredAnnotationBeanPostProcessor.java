@@ -1,7 +1,6 @@
 package com.kfyty.boot.processor;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Configuration;
@@ -11,6 +10,7 @@ import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
@@ -28,7 +28,7 @@ import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 功能描述: Autowired 注解处理器
- * 必须实现 {@link InstantiationAwareBeanPostProcessor} 接口，以保证其最高的优先级
+ * 必须实现 {@link InternalPriority} 接口，以保证其最高的优先级
  *
  * @author kfyty725@hotmail.com
  * @date 2019/8/27 10:43
@@ -37,7 +37,7 @@ import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 @Slf4j
 @Order(Integer.MIN_VALUE)
 @Component(AutowiredCapableSupport.BEAN_NAME)
-public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextAware, InstantiationAwareBeanPostProcessor, AutowiredCapableSupport {
+public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextAware, AutowiredCapableSupport, InternalPriority {
     /**
      * 自动注入处理器
      */

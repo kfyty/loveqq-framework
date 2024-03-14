@@ -3,7 +3,6 @@ package com.kfyty.boot.proxy;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Lookup;
-import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.core.generic.ActualGeneric;
@@ -23,7 +22,6 @@ import java.lang.reflect.Method;
  * @date 2021/7/11 12:30
  * @email kfyty725@hotmail.com
  */
-@Order(ConfigurationBeanInterceptorProxy.BEAN_METHOD_PROXY_ORDER)
 public class LookupMethodInterceptorProxy implements MethodInterceptorChainPoint {
     private final AutowiredProcessor autowiredProcessor;
 

@@ -1,8 +1,8 @@
 package com.kfyty.boot.processor.factory;
 
+import com.kfyty.boot.processor.factory.internal.HardCodeBeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.event.ApplicationListener;
@@ -16,15 +16,14 @@ import java.util.Set;
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
 
 /**
- * 描述:
+ * 描述: {@link com.kfyty.core.autoconfig.beans.FactoryBean} 处理
  *
- * @author kfyty
+ * @author kfyty725
  * @date 2022/10/23 15:30
  * @email kfyty725@hotmail.com
  */
 @Component
-@Order(Integer.MAX_VALUE)
-public class FactoryBeanBeanFactoryPostProcessor implements BeanFactoryPostProcessor, ApplicationListener<ContextRefreshedEvent> {
+public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPostProcessor implements BeanFactoryPostProcessor, ApplicationListener<ContextRefreshedEvent> {
     protected volatile Set<String> postProcessed;
 
     @Override

@@ -35,7 +35,7 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Order(0)
+@Order
 public class ControllerExceptionAdviceInterceptorProxy implements MethodInterceptorChainPoint {
     /**
      * {@link ApplicationContext}
@@ -50,7 +50,7 @@ public class ControllerExceptionAdviceInterceptorProxy implements MethodIntercep
     /**
      * 异常处理器映射
      */
-    private Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap;
+    private volatile Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap;
 
     public ControllerExceptionAdviceInterceptorProxy(ApplicationContext context) {
         this.applicationContext = context;
@@ -82,16 +82,21 @@ public class ControllerExceptionAdviceInterceptorProxy implements MethodIntercep
         if (this.exceptionHandlerMap != null) {
             return;
         }
-        this.exceptionHandlerMap = new LinkedHashMap<>();
-        for (String adviceBeanName : this.applicationContext.getBeanDefinitionWithAnnotation(ControllerAdvice.class, true).keySet()) {
-            Object adviceBean = this.applicationContext.getBean(adviceBeanName);
-            for (Method method : ReflectUtil.getMethods(adviceBean.getClass())) {
-                ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, ExceptionHandler.class);
-                if (annotation != null) {
-                    Class<?>[] exceptionClasses = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : method.getParameterTypes();
-                    for (Class<?> exceptionClass : exceptionClasses) {
-                        if (Throwable.class.isAssignableFrom(exceptionClass)) {
-                            this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, new MethodParameter(adviceBean, method));
+        synchronized (this) {
+            if (this.exceptionHandlerMap != null) {
+                return;
+            }
+            this.exceptionHandlerMap = new LinkedHashMap<>();
+            for (String adviceBeanName : this.applicationContext.getBeanDefinitionWithAnnotation(ControllerAdvice.class, true).keySet()) {
+                Object adviceBean = this.applicationContext.getBean(adviceBeanName);
+                for (Method method : ReflectUtil.getMethods(adviceBean.getClass())) {
+                    ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, ExceptionHandler.class);
+                    if (annotation != null) {
+                        Class<?>[] exceptionClasses = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : method.getParameterTypes();
+                        for (Class<?> exceptionClass : exceptionClasses) {
+                            if (Throwable.class.isAssignableFrom(exceptionClass)) {
+                                this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, new MethodParameter(adviceBean, method));
+                            }
                         }
                     }
                 }

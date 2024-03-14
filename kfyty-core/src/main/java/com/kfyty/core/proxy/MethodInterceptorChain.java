@@ -1,5 +1,7 @@
 package com.kfyty.core.proxy;
 
+import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.utils.BeanUtil;
 
 import java.util.ArrayList;
@@ -15,6 +17,11 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public class MethodInterceptorChain extends MethodInvocationInterceptor {
+    public static final Comparator<MethodInterceptorChainPoint> METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR = Comparator
+            .comparing((MethodInterceptorChainPoint e) -> e instanceof InternalPriority ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
+            .thenComparing(BeanUtil::getBeanOrder)
+            .thenComparing(e -> e.getClass().getName());
+
     private static final ThreadLocal<MethodInterceptorChain> CURRENT_INTERCEPTOR_CHAIN = new ThreadLocal<>();
 
     private int currentChainIndex;
@@ -53,7 +60,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
     }
 
     public void sortInterceptorChain() {
-        this.sortInterceptorChain(Comparator.comparing(BeanUtil::getBeanOrder));
+        this.sortInterceptorChain(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
     }
 
     public void sortInterceptorChain(Comparator<MethodInterceptorChainPoint> comparator) {
@@ -80,7 +87,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
     }
 
     public Object proceed(MethodProxy methodProxy) throws Throwable {
-        if(++this.currentChainIndex == this.chainPoints.size()) {
+        if (++this.currentChainIndex == this.chainPoints.size()) {
             this.currentChainIndex = -1;
             return methodProxy.invoke();
         }

@@ -1,8 +1,8 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.support.Pair;
 
 import java.util.Comparator;
@@ -22,7 +22,7 @@ public interface BeanDefinition {
      * BeanDefinition 排序比较器
      */
     Comparator<BeanDefinition> BEAN_DEFINITION_COMPARATOR = Comparator
-            .comparing((BeanDefinition e) -> InstantiationAwareBeanPostProcessor.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
+            .comparing((BeanDefinition e) -> InternalPriority.class.isAssignableFrom(e.getBeanType()) ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
             .thenComparing(e -> getBeanOrder((BeanDefinition) e))
             .thenComparing(BeanDefinition::getBeanName);
 

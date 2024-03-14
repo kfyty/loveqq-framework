@@ -126,7 +126,7 @@ public class TomcatWebServer implements WebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         if (this.config.isVirtualThread() && TomcatConfig.VIRTUAL_THREAD_SUPPORTED) {
-            connector.getProtocolHandler().setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+            connector.getProtocolHandler().setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler").factory()));
         }
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
