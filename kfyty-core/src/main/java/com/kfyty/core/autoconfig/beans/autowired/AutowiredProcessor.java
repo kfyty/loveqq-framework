@@ -13,6 +13,7 @@ import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
@@ -47,16 +48,20 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 public class AutowiredProcessor {
+    /**
+     * 正在解析中的 bean name
+     */
     private final Set<String> resolving;
+
+    /**
+     * 应用上下文
+     */
+    @Getter
     private final ApplicationContext context;
 
     public AutowiredProcessor(ApplicationContext context) {
         this.context = context;
         this.resolving = new LinkedHashSet<>();
-    }
-
-    public ApplicationContext getContext() {
-        return this.context;
     }
 
     public void doAutowired(Object bean, Field field) {
@@ -72,12 +77,7 @@ public class AutowiredProcessor {
             return;
         }
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
-        String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), description.value());
-        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, actualGeneric, description);
-        Object targetBean = LaziedObject.class.isAssignableFrom(actualGeneric.getSourceType()) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
-        if (targetBean != null && isJdkProxy(targetBean) && field.getType().equals(getTargetClass(targetBean))) {
-            targetBean = AopUtil.getTarget(targetBean);
-        }
+        Object targetBean = this.doResolveBean(actualGeneric, description, field.getType());
         if (targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
             if (log.isDebugEnabled()) {
@@ -90,17 +90,34 @@ public class AutowiredProcessor {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
+            ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), parameter);
             AutowiredDescription paramDescription = ofNullable(AutowiredDescription.from(findAnnotation(parameter, Autowired.class))).orElse(description);
-            Object targetBean = this.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(bean.getClass(), parameter), paramDescription);
-            if (targetBean != null && isJdkProxy(targetBean) && parameter.getType().equals(getTargetClass(targetBean))) {
-                targetBean = AopUtil.getTarget(targetBean);
-            }
+            Object targetBean = this.doResolveBean(actualGeneric, paramDescription, parameter.getType());
             parameters[index++] = targetBean;
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if (log.isDebugEnabled()) {
             log.debug("autowired bean: {} -> {} !", parameters, bean);
         }
+    }
+
+    /**
+     * 解析 bean 依赖
+     * 仅解析自动装配的候选者
+     *
+     * @param actualGeneric 实际泛型
+     * @param description   自动注入描述
+     * @param requiredType  实际请求类型
+     * @return bean
+     */
+    public Object doResolveBean(ActualGeneric actualGeneric, AutowiredDescription description, Class<?> requiredType) {
+        String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), description == null ? null : description.value());
+        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, actualGeneric, description);
+        Object targetBean = LaziedObject.class.isAssignableFrom(actualGeneric.getSourceType()) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
+        if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {
+            targetBean = AopUtil.getTarget(targetBean);
+        }
+        return targetBean;
     }
 
     /**

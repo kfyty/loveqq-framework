@@ -1,10 +1,8 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.annotation.Order;
-import com.kfyty.core.autoconfig.annotation.Qualifier;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.core.autoconfig.beans.GenericBeanDefinition;
@@ -13,13 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Optional.ofNullable;
@@ -57,20 +53,6 @@ public abstract class BeanUtil {
     }
 
     /**
-     * 解析 FactoryBean bean type
-     *
-     * @param beanName factory bean type
-     * @return 原 bean type
-     */
-    public static Class<?> resolveFactoryBeanType(String beanName, Class<?> beanType) {
-        while (beanName.startsWith(FactoryBeanDefinition.FACTORY_BEAN_PREFIX)) {
-            beanName = beanName.substring(FactoryBeanDefinition.FACTORY_BEAN_PREFIX.length());
-            beanType = FactoryBeanDefinition.getSnapBeanType(beanName, beanType);
-        }
-        return beanType;
-    }
-
-    /**
      * 根据 class 对象转换为 bean name
      *
      * @param clazz class
@@ -91,17 +73,6 @@ public abstract class BeanUtil {
             return className;
         }
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
-    }
-
-    /**
-     * 从参数对象中解析 bean name
-     *
-     * @param parameter 参数对象
-     * @return bean name
-     */
-    public static String getBeanName(Parameter parameter) {
-        Qualifier qualifier = AnnotationUtil.findAnnotation(parameter, Qualifier.class);
-        return qualifier != null ? qualifier.value() : getBeanName(parameter.getType(), ofNullable(AnnotationUtil.findAnnotation(parameter, Autowired.class)).map(Autowired::value).orElse(null));
     }
 
     /**

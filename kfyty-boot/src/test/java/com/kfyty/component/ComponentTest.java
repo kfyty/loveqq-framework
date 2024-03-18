@@ -110,6 +110,10 @@ class PropertiesConfig implements InitializingBean {
 
     private Pair<String, List<String>> listPair;
 
+    public PropertiesConfig(@Value("${k.prop.ip}") String ip) {
+        Assert.assertEquals(ip, "127.0.0.1");
+    }
+
     @Override
     public void afterPropertiesSet() {
         Assert.assertEquals(this.url, "http://127.0.0.1:8080/");

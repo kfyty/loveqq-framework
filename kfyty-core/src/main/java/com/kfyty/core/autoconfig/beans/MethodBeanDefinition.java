@@ -1,9 +1,10 @@
 package com.kfyty.core.autoconfig.beans;
 
+import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Scope;
+import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
-import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -125,8 +126,13 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         Autowired methodAnnotation = findAnnotation(this.beanMethod, Autowired.class);
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
+            Value value = findAnnotation(parameter, Value.class);
+            if (value != null) {
+                parameters[index++] = this.resolvePlaceholderValue(value.value(), parameter.getParameterizedType());
+                continue;
+            }
             Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(methodAnnotation);
-            parameters[index++] = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired));
+            parameters[index++] = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired), parameter.getType());
         }
         return parameters;
     }

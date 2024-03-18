@@ -15,10 +15,9 @@ import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.UUID;
 
+import static com.kfyty.core.autoconfig.beans.GenericBeanDefinition.resolvePlaceholderValue;
 import static com.kfyty.core.utils.ReflectUtil.setFieldValue;
 
 /**
@@ -48,7 +47,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             if (annotation == null) {
                 continue;
             }
-            Object property = this.resolvePlaceholderValue(annotation.value(), field.getGenericType());
+            Object property = resolvePlaceholderValue(annotation.value(), field.getGenericType(), this.placeholdersResolver, this.propertyContext);
             if (property != null) {
                 setFieldValue(target, field, property);
             }
@@ -57,16 +56,5 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             BeanUtil.copyProperties(target, bean);
         }
         return null;
-    }
-
-    protected Object resolvePlaceholderValue(String value, Type targetType) {
-        String tempKey = "__temp__" + UUID.randomUUID() + "__key__";
-        try {
-            String resolved = this.placeholdersResolver.resolvePlaceholders(value);
-            this.propertyContext.setProperty(tempKey, resolved);
-            return this.propertyContext.getProperty(tempKey, targetType);
-        } finally {
-            this.propertyContext.removeProperty(tempKey);
-        }
     }
 }
