@@ -13,7 +13,6 @@ import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.EventListener;
-import com.kfyty.core.autoconfig.annotation.Qualifier;
 import com.kfyty.core.autoconfig.annotation.Service;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
@@ -113,7 +112,7 @@ class Config {
     }
 
     @Bean
-    public Bean3 bean3(@Qualifier("inter1") Inter inter1, Map<String, Inter> interMap) {
+    public Bean3 bean3(@Autowired("inter1") Inter inter1, Map<String, Inter> interMap) {
         Assert.assertNotNull(test);
         return new Bean3();
     }
@@ -198,6 +197,10 @@ class FactoryImport implements ImportBeanDefinition {
 
 class FactoryProxy implements FactoryBean<Factory> {
     private final Class<?> clazz;
+
+    public FactoryProxy() {
+        this(Object.class);
+    }
 
     public FactoryProxy(Class<?> clazz) {
         this.clazz = clazz;

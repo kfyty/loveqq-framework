@@ -3,12 +3,16 @@ package com.kfyty.core.autoconfig.beans;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Scope;
+import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
@@ -17,10 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 import static java.util.Optional.ofNullable;
@@ -238,7 +245,8 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     protected void ensureConstructor() {
         if (this.constructor == null) {
-            this.constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> AnnotationUtil.hasAnnotation(e, Autowired.class));
+            Class<?>[] parameterClasses = CommonUtil.empty(this.defaultConstructorArgs) ? null : this.defaultConstructorArgs.stream().map(Pair::getKey).toArray(Class[]::new);
+            this.constructor = ReflectUtil.searchSuitableConstructor(this.beanType, e -> Arrays.equals(e.getParameterTypes(), parameterClasses) || AnnotationUtil.hasAnnotation(e, Autowired.class));
         }
     }
 
@@ -258,10 +266,33 @@ public class GenericBeanDefinition implements BeanDefinition {
         List<Pair<Class<?>, Object>> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedList::new).orElseGet(LinkedList::new);
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
+            Value value = findAnnotation(parameter, Value.class);
+            if (value != null) {
+                constructorArgs.add(new Pair<>(parameter.getType(), this.resolvePlaceholderValue(value.value(), parameter.getParameterizedType())));
+                continue;
+            }
             Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(constructorAnnotation);
-            Object resolveBean = autowiredProcessor.doResolveBean(BeanUtil.getBeanName(parameter), ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired));
+            Object resolveBean = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired), parameter.getType());
             constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }
         return constructorArgs;
+    }
+
+    protected Object resolvePlaceholderValue(String value, Type targetType) {
+        ApplicationContext context = autowiredProcessor.getContext();
+        PlaceholdersResolver placeholdersResolver = context.getBean(PlaceholdersResolver.class);
+        GenericPropertiesContext propertiesContext = context.getBean(GenericPropertiesContext.class);
+        return resolvePlaceholderValue(value, targetType, placeholdersResolver, propertiesContext);
+    }
+
+    public static Object resolvePlaceholderValue(String value, Type targetType, PlaceholdersResolver placeholdersResolver, GenericPropertiesContext propertyContext) {
+        String tempKey = "__temp__" + UUID.randomUUID() + "__key__";
+        try {
+            String resolved = placeholdersResolver.resolvePlaceholders(value);
+            propertyContext.setProperty(tempKey, resolved);
+            return propertyContext.getProperty(tempKey, targetType);
+        } finally {
+            propertyContext.removeProperty(tempKey);
+        }
     }
 }

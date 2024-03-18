@@ -72,11 +72,6 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         return bean;
     }
 
-    public static Class<?> getSnapBeanType(String beanName, Class<?> defaultBeanType) {
-        FactoryBean<?> factoryBean = snapFactoryBeanCache.get(beanName);
-        return factoryBean == null ? defaultBeanType : factoryBean.getBeanType();
-    }
-
     public static FactoryBean<?> getSnapFactoryBean(BeanDefinition beanDefinition) {
         return snapFactoryBeanCache.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
     }

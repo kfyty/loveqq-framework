@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Value {
     /**
