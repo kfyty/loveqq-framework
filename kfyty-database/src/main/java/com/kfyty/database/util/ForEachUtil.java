@@ -29,8 +29,8 @@ public abstract class ForEachUtil {
             for (int i = 0; i < list.size(); i++) {
                 String flag = "param_" + i + "_";
                 Object value = list.get(i);
-                builder.append(each.sqlPart().replace("#{", "#{" + flag).replace("${", "${" + flag));
-                params.put(flag + each.item(), new MethodParameter(value == null ? Object.class : value.getClass(), value));
+                builder.append(each.sql().replace("#{", "#{" + flag).replace("${", "${" + flag));
+                params.put(flag + each.item(), new MethodParameter(value == null ? Object.class : value.getClass(), value, flag + each.item()));
                 if (i == list.size() - 1) {
                     break;
                 }

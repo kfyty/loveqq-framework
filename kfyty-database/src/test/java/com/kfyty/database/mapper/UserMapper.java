@@ -21,8 +21,8 @@ public interface UserMapper extends BaseMapper<Integer, User> {
     @Query(value = "select * from user", subQuery = @SubQuery(value = "select * from user where id = #{userId}", paramField = "id", mapperField = "userId", returnField = "user"))
     List<UserVo> findUserVo();
 
-    @Query(value = "select id from user where id in ", forEach = @ForEach(collection = "ids", open = "(", separator = ",", close = ")", item = "id", sqlPart = "#{id}"))
-    int[] findAllIds(@Param("ids") List<Integer> ids);
+    @Query(value = "select id from user where username = #{username} or id in ", forEach = @ForEach(collection = "ids", open = "(", separator = ",", close = ")", item = "id", sql = "#{id}"))
+    int[] findAllIds(String username, @Param("ids") List<Integer> ids);
 
     @Query("select * from user where id = #{vo.id}")
     Map<String, Object> findMapById(@Param("vo") UserVo vo);

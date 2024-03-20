@@ -9,6 +9,8 @@ import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.database.jdbc.intercept.internal.ForEachInternalInterceptor;
+import com.kfyty.database.jdbc.intercept.internal.SubQueryInternalInterceptor;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
 import com.kfyty.database.jdbc.transaction.ManagedJdbcTransaction;
@@ -39,6 +41,16 @@ public class MapperAutoConfig implements ImportBeanDefinition {
     @ConditionalOnMissingBean(name = "transactionFactory")
     public Supplier<Transaction> transactionFactory(DataSource dataSource) {
         return () -> new ManagedJdbcTransaction(dataSource);
+    }
+
+    @Bean
+    public ForEachInternalInterceptor forEachInternalInterceptor() {
+        return new ForEachInternalInterceptor();
+    }
+
+    @Bean
+    public SubQueryInternalInterceptor subQueryInternalInterceptor() {
+        return new SubQueryInternalInterceptor();
     }
 
     @Bean

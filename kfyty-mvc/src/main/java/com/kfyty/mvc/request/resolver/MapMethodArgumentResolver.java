@@ -29,6 +29,6 @@ public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentReso
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         Map<String, String> parametersMap = ServletUtil.getRequestParametersMap(request);
-        return this.createDataBinder(parametersMap).getPropertyContext().getProperty(parameter.getParameterName(), parameter.getParameterGeneric());
+        return this.createDataBinder(parametersMap).getPropertyContext().getProperty(parameter.getParamName(), parameter.getParameterGeneric());
     }
 }

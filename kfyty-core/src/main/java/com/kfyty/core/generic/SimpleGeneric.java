@@ -36,7 +36,8 @@ public class SimpleGeneric extends QualifierGeneric {
             Value.class
     };
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private String mapKey;
 
     public SimpleGeneric(Class<?> sourceType) {

@@ -9,7 +9,10 @@ import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ResultSetUtil;
 import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Execute;
+import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
+import com.kfyty.database.jdbc.session.SqlSession;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
@@ -19,7 +22,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.kfyty.core.utils.CommonUtil.size;
 import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
@@ -32,12 +37,14 @@ import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@Getter
 public class InterceptorChain implements AutoCloseable {
+    private final SqlSession sqlSession;
     private final MethodParameter mapperMethod;
     private final Annotation annotation;
     private final Value<String> sql;
     private final SimpleGeneric returnType;
-    private final MethodParameter[] methodParameters;
+    private final List<MethodParameter> methodParameters;
     private final Iterator<Map.Entry<Method, Interceptor>> interceptors;
 
     private PreparedStatement preparedStatement;
@@ -45,7 +52,8 @@ public class InterceptorChain implements AutoCloseable {
     private Object retValue;
     private boolean hasRet;
 
-    public InterceptorChain(MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, MethodParameter[] methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
+    public InterceptorChain(SqlSession sqlSession, MethodParameter method, Annotation annotation, String sql, SimpleGeneric returnType, List<MethodParameter> methodParameters, Iterator<Map.Entry<Method, Interceptor>> interceptors) {
+        this.sqlSession = sqlSession;
         this.mapperMethod = method;
         this.annotation = annotation;
         this.sql = new Value<>(sql);
@@ -54,20 +62,8 @@ public class InterceptorChain implements AutoCloseable {
         this.interceptors = interceptors;
     }
 
-    public MethodParameter getMapperMethod() {
-        return this.mapperMethod;
-    }
-
-    public PreparedStatement getPreparedStatement() {
-        return this.preparedStatement;
-    }
-
-    public ResultSet getResultSet() {
-        return this.resultSet;
-    }
-
     public void setPreparedStatement(PreparedStatement preparedStatement) {
-        this.preparedStatement = preparedStatement;
+        this.preparedStatement = Objects.requireNonNull(preparedStatement);
     }
 
     public void setRetValue(Object retValue) {
@@ -88,6 +84,9 @@ public class InterceptorChain implements AutoCloseable {
 
     @Override
     public void close() {
+        if (this.annotation instanceof SubQuery) {
+            return;
+        }
         try {
             IOUtil.close(this.getPreparedStatement());
             IOUtil.close(this.getResultSet());
@@ -123,7 +122,7 @@ public class InterceptorChain implements AutoCloseable {
         if (SimpleGeneric.class.isAssignableFrom(parameterType)) {
             return this.returnType;
         }
-        if (parameterType.isArray() && MethodParameter.class.isAssignableFrom(parameterType.getComponentType())) {
+        if (List.class.isAssignableFrom(parameterType)) {
             return this.methodParameters;
         }
         if (PreparedStatement.class.isAssignableFrom(parameterType)) {
@@ -144,7 +143,7 @@ public class InterceptorChain implements AutoCloseable {
     protected PreparedStatement preparePreparedStatement() {
         if (this.preparedStatement == null) {
             try {
-                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters);
+                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(MethodParameter[]::new));
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }
