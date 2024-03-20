@@ -2,6 +2,8 @@ package com.kfyty.mvc.request.resolver;
 
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.mvc.annotation.bind.RequestBody;
 import com.kfyty.mvc.mapping.MethodMapping;
 import com.kfyty.mvc.util.ServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +23,7 @@ public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentReso
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return Map.class.isAssignableFrom(parameter.getParamType());
+        return Map.class.isAssignableFrom(parameter.getParamType()) && !AnnotationUtil.hasAnnotation(parameter.getParameter(), RequestBody.class);
     }
 
     @Override

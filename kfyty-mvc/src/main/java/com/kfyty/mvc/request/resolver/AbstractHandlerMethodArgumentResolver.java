@@ -49,11 +49,12 @@ public abstract class AbstractHandlerMethodArgumentResolver implements HandlerMe
     }
 
     protected DataBinder createDataBinder() {
-        DataBinder dataBinder = this.beanFactory != null ? this.beanFactory.getBean(DataBinder.class).clone() : (DataBinder) ReflectUtil.newInstance(DEFAULT_DATA_BINDER_CLASS);
-        if (dataBinder.getPropertyContext() == null) {
-            dataBinder.setPropertyContext(this.createPropertiesContext());
-            dataBinder.getPropertyContext().setDataBinder(dataBinder);
+        if (this.beanFactory != null) {
+            return this.beanFactory.getBean(DataBinder.class).clone();
         }
+        DataBinder dataBinder = (DataBinder) ReflectUtil.newInstance(DEFAULT_DATA_BINDER_CLASS);
+        dataBinder.setPropertyContext(this.createPropertiesContext());
+        dataBinder.getPropertyContext().setDataBinder(dataBinder);
         return dataBinder;
     }
 

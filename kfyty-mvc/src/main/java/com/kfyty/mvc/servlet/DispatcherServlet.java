@@ -204,7 +204,7 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
             Object o = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
             this.processPostInterceptor(request, response, methodMapping, o);
             if (o != null) {
-                this.processReturnValue(o, new MethodParameter(methodMapping.getMappingMethod()), request, response, params);
+                this.processReturnValue(o, new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod()), request, response, params);
             }
         } catch (Throwable e) {
             log.error("process request error: {}", e.getMessage());
@@ -255,7 +255,7 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
                 paramValues[index++] = response;
                 continue;
             }
-            MethodParameter methodParameter = new MethodParameter(methodMapping.getMappingMethod(), parameter);
+            MethodParameter methodParameter = new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), parameter);
             MethodParameter arguments = this.processMethodArguments(methodParameter, methodMapping, request);
             if (arguments != null) {
                 paramValues[index++] = arguments.getValue();

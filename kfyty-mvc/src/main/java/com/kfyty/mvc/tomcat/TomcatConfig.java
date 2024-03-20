@@ -1,6 +1,7 @@
 package com.kfyty.mvc.tomcat;
 
 import jakarta.servlet.Filter;
+import jakarta.servlet.MultipartConfigElement;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,14 +39,15 @@ public class TomcatConfig {
     private List<String> staticPattern;
     private String dispatcherMapping;
     private Class<?> primarySource;
+    private MultipartConfigElement multipartConfig;
     private List<Filter> webFilters;
     private List<EventListener> webListeners;
 
     public TomcatConfig() {
-        this(TomcatConfig.class);
+        this(TomcatConfig.class, new MultipartConfigElement(""));
     }
 
-    public TomcatConfig(Class<?> primarySource) {
+    public TomcatConfig(Class<?> primarySource, MultipartConfigElement multipartConfig) {
         this.port = 8080;
         this.virtualThread = true;
         this.protocol = DEFAULT_PROTOCOL;
@@ -53,6 +55,7 @@ public class TomcatConfig {
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
         this.staticPattern = new LinkedList<>();
         this.primarySource = primarySource;
+        this.multipartConfig = multipartConfig;
         this.webFilters = new LinkedList<>();
         this.webListeners = new LinkedList<>();
         this.addDefaultStaticPattern();

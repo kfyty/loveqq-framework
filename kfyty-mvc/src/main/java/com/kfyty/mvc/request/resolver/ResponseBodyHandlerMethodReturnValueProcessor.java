@@ -24,7 +24,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
         if (returnType == null) {
             return false;
         }
-        Class<?> declaringClass = returnType.getMethod().getDeclaringClass();
+        Class<?> declaringClass = returnType.getSource().getClass();
         return AnnotationUtil.hasAnnotationElement(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnnotationElement(declaringClass, ResponseBody.class);
     }
 

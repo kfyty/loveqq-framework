@@ -1,13 +1,12 @@
 package com.kfyty.mvc.request.resolver;
 
-import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.mvc.annotation.bind.RequestParam;
 import com.kfyty.mvc.mapping.MethodMapping;
-import com.kfyty.mvc.multipart.MultipartFile;
 import com.kfyty.mvc.util.ServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -27,14 +26,11 @@ import static com.kfyty.mvc.util.ServletUtil.getRequestParametersMap;
  * @date 2021/6/4 10:25
  * @email kfyty725@hotmail.com
  */
+@Order(Integer.MAX_VALUE)
 public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        SimpleGeneric type = SimpleGeneric.from(parameter.getParameter());
-        if (MultipartFile.class.isAssignableFrom(type.getSimpleActualType())) {
-            return false;
-        }
         if (hasAnnotation(parameter.getParameter(), RequestParam.class)) {
             return true;
         }

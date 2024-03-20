@@ -86,7 +86,12 @@ public class MethodParameter {
     }
 
     public MethodParameter(Method method, Parameter parameter) {
+        this(null, method, parameter);
+    }
+
+    public MethodParameter(Object source, Method method, Parameter parameter) {
         this(method);
+        this.source = source;
         this.parameter = parameter;
         this.paramType = parameter.getType();
         this.parameterGeneric = parameter.getParameterizedType();
