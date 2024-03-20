@@ -1,5 +1,6 @@
 package com.kfyty.mvc.util;
 
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.mvc.multipart.DefaultMultipartFile;
 import com.kfyty.mvc.multipart.MultipartFile;
@@ -11,10 +12,13 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: servlet 工具
@@ -82,10 +86,10 @@ public class ServletUtil {
         if (CommonUtil.notEmpty(currentRequestParam)) {
             return currentRequestParam;
         }
-        StringBuilder builder = new StringBuilder();
+        Set<Pair<String, String>> params = new HashSet<>();
         for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-            for (String s : entry.getValue()) {
-                builder.append(entry.getKey()).append("=").append(s).append("&");
+            for (String value : entry.getValue()) {
+                params.add(new Pair<>(entry.getKey(), value));
             }
         }
         List<MultipartFile> files = DefaultMultipartFile.from(request);
@@ -94,10 +98,10 @@ public class ServletUtil {
             if (file.isFile()) {
                 continue;
             }
-            builder.append(file.getName()).append("=").append(new String(file.getBytes())).append("&");
+            params.add(new Pair<>(file.getName(), new String(file.getBytes())));
             i.remove();
         }
-        String body = builder.isEmpty() ? CommonUtil.EMPTY_STRING : builder.deleteCharAt(builder.length() - 1).toString();
+        String body = params.stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining("&"));
         request.setAttribute(CURRENT_REQUEST_PARAM, body);
         request.setAttribute(CURRENT_REQUEST_FILES, files);
         return body;

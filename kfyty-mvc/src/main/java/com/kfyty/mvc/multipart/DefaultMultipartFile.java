@@ -1,9 +1,14 @@
 package com.kfyty.mvc.multipart;
 
+import com.kfyty.core.lang.Lazy;
+import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.IOUtil;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.FileItem;
 import org.apache.tomcat.util.http.fileupload.FileUpload;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
@@ -21,33 +26,33 @@ import java.util.List;
  * @date 2021/6/4 14:02
  * @email kfyty725@hotmail.com
  */
+@RequiredArgsConstructor
 public class DefaultMultipartFile implements MultipartFile {
-    private final FileItem fileItem;
+    private final String formName;
+    private final String fileName;
+    private final String contentType;
+    private final boolean isFile;
     private final long size;
-
-    public DefaultMultipartFile(FileItem fileItem) {
-        this.fileItem = fileItem;
-        this.size = fileItem.getSize();
-    }
+    private final Lazy<InputStream> inputStreamLazy;
 
     @Override
     public boolean isFile() {
-        return !this.fileItem.isFormField();
+        return this.isFile;
     }
 
     @Override
     public String getName() {
-        return fileItem.getFieldName();
+        return this.formName;
     }
 
     @Override
     public String getOriginalFilename() {
-        return fileItem.getName();
+        return this.fileName;
     }
 
     @Override
     public String getContentType() {
-        return fileItem.getContentType();
+        return this.contentType;
     }
 
     @Override
@@ -62,12 +67,14 @@ public class DefaultMultipartFile implements MultipartFile {
 
     @Override
     public byte[] getBytes() throws IOException {
-        return fileItem.get();
+        try (InputStream in = this.getInputStream()) {
+            return IOUtil.read(in);
+        }
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return fileItem.getInputStream();
+        return this.inputStreamLazy.get();
     }
 
     @Override
@@ -75,7 +82,9 @@ public class DefaultMultipartFile implements MultipartFile {
         if (dest.exists() && !dest.delete()) {
             throw new IOException("Destination file [" + dest.getAbsolutePath() + "] already exists and could not be deleted !");
         }
-        this.fileItem.write(dest);
+        try (InputStream in = this.getInputStream()) {
+            IOUtil.copy(in, IOUtil.newOutputStream(dest));
+        }
     }
 
     public static List<MultipartFile> from(HttpServletRequest request) {
@@ -88,10 +97,29 @@ public class DefaultMultipartFile implements MultipartFile {
             List<FileItem> fileItems = fileUpload.parseRequest(new ServletRequestContext(request));
             List<MultipartFile> multipartFiles = new ArrayList<>(fileItems.size());
             for (FileItem fileItem : fileItems) {
-                multipartFiles.add(new DefaultMultipartFile(fileItem));
+                Lazy<InputStream> inputStream = new Lazy<>(() -> {
+                    try {
+                        return fileItem.getInputStream();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                multipartFiles.add(new DefaultMultipartFile(fileItem.getFieldName(), fileItem.getName(), fileItem.getContentType(), !fileItem.isFormField(), fileItem.getSize(), inputStream));
+            }
+            if (multipartFiles.isEmpty() && CommonUtil.notEmpty(request.getParts())) {
+                for (Part part : request.getParts()) {
+                    Lazy<InputStream> inputStream = new Lazy<>(() -> {
+                        try {
+                            return part.getInputStream();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    multipartFiles.add(new DefaultMultipartFile(part.getName(), part.getSubmittedFileName(), part.getContentType(), part.getSubmittedFileName() != null, part.getSize(), inputStream));
+                }
             }
             return multipartFiles;
-        } catch (FileUploadException e) {
+        } catch (IOException | ServletException e) {
             throw new RuntimeException(e);
         }
     }

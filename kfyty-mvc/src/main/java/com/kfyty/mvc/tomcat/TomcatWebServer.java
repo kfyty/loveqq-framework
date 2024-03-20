@@ -6,7 +6,10 @@ import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.mvc.WebServer;
 import com.kfyty.mvc.servlet.DispatcherServlet;
 import jakarta.servlet.Filter;
+import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebInitParam;
 import lombok.Getter;
@@ -38,7 +41,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EventListener;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
 /**
@@ -138,6 +143,7 @@ public class TomcatWebServer implements WebServer {
         context.setDocBase(createTempDir("tomcat-docbase").getAbsolutePath());
         context.setCreateUploadTargets(true);
         context.setFailCtxIfServletStartFails(true);
+        context.addServletContainerInitializer(new DispatcherServletConfigInitializer(this.config, this.dispatcherServlet), Collections.emptySet());
         context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
         this.bindContextClassLoader(context);
@@ -145,7 +151,6 @@ public class TomcatWebServer implements WebServer {
         this.prepareResources(context);
         this.prepareDefaultServlet(context);
         this.prepareJspServlet(context);
-        this.prepareDispatcherServlet(context);
         this.prepareWebFilter(context);
         this.prepareWebListener(context);
         this.tomcat.getHost().addChild(context);
@@ -208,13 +213,6 @@ public class TomcatWebServer implements WebServer {
         context.addServletContainerInitializer(new JasperInitializer(), null);
     }
 
-    private void prepareDispatcherServlet(Context context) {
-        if (this.dispatcherServlet != null) {
-            Tomcat.addServlet(context, "dispatcherServlet", this.dispatcherServlet);
-            context.addServletMappingDecoded(config.getDispatcherMapping(), "dispatcherServlet");
-        }
-    }
-
     private void prepareWebFilter(Context context) {
         for (Filter webFilter : this.config.getWebFilters()) {
             FilterDef filterDef = new FilterDef();
@@ -270,5 +268,24 @@ public class TomcatWebServer implements WebServer {
         tempDir.mkdir();
         tempDir.deleteOnExit();
         return tempDir;
+    }
+
+    @RequiredArgsConstructor
+    private static class DispatcherServletConfigInitializer implements ServletContainerInitializer {
+        private final TomcatConfig tomcatConfig;
+        private final DispatcherServlet dispatcherServlet;
+
+        @Override
+        public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
+            this.prepareDispatcherServlet(ctx);
+        }
+
+        private void prepareDispatcherServlet(ServletContext context) {
+            if (this.dispatcherServlet != null) {
+                ServletRegistration.Dynamic dynamic = context.addServlet("dispatcherServlet", this.dispatcherServlet);
+                dynamic.addMapping(this.tomcatConfig.getDispatcherMapping());
+                dynamic.setMultipartConfig(this.tomcatConfig.getMultipartConfig());
+            }
+        }
     }
 }
