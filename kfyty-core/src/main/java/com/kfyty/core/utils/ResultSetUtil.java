@@ -129,7 +129,7 @@ public abstract class ResultSetUtil {
                     ReflectUtil.setNestedFieldValue(fieldName, o, value);
                     continue;
                 }
-                LogUtil.logIfWarnEnabled((logger, param) -> logger.warn("discovery column: [{}], but class:[{}] no field matching !", param), metaData.getColumnName(i), clazz);
+                LogUtil.logIfDebugEnabled((logger, param) -> logger.debug("discovery column: [{}], but class:[{}] no field matching !", param), metaData.getColumnName(i), clazz);
             }
             list.add(o);
         } while (resultSet.next());

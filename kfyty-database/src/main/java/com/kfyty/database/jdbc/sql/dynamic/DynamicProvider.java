@@ -3,6 +3,7 @@ package com.kfyty.database.jdbc.sql.dynamic;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.database.jdbc.sql.Provider;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -16,7 +17,7 @@ import java.util.Map;
  * @date 2021/9/29 22:44
  * @email kfyty725@hotmail.com
  */
-public interface DynamicProvider<TS extends TemplateStatement> {
+public interface DynamicProvider<TS extends TemplateStatement> extends Provider<Annotation> {
     /**
      * 设置全局配置
      *
@@ -69,6 +70,7 @@ public interface DynamicProvider<TS extends TemplateStatement> {
      * @param params       方法参数
      * @return SQL
      */
+    @Override
     default String doProvide(Class<?> mapperClass, Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
         return this.doProvide(mapperClass, mapperMethod, params);
     }

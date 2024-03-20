@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.function.Function;
 
 /**
@@ -36,27 +37,38 @@ public class MethodParameter {
     private Object[] methodArgs;
 
     /**
-     * 原始参数对象
+     * 方法参数
+     * 该方法参数更详细
+     */
+    private MethodParameter[] methodParameters;
+
+    /**
+     * 方法参数对象
      */
     private Parameter parameter;
 
     /**
-     * 参数类型
+     * 方法参数名称
+     */
+    private String paramName;
+
+    /**
+     * 方法参数类型
      */
     private Class<?> paramType;
 
     /**
-     * 返回值类型
+     * 方法返回值类型
      */
     private Class<?> returnType;
 
     /**
-     * 参数泛型
+     * 方法参数泛型
      */
     private Type parameterGeneric;
 
     /**
-     * 返回值泛型
+     * 方法返回值泛型
      */
     private Type returnGeneric;
 
@@ -76,8 +88,9 @@ public class MethodParameter {
         this.source = source;
     }
 
-    public MethodParameter(Method method, Object... methodArgs) {
-        this(null, method, methodArgs);
+    public MethodParameter(Method method, MethodParameter... methodParameters) {
+        this(null, method, Arrays.stream(methodParameters).map(MethodParameter::getValue).toArray());
+        this.methodParameters = methodParameters;
     }
 
     public MethodParameter(Object source, Method method, Object... methodArgs) {
@@ -93,6 +106,7 @@ public class MethodParameter {
         this(method);
         this.source = source;
         this.parameter = parameter;
+        this.paramName = parameter.getName();
         this.paramType = parameter.getType();
         this.parameterGeneric = parameter.getParameterizedType();
     }
@@ -104,8 +118,20 @@ public class MethodParameter {
      * @param value     参数值
      */
     public MethodParameter(Class<?> paramType, Object value) {
+        this(paramType, value, null);
+    }
+
+    /**
+     * 仅使用参数类型和参数值构造，一般用于后续使用
+     *
+     * @param paramType 参数类型
+     * @param value     参数值
+     * @param paramName 方法参数名称
+     */
+    public MethodParameter(Class<?> paramType, Object value, String paramName) {
         this.paramType = paramType;
         this.value = value;
+        this.paramName = paramName;
     }
 
     /**
@@ -113,20 +139,24 @@ public class MethodParameter {
      *
      * @param method    声明方法
      * @param parameter 原参数对象
-     * @param value     参数值
+     * @param value     方法参数值
      */
     public MethodParameter(Method method, Parameter parameter, Object value) {
-        this(method, parameter);
-        this.value = value;
+        this(method, parameter, value, parameter.getName());
     }
 
     /**
-     * 获取方法参数名称
+     * 使用声明方法、原参数对象和参数值构造
      *
-     * @return 参数名称
+     * @param method    声明方法
+     * @param parameter 原参数对象
+     * @param value     方法参数值
+     * @param paramName 方法参数名称
      */
-    public String getParameterName() {
-        return this.parameter.getName();
+    public MethodParameter(Method method, Parameter parameter, Object value, String paramName) {
+        this(method, parameter);
+        this.value = value;
+        this.paramName = paramName;
     }
 
     /**
@@ -138,6 +168,6 @@ public class MethodParameter {
      */
     public <A extends Annotation> String getParameterName(A annotation, Function<A, String> mapping) {
         String declaringName = annotation == null ? null : mapping.apply(annotation);
-        return CommonUtil.notEmpty(declaringName) ? declaringName : this.getParameterName();
+        return CommonUtil.notEmpty(declaringName) ? declaringName : this.getParamName();
     }
 }

@@ -51,13 +51,9 @@ public abstract class AnnotationInstantiateUtil {
             }
 
             @Override
-            public Class<?> provider() {
+            @SuppressWarnings("rawtypes")
+            public Class<DynamicProvider> provider() {
                 return DynamicProvider.class;
-            }
-
-            @Override
-            public String method() {
-                return null;
             }
 
             @Override
@@ -81,13 +77,9 @@ public abstract class AnnotationInstantiateUtil {
             }
 
             @Override
-            public Class<?> provider() {
+            @SuppressWarnings("rawtypes")
+            public Class<DynamicProvider> provider() {
                 return DynamicProvider.class;
-            }
-
-            @Override
-            public String method() {
-                return null;
             }
 
             @Override
@@ -97,7 +89,7 @@ public abstract class AnnotationInstantiateUtil {
         };
     }
 
-    public static ForEach createForEach(String collection, String open, String separator, String close, Function<ForEach, String> sqlPart) {
+    public static ForEach createForEach(String collection, String open, String separator, String close, Function<ForEach, String> sql) {
         return new ForEach() {
 
             @Override
@@ -116,8 +108,8 @@ public abstract class AnnotationInstantiateUtil {
             }
 
             @Override
-            public String sqlPart() {
-                return sqlPart.apply(this);
+            public String sql() {
+                return sql.apply(this);
             }
 
             @Override

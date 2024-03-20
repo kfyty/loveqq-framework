@@ -43,19 +43,38 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 public class Configuration {
+    /**
+     * xml 查询标签
+     */
     public static final String SELECT_LABEL = "select";
 
+    /**
+     * xml 执行标签
+     */
     public static final String EXECUTE_LABEL = "execute";
 
+    /**
+     * xml 命名空间标签
+     */
     public static final String MAPPER_NAMESPACE = "namespace";
 
+    /**
+     * xml 查询/执行 id 属性
+     */
     public static final String MAPPER_STATEMENT_ID = "id";
 
+    /**
+     * 拦截器方法名称
+     */
     public static final String INTERCEPTOR_METHOD_NAME = "intercept";
 
+    /**
+     * 默认的拦截器
+     * 由于更新 sql 执行时，如果没有查询拦截器，后续不会执行，因此当存在拦截器但是没有查询拦截器时，添加一个默认的拦截器
+     */
     public static final QueryInterceptor DEFAULT_INTERCEPTOR = new QueryInterceptor() {
         @Override
-        public Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, MethodParameter[] parameters, InterceptorChain chain) {
+        public Object intercept(PreparedStatement ps, ResultSet rs, Object retValue, List<MethodParameter> parameters, InterceptorChain chain) {
             return chain.proceed();
         }
     };

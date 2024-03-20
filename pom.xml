@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kfyty</groupId>
-    <artifactId>kfyty-utils</artifactId>
+    <artifactId>kfyty-framework</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 

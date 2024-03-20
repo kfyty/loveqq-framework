@@ -7,6 +7,7 @@ import com.kfyty.database.jdbc.intercept.InterceptorChain;
 import com.kfyty.database.jdbc.intercept.QueryInterceptor;
 
 import java.util.Collection;
+import java.util.List;
 
 import static com.kfyty.core.utils.CommonUtil.mapping;
 
@@ -20,7 +21,7 @@ import static com.kfyty.core.utils.CommonUtil.mapping;
 public class FieldStructInfoInterceptor implements QueryInterceptor {
 
     @Override
-    public Object intercept(Object retValue, MethodParameter[] params, InterceptorChain chain) {
+    public Object intercept(Object retValue, List<MethodParameter> params, InterceptorChain chain) {
         return retValue instanceof Collection ? mapping(retValue, e -> {
             if (e instanceof AbstractFieldStructInfo) {
                 AbstractFieldStructInfo info = (AbstractFieldStructInfo) e;

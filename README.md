@@ -1,4 +1,4 @@
-# kfyty-utils
+# kfyty-framework
     造轮子~~ 注解式 ioc/aop、自动装配、异步事件、动态代理、注解式 mvc（支持 Restful）、嵌入式 tomcat、
     注解式 jdbc 框架、javafx mvvm 框架，并基于此开发了一套支持 java/enjoy/freemarker/jsp 模板的代码生成器。
 

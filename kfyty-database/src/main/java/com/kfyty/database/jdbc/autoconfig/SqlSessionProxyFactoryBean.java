@@ -28,7 +28,7 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
     @Autowired
     private DataSource dataSource;
 
-    @Autowired(required = false)
+    @Autowired(value = "transactionFactory", required = false)
     private Supplier<Transaction> transactionFactory;
 
     @Autowired(required = false)
@@ -45,10 +45,10 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
     @Override
     public SqlSessionProxyFactory getObject() {
         Configuration configuration = new Configuration()
-                .setDataSource(this.getDataSource())
-                .setInterceptors(this.getInterceptors());
+                .setDataSource(this.dataSource)
+                .setInterceptors(this.interceptors);
         if (this.transactionFactory != null) {
-            configuration.setTransactionFactory(this.getTransactionFactory());
+            configuration.setTransactionFactory(this.transactionFactory);
         }
         if (this.dynamicProvider != null) {
             this.dynamicProvider.setConfiguration(configuration.setDynamicProvider(dynamicProvider));

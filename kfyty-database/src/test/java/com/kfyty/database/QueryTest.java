@@ -1,17 +1,20 @@
 package com.kfyty.database;
 
-import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.jfinal.template.Engine;
 import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
+import com.kfyty.database.jdbc.intercept.internal.ForEachInternalInterceptor;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
+import com.kfyty.database.jdbc.intercept.internal.SubQueryInternalInterceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
 import com.kfyty.database.mapper.UserMapper;
 import com.kfyty.database.vo.UserVo;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class QueryTest {
     private static final String PATH = "druid.properties";
@@ -28,12 +32,15 @@ public class QueryTest {
 
     @Before
     public void prepare() throws Exception {
-        DataSource dataSource = DruidDataSourceFactory.createDataSource(PropertiesUtil.load(PATH));
+        Properties load = PropertiesUtil.load(PATH);
+        DataSource dataSource = new HikariDataSource(new HikariConfig(load));
         DynamicProvider<?> dynamicProvider = new EnjoyDynamicProvider().setEngine(Engine.create("test"));
         Configuration configuration = new Configuration()
                 .setDataSource(dataSource)
                 .setTransactionFactory(() -> new JdbcTransaction(dataSource))
                 .addInterceptor(new GeneratedKeysInterceptor())
+                .addInterceptor(new ForEachInternalInterceptor())
+                .addInterceptor(new SubQueryInternalInterceptor())
                 .setDynamicProvider(dynamicProvider, "/mapper/*.xml");
         dynamicProvider.setConfiguration(configuration);
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
@@ -54,7 +61,7 @@ public class QueryTest {
         List<UserVo> userVo = this.userMapper.findUserVo();
         List<User> users = this.userMapper.selectAll();
         this.userMapper.updateBatch(users);
-        int[] ids = this.userMapper.findAllIds(Collections.singletonList(one.getId()));
+        int[] ids = this.userMapper.findAllIds("test", Collections.singletonList(one.getId()));
         Map<String, Object> map = this.userMapper.findMapById(UserVo.create(newUser.getId()));
         Map<String, User> userMap = this.userMapper.findUserMap();
         List<Map<String, Object>> maps = this.userMapper.findAllMap();

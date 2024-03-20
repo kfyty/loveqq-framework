@@ -6,6 +6,11 @@ import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.lang.Value;
 
 import java.sql.PreparedStatement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 描述: SQL 执行拦截器
@@ -18,12 +23,16 @@ import java.sql.PreparedStatement;
 public interface Interceptor {
 
     @Order(10)
-    default Object intercept(Value<String> sql, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
+    default Object intercept(Value<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
         return chain.proceed();
     }
 
     @Order(20)
-    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, MethodParameter[] parameters, InterceptorChain chain) {
+    default Object intercept(PreparedStatement ps, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
         return chain.proceed();
+    }
+
+    default Map<String, MethodParameter> getParameterMap(InterceptorChain chain) {
+        return Arrays.stream(chain.getMapperMethod().getMethodParameters()).collect(Collectors.toMap(MethodParameter::getParamName, Function.identity()));
     }
 }

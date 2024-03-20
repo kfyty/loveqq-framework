@@ -1,13 +1,17 @@
 package com.kfyty.database.util;
 
+import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.support.Pair;
+import com.kfyty.database.jdbc.annotation.Query;
+import com.kfyty.database.jdbc.annotation.SubQuery;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -20,6 +24,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 
 import static com.kfyty.core.utils.CommonUtil.PARAMETERS_PATTERN;
+import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
 /**
  * 描述: SQL 解析工具
@@ -30,6 +35,20 @@ import static com.kfyty.core.utils.CommonUtil.PARAMETERS_PATTERN;
  */
 @Slf4j
 public abstract class SQLParametersResolveUtil {
+
+    /**
+     * 检查注解中的 key 属性，并设置到 {@link SimpleGeneric#mapKey}
+     *
+     * @param annotation 注解
+     * @param returnType 返回值类型
+     */
+    public static void checkMapKey(Annotation annotation, SimpleGeneric returnType) {
+        if (!(annotation instanceof Query || annotation instanceof SubQuery)) {
+            return;
+        }
+        returnType.setMapKey(invokeMethod(annotation, "key"));
+    }
+
     /**
      * 将方法参数中有 @Param 注解的参数封装为 Map
      * 若 {@link Param} 注解不存在，则直接使用 {@link Parameter#getName()}
@@ -45,7 +64,7 @@ public abstract class SQLParametersResolveUtil {
             Parameter parameter = parameters[i];
             Param annotation = AnnotationUtil.findAnnotation(parameter, Param.class);
             String paramName = annotation != null && CommonUtil.notEmpty(annotation.value()) ? annotation.value() : parameter.getName();
-            params.put(paramName, new MethodParameter(method, parameter, args[i]));
+            params.put(paramName, new MethodParameter(method, parameter, args[i], paramName));
         }
         return params;
     }
@@ -144,7 +163,7 @@ public abstract class SQLParametersResolveUtil {
         Map<String, MethodParameter> param = new HashMap<>();
         for (int i = 0; i < paramField.length; i++) {
             Field field = ReflectUtil.getField(obj.getClass(), paramField[i]);
-            param.put(mapperField[i], new MethodParameter(field.getType(), ReflectUtil.getFieldValue(obj, field)));
+            param.put(mapperField[i], new MethodParameter(field.getType(), ReflectUtil.getFieldValue(obj, field), mapperField[i]));
         }
         return param;
     }

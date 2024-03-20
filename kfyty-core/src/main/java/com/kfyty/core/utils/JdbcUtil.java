@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class JdbcUtil {
+
     public static Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
         try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params);
@@ -102,13 +103,5 @@ public abstract class JdbcUtil {
             transaction.commit();
             IOUtil.close(transaction);
         }
-    }
-
-    private static Object subQuery(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
-        return query(transaction, returnType, sql, params);
-    }
-
-    private static int execute(Transaction transaction, SimpleGeneric non, String sql, MethodParameter... params) throws SQLException {
-        return execute(transaction, sql, params);
     }
 }

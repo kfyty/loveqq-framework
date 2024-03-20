@@ -13,13 +13,15 @@ import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.TableId;
 import com.kfyty.database.jdbc.annotation.TableName;
 import com.kfyty.database.jdbc.annotation.Transient;
-import com.kfyty.database.jdbc.sql.DeleteProvider;
-import com.kfyty.database.jdbc.sql.InsertProvider;
-import com.kfyty.database.jdbc.sql.SelectProvider;
-import com.kfyty.database.jdbc.sql.UpdateProvider;
+import com.kfyty.database.jdbc.sql.provider.DeleteProvider;
+import com.kfyty.database.jdbc.sql.provider.InsertProvider;
+import com.kfyty.database.jdbc.sql.Provider;
+import com.kfyty.database.jdbc.sql.provider.SelectProvider;
+import com.kfyty.database.jdbc.sql.provider.UpdateProvider;
 import com.kfyty.database.util.AnnotationInstantiateUtil;
 import com.kfyty.database.util.ForEachUtil;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -35,7 +37,7 @@ import java.util.function.Predicate;
  * @date 2021/7/24 19:20
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractProvider implements InsertProvider, SelectProvider, UpdateProvider, DeleteProvider {
+public abstract class AbstractProvider implements InsertProvider, SelectProvider, UpdateProvider, DeleteProvider, Provider<Annotation> {
     public static final String PROVIDER_PARAM_PK = "pk";
 
     public static final String PROVIDER_PARAM_ENTITY = "entity";
@@ -49,11 +51,6 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
     @Override
     public String insert(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         return this.buildInsertSQL(mapperClass);
-    }
-
-    @Override
-    public String insertBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -81,11 +78,6 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
     @Override
     public String updateByPk(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
         return this.buildUpdateSQL(mapperClass);
-    }
-
-    @Override
-    public String updateBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -138,7 +130,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
         StringBuilder values = new StringBuilder();
         for (Field field : ReflectUtil.getFieldMap(entityClass).values()) {
             String name = field.getName();
-            if (AnnotationUtil.hasAnnotation(field, Transient.class)) {
+            if (ReflectUtil.isStaticFinal(field.getModifiers()) || AnnotationUtil.hasAnnotation(field, Transient.class)) {
                 continue;
             }
             fields.append(CommonUtil.camelCase2Underline(name)).append(",");
@@ -160,7 +152,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
         StringBuilder sql = new StringBuilder("update " + this.getTableName(entityClass.getValue()) + " set ");
         for (Field field : ReflectUtil.getFieldMap(entityClass.getValue()).values()) {
             String name = field.getName();
-            if (AnnotationUtil.hasAnnotation(field, Transient.class)) {
+            if (ReflectUtil.isStaticFinal(field.getModifiers()) || AnnotationUtil.hasAnnotation(field, Transient.class)) {
                 continue;
             }
             sql.append(CommonUtil.camelCase2Underline(name)).append(" = ");
