@@ -1,12 +1,13 @@
 package com.kfyty.database.util;
 
 import com.kfyty.core.generic.SimpleGeneric;
-import com.kfyty.database.jdbc.annotation.Param;
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.support.Pair;
+import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 
-import static com.kfyty.core.utils.CommonUtil.PARAMETERS_PATTERN;
 import static com.kfyty.core.utils.ReflectUtil.invokeMethod;
 
 /**
@@ -70,38 +69,56 @@ public abstract class SQLParametersResolveUtil {
     }
 
     /**
-     * 替换 sql 中的 #{} 为 ?
-     *
-     * @param sql    sql 语句
-     * @param params 解析出的 #{} 中的字符串集合
-     * @return 替换后的 sql
-     */
-    public static String replaceParameters(String sql, List<String> params) {
-        for (String param : params) {
-            sql = sql.replace("#{" + param + "}", "?");
-        }
-        return sql;
-    }
-
-    /**
      * 解析 sql 中的 #{}/${} 中的字符串，并分别保存到 Map
      *
-     * @param sql sql 语句
+     * @param value sql 语句
      * @return 解析得到的包含 #{}/${} 的 Map
      */
-    public static Map<String, List<String>> resolvePlaceholderParameters(String sql) {
-        Map<String, List<String>> params = new HashMap<>();
-        params.put("#", new ArrayList<>());
-        params.put("$", new ArrayList<>());
-        Matcher matcher = PARAMETERS_PATTERN.matcher(sql);
-        while (matcher.find()) {
-            String group = matcher.group();
-            if (group.charAt(0) == '#') {
-                params.get("#").add(group.replaceAll("[#{}]", ""));
+    public static Map<String, List<String>> resolvePlaceholderParameters(Value<String> value) {
+        String sql = value.get();
+        StringBuilder builder = new StringBuilder();
+        List<String> hashesParams = new ArrayList<>();
+        List<String> dollarParams = new ArrayList<>();
+
+        int offset = 0;
+        char[] src = value.get().toCharArray();                                                 // 从数组中复制，避免内存拷贝
+        int begin1 = sql.indexOf("#{");
+        int begin2 = sql.indexOf("${");
+        int begin = begin1 == -1 ? begin2 : (begin2 == -1 ? begin1 : Math.min(begin1, begin2));
+        int end = sql.indexOf("}", begin);
+        while (begin != -1 && end != -1) {
+            // 构建 SQL
+            builder.append(src, offset, begin - offset);
+            String variable = sql.substring(begin + 2, end).trim();
+            if (sql.charAt(begin) == '$') {
+                builder.append(src, begin, end - begin + 1);
+                dollarParams.add(variable);
             } else {
-                params.get("$").add(group.replaceAll("[${}]", ""));
+                builder.append('?');
+                hashesParams.add(variable);
             }
+
+            // 更新索引
+            begin1 = begin1 == -1 ? -1 : sql.indexOf("#{", end);
+            begin2 = begin2 == -1 ? -1 : sql.indexOf("${", end);
+            begin = begin1 == -1 ? begin2 : (begin2 == -1 ? begin1 : Math.min(begin1, begin2));
+            if (begin != -1) {
+                builder.append(src, end + 1, begin - end - 1);
+            } else {
+                builder.append(src, end + 1, src.length - end - 1);                     // 到达结尾，复制剩下的内容
+            }
+            end = sql.indexOf("}", begin);
+            offset = begin;
         }
+
+        // 更新 SQL
+        if (!builder.isEmpty()) {
+            value.set(builder.toString());
+        }
+
+        Map<String, List<String>> params = new HashMap<>(4);
+        params.put("#", hashesParams);
+        params.put("$", dollarParams);
         return params;
     }
 
@@ -113,11 +130,13 @@ public abstract class SQLParametersResolveUtil {
      * @param parameters MethodParameter
      * @return Pair<String, MethodParameter [ ]>，包含解析后的 sql 以及对应的参数数组
      * @see SQLParametersResolveUtil#processMethodParameters(Method, Object[])
-     * @see SQLParametersResolveUtil#resolvePlaceholderParameters(String)
+     * @see SQLParametersResolveUtil#resolvePlaceholderParameters(Value)
      */
     public static Pair<String, MethodParameter[]> resolveSQL(String sql, Map<String, MethodParameter> parameters) {
-        List<MethodParameter> args = new ArrayList<>();
-        Map<String, List<String>> params = resolvePlaceholderParameters(sql);
+        int index = 0;
+        Value<String> valueSQL = new Value<>(sql);
+        Map<String, List<String>> params = resolvePlaceholderParameters(valueSQL);
+        MethodParameter[] args = new MethodParameter[params.get("#").size()];
         for (Map.Entry<String, List<String>> next : params.entrySet()) {
             for (String param : next.getValue()) {
                 Object value = null;
@@ -127,22 +146,23 @@ public abstract class SQLParametersResolveUtil {
                     value = methodParam.getValue();
                     paramType = methodParam.getParamType();
                 } else {
-                    String nested = param.substring(param.indexOf(".") + 1);
-                    Object root = parameters.get(param.split("\\.")[0]).getValue();
+                    int rootIndex = param.indexOf(".");
+                    String nested = param.substring(rootIndex + 1);
+                    Object root = parameters.get(param.substring(0, rootIndex)).getValue();
                     value = ReflectUtil.parseValue(nested, root);
-                    paramType = ReflectUtil.parseFieldType(nested, root.getClass());
+                    paramType = value == null ? null : value.getClass();
                 }
                 if (value == null && log.isDebugEnabled()) {
                     log.debug("discovery null parameter: [{}] !", param);
                 }
                 if ("#".equals(next.getKey())) {
-                    args.add(new MethodParameter(paramType, value, param));
+                    args[index++] = new MethodParameter(paramType, value, param);
                     continue;
                 }
-                sql = sql.replace("${" + param + "}", String.valueOf(value));
+                valueSQL.set(valueSQL.get().replace("${" + param + "}", String.valueOf(value)));
             }
         }
-        return new Pair<>(replaceParameters(sql, params.get("#")), args.toArray(new MethodParameter[0]));
+        return new Pair<>(valueSQL.get(), args);
     }
 
     /**

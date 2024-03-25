@@ -1,5 +1,5 @@
 <mapper namespace="com.kfyty.database.mapper.UserMapper">
-    <select id="findLikeName">
+    <select id="findLikeName2">
         select
             *
         from

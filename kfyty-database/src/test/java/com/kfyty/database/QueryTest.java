@@ -70,8 +70,9 @@ public class QueryTest {
         Map<String, Object> map = this.userMapper.findMapById(UserVo.create(newUser.getId()));
         Map<String, User> userMap = this.userMapper.findUserMap();
         List<Map<String, Object>> maps = this.userMapper.findAllMap();
-        List<User> likeNull = this.userMapper.findLikeName(null);
-        List<User> likeTest = this.userMapper.findLikeName("test");
+        List<User> likeName = this.userMapper.findLikeName1("test");
+        List<User> likeNull = this.userMapper.findLikeName2(null);
+        List<User> likeTest = this.userMapper.findLikeName2("test");
         this.userMapper.deleteByPk(newUser.getId());
         this.userMapper.deleteByPks(Collections.singletonList(newUser.getId()));
         this.userMapper.deleteAll();
@@ -86,6 +87,7 @@ public class QueryTest {
         System.out.println(map);
         System.out.println(userMap);
         System.out.println(maps);
+        System.out.println(likeName);
         System.out.println(likeNull);
         System.out.println(likeTest);
     }

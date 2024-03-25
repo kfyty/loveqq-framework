@@ -34,6 +34,9 @@ public interface UserMapper extends BaseMapper<Integer, User> {
     @Query("select * from user")
     List<Map<String, Object>> findAllMap();
 
+    @Query("select * from user where username like '%${name}%' or create_time like '%${name}%'")
+    List<User> findLikeName1(@Param("name") String name);
+
     /** 动态 SQL 测试 **/
-    List<User> findLikeName(@Param("name") String name);
+    List<User> findLikeName2(@Param("name") String name);
 }
