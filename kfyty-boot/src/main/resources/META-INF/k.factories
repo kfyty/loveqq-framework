@@ -3,6 +3,7 @@ com.kfyty.core.autoconfig.BeanFactoryPreProcessor=\
     com.kfyty.boot.processor.factory.ScanBeanDefinitionBeanFactoryPreProcessor
 
 com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.core.support.io.PathMatchingResourcePatternResolver,\
     com.kfyty.boot.processor.factory.ImportBeanDefinitionBeanFactoryPostProcessor,\
     com.kfyty.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
     com.kfyty.boot.processor.factory.LazyProxyBeanFactoryPostProcessor,\

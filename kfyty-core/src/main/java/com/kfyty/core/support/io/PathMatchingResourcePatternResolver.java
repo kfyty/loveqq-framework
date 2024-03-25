@@ -1,13 +1,12 @@
 package com.kfyty.core.support.io;
 
+import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.support.AntPathMatcher;
 import com.kfyty.core.support.PatternMatcher;
-import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ExceptionUtil;
 import com.kfyty.core.utils.IOUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +18,9 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static com.kfyty.core.utils.ClassLoaderUtil.classLoader;
+import static com.kfyty.core.utils.IOUtil.resolveAllClassPath;
+
 /**
  * 描述: 支持 ant 路径匹配的资源解析器
  *
@@ -26,13 +28,18 @@ import java.util.jar.JarFile;
  * @date 2023/8/7 13:51
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 @Getter
+@Component
 @RequiredArgsConstructor
+@SuppressWarnings("UrlHashCode")
 public class PathMatchingResourcePatternResolver {
+    private volatile boolean loaded;
     private final Set<URL> urls;
-
     private final PatternMatcher patternMatcher;
+
+    public PathMatchingResourcePatternResolver() {
+        this(new HashSet<>());
+    }
 
     public PathMatchingResourcePatternResolver(Set<URL> urls) {
         this(urls, new AntPathMatcher());
@@ -40,8 +47,9 @@ public class PathMatchingResourcePatternResolver {
 
     public Set<URL> findResources(String pattern) {
         try {
+            Set<URL> urls = this.obtainURL();
             Set<URL> resources = new HashSet<>();
-            for (URL url : this.urls) {
+            for (URL url : urls) {
                 if (url.getFile().endsWith(".jar")) {
                     resources.addAll(this.findResourcesByJar(new JarFile(url.getFile().replace("%20", " ")), pattern));
                 } else {
@@ -70,7 +78,7 @@ public class PathMatchingResourcePatternResolver {
         try {
             Set<URL> resources = new HashSet<>();
             File[] files = new File(url.getPath()).listFiles();
-            if (CommonUtil.empty(files)) {
+            if (files == null || files.length < 1) {
                 return resources;
             }
             for (File file : files) {
@@ -80,7 +88,7 @@ public class PathMatchingResourcePatternResolver {
                 }
                 String filePath = file.getPath();
                 if (filePath.contains("classes")) {
-                    filePath = '/' + filePath.substring(filePath.indexOf("classes" + File.separator) + 8).replace('\\', '/');
+                    filePath = filePath.substring(filePath.indexOf("classes" + File.separator) + 8).replace('\\', '/');
                 }
                 if (this.patternMatcher.matches(pattern, filePath)) {
                     resources.add(file.toURI().toURL());
@@ -90,5 +98,17 @@ public class PathMatchingResourcePatternResolver {
         } catch (MalformedURLException e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    protected Set<URL> obtainURL() {
+        if (!this.loaded) {
+            synchronized (this) {
+                if (!this.loaded) {
+                    this.urls.addAll(resolveAllClassPath(classLoader(this.getClass())));
+                    this.loaded = true;
+                }
+            }
+        }
+        return this.urls;
     }
 }

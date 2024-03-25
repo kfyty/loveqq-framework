@@ -15,7 +15,7 @@ import java.util.List;
  * @date 2019/9/5 10:11:12
  * @since JDK 1.8
  */
-public interface SQLServerDatabaseMapper extends AbstractDatabaseMapper {
+public interface SQLServerDatabaseMapper extends DatabaseMapper {
     @Override
     @Query("select distinct i.table_schema databaseName, t.name tableName, e.value tableComment from information_schema.columns i join sys.tables t on i.table_name = t.name left join sys.extended_properties e on e.major_id = t.object_id and e.minor_id = 0 where i.table_schema = #{databaseName} and i.table_name = #{tableName}")
     AbstractTableStructInfo findTableInfo(@Param("databaseName") String dataBaseName, @Param("tableName") String tableName);

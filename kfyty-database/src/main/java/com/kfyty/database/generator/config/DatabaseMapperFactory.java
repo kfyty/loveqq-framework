@@ -1,7 +1,7 @@
 package com.kfyty.database.generator.config;
 
 import com.kfyty.core.autoconfig.beans.FactoryBean;
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
+import com.kfyty.database.generator.mapper.DatabaseMapper;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class DatabaseMapperFactory implements FactoryBean<Class<AbstractDatabaseMapper>> {
-    private final Class<AbstractDatabaseMapper> databaseClass;
+public class DatabaseMapperFactory implements FactoryBean<Class<DatabaseMapper>> {
+    private final Class<DatabaseMapper> databaseClass;
 
     @Override
     public Class<?> getBeanType() {
@@ -21,7 +21,7 @@ public class DatabaseMapperFactory implements FactoryBean<Class<AbstractDatabase
     }
 
     @Override
-    public Class<AbstractDatabaseMapper> getObject() {
+    public Class<DatabaseMapper> getObject() {
         return this.databaseClass;
     }
 }

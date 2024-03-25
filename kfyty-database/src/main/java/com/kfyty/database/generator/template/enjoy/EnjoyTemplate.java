@@ -5,8 +5,10 @@ import com.jfinal.template.Engine;
 import com.jfinal.template.Env;
 import com.jfinal.template.Template;
 import com.jfinal.template.io.Writer;
+import com.jfinal.template.source.StringSource;
 import com.jfinal.template.stat.Scope;
 import com.kfyty.core.io.SimpleBufferedWriter;
+import com.kfyty.core.utils.IOUtil;
 import com.kfyty.database.generator.config.GeneratorConfiguration;
 import com.kfyty.database.generator.info.AbstractTableStructInfo;
 import com.kfyty.database.generator.template.AbstractTemplateEngine;
@@ -62,7 +64,8 @@ public class EnjoyTemplate extends AbstractTemplateEngine {
         }
         if (this.template == null) {
             URL resource = this.getClass().getResource(TemplateEngineUtil.getTemplatePath(prefix) + "/" + super.template);
-            this.template = engine.getTemplate(Objects.requireNonNull(resource, "enjoy template not found").getFile());
+            String templateString = IOUtil.toString(IOUtil.newInputStream(Objects.requireNonNull(resource, "enjoy template not found")));
+            this.template = engine.getTemplate(new StringSource(templateString, super.template));
         }
     }
 

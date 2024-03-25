@@ -1,6 +1,6 @@
 package com.kfyty.database.generator.config;
 
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
+import com.kfyty.database.generator.mapper.DatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 
 import javax.sql.DataSource;
@@ -16,7 +16,7 @@ public interface GeneratorConfigurationSupport {
 
     DataSource getDataSource();
 
-    default Class<? extends AbstractDatabaseMapper> databaseMapping() {
+    default Class<? extends DatabaseMapper> databaseMapping() {
         return null;
     }
 

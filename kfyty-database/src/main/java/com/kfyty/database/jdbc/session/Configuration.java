@@ -3,6 +3,7 @@ package com.kfyty.database.jdbc.session;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.jdbc.transaction.Transaction;
 import com.kfyty.core.method.MethodParameter;
+import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.database.jdbc.intercept.Interceptor;
@@ -86,6 +87,12 @@ public class Configuration {
     private DataSource dataSource;
 
     /**
+     * 资源匹配器
+     */
+    @Getter
+    private PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver;
+
+    /**
      * 事务工厂
      */
     @Getter
@@ -124,6 +131,17 @@ public class Configuration {
     }
 
     /**
+     * 设置资源匹配器
+     *
+     * @param pathMatchingResourcePatternResolver 资源匹配器
+     * @return this
+     */
+    public Configuration setPathMatchingResourcePatternResolver(PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver) {
+        this.pathMatchingResourcePatternResolver = Objects.requireNonNull(pathMatchingResourcePatternResolver);
+        return this;
+    }
+
+    /**
      * 设置事务工厂
      *
      * @param transactionFactory 事务工厂
@@ -143,6 +161,7 @@ public class Configuration {
      */
     public Configuration setDynamicProvider(DynamicProvider<?> dynamicProvider, String... paths) {
         this.dynamicProvider = Objects.requireNonNull(dynamicProvider);
+        this.dynamicProvider.setConfiguration(this);
         return this.addTemplateStatementPaths(paths);
     }
 

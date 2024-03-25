@@ -8,6 +8,16 @@
     <artifactId>kfyty-framework</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <description>ioc/aop/jdbc/mvc/javafx framework</description>
+
+    <developers>
+        <developer>
+            <id>kfyty</id>
+            <name>kfyty</name>
+            <url>http://www.kfyty.com</url>
+            <email>kfyty725@hotmail.com</email>
+        </developer>
+    </developers>
 
     <modules>
         <module>kfyty-core</module>
