@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql.dynamic;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.core.method.MethodParameter;
@@ -71,7 +72,7 @@ public interface DynamicProvider<TS extends TemplateStatement> extends Provider<
      * @return SQL
      */
     @Override
-    default String doProvide(Class<?> mapperClass, Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    default String doProvide(Class<?> mapperClass, Method mapperMethod, Value<Annotation> annotation, Map<String, MethodParameter> params) {
         return this.doProvide(mapperClass, mapperMethod, params);
     }
 }

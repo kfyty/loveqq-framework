@@ -136,7 +136,7 @@ public abstract class SQLParametersResolveUtil {
                     log.debug("discovery null parameter: [{}] !", param);
                 }
                 if ("#".equals(next.getKey())) {
-                    args.add(new MethodParameter(paramType, value));
+                    args.add(new MethodParameter(paramType, value, param));
                     continue;
                 }
                 sql = sql.replace("${" + param + "}", String.valueOf(value));

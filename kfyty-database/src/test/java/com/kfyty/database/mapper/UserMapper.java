@@ -1,11 +1,12 @@
 package com.kfyty.database.mapper;
 
+import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.BaseMapper;
 import com.kfyty.database.jdbc.annotation.ForEach;
-import com.kfyty.database.jdbc.annotation.SubQuery;
-import com.kfyty.database.entity.User;
+import com.kfyty.database.jdbc.annotation.If;
 import com.kfyty.database.jdbc.annotation.Param;
 import com.kfyty.database.jdbc.annotation.Query;
+import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.vo.UserVo;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public interface UserMapper extends BaseMapper<Integer, User> {
     @Query(value = "select * from user", subQuery = @SubQuery(value = "select * from user where id = #{userId}", paramField = "id", mapperField = "userId", returnField = "user"))
     List<UserVo> findUserVo();
 
-    @Query(value = "select id from user where username = #{username} or id in ", forEach = @ForEach(collection = "ids", open = "(", separator = ",", close = ")", item = "id", sql = "#{id}"))
+    @Query(value = "select id from user where username = #{username}", _if = @If(test = "ids != null and ids.size() > 0", value = "or id in", forEach = @ForEach(collection = "ids", item = "id", sql = "#{id}")))
     int[] findAllIds(String username, @Param("ids") List<Integer> ids);
 
     @Query("select * from user where id = #{vo.id}")

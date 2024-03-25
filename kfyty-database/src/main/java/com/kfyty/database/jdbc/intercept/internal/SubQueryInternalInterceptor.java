@@ -2,6 +2,7 @@ package com.kfyty.database.jdbc.intercept.internal;
 
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.generic.SimpleGeneric;
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -60,7 +61,7 @@ public class SubQueryInternalInterceptor implements QueryInterceptor {
                 Field returnField = ReflectUtil.getField(retValue.getClass(), subQuery.returnField());
                 Map<String, MethodParameter> params = SQLParametersResolveUtil.resolveMappingParameters(subQuery.paramField(), subQuery.mapperField(), retValue);
                 SimpleGeneric returnType = SimpleGeneric.from(returnField);
-                ReflectUtil.setFieldValue(retValue, returnField, sqlSession.requestExecuteSQL(mapperMethod, subQuery, returnType, params));
+                ReflectUtil.setFieldValue(retValue, returnField, sqlSession.requestExecuteSQL(mapperMethod, new Value<>(subQuery), returnType, params));
             }
         } catch (SQLException e) {
             throw new ExecuteInterceptorException("processSubQuery failed", e);

@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 
 import java.lang.annotation.Annotation;
@@ -27,8 +28,8 @@ public interface Provider<T extends Annotation> {
      * @param params       方法参数
      * @return SQL
      */
-    default String doProvide(Class<?> mapperClass, Method mapperMethod, T annotation, Map<String, MethodParameter> params) {
-        Method method = getMethod(this.getClass(), mapperMethod.getName(), Class.class, Method.class, annotation.annotationType(), Map.class);
+    default String doProvide(Class<?> mapperClass, Method mapperMethod, Value<T> annotation, Map<String, MethodParameter> params) {
+        Method method = getMethod(this.getClass(), mapperMethod.getName(), Class.class, Method.class, Value.class, Map.class);
         return (String) invokeMethod(this, method, mapperClass, mapperMethod, annotation, params);
     }
 }

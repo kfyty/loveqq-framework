@@ -4,8 +4,8 @@ import com.jfinal.template.Engine;
 import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
-import com.kfyty.database.jdbc.intercept.internal.ForEachInternalInterceptor;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
+import com.kfyty.database.jdbc.intercept.internal.IfInternalInterceptor;
 import com.kfyty.database.jdbc.intercept.internal.SubQueryInternalInterceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
@@ -39,7 +39,7 @@ public class QueryTest {
                 .setDataSource(dataSource)
                 .setTransactionFactory(() -> new JdbcTransaction(dataSource))
                 .addInterceptor(new GeneratedKeysInterceptor())
-                .addInterceptor(new ForEachInternalInterceptor())
+                .addInterceptor(new IfInternalInterceptor())
                 .addInterceptor(new SubQueryInternalInterceptor())
                 .setDynamicProvider(dynamicProvider, "/mapper/*.xml");
         dynamicProvider.setConfiguration(configuration);
@@ -55,11 +55,16 @@ public class QueryTest {
         User one = this.userMapper.selectByPk(newUser.getId());
         List<User> more = this.userMapper.selectByPks(Collections.singletonList(newUser.getId()));
         one.setUsername("update");
+        one.setImage(null);
         this.userMapper.updateByPk(one);
         UserVo user = this.userMapper.findById(one.getId());
         String name = this.userMapper.findNameById(one.getId());
         List<UserVo> userVo = this.userMapper.findUserVo();
         List<User> users = this.userMapper.selectAll();
+        users.get(0).setUsername("test1");
+        users.get(1).setUsername("test2");
+        users.get(2).setUsername("test3");
+        users.get(2).setImage(null);
         this.userMapper.updateBatch(users);
         int[] ids = this.userMapper.findAllIds("test", Collections.singletonList(one.getId()));
         Map<String, Object> map = this.userMapper.findMapById(UserVo.create(newUser.getId()));

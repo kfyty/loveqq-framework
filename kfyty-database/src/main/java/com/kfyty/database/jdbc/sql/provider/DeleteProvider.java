@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql.provider;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.core.method.MethodParameter;
 
@@ -15,9 +16,9 @@ import java.util.Map;
  */
 public interface DeleteProvider {
 
-    String deleteByPk(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+    String deleteByPk(Class<?> mapperClass, Method sourceMethod, Value<Execute> annotation, Map<String, MethodParameter> params);
 
-    String deleteByPks(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+    String deleteByPks(Class<?> mapperClass, Method sourceMethod, Value<Execute> annotation, Map<String, MethodParameter> params);
 
-    String deleteAll(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+    String deleteAll(Class<?> mapperClass, Method sourceMethod, Value<Execute> annotation, Map<String, MethodParameter> params);
 }
