@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql.provider;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.core.method.MethodParameter;
 
@@ -15,9 +16,9 @@ import java.util.Map;
  */
 public interface SelectProvider {
 
-    String selectByPk(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params);
+    String selectByPk(Class<?> mapperClass, Method sourceMethod, Value<Query> annotation, Map<String, MethodParameter> params);
 
-    String selectByPks(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params);
+    String selectByPks(Class<?> mapperClass, Method sourceMethod, Value<Query> annotation, Map<String, MethodParameter> params);
 
-    String selectAll(Class<?> mapperClass, Method sourceMethod, Query annotation, Map<String, MethodParameter> params);
+    String selectAll(Class<?> mapperClass, Method sourceMethod, Value<Query> annotation, Map<String, MethodParameter> params);
 }

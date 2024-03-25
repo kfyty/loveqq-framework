@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.database.jdbc.session.Configuration;
@@ -81,7 +82,7 @@ public class ProviderAdapter {
      * @return SQL
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public String doProvide(Class<?> providerClass, Class<?> mapperClass, Method sourceMethod, Annotation annotation, Map<String, MethodParameter> params) {
+    public String doProvide(Class<?> providerClass, Class<?> mapperClass, Method sourceMethod, Value<Annotation> annotation, Map<String, MethodParameter> params) {
         if (DynamicProvider.class.isAssignableFrom(providerClass)) {
             return this.configuration.getDynamicProvider().doProvide(mapperClass, sourceMethod, annotation, params);
         }

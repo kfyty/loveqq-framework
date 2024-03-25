@@ -37,9 +37,16 @@ public @interface Query {
     String key() default "";
 
     /**
-     * @see ForEach
+     * @see If
      */
-    ForEach[] forEach() default {};
+    If[] _if() default {};
+
+    /**
+     * 最后拼接的 SQL
+     *
+     * @return sql
+     */
+    String last() default "";
 
     /**
      * @see SubQuery

@@ -4,6 +4,7 @@ import com.kfyty.core.generic.Generic;
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.jdbc.TransactionHolder;
 import com.kfyty.core.jdbc.transaction.Transaction;
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.CommonUtil;
@@ -104,11 +105,11 @@ public class SqlSession implements InvocationHandler {
         Annotation[] annotations = this.processAnnotation(method);
         Map<String, MethodParameter> methodParameter = SQLParametersResolveUtil.processMethodParameters(method, args);
         if (annotations.length == 1) {
-            return this.requestExecuteSQL(method, annotations[0], returnType, methodParameter);
+            return this.requestExecuteSQL(method, new Value<>(annotations[0]), returnType, methodParameter);
         }
         List<Object> os = new ArrayList<>();
         for (Annotation annotation : annotations) {
-            os.add(this.requestExecuteSQL(method, annotation, returnType, methodParameter));
+            os.add(this.requestExecuteSQL(method, new Value<>(annotation), returnType, methodParameter));
         }
         return os;
     }
@@ -121,8 +122,8 @@ public class SqlSession implements InvocationHandler {
      * @param params     参数
      * @return 返回值
      */
-    public Object requestExecuteSQL(Method mapperMethod, Annotation annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) throws SQLException {
-        SQLParametersResolveUtil.checkMapKey(annotation, returnType);
+    public Object requestExecuteSQL(Method mapperMethod, Value<Annotation> annotation, SimpleGeneric returnType, Map<String, MethodParameter> params) throws SQLException {
+        SQLParametersResolveUtil.checkMapKey(annotation.get(), returnType);
         final String sql = this.resolveSQL(mapperMethod, annotation, params);
         final Pair<String, MethodParameter[]> sqlParams = SQLParametersResolveUtil.resolveSQL(sql, params);
         final Transaction before = TransactionHolder.currentTransaction(false);
@@ -130,9 +131,9 @@ public class SqlSession implements InvocationHandler {
             Transaction transaction = this.getTransaction();
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
                 MethodParameter method = new MethodParameter(mapperMethod, params.values().toArray(MethodParameter[]::new));
-                return this.invokeInterceptorChain(method, annotation, sqlParams, returnType);
+                return this.invokeInterceptorChain(method, annotation.get(), sqlParams, returnType);
             }
-            if (annotation.annotationType() == Query.class || annotation.annotationType() == SubQuery.class) {
+            if (annotation.get().annotationType() == Query.class || annotation.get().annotationType() == SubQuery.class) {
                 return JdbcUtil.query(transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
             }
             return JdbcUtil.execute(transaction, sqlParams.getKey(), sqlParams.getValue());
@@ -196,12 +197,12 @@ public class SqlSession implements InvocationHandler {
      * @param annotation   注解
      * @return SQL
      */
-    private String resolveSQL(Method mapperMethod, Annotation annotation, Map<String, MethodParameter> params) {
-        Class<?> provider = invokeMethod(annotation, "provider");
+    private String resolveSQL(Method mapperMethod, Value<Annotation> annotation, Map<String, MethodParameter> params) {
+        Class<?> provider = invokeMethod(annotation.get(), "provider");
         if (!provider.equals(Provider.class)) {
             return this.providerAdapter.doProvide(provider, this.mapperClass, mapperMethod, annotation, params);
         }
-        String sql = invokeMethod(annotation, "value");
+        String sql = invokeMethod(annotation.get(), "value");
         if (CommonUtil.empty(sql)) {
             throw new IllegalArgumentException("SQL statement is empty !");
         }

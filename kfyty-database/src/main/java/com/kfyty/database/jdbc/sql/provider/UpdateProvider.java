@@ -1,5 +1,6 @@
 package com.kfyty.database.jdbc.sql.provider;
 
+import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.core.method.MethodParameter;
 
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 public interface UpdateProvider {
 
-    String updateByPk(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+    String updateByPk(Class<?> mapperClass, Method sourceMethod, Value<Execute> annotation, Map<String, MethodParameter> params);
 
-    String updateBatch(Class<?> mapperClass, Method sourceMethod, Execute annotation, Map<String, MethodParameter> params);
+    String updateBatch(Class<?> mapperClass, Method sourceMethod, Value<Execute> annotation, Map<String, MethodParameter> params);
 }

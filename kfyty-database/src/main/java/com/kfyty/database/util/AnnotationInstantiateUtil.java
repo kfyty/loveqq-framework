@@ -2,11 +2,14 @@ package com.kfyty.database.util;
 
 import com.kfyty.database.jdbc.annotation.Execute;
 import com.kfyty.database.jdbc.annotation.ForEach;
+import com.kfyty.database.jdbc.annotation.If;
 import com.kfyty.database.jdbc.annotation.Query;
 import com.kfyty.database.jdbc.annotation.SubQuery;
+import com.kfyty.database.jdbc.sql.Provider;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.function.Function;
 
 import static com.kfyty.database.jdbc.session.Configuration.SELECT_LABEL;
@@ -20,6 +23,7 @@ import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
  * @email kfyty725@hotmail.com
  */
 public abstract class AnnotationInstantiateUtil {
+    private static final If[] EMPTY_IF_ARRAY = new If[0];
     private static final ForEach[] EMPTY_FOR_EACH_ARRAY = new ForEach[0];
     private static final SubQuery[] EMPTY_SUB_QUERY_ARRAY = new SubQuery[0];
 
@@ -41,8 +45,13 @@ public abstract class AnnotationInstantiateUtil {
             }
 
             @Override
-            public ForEach[] forEach() {
-                return EMPTY_FOR_EACH_ARRAY;
+            public If[] _if() {
+                return EMPTY_IF_ARRAY;
+            }
+
+            @Override
+            public String last() {
+                return EMPTY_STRING;
             }
 
             @Override
@@ -72,8 +81,13 @@ public abstract class AnnotationInstantiateUtil {
             }
 
             @Override
-            public ForEach[] forEach() {
-                return EMPTY_FOR_EACH_ARRAY;
+            public If[] _if() {
+                return EMPTY_IF_ARRAY;
+            }
+
+            @Override
+            public String last() {
+                return EMPTY_STRING;
             }
 
             @Override
@@ -85,6 +99,67 @@ public abstract class AnnotationInstantiateUtil {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return Execute.class;
+            }
+        };
+    }
+
+    public static Execute createExecute(String sql, List<If> ifs, String last) {
+        return new Execute() {
+
+            @Override
+            public String value() {
+                return sql;
+            }
+
+            @Override
+            public If[] _if() {
+                return ifs.toArray(If[]::new);
+            }
+
+            @Override
+            public String last() {
+                return last;
+            }
+
+            @Override
+            @SuppressWarnings("rawtypes")
+            public Class<? extends Provider> provider() {
+                return Provider.class;
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Execute.class;
+            }
+        };
+    }
+
+    public static If createIf(String test, String value, String trim) {
+        return new If() {
+
+            @Override
+            public String test() {
+                return test;
+            }
+
+            @Override
+            public String value() {
+                return value;
+            }
+
+            @Override
+            public String trim() {
+                return trim;
+            }
+
+            @Override
+            public ForEach[] forEach() {
+                return EMPTY_FOR_EACH_ARRAY;
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return If.class;
             }
         };
     }

@@ -54,9 +54,16 @@ public @interface SubQuery {
     String[] mapperField();
 
     /**
-     * @see ForEach
+     * @see If
      */
-    ForEach[] forEach() default {};
+    If[] _if() default {};
+
+    /**
+     * 最后拼接的 SQL
+     *
+     * @return sql
+     */
+    String last() default "";
 
     /**
      * sql 提供 class
