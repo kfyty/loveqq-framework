@@ -1,6 +1,6 @@
 package com.kfyty.database.generator.config;
 
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
+import com.kfyty.database.generator.mapper.DatabaseMapper;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.core.autoconfig.annotation.Component;
@@ -22,7 +22,7 @@ public class DatabaseMapperImporter implements ImportBeanDefinition {
 
     @Override
     public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
-        return AbstractDatabaseMapper.class::isAssignableFrom;
+        return DatabaseMapper.class::isAssignableFrom;
     }
 
     @Override

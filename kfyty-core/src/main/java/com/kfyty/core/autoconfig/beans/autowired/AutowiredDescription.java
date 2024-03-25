@@ -2,6 +2,7 @@ package com.kfyty.core.autoconfig.beans.autowired;
 
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.ReflectUtil;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,19 @@ import static com.kfyty.core.utils.CommonUtil.notEmpty;
  */
 @RequiredArgsConstructor
 public class AutowiredDescription {
+    /**
+     * jakarta api 是否可用
+     */
+    private static boolean JAKARTA_AVAILABLE;
+
+    static {
+        try {
+            JAKARTA_AVAILABLE = ReflectUtil.isPresent("jakarta.annotation.Resource");
+        } catch (Throwable e) {
+            JAKARTA_AVAILABLE = false;
+        }
+    }
+
     /**
      * bean name
      */
@@ -72,7 +86,7 @@ public class AutowiredDescription {
 
     public static AutowiredDescription from(AccessibleObject accessibleObject) {
         Autowired autowired = AnnotationUtil.findAnnotation(accessibleObject, Autowired.class);
-        if (autowired != null) {
+        if (autowired != null || !JAKARTA_AVAILABLE) {
             return from(autowired);
         }
         Resource resource = AnnotationUtil.findAnnotation(accessibleObject, Resource.class);

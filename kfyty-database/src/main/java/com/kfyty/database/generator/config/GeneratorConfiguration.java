@@ -2,11 +2,10 @@ package com.kfyty.database.generator.config;
 
 import com.kfyty.database.generator.config.annotation.BasePackage;
 import com.kfyty.database.generator.config.annotation.Database;
-import com.kfyty.database.generator.config.annotation.DatabaseMapper;
 import com.kfyty.database.generator.config.annotation.FilePath;
 import com.kfyty.database.generator.config.annotation.Table;
 import com.kfyty.database.generator.config.annotation.Template;
-import com.kfyty.database.generator.mapper.AbstractDatabaseMapper;
+import com.kfyty.database.generator.mapper.DatabaseMapper;
 import com.kfyty.database.generator.template.GeneratorTemplate;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -46,7 +45,7 @@ public class GeneratorConfiguration {
 
     protected List<GeneratorTemplate> templateList;
 
-    protected Class<? extends AbstractDatabaseMapper> databaseMapper;
+    protected Class<? extends DatabaseMapper> databaseMapper;
 
     protected String databaseName;
 
@@ -106,7 +105,7 @@ public class GeneratorConfiguration {
 
     private void initGeneratorConfigurationFromAnnotation(GeneratorConfigurationSupport configuration) {
         Class<? extends GeneratorConfigurationSupport> configurationClass = configuration.getClass();
-        this.databaseMapper = this.databaseMapper != null ? this.databaseMapper : ofNullable(AnnotationUtil.findAnnotation(configurationClass, DatabaseMapper.class)).map(DatabaseMapper::value).orElse(null);
+        this.databaseMapper = this.databaseMapper != null ? this.databaseMapper : ofNullable(AnnotationUtil.findAnnotation(configurationClass, com.kfyty.database.generator.config.annotation.DatabaseMapper.class)).map(com.kfyty.database.generator.config.annotation.DatabaseMapper::value).orElse(null);
         this.databaseName = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Database.class)).map(Database::value).orElse(null);
         this.tables = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> CommonUtil.notEmpty(e.value()[0])).map(e -> new HashSet<>(Arrays.asList(e.value()))).orElse(null);
         this.tablePattern = ofNullable(AnnotationUtil.findAnnotation(configurationClass, Table.class)).filter(e -> CommonUtil.notEmpty(e.pattern())).map(e -> Pattern.compile(e.pattern())).orElse(MATCH_ALL_PATTERN);

@@ -2,6 +2,7 @@ package com.kfyty.database;
 
 import com.jfinal.template.Engine;
 import com.kfyty.core.jdbc.JdbcTransaction;
+import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.core.utils.PropertiesUtil;
 import com.kfyty.database.entity.User;
 import com.kfyty.database.jdbc.intercept.internal.GeneratedKeysInterceptor;
@@ -37,12 +38,12 @@ public class QueryTest {
         DynamicProvider<?> dynamicProvider = new EnjoyDynamicProvider().setEngine(Engine.create("test"));
         Configuration configuration = new Configuration()
                 .setDataSource(dataSource)
+                .setPathMatchingResourcePatternResolver(new PathMatchingResourcePatternResolver())
                 .setTransactionFactory(() -> new JdbcTransaction(dataSource))
                 .addInterceptor(new GeneratedKeysInterceptor())
                 .addInterceptor(new IfInternalInterceptor())
                 .addInterceptor(new SubQueryInternalInterceptor())
                 .setDynamicProvider(dynamicProvider, "/mapper/*.xml");
-        dynamicProvider.setConfiguration(configuration);
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
         this.userMapper = proxyFactory.createProxy(UserMapper.class);
     }

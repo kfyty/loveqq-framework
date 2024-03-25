@@ -108,7 +108,7 @@ public abstract class IOUtil {
             }
             out.flush();
             return out;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }
@@ -137,7 +137,7 @@ public abstract class IOUtil {
         try {
             out.write(bytes, start, limit);
             return out;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }
@@ -195,6 +195,20 @@ public abstract class IOUtil {
     }
 
     /**
+     * 从 URL 返回一个输入流
+     *
+     * @param url URL
+     * @return 输入流
+     */
+    public static InputStream newInputStream(URL url) {
+        try {
+            return url.openStream();
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
      * 从文件返回一个输入流
      *
      * @param file 文件
@@ -203,7 +217,7 @@ public abstract class IOUtil {
     public static InputStream newInputStream(File file) {
         try {
             return Files.newInputStream(file.toPath());
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }
@@ -217,7 +231,7 @@ public abstract class IOUtil {
     public static OutputStream newOutputStream(File file) {
         try {
             return Files.newOutputStream(file.toPath());
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }

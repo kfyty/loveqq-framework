@@ -15,7 +15,7 @@ import java.util.List;
  * @date 2019/8/19 14:16:41
  * @since JDK 1.8
  */
-public interface OracleDatabaseMapper extends AbstractDatabaseMapper {
+public interface OracleDatabaseMapper extends DatabaseMapper {
     @Override
     @Query("select OWNER \"databaseName\", TABLE_NAME, COMMENTS \"tableComment\" from all_tab_comments where OWNER = #{databaseName} and TABLE_NAME = #{tableName}")
     AbstractTableStructInfo findTableInfo(@Param("databaseName") String dataBaseName, @Param("tableName") String tableName);

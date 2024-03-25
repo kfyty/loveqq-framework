@@ -76,17 +76,13 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
             this.autowiredProcessor.doAutowired(bean, field, description.markLazied(hasAnnotation(field, Lazy.class)));
         }
         for (Field field : laziedFields) {
-            this.autowiredProcessor.doAutowired(bean, field, AutowiredDescription.from(field).markLazied(hasAnnotation(field, Lazy.class)));
+            this.autowiredProcessor.doAutowired(bean, field);
         }
     }
 
     protected void autowiredBeanMethod(Class<?> clazz, Object bean) {
         for (Method method : ReflectUtil.getMethods(clazz)) {
-            AutowiredDescription description = AutowiredDescription.from(method);
-            if (description == null) {
-                continue;
-            }
-            this.autowiredProcessor.doAutowired(bean, method, description.markLazied(hasAnnotation(method, Lazy.class)));
+            this.autowiredProcessor.doAutowired(bean, method);
         }
     }
 }

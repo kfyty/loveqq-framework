@@ -1,6 +1,7 @@
 package com.kfyty.database.jdbc.autoconfig;
 
 import com.kfyty.core.jdbc.transaction.Transaction;
+import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.database.jdbc.intercept.Interceptor;
 import com.kfyty.database.jdbc.session.Configuration;
 import com.kfyty.database.jdbc.session.SqlSessionProxyFactory;
@@ -28,6 +29,9 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver;
+
     @Autowired(value = "transactionFactory", required = false)
     private Supplier<Transaction> transactionFactory;
 
@@ -46,12 +50,13 @@ public class SqlSessionProxyFactoryBean implements FactoryBean<SqlSessionProxyFa
     public SqlSessionProxyFactory getObject() {
         Configuration configuration = new Configuration()
                 .setDataSource(this.dataSource)
+                .setPathMatchingResourcePatternResolver(this.pathMatchingResourcePatternResolver)
                 .setInterceptors(this.interceptors);
         if (this.transactionFactory != null) {
             configuration.setTransactionFactory(this.transactionFactory);
         }
         if (this.dynamicProvider != null) {
-            this.dynamicProvider.setConfiguration(configuration.setDynamicProvider(dynamicProvider));
+            configuration.setDynamicProvider(this.dynamicProvider);
         }
         return new SqlSessionProxyFactory(configuration);
     }

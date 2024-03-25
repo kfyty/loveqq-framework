@@ -1,9 +1,9 @@
 package com.kfyty.core.autoconfig.beans.autowired;
 
+import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.LaziedObject;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.generic.Generic;
@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isLazied;
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isRequired;
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.core.utils.AopUtil.isJdkProxy;
 import static java.util.Optional.ofNullable;
@@ -65,11 +66,17 @@ public class AutowiredProcessor {
     }
 
     public void doAutowired(Object bean, Field field) {
-        this.doAutowired(bean, field, AutowiredDescription.from(field));
+        AutowiredDescription description = AutowiredDescription.from(field);
+        if (description != null) {
+            this.doAutowired(bean, field, description.markLazied(hasAnnotation(field, com.kfyty.core.autoconfig.annotation.Lazy.class)));
+        }
     }
 
     public void doAutowired(Object bean, Method method) {
-        this.doAutowired(bean, method, AutowiredDescription.from(method));
+        AutowiredDescription description = AutowiredDescription.from(method);
+        if (description != null) {
+            this.doAutowired(bean, method, description.markLazied(hasAnnotation(method, com.kfyty.core.autoconfig.annotation.Lazy.class)));
+        }
     }
 
     public void doAutowired(Object bean, Field field, AutowiredDescription description) {
@@ -149,33 +156,33 @@ public class AutowiredProcessor {
         return resolveBean;
     }
 
-    private void checkResolving(String targetBeanName) {
-        if (resolving.contains(targetBeanName)) {
+    private synchronized void checkResolving(String targetBeanName) {
+        if (this.resolving.contains(targetBeanName)) {
             throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
         }
     }
 
-    private void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+    private synchronized void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
         if (!isGeneric) {
             this.checkResolving(targetBeanName);
             if (!this.context.containsReference(targetBeanName)) {
-                resolving.add(targetBeanName);
+                this.resolving.add(targetBeanName);
             }
             return;
         }
         for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
             this.checkResolving(beanDefinition.getBeanName());
             if (!this.context.containsReference(beanDefinition.getBeanName())) {
-                resolving.add(beanDefinition.getBeanName());
+                this.resolving.add(beanDefinition.getBeanName());
             }
         }
     }
 
-    private void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+    private synchronized void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
         if (!isGeneric) {
-            resolving.remove(targetBeanName);
+            this.resolving.remove(targetBeanName);
         } else {
-            this.context.getBeanDefinitions(targetType).values().forEach(e -> resolving.remove(e.getBeanName()));
+            this.context.getBeanDefinitions(targetType).values().forEach(e -> this.resolving.remove(e.getBeanName()));
         }
     }
 

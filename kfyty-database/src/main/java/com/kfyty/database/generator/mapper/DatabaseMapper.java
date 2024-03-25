@@ -16,7 +16,7 @@ import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING;
  * @date 2019/8/19 14:15:05
  * @since JDK 1.8
  */
-public interface AbstractDatabaseMapper {
+public interface DatabaseMapper {
     @Query(EMPTY_STRING)
     default List<String> findTableList() {
         return null;

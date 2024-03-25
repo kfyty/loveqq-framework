@@ -1,8 +1,7 @@
 package com.kfyty.database.jdbc.sql.dynamic;
 
 import com.kfyty.core.method.MethodParameter;
-import com.kfyty.core.utils.ClassLoaderUtil;
-import com.kfyty.core.utils.IOUtil;
+import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.core.utils.XmlUtil;
 import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.database.jdbc.session.Configuration;
@@ -36,10 +35,11 @@ public abstract class AbstractDynamicProvider<TS extends TemplateStatement> impl
 
     @Override
     public List<TS> resolve(List<String> paths) {
-        List<TS> templateStatements = new ArrayList<>();
         String templateSuffix = this.getTemplateSuffix();
+        List<TS> templateStatements = new ArrayList<>();
+        PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver = this.configuration.getPathMatchingResourcePatternResolver();
         for (String path : paths) {
-            for (URL file : IOUtil.scanFiles(path, ClassLoaderUtil.classLoader(this.getClass()))) {
+            for (URL file : pathMatchingResourcePatternResolver.findResources(path)) {
                 if (!file.getFile().endsWith(templateSuffix)) {
                     continue;
                 }
