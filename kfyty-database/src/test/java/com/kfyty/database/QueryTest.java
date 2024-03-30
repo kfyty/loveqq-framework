@@ -43,7 +43,7 @@ public class QueryTest {
                 .addInterceptor(new GeneratedKeysInterceptor())
                 .addInterceptor(new IfInternalInterceptor())
                 .addInterceptor(new SubQueryInternalInterceptor())
-                .setDynamicProvider(dynamicProvider, "/mapper/*.xml");
+                .setDynamicProvider(dynamicProvider, "mapper/*.xml");
         SqlSessionProxyFactory proxyFactory = new SqlSessionProxyFactory(configuration);
         this.userMapper = proxyFactory.createProxy(UserMapper.class);
     }
