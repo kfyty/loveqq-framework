@@ -193,13 +193,13 @@ public abstract class BeanUtil {
         Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
         for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
             if (!targetFieldMap.containsKey(fieldEntry.getKey())) {
-                log.warn("cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass());
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass()));
                 continue;
             }
             Field field = targetFieldMap.get(fieldEntry.getKey());
             Object fieldValue = ReflectUtil.getFieldValue(source, fieldEntry.getValue());
             if (!fieldValTest.test(field, fieldValue)) {
-                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy properties skip field: {}", param), fieldEntry.getValue());
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", fieldEntry.getValue()));
                 continue;
             }
             ReflectUtil.setFieldValue(target, field, fieldValue);
@@ -223,11 +223,11 @@ public abstract class BeanUtil {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             Field field = ReflectUtil.getField(clazz, entry.getKey());
             if (field == null) {
-                log.warn("cannot copy properties [{}], no field found from target class [{}] !", entry.getKey(), clazz);
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
                 continue;
             }
             if (!fieldValTest.test(field, entry.getValue())) {
-                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy properties skip field: {}", param), field);
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", field));
                 continue;
             }
             ReflectUtil.setFieldValue(o, field, entry.getValue());
@@ -250,7 +250,7 @@ public abstract class BeanUtil {
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {
             Object fieldValue = ReflectUtil.getFieldValue(obj, entry.getValue());
             if (!fieldValTest.test(entry.getValue(), entry.getValue())) {
-                LogUtil.logIfDebugEnabled((log, param) -> log.debug("copy properties skip field: {}", param), entry.getValue());
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
                 continue;
             }
             map.put(entry.getKey(), fieldValue);

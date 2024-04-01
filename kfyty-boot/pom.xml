@@ -25,7 +25,7 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>kfyty-mvc</artifactId>
+            <artifactId>kfyty-boot-starter-tomcat</artifactId>
             <version>${kfyty.utils.version}</version>
             <optional>true</optional>
         </dependency>

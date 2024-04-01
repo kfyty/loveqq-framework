@@ -9,7 +9,7 @@ import com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.mvc.servlet.DispatcherServlet;
+import com.kfyty.web.mvc.servlet.DispatcherServlet;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -23,10 +23,7 @@ import jakarta.servlet.ServletContextListener;
  */
 @Component
 @EnableAutoConfiguration
-@ComponentScan(excludeFilter = @ComponentFilter({
-        "com.kfyty.mvc.autoconfig.TomcatAutoConfig",
-        "com.kfyty.mvc.autoconfig.WebSocketAutoConfig"
-}))
+@ComponentScan(excludeFilter = @ComponentFilter("com.kfyty.boot.mvc.servlet.tomcat.autoconfig.TomcatAutoConfig"))
 public class WebMvcAutoConfigListener implements ServletContextListener {
     /**
      * BeanFactory 属性 key

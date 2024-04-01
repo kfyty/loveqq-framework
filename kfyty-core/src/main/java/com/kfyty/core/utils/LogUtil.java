@@ -3,7 +3,7 @@ package com.kfyty.core.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * 描述: 打印日志工具
@@ -15,25 +15,25 @@ import java.util.function.BiConsumer;
 @Slf4j
 public abstract class LogUtil {
 
-    public static void logIfDebugEnabled(BiConsumer<Logger, Object[]> print, Object ... params) {
+    public static void logIfDebugEnabled(Logger log, Consumer<Logger> loggerConsumer) {
         if(log.isDebugEnabled()) {
-            print.accept(log, params);
+            loggerConsumer.accept(log);
         }
     }
 
-    public static <T> T logIfDebugEnabled(T defaultValue, BiConsumer<Logger, Object[]> print, Object ... params) {
-        logIfDebugEnabled(print, params);
+    public static <T> T logIfDebugEnabled(Logger log, Consumer<Logger> loggerConsumer, T defaultValue) {
+        logIfDebugEnabled(log, loggerConsumer);
         return defaultValue;
     }
 
-    public static void logIfWarnEnabled(BiConsumer<Logger, Object[]> print, Object ... params) {
+    public static void logIfWarnEnabled(Logger log, Consumer<Logger> loggerConsumer) {
         if(log.isWarnEnabled()) {
-            print.accept(log, params);
+            loggerConsumer.accept(log);
         }
     }
 
-    public static <T> T logIfWarnEnabled(T defaultValue, BiConsumer<Logger, Object[]> print, Object ... params) {
-        logIfWarnEnabled(print, params);
+    public static <T> T logIfWarnEnabled(Logger log, Consumer<Logger> loggerConsumer, T defaultValue) {
+        logIfWarnEnabled(log, loggerConsumer);
         return defaultValue;
     }
 }

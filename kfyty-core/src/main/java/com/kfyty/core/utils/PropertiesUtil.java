@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
@@ -125,7 +125,7 @@ public abstract class PropertiesUtil {
             properties.putAll(flatMap(yaml.load(new InputStreamReader(stream, StandardCharsets.UTF_8))));
             return properties;
         } catch (IOException e) {
-            throw new SupportException("load properties failed !", e);
+            throw new ResolvableException("load properties failed !", e);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodInvocationInterceptor;
@@ -153,13 +153,13 @@ public abstract class AopUtil {
      */
     public static MethodInterceptorChain getProxyInterceptorChain(Object proxy) {
         if (!isProxy(proxy)) {
-            throw new SupportException("the instance is not a proxy !");
+            throw new ResolvableException("the instance is not a proxy !");
         }
         Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) :
                 getFieldMap(proxy.getClass()).entrySet().stream().filter(e -> e.getKey().startsWith(CGLIB_PROXY_CALLBACK_FIELD)).map(e -> getFieldValue(proxy, e.getValue())).filter(e -> e instanceof MethodInterceptorChain).findAny().orElse(null);
         if (interceptorChain instanceof MethodInterceptorChain) {
             return (MethodInterceptorChain) interceptorChain;
         }
-        throw new SupportException("the proxy object has no MethodInterceptorChain: " + proxy);
+        throw new ResolvableException("the proxy object has no MethodInterceptorChain: " + proxy);
     }
 }

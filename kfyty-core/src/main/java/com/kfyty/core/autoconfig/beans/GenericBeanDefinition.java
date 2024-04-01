@@ -13,6 +13,7 @@ import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.LogUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
@@ -237,10 +238,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         }
         this.ensureAutowiredProcessor(context);
         Object bean = ReflectUtil.newInstance(this.beanType, this.getConstructArgs());
-        if (log.isDebugEnabled()) {
-            log.debug("instantiate bean: {} !", bean);
-        }
-        return bean;
+        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean: {}", bean), bean);
     }
 
     protected void ensureConstructor() {

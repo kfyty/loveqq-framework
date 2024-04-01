@@ -41,8 +41,8 @@ import com.kfyty.core.autoconfig.annotation.Async;
 import com.kfyty.core.autoconfig.annotation.BootApplication;
 import com.kfyty.core.autoconfig.annotation.EventListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
-import com.kfyty.mvc.annotation.GetMapping;
-import com.kfyty.mvc.autoconfig.annotation.EnableWebMvc;
+import com.kfyty.web.mvc.annotation.GetMapping;
+import com.kfyty.web.mvc.autoconfig.annotation.EnableWebMvc;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 

@@ -2,14 +2,13 @@ package com.kfyty.database.jdbc.intercept;
 
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.jdbc.TransactionHolder;
+import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.JdbcUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ResultSetUtil;
-import com.kfyty.core.lang.Value;
 import com.kfyty.database.jdbc.annotation.Execute;
-import com.kfyty.database.jdbc.annotation.SubQuery;
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.database.jdbc.session.SqlSession;
 import lombok.Getter;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.kfyty.core.utils.CommonUtil.size;
-import static com.kfyty.core.utils.JdbcUtil.commitTransactionIfNecessary;
 
 /**
  * 描述: SQL 执行拦截器链
@@ -84,19 +82,8 @@ public class InterceptorChain implements AutoCloseable {
 
     @Override
     public void close() {
-        if (this.annotation instanceof SubQuery) {
-            return;
-        }
-        try {
-            IOUtil.close(this.getPreparedStatement());
-            IOUtil.close(this.getResultSet());
-        } finally {
-            try {
-                commitTransactionIfNecessary(TransactionHolder.currentTransaction());
-            } catch (SQLException e) {
-                log.error("try commit transaction error !", e);
-            }
-        }
+        IOUtil.close(this.getPreparedStatement());
+        IOUtil.close(this.getResultSet());
     }
 
     protected Object[] bindInterceptorParameters(Method method) {

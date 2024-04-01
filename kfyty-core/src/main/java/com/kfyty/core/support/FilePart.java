@@ -1,6 +1,6 @@
 package com.kfyty.core.support;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -51,7 +51,7 @@ public class FilePart {
         try {
             return new FileInputStream(this.file);
         } catch (IOException e) {
-            throw new SupportException("open file part failed: " + e.getMessage(), e);
+            throw new ResolvableException("open file part failed: " + e.getMessage(), e);
         }
     }
 

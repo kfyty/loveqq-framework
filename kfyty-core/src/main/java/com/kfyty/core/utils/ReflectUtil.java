@@ -1,7 +1,7 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.converter.Converter;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.lang.function.Function3;
 import com.kfyty.core.lang.function.Function4;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
@@ -165,7 +165,7 @@ public abstract class ReflectUtil {
             return Class.forName(className, initialize, classLoader);
         } catch (ClassNotFoundException e) {
             if (throwIfFailed) {
-                throw new SupportException("load class failed, class does not exist !", e);
+                throw new ResolvableException("load class failed, class does not exist !", e);
             }
             log.error("load class failed, class does not exist: [{}]", className);
             return null;
@@ -264,7 +264,7 @@ public abstract class ReflectUtil {
         if (Map.class.isAssignableFrom(clazz) && !Properties.class.isAssignableFrom(clazz)) {
             return (T) new HashMap<>();
         }
-        throw new SupportException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
+        throw new ResolvableException(CommonUtil.format("cannot instance for abstract class: [{}]", clazz));
     }
 
     public static <T> T newInstance(Constructor<T> constructor, Object... args) {
@@ -305,7 +305,7 @@ public abstract class ReflectUtil {
         if (noParameterConstructor != null) {
             return (Constructor<T>) noParameterConstructor;
         }
-        throw new SupportException("can't find a suitable constructor !");
+        throw new ResolvableException("can't find a suitable constructor !");
     }
 
     /*----------------------------------------- 构造器/属性/方法相关方法 -----------------------------------------*/
@@ -636,13 +636,13 @@ public abstract class ReflectUtil {
                     generics = generics.stream().filter(e -> e instanceof ParameterizedType).map(e -> ((ParameterizedType) e).getRawType()).filter(e -> e instanceof Class).flatMap(e -> getGenerics((Class<?>) e).stream()).collect(Collectors.toList());
                 }
                 if (!filterInterface.isPresent()) {
-                    throw new SupportException("parent generic match failed !");
+                    throw new ResolvableException("parent generic match failed !");
                 }
                 genericSuperclass = filterInterface.get();
             }
         }
         if (!(genericSuperclass instanceof ParameterizedType)) {
-            throw new SupportException(clazz.getName() + " does not contain generic types !");
+            throw new ResolvableException(clazz.getName() + " does not contain generic types !");
         }
         Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
         if (actualTypeArguments[genericIndex] instanceof ParameterizedType) {
@@ -653,11 +653,11 @@ public abstract class ReflectUtil {
             for (Type generic : getGenerics(source)) {
                 try {
                     return getActualGenericType(getTypeVariableName(type), generic);
-                } catch (SupportException e) {
+                } catch (ResolvableException e) {
                     log.warn(e.getMessage());
                 }
             }
-            throw new SupportException(source.getName() + " does not contain generic types !");
+            throw new ResolvableException(source.getName() + " does not contain generic types !");
         }
         return (Class<?>) type;
     }
@@ -679,7 +679,7 @@ public abstract class ReflectUtil {
 
     public static Class<?> getActualGenericType(String typeVariable, Type genericSuperclass) {
         if (!(genericSuperclass instanceof ParameterizedType)) {
-            throw new SupportException("unable to get the parent generic type !");
+            throw new ResolvableException("unable to get the parent generic type !");
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
         TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
@@ -692,7 +692,7 @@ public abstract class ReflectUtil {
         if (parent instanceof Class) {
             return getActualGenericType(typeVariable, (Class<?>) parent);
         }
-        throw new SupportException("can't find actual generic type !");
+        throw new ResolvableException("can't find actual generic type !");
     }
 
     /*--------------------------------------------- 其他方法 ---------------------------------------------*/
@@ -781,13 +781,13 @@ public abstract class ReflectUtil {
             WildcardType wildcardType = (WildcardType) type;
             return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
         }
-        throw new SupportException("unable to get the raw type: " + type);
+        throw new ResolvableException("unable to get the raw type: " + type);
     }
 
     public static String getTypeVariableName(Type type) {
         if (type instanceof TypeVariable) {
             return ((TypeVariable<?>) type).getName();
         }
-        throw new SupportException("unable to get the type variable: " + type);
+        throw new ResolvableException("unable to get the type variable: " + type);
     }
 }

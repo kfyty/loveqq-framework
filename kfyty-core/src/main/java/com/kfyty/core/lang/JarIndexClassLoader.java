@@ -54,13 +54,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @SneakyThrows(MalformedURLException.class)
     public URL getResource(String name) {
         List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
+        if (jarFiles.isEmpty() && this.isExploded()) {
+            return super.getResource(name);
+        }
         return jarFiles.isEmpty() ? null : new URL("jar:file:/" + jarFiles.get(0).getName() + "!/" + name);
     }
 
     @Override
-    public Enumeration<URL> getResources(String name) {
-        AtomicInteger index = new AtomicInteger(0);
+    public Enumeration<URL> getResources(String name) throws IOException {
         List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
+        if (jarFiles.isEmpty() && this.isExploded()) {
+            return super.getResources(name);
+        }
+        AtomicInteger index = new AtomicInteger(0);
         return new Enumeration<URL>() {
 
             @Override
@@ -114,9 +120,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 if (inputStream != null) {
                     URL jarURL = this.jarIndex.getJarURL(jarFile);
                     byte[] classBytes = this.transform(name, this.read(inputStream));
-                    Class<?> loadedClass = super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarURL, (CodeSigner[]) null));
                     this.definePackageIfNecessary(name, jarURL, jarFile.getManifest());
-                    return loadedClass;
+                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarURL, (CodeSigner[]) null));
                 }
             }
         }
@@ -139,9 +144,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
                     URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
                     byte[] classBytes = this.transform(name, this.read(inputStream));
-                    Class<?> loadedClass = super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
                     this.definePackageIfNecessary(name, classURL, new Manifest());
-                    return loadedClass;
+                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
                 }
             }
         }
@@ -178,7 +182,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected byte[] read(InputStream in) throws IOException {
         int n = -1;
         byte[] buffer = new byte[4096];
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream(buffer.length)) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream(in.available())) {
             while ((n = in.read(buffer)) != -1) {
                 out.write(buffer, 0, n);
             }

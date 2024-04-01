@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,9 +26,9 @@ public abstract class ExceptionUtil {
         return stringWriter.toString();
     }
 
-    public static SupportException wrap(Throwable throwable) {
-        if (throwable instanceof SupportException) {
-            return (SupportException) throwable;
+    public static ResolvableException wrap(Throwable throwable) {
+        if (throwable instanceof ResolvableException) {
+            return (ResolvableException) throwable;
         }
         if (throwable instanceof UndeclaredThrowableException) {
             Throwable undeclaredThrowable = ((UndeclaredThrowableException) throwable).getUndeclaredThrowable();
@@ -45,7 +45,7 @@ public abstract class ExceptionUtil {
         if (throwable instanceof CompletionException && throwable.getCause() != null) {
             return wrap(throwable.getCause());
         }
-        return new SupportException(throwable);
+        return new ResolvableException(throwable);
     }
 
     public static Throwable unwrap(Throwable throwable) {

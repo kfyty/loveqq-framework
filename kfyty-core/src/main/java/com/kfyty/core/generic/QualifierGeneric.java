@@ -1,6 +1,6 @@
 package com.kfyty.core.generic;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
@@ -139,7 +139,7 @@ public class QualifierGeneric {
      */
     public Generic getGeneric() {
         if (this.size() > 1) {
-            throw new SupportException("more than one generic !");
+            throw new ResolvableException("more than one generic !");
         }
         return this.getFirst();
     }
@@ -161,7 +161,7 @@ public class QualifierGeneric {
      */
     public Generic getFirst() {
         if (!this.hasGeneric()) {
-            throw new SupportException("generic not exists !");
+            throw new ResolvableException("generic not exists !");
         }
         return this.genericInfo.keySet().iterator().next();
     }
@@ -173,7 +173,7 @@ public class QualifierGeneric {
      */
     public Generic getSecond() {
         if (this.size() < 2) {
-            throw new SupportException("generic not exists !");
+            throw new ResolvableException("generic not exists !");
         }
         Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
         iterator.next();
@@ -212,7 +212,7 @@ public class QualifierGeneric {
             this.processTypeVariable((TypeVariable<?>) genericType);
             return this;
         }
-        throw new SupportException("unsupported generic type !");
+        throw new ResolvableException("unsupported generic type !");
     }
 
     protected void processClassGenericType(Class<?> clazz) {

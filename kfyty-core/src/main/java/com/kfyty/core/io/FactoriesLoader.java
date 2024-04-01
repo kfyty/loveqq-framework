@@ -1,6 +1,6 @@
 package com.kfyty.core.io;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.PropertiesUtil;
@@ -66,7 +66,7 @@ public abstract class FactoriesLoader {
                 }
                 return properties;
             } catch (IOException e) {
-                throw new SupportException("unable to load factories from location [" + factoriesResourceLocation + "]", e);
+                throw new ResolvableException("unable to load factories from location [" + factoriesResourceLocation + "]", e);
             }
         });
     }
@@ -87,7 +87,7 @@ public abstract class FactoriesLoader {
             }
             return retValue;
         } catch (IOException e) {
-            throw new SupportException("unable to load resource from location [" + urlResourceLocation + "]", e);
+            throw new ResolvableException("unable to load resource from location [" + urlResourceLocation + "]", e);
         }
     }
 }

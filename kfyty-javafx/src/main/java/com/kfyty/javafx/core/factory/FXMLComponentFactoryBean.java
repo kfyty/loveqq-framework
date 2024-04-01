@@ -2,7 +2,7 @@ package com.kfyty.javafx.core.factory;
 
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.FactoryBean;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.javafx.core.AbstractController;
 import com.kfyty.javafx.core.LifeCycleController;
@@ -99,7 +99,7 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
 
             return window;
         } catch (IOException e) {
-            throw new SupportException("failed load FXML component: " + this.path, e);
+            throw new ResolvableException("failed load FXML component: " + this.path, e);
         }
     }
 

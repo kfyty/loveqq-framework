@@ -3,7 +3,6 @@ package com.kfyty.boot.processor;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
@@ -12,9 +11,7 @@ import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.generic.ActualGeneric;
-import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
-import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,14 +50,11 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
     public void autowiredBean(String beanName, Object bean) {
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
-        this.autowiredBeanField(targetClass, target);
-        this.autowiredBeanMethod(targetClass, target);
-        if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
-            BeanUtil.copyProperties(target, bean);
-        }
+        this.autowiredBeanField(targetClass, target, bean);
+        this.autowiredBeanMethod(targetClass, target, bean);
     }
 
-    protected void autowiredBeanField(Class<?> clazz, Object bean) {
+    protected void autowiredBeanField(Class<?> clazz, Object bean, Object exposedBean) {
         List<Field> laziedFields = new LinkedList<>();
         List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
@@ -73,14 +67,20 @@ public class AutowiredAnnotationBeanPostProcessor implements ApplicationContextA
                 laziedFields.add(field);
                 continue;
             }
-            this.autowiredProcessor.doAutowired(bean, field, description.markLazied(hasAnnotation(field, Lazy.class)));
+            Object autowired = this.autowiredProcessor.doAutowired(bean, field, description.markLazied(hasAnnotation(field, Lazy.class)));
+            if (autowired != null && bean != exposedBean && AopUtil.isCglibProxy(exposedBean)) {
+                ReflectUtil.setFieldValue(exposedBean, field, autowired);
+            }
         }
         for (Field field : laziedFields) {
-            this.autowiredProcessor.doAutowired(bean, field);
+            Object autowired = this.autowiredProcessor.doAutowired(bean, field);
+            if (autowired != null && bean != exposedBean && AopUtil.isCglibProxy(exposedBean)) {
+                ReflectUtil.setFieldValue(exposedBean, field, autowired);
+            }
         }
     }
 
-    protected void autowiredBeanMethod(Class<?> clazz, Object bean) {
+    protected void autowiredBeanMethod(Class<?> clazz, Object bean, Object exposedBean) {
         for (Method method : ReflectUtil.getMethods(clazz)) {
             this.autowiredProcessor.doAutowired(bean, method);
         }

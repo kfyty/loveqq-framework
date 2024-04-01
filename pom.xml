@@ -31,6 +31,7 @@
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-spring-tx</module>
         <module>kfyty-boot-starter-validator</module>
+        <module>kfyty-boot-starter-tomcat</module>
         <module>kfyty-boot-starter-redisson</module>
         <module>kfyty-boot-starter-quartz</module>
         <module>kfyty-boot-starter-xxl-job</module>
@@ -54,6 +55,7 @@
 
         <jstl.version>1.2</jstl.version>
         <servlet.api.version>6.0.0</servlet.api.version>
+        <servlet.websocket.api.version>2.1.1</servlet.websocket.api.version>
         <annotation.api.version>3.0.0-M1</annotation.api.version>
         <validation.api.version>3.0.2</validation.api.version>
         <glassfish.jakarta.el.version>4.0.2</glassfish.jakarta.el.version>
@@ -324,6 +326,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
                 <version>${jackson.version}</version>
@@ -387,6 +395,18 @@
                 <groupId>jakarta.servlet</groupId>
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>${servlet.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-api</artifactId>
+                <version>${servlet.websocket.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-client-api</artifactId>
+                <version>${servlet.websocket.api.version}</version>
             </dependency>
 
             <dependency>
