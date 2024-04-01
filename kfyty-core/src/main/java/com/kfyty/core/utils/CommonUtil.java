@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileOutputStream;
@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -99,9 +100,10 @@ public abstract class CommonUtil {
      */
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
 
+    @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static boolean empty(Object obj) {
         if (obj instanceof CharSequence) {
-            return ((CharSequence) obj).isEmpty();
+            return ((CharSequence) obj).length() < 1;
         }
         return size(obj) < 1;
     }
@@ -122,6 +124,9 @@ public abstract class CommonUtil {
         }
         if (obj instanceof Map) {
             return ((Map<?, ?>) obj).size();
+        }
+        if (obj instanceof Optional<?>) {
+            return ((Optional<?>) obj).isPresent() ? 1 : 0;
         }
         return 1;
     }
@@ -252,7 +257,7 @@ public abstract class CommonUtil {
 
     public static String underline2CamelCase(String target, boolean isClass) {
         if (empty(target)) {
-            throw new SupportException("convert underline to camel case failed, target can't empty !");
+            throw new ResolvableException("convert underline to camel case failed, target can't empty !");
         }
         StringBuilder builder = new StringBuilder();
         target = UPPER_CASE_PATTERN.matcher(target).matches() || target.contains("_") ? target.toLowerCase() : target;
@@ -279,7 +284,7 @@ public abstract class CommonUtil {
 
     public static String camelCase2Underline(String target, boolean lower) {
         if (empty(target)) {
-            throw new SupportException("convert camel case to underline failed, target can't empty !");
+            throw new ResolvableException("convert camel case to underline failed, target can't empty !");
         }
         if (UPPER_CASE_PATTERN.matcher(target).matches()) {
             return lower ? target.toLowerCase() : target.toUpperCase();

@@ -8,7 +8,7 @@ import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.env.PropertyContext;
 import com.kfyty.core.event.ApplicationListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.CommonUtil;
 
 import java.util.Collections;
@@ -49,7 +49,7 @@ public class NacosDiscoveryRegisterService implements ApplicationListener<Contex
                 this.namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
             }
         } catch (NacosException e) {
-            throw new SupportException("Register service discovery failed", e);
+            throw new ResolvableException("Register service discovery failed", e);
         }
     }
 

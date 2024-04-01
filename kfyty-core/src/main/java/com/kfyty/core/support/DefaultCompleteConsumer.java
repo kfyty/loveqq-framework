@@ -1,6 +1,6 @@
 package com.kfyty.core.support;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +20,7 @@ public class DefaultCompleteConsumer implements BiConsumer<Object, Throwable> {
     @Override
     public void accept(Object unused, Throwable throwable) {
         if (throwable != null) {
-            SupportException e = ExceptionUtil.wrap(throwable);
+            ResolvableException e = ExceptionUtil.wrap(throwable);
             log.error("DefaultCompleteConsumer: {}", e.getMessage());
             throw e;
         }

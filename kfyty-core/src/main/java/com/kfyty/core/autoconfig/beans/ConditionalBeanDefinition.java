@@ -70,20 +70,31 @@ public class ConditionalBeanDefinition extends GenericBeanDefinition {
                 : beanDefinition instanceof FactoryBeanDefinition ? ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
         Annotation[] possibleAnnotations = AnnotationUtil.findAnnotationElements(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class));
         Annotation[] annotations = AnnotationUtil.flatRepeatableAnnotation(possibleAnnotations);
+
         for (Annotation annotation : annotations) {
             this.conditionDeclares.add(this.buildConditionDeclare(annotation));
+        }
+
+        Conditional conditional = AnnotationUtil.findAnnotation(annotatedElement, Conditional.class);
+        if (conditional != null && this.conditionDeclares.stream().noneMatch(e -> e.getConditional() == conditional)) {
+            this.conditionDeclares.add(new ConditionDeclare(conditional, conditional, unmodifiableList(Arrays.stream(conditional.value()).map(ReflectUtil::newInstance).collect(Collectors.toList()))));
         }
     }
 
     private ConditionDeclare buildConditionDeclare(Annotation annotation) {
         Conditional conditional = AnnotationUtil.findAnnotationElement(annotation.annotationType(), Conditional.class);
         List<Condition> conditions = Arrays.stream(conditional.value()).map(ReflectUtil::newInstance).collect(Collectors.toList());
-        return new ConditionDeclare(annotation, unmodifiableList(conditions));
+        return new ConditionDeclare(conditional, annotation, unmodifiableList(conditions));
     }
 
     @Data
     @RequiredArgsConstructor
     public class ConditionDeclare {
+        /**
+         * 真实条件注解
+         */
+        private final Conditional conditional;
+
         /**
          * 声明的条件注解
          */

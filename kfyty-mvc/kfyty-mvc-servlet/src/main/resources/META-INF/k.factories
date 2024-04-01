@@ -1,0 +1,3 @@
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.web.mvc.servlet.autoconfig.WebServletMvcAutoConfig,\
+    com.kfyty.web.mvc.servlet.autoconfig.WebServletSocketAutoConfig

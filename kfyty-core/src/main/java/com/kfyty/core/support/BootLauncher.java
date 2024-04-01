@@ -1,6 +1,6 @@
 package com.kfyty.core.support;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.lang.JarIndex;
 import com.kfyty.core.lang.JarIndexClassLoader;
@@ -118,7 +118,7 @@ public class BootLauncher {
                 return new JarManifest(manifest, new URL(url.getFile().replace("!/" + JAR_MANIFEST_LOCATION, "")));
             }
         }
-        throw new SupportException("Start-Class does not exists in manifest");
+        throw new ResolvableException("Start-Class does not exists in manifest");
     }
 
     /**

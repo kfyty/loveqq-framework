@@ -12,6 +12,7 @@ import com.kfyty.core.lang.Lazy;
 import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.LogUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,11 +66,12 @@ public class AutowiredProcessor {
         this.resolving = new LinkedHashSet<>();
     }
 
-    public void doAutowired(Object bean, Field field) {
+    public Object doAutowired(Object bean, Field field) {
         AutowiredDescription description = AutowiredDescription.from(field);
         if (description != null) {
-            this.doAutowired(bean, field, description.markLazied(hasAnnotation(field, com.kfyty.core.autoconfig.annotation.Lazy.class)));
+            return this.doAutowired(bean, field, description.markLazied(hasAnnotation(field, com.kfyty.core.autoconfig.annotation.Lazy.class)));
         }
+        return null;
     }
 
     public void doAutowired(Object bean, Method method) {
@@ -79,18 +81,17 @@ public class AutowiredProcessor {
         }
     }
 
-    public void doAutowired(Object bean, Field field, AutowiredDescription description) {
+    public Object doAutowired(Object bean, Field field, AutowiredDescription description) {
         if (ReflectUtil.getFieldValue(bean, field) != null) {
-            return;
+            return null;
         }
         ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
         Object targetBean = this.doResolveBean(actualGeneric, description, field.getType());
         if (targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
-            if (log.isDebugEnabled()) {
-                log.debug("autowired bean: {} -> {} !", targetBean, bean);
-            }
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", targetBean, bean));
         }
+        return targetBean;
     }
 
     public void doAutowired(Object bean, Method method, AutowiredDescription description) {
@@ -104,7 +105,7 @@ public class AutowiredProcessor {
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
         if (log.isDebugEnabled()) {
-            log.debug("autowired bean: {} -> {} !", parameters, bean);
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", parameters, bean));
         }
     }
 

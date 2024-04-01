@@ -95,7 +95,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <T> List<T> processListBaseType(ResultSet resultSet, Class<T> clazz) throws SQLException {
         if (resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process base type failed: result set is empty !"));
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("process base type failed: result set is empty !"), Collections.emptyList());
         }
         List<T> list = new ArrayList<>();
         do {
@@ -109,7 +109,7 @@ public abstract class ResultSetUtil {
             return processListBaseType(resultSet, clazz);
         }
         if (resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process object failed: result set is empty !"));
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("process object failed: result set is empty !"), Collections.emptyList());
         }
         List<T> list = new ArrayList<>();
         do {
@@ -129,7 +129,8 @@ public abstract class ResultSetUtil {
                     ReflectUtil.setNestedFieldValue(fieldName, o, value);
                     continue;
                 }
-                LogUtil.logIfDebugEnabled((logger, param) -> logger.debug("discovery column: [{}], but class:[{}] no field matching !", param), metaData.getColumnName(i), clazz);
+                final String columnName = metaData.getColumnName(i);
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("discovery column: [{}], but class:[{}] no field matching !", columnName, clazz));
             }
             list.add(o);
         } while (resultSet.next());
@@ -153,7 +154,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws SQLException {
         if (resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(Collections.emptyMap(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("process map failed: result set is empty !"), Collections.emptyMap());
         }
         Map<K, V> map = new HashMap<>();
         ResultSetMetaData metaData = resultSet.getMetaData();
@@ -169,7 +170,7 @@ public abstract class ResultSetUtil {
     @SuppressWarnings("unchecked")
     public static <K, V> Object processListMapObject(ResultSet resultSet) throws SQLException {
         if (resultSet == null || !resultSet.next()) {
-            return LogUtil.logIfDebugEnabled(Collections.emptyList(), (logger, param) -> logger.debug("process map failed: result set is empty !"));
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("process map failed: result set is empty !"), Collections.emptyList());
         }
         List<Map<K, V>> result = new ArrayList<>();
         ResultSetMetaData metaData = resultSet.getMetaData();

@@ -6,7 +6,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.env.PropertyContext;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.PropertiesUtil;
 
@@ -100,7 +100,7 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
                 this.configService.addListener(dataId, group, this.configListener);
             }
         } catch (NacosException e) {
-            throw new SupportException("load nacos config failed", e);
+            throw new ResolvableException("load nacos config failed", e);
         }
     }
 

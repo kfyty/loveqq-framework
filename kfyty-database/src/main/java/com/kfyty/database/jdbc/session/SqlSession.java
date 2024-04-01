@@ -219,15 +219,24 @@ public class SqlSession implements InvocationHandler {
      * @return 执行结果
      */
     private Object invokeInterceptorChain(MethodParameter mapperMethod, Annotation annotation, Pair<String, MethodParameter[]> sqlParams, SimpleGeneric returnType) {
+        Transaction transaction = TransactionHolder.currentTransaction();
         Iterator<Map.Entry<Method, Interceptor>> iterator = this.configuration.getInterceptorMethodChain().entrySet().iterator();
         try (InterceptorChain chain = new InterceptorChain(this, mapperMethod, annotation, sqlParams.getKey(), returnType, new ArrayList<>(Arrays.asList(sqlParams.getValue())), iterator)) {
-            return chain.proceed();
+            Object retValue = chain.proceed();
+            if (annotation instanceof SubQuery) {
+                return retValue;
+            }
+            JdbcUtil.commitTransactionIfNecessary(transaction);
+            return retValue;
         } catch (Exception e) {
             try {
-                TransactionHolder.currentTransaction().rollback();
+                transaction.rollback();
                 throw e;
             } catch (SQLException ex) {
-                throw new ExecuteInterceptorException(ex);
+                if (ex == e) {
+                    throw new ExecuteInterceptorException(e);
+                }
+                throw new ExecuteInterceptorException(ex.getMessage() + ", root cause is " + e.getMessage(), e);
             }
         }
     }

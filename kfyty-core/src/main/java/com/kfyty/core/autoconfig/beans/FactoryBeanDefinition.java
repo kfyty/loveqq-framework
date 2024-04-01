@@ -2,6 +2,7 @@ package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.core.utils.LogUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -66,10 +67,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
             return context.getBean(this.getBeanName());
         }
         Object bean = factoryBean.getObject();
-        if (log.isDebugEnabled()) {
-            log.debug("instantiate bean from factory bean: {} !", bean);
-        }
-        return bean;
+        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean from factory bean: {}", bean), bean);
     }
 
     public static FactoryBean<?> getSnapFactoryBean(BeanDefinition beanDefinition) {

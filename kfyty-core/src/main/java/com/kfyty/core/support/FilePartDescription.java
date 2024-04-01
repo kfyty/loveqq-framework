@@ -1,6 +1,6 @@
 package com.kfyty.core.support;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.utils.IOUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -73,7 +73,7 @@ public class FilePartDescription extends FilePart {
             this.accessFile.read(bytes);
             return new ByteArrayInputStream(bytes);
         } catch (IOException e) {
-            throw new SupportException("read file part description failed: " + e.getMessage(), e);
+            throw new ResolvableException("read file part description failed: " + e.getMessage(), e);
         }
     }
 

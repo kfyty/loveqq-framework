@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +27,7 @@ public abstract class SerializableUtil {
             objectOutputStream.writeObject(o);
             objectOutputStream.flush();
         } catch (IOException e) {
-            throw new SupportException("serialize object failed: " + o, e);
+            throw new ResolvableException("serialize object failed: " + o, e);
         }
         return byteArrayOutputStream.toByteArray();
     }
@@ -37,7 +37,7 @@ public abstract class SerializableUtil {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             return objectInputStream.readObject();
         } catch (Exception e) {
-            throw new SupportException("deserialize object failed: ", e);
+            throw new ResolvableException("deserialize object failed: ", e);
         }
     }
 

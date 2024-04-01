@@ -6,7 +6,7 @@ import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.event.PropertyConfigRefreshedEvent;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 
 /**
  * 描述: nacos 配置监听器
@@ -38,7 +38,7 @@ public class NacosConfigListener extends AbstractSharedListener implements Appli
             this.nacosPropertyLoaderBeanPostProcessor.loadConfig(configInfo, group, true);
             this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
         } catch (Exception e) {
-            throw new SupportException("refresh config failed", e);
+            throw new ResolvableException("refresh config failed", e);
         }
     }
 }

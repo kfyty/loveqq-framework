@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.support.FilePart;
 import com.kfyty.core.support.FilePartDescription;
 import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
@@ -270,7 +270,7 @@ public abstract class IOUtil {
     public static void ensureFolderExists(String path) {
         File file = new File(path);
         if (!file.exists() && !file.mkdirs()) {
-            throw new SupportException("ensure folder exists failed !");
+            throw new ResolvableException("ensure folder exists failed !");
         }
     }
 
@@ -353,7 +353,7 @@ public abstract class IOUtil {
                 return file;
             }
         } catch (IOException e) {
-            throw new SupportException(e);
+            throw new ResolvableException(e);
         }
     }
 
@@ -420,7 +420,7 @@ public abstract class IOUtil {
             log.info("split ok, total: {}, split: {}....", totalSize, splitSize);
             return fileParts;
         } catch (IOException e) {
-            throw new SupportException(e);
+            throw new ResolvableException(e);
         }
     }
 
@@ -434,7 +434,7 @@ public abstract class IOUtil {
             return;
         }
         if (!(obj instanceof AutoCloseable)) {
-            throw new SupportException("can't close !");
+            throw new ResolvableException("can't close !");
         }
         try {
             if (obj instanceof Flushable) {

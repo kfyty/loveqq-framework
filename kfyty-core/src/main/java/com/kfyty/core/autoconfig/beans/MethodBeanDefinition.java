@@ -8,6 +8,7 @@ import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
+import com.kfyty.core.utils.LogUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
@@ -115,10 +116,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
-        if (log.isDebugEnabled()) {
-            log.debug("instantiate bean from bean method: {} !", bean);
-        }
-        return bean;
+        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean from bean method: {}", bean), bean);
     }
 
     protected Object[] prepareMethodArgs() {

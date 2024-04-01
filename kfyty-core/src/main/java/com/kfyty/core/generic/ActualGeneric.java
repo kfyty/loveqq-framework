@@ -1,6 +1,6 @@
 package com.kfyty.core.generic;
 
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.reflect.GenericArrayTypeImpl;
 
 import java.lang.reflect.Array;
@@ -101,7 +101,7 @@ public class ActualGeneric extends SimpleGeneric {
     public static ActualGeneric from(Field sourceField, Field field) {
         Type genericType = sourceField.getGenericType();
         if (!(genericType instanceof ParameterizedType)) {
-            throw new SupportException("unable to get the source field generic type !");
+            throw new ResolvableException("unable to get the source field generic type !");
         }
         ActualGeneric source = ActualGeneric.from(sourceField);
         String typeName = field.getGenericType().getTypeName();

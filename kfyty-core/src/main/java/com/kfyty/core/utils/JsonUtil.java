@@ -3,6 +3,7 @@ package com.kfyty.core.utils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -12,12 +13,20 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.kfyty.core.support.json.Array;
 import com.kfyty.core.support.json.JSON;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,17 +49,21 @@ public abstract class JsonUtil {
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
 
     static {
+        SimpleModule module = new SimpleModule("json_string_deserializer");
+        module.addDeserializer(String.class, new com.kfyty.core.utils.JsonUtil.StringDeserializer());
+
+        SimpleModule timeModule = new SimpleModule("common_time_deserializer");
+        timeModule.addDeserializer(LocalDateTime.class, new com.kfyty.core.utils.JsonUtil.CommonLocalDateTimeDeserializer());
+
         configure()
                 .setTimeZone(TimeZone.getDefault())
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .registerModule(new JavaTimeModule())
+                .registerModule(module)
+                .registerModule(timeModule);
 
         configureWriter()
                 .with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(String.class, new com.kfyty.core.utils.JsonUtil.StringDeserializer());
-
-        configure().registerModule(module);
     }
 
     public static ObjectMapper configure() {
@@ -71,19 +84,6 @@ public abstract class JsonUtil {
         } catch (JsonProcessingException e) {
             throw ExceptionUtil.wrap(e);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> toMap(Object o) {
-        if (o.getClass() == String.class) {
-            return (Map<String, Object>) toObject((String) o, LinkedHashMap.class);
-        }
-        return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static List<Map<String, Object>> toArray(CharSequence o) {
-        return (List<Map<String, Object>>) toObject((String) o, ArrayList.class);
     }
 
     public static JSON toJSON(Object o) {
@@ -137,19 +137,32 @@ public abstract class JsonUtil {
         }
     }
 
-    public static <T> List<T> toArray(String json, Class<T> clazz) {
-        return (List<T>) toCollectionObject(json, List.class, clazz);
+    @SuppressWarnings("unchecked")
+    public static List<Map<String, Object>> toArray(CharSequence o) {
+        return (List<Map<String, Object>>) toObject(o.toString(), ArrayList.class);
     }
 
-    public static <T> Set<T> toSetObject(String json, Class<T> clazz) {
-        return (Set<T>) toCollectionObject(json, Set.class, clazz);
+    public static <T> List<T> toList(String json, Class<T> clazz) {
+        return (List<T>) toCollection(json, List.class, clazz);
     }
 
-    public static <V> Map<String, V> toMapObject(String json, Class<V> valueType) {
-        return toMapObject(json, String.class, valueType);
+    public static <T> Set<T> toSet(String json, Class<T> clazz) {
+        return (Set<T>) toCollection(json, Set.class, clazz);
     }
 
-    public static <K, V> Map<K, V> toMapObject(String json, Class<K> keyType, Class<V> valueType) {
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> toMap(Object o) {
+        if (o.getClass() == String.class) {
+            return (Map<String, Object>) toObject((String) o, LinkedHashMap.class);
+        }
+        return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
+    }
+
+    public static <V> Map<String, V> toMap(String json, Class<V> valueType) {
+        return toMap(json, String.class, valueType);
+    }
+
+    public static <K, V> Map<K, V> toMap(String json, Class<K> keyType, Class<V> valueType) {
         try {
             MapType javaType = DEFAULT_OBJECT_MAPPER.getTypeFactory().constructMapType(LinkedHashMap.class, keyType, valueType);
             return DEFAULT_OBJECT_MAPPER.readValue(json, javaType);
@@ -159,7 +172,7 @@ public abstract class JsonUtil {
     }
 
     @SuppressWarnings("rawtypes")
-    public static <T> Collection<T> toCollectionObject(String json, Class<? extends Collection> collectionType, Class<T> clazz) {
+    public static <T> Collection<T> toCollection(String json, Class<? extends Collection> collectionType, Class<T> clazz) {
         try {
             CollectionType javaType = DEFAULT_OBJECT_MAPPER.getTypeFactory().constructCollectionType(collectionType, clazz);
             return DEFAULT_OBJECT_MAPPER.readValue(json, javaType);
@@ -170,6 +183,48 @@ public abstract class JsonUtil {
 
     public static <T> T convert(String str, Class<T> rawClass) {
         return DEFAULT_OBJECT_MAPPER.convertValue(str, rawClass);
+    }
+
+    /**
+     * 通用日期反序列化
+     */
+    @Slf4j
+    @NoArgsConstructor
+    public static class CommonLocalDateTimeDeserializer extends LocalDateTimeDeserializer {
+        private static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        public CommonLocalDateTimeDeserializer(DateTimeFormatter formatter) {
+            super(formatter);
+        }
+
+        protected CommonLocalDateTimeDeserializer(LocalDateTimeDeserializer base, Boolean leniency) {
+            super(base, leniency);
+        }
+
+        @Override
+        public LocalDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+            // 解析时间戳
+            if (!parser.hasTokenId(JsonTokenId.ID_STRING)) {
+                long timestamp = parser.getValueAsLong();
+                if (timestamp < 1) {
+                    return super.deserialize(parser, context);
+                }
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), context.getTimeZone().toZoneId());
+            }
+
+            // 解析字符串
+            String string = parser.getText().trim();
+            if (string.length() > 10 && string.charAt(10) == 'T') {
+                if (string.endsWith("Z")) {
+                    return LocalDateTime.ofInstant(Instant.parse(string), ZoneOffset.UTC);
+                }
+                return LocalDateTime.parse(string, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            }
+            if (string.length() == 19 && string.charAt(10) == ' ') {
+                return LocalDateTime.parse(string, DEFAULT_DATE_TIME_FORMATTER);
+            }
+            return super.deserialize(parser, context);
+        }
     }
 
     /**

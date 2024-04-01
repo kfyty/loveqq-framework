@@ -6,7 +6,7 @@ import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
 import com.kfyty.core.autoconfig.boostrap.Bootstrap;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.support.AntPathMatcher;
 import com.kfyty.core.support.PatternMatcher;
@@ -162,7 +162,7 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
                 Bootstrap bootstrap = (Bootstrap) ReflectUtil.newInstance(bootstrapClass);
                 bootstrap.bootstrap(this);
             } catch (Exception e) {
-                throw new SupportException("Bootstrap failed, because " + e.getMessage(), e);
+                throw new ResolvableException("Bootstrap failed, because " + e.getMessage(), e);
             }
         }
     }

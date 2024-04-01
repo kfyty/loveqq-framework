@@ -5,7 +5,7 @@ import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Lazy;
 import com.kfyty.core.autoconfig.env.DataBinder;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
-import com.kfyty.core.exception.SupportException;
+import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.generic.SimpleGeneric;
 import com.kfyty.core.support.Instance;
 import com.kfyty.core.utils.CommonUtil;
@@ -79,7 +79,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             return (T) this.bindCollectionProperties(key, targetType);
         }
 
-        throw new SupportException("complex generic are not supported: " + targetType);
+        throw new ResolvableException("complex generic are not supported: " + targetType);
     }
 
     /**
