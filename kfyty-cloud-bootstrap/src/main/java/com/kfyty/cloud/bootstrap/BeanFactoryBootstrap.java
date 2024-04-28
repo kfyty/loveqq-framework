@@ -15,6 +15,7 @@ import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @date 2023/9/10 22:00
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class BeanFactoryBootstrap implements Bootstrap {
     /**
      * 空 bean
@@ -38,10 +40,12 @@ public class BeanFactoryBootstrap implements Bootstrap {
         if (applicationContext.getPrimarySource() == BeanFactoryBootstrapApplication.class) {
             return;
         }
+        log.info("Bootstrap starting...");
         try (ApplicationContext bootstrapContext = new ApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
             bootstrapContext.refresh();
             this.copyBeanFactory(bootstrapContext, applicationContext);
         }
+        log.info("Bootstrap succeed completed.");
     }
 
     /**

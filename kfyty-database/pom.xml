@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>kfyty-framework</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -13,15 +13,11 @@
     <artifactId>kfyty-database</artifactId>
     <packaging>jar</packaging>
 
-    <properties>
-        <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-core</artifactId>
-            <version>${kfyty.utils.version}</version>
+            <version>${kfyty.framework.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -38,7 +34,7 @@
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-boot-starter-datasource</artifactId>
-            <version>${kfyty.utils.version}</version>
+            <version>${kfyty.framework.version}</version>
         </dependency>
 
         <dependency>

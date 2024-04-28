@@ -6,6 +6,7 @@ import com.kfyty.core.lang.Value;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.IOUtil;
 import com.kfyty.core.utils.JdbcUtil;
+import com.kfyty.core.utils.LogUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.core.utils.ResultSetUtil;
 import com.kfyty.database.jdbc.annotation.Execute;
@@ -153,9 +154,7 @@ public class InterceptorChain implements AutoCloseable {
         if (!this.hasRet) {
             try {
                 this.setRetValue(ResultSetUtil.processObject(this.prepareResultSet(), this.returnType));
-                if (log.isDebugEnabled()) {
-                    log.debug("<==         total: {} [{}]", size(this.retValue), this.retValue == null ? null : this.retValue.getClass());
-                }
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<==         total: {} {}", size(this.retValue), this.retValue == null ? null : this.retValue.getClass()));
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }
@@ -170,10 +169,7 @@ public class InterceptorChain implements AutoCloseable {
         try {
             this.preparePreparedStatement().execute();
             this.setRetValue(this.preparePreparedStatement().getUpdateCount());
-            if (log.isDebugEnabled()) {
-                log.debug("<== affected rows: {}", this.retValue);
-            }
-            return this.retValue;
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<== affected rows: {}", this.retValue), this.retValue);
         } catch (SQLException e) {
             throw new ExecuteInterceptorException(e);
         }

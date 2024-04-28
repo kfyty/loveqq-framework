@@ -4,6 +4,7 @@ import com.kfyty.core.lang.util.LinkedArrayList;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.IOUtil;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,6 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -27,6 +29,7 @@ import java.util.function.Supplier;
  * @date 2022/11/19 10:08
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class LinkedArrayListTest {
 
     @Test
@@ -41,6 +44,7 @@ public class LinkedArrayListTest {
         list.add(1, 2);
         list.add(0, 0);
         Assert.assertEquals(list, Arrays.asList(0, 1, 2, 3));
+        Assert.assertArrayEquals(list.toArray(Integer[]::new), new Integer[] {0, 1, 2, 3});
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream);
@@ -51,6 +55,7 @@ public class LinkedArrayListTest {
         List<Integer> o = (List<Integer>) ois.readObject();
         IOUtil.close(ois);
         Assert.assertEquals(o, Arrays.asList(0, 1, 2, 3));
+        Assert.assertEquals(((LinkedArrayList<?>) list).clone(), Arrays.asList(0, 1, 2, 3));
     }
 
     @Test
@@ -94,8 +99,58 @@ public class LinkedArrayListTest {
     }
 
     @Test
-    public void test5() {
-        int count = 3000;
+    public void test51() {
+        List<Integer> list = new LinkedArrayList<>(5);
+        list.add(1);
+        list.add(2);
+        list.add(10);
+        list.addAll(2, Arrays.asList(3, 4, 5, 6, 7, 8, 9));
+        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+    }
+
+    @Test
+    public void test52() {
+        List<Integer> list = new LinkedArrayList<>(5);
+        list.add(9);
+        list.add(10);
+        list.add(11);
+        list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+    }
+
+    @Test
+    public void test53() {
+        List<Integer> list = new LinkedArrayList<>(3);
+        list.add(9);
+        list.add(10);
+        list.add(11);
+        list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+    }
+
+    @Test
+    public void test54() {
+        List<Integer> list = new LinkedArrayList<>(1);
+        list.add(9);
+        list.add(10);
+        list.add(11);
+        list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+    }
+
+    @Test
+    public void test55() {
+        List<Integer> list = new LinkedArrayList<>(2);
+        list.add(9);
+        list.add(10);
+        list.add(11);
+        list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+    }
+
+    @Test
+    public void test6() {
+        int count = 10000;
         Random random = new Random();
         List<Integer> list1 = new ArrayList<>();
         List<Integer> list2 = new LinkedArrayList<>();
@@ -104,16 +159,22 @@ public class LinkedArrayListTest {
         for (int i = 0; i < count; i++) {
             int index = random.nextInt(list1.size());
             int value = random.nextInt(count);
-            list1.add(index, value);
-            list2.add(index, value);
-            Assert.assertEquals(list1, list2);
+            if (value % 2 == 0) {
+                list1.add(index, value);
+                list2.add(index, value);
+            } else {
+                list1.addAll(index, Collections.singletonList(value));
+                list2.addAll(index, Collections.singletonList(value));
+            }
+            Assert.assertEquals(list2, list1);
         }
         for (int i = 0; i < count - 10; i++) {
             int index = random.nextInt(list1.size());
             list1.remove(index);
             list2.remove(index);
-            Assert.assertEquals(list1, list2);
+            Assert.assertEquals(list2, list1);
         }
+        log.info("Correctness testing complete");
     }
 
     @Test
@@ -121,8 +182,8 @@ public class LinkedArrayListTest {
     public void performanceTest() {
         int retry = 100;
         int count = 10000;
-        // Supplier<List<Integer>> list = () -> new LinkedList<>();
-        // Supplier<List<Integer>> list = () -> new ArrayList<>(count / 200);
+//         Supplier<List<Integer>> list = () -> new LinkedList<>();
+//         Supplier<List<Integer>> list = () -> new ArrayList<>(count / 200);
         Supplier<List<Integer>> list = () -> new LinkedArrayList<>(count / 200);
         CountDownLatch latch = new CountDownLatch(3);
         ExecutorService executorService = Executors.newFixedThreadPool(3);
@@ -130,6 +191,7 @@ public class LinkedArrayListTest {
         executorService.execute(this.addLastPerformanceTest(retry, count, list, latch));
         executorService.execute(this.addRandomPerformanceTest(retry, count, list, latch));
         latch.await();
+        executorService.shutdown();
     }
 
     private Runnable addFirstPerformanceTest(int retry, int count, Supplier<List<Integer>> list, CountDownLatch latch) {

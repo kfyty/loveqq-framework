@@ -6,14 +6,13 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>kfyty-framework</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>kfyty-boot-starter-discovery-nacos</artifactId>
     <description>nacos 服务发现</description>
 
     <properties>
-        <kfyty.version>1.0-SNAPSHOT</kfyty.version>
         <nacos.version>2.3.1</nacos.version>
     </properties>
 
@@ -21,13 +20,13 @@
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-core</artifactId>
-            <version>${kfyty.version}</version>
+            <version>${kfyty.framework.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-cloud-bootstrap</artifactId>
-            <version>${kfyty.version}</version>
+            <version>${kfyty.framework.version}</version>
             <scope>provided</scope>
         </dependency>
 
