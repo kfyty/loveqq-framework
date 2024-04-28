@@ -8,13 +8,13 @@
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-boot</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-javafx</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>

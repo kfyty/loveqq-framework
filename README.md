@@ -29,7 +29,7 @@ javafx mvvm 框架，实现了视图和数据模型的双向绑定。代码中�
 <dependency>
     <groupId>com.kfyty</groupId>
     <artifactId>kfyty-boot</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 ```java

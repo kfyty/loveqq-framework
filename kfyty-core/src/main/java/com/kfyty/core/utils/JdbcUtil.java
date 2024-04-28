@@ -29,9 +29,7 @@ public abstract class JdbcUtil {
         try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             Object obj = ResultSetUtil.processObject(resultSet, returnType);
-            if (log.isDebugEnabled()) {
-                log.debug("<==         total: {} [{}]", CommonUtil.size(obj), obj == null ? null : obj.getClass());
-            }
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<==         total: {} {}", CommonUtil.size(obj), obj == null ? null : obj.getClass()));
             return obj;
         } catch (SQLException e) {
             transaction.rollback();
@@ -46,9 +44,7 @@ public abstract class JdbcUtil {
         Connection connection = transaction.getConnection();
         try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params)) {
             int updateCount = preparedStatement.executeUpdate();
-            if (log.isDebugEnabled()) {
-                log.debug("<== affected rows: {}", updateCount);
-            }
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<== affected rows: {}", updateCount));
             return updateCount;
         } catch (SQLException e) {
             transaction.rollback();
@@ -76,8 +72,8 @@ public abstract class JdbcUtil {
             preparedStatement.setObject(i + 1, parameter.getValue());
         }
         if (log.isDebugEnabled()) {
-            log.debug("==>     preparing: {}", sql);
-            log.debug("==>    parameters: {}", params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.debug("\r\n==>     preparing: {}", sql);
+            log.debug("\r\n==>    parameters: {}", params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
         }
         return preparedStatement;
     }

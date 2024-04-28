@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>kfyty-framework</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <modules>
@@ -17,15 +17,11 @@
     <artifactId>kfyty-mvc</artifactId>
     <packaging>pom</packaging>
 
-    <properties>
-        <kfyty.utils.version>1.0-SNAPSHOT</kfyty.utils.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>kfyty-core</artifactId>
-            <version>${kfyty.utils.version}</version>
+            <version>${kfyty.framework.version}</version>
         </dependency>
     </dependencies>
 </project>

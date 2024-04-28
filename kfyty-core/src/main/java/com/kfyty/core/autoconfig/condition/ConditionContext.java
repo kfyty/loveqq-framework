@@ -6,7 +6,9 @@ import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.support.AnnotationMetadata;
+import com.kfyty.core.utils.LogUtil;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Data
+@Slf4j
 public class ConditionContext {
     /**
      * BeanFactory
@@ -52,8 +55,20 @@ public class ConditionContext {
         this.beanFactory = beanFactory;
         this.conditionBeanMap = conditionBeanMap;
         this.resolvedCondition = new HashSet<>();
-        this.matchedCondition = new HashSet<>();
-        this.skippedCondition = new HashSet<>();
+        this.matchedCondition = new HashSet<>() {
+            @Override
+            public boolean add(String s) {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("The bean condition match succeed and will register bean: {}", conditionBeanMap.get(s)));
+                return super.add(s);
+            }
+        };
+        this.skippedCondition = new HashSet<>() {
+            @Override
+            public boolean add(String s) {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("The bean condition match failed and will skip register bean: {}", conditionBeanMap.get(s)));
+                return super.add(s);
+            }
+        };
     }
 
     /**
@@ -144,8 +159,7 @@ public class ConditionContext {
         for (String conditionName : abstractBeanCondition.conditionNames(metadata)) {
             ConditionalBeanDefinition nestedConditional = this.conditionBeanMap.get(conditionName);
             if (nestedConditional == null) {
-                this.skippedCondition.add(current.getBeanName());               // 依赖的条件不存在，跳过
-                return nested;
+                continue;
             }
             if (!conditionName.equals(current.getBeanName())) {
                 nested.put(conditionName, nestedConditional);
@@ -153,9 +167,8 @@ public class ConditionContext {
         }
         for (Class<?> conditionType : abstractBeanCondition.conditionTypes(metadata)) {
             Map<String, ConditionalBeanDefinition> collect = this.conditionBeanMap.values().stream().filter(e -> conditionType.isAssignableFrom(e.getBeanType())).collect(Collectors.toMap(GenericBeanDefinition::getBeanName, v -> v));
-            if (collect.isEmpty()) {                                            // 依赖的条件不存在，跳过
-                this.skippedCondition.add(current.getBeanName());
-                return nested;
+            if (collect.isEmpty()) {
+                continue;
             }
             collect.entrySet().stream().filter(e -> !e.getKey().equals(current.getBeanName())).forEach(e -> nested.put(e.getKey(), e.getValue()));
         }

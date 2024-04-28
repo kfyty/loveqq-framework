@@ -1,6 +1,7 @@
 package com.kfyty.web.mvc.servlet;
 
 import jakarta.servlet.ServletContext;
+import jakarta.websocket.DeploymentException;
 import jakarta.websocket.server.ServerContainer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,11 +45,9 @@ public class ServerEndpointExporter {
         ServerContainer serverContainer = this.getServerContainer();
         for (Class<?> endpointClass : this.endpointClasses) {
             try {
-                if (log.isDebugEnabled()) {
-                    log.debug("registering @ServerEndpoint class: {}", endpointClass);
-                }
+                log.info("registering @ServerEndpoint class: {}", endpointClass);
                 serverContainer.addEndpoint(endpointClass);
-            } catch (Exception ex) {
+            } catch (DeploymentException ex) {
                 throw new IllegalStateException("failed to register @ServerEndpoint class: " + endpointClass, ex);
             }
         }

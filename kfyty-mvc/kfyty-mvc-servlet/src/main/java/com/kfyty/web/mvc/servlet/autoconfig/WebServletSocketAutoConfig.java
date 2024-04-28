@@ -1,6 +1,7 @@
 package com.kfyty.web.mvc.servlet.autoconfig;
 
-import com.kfyty.core.autoconfig.InitializingBean;
+import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.core.autoconfig.annotation.Configuration;
@@ -21,7 +22,7 @@ import jakarta.websocket.server.ServerEndpoint;
 @Configuration
 @ConditionalOnBean(ServletContext.class)
 @ComponentFilter(annotations = ServerEndpoint.class)
-public class WebServletSocketAutoConfig implements InitializingBean, BeanFactoryAware {
+public class WebServletSocketAutoConfig implements ContextAfterRefreshed, BeanFactoryAware {
     private BeanFactory beanFactory;
 
     @Override
@@ -35,7 +36,7 @@ public class WebServletSocketAutoConfig implements InitializingBean, BeanFactory
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void onAfterRefreshed(ApplicationContext applicationContext) {
         ServerEndpointExporter serverEndpointExporter = this.beanFactory.getBean(ServerEndpointExporter.class);
         for (Object value : this.beanFactory.getBeanWithAnnotation(ServerEndpoint.class).values()) {
             serverEndpointExporter.addEndpointClass(value.getClass());
