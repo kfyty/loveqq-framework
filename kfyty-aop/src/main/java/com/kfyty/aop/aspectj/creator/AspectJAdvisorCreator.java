@@ -37,8 +37,8 @@ public class AspectJAdvisorCreator implements AdvisorCreator {
         for (Class<? extends Annotation> aspectAnnotationType : AspectJAnnotationUtil.ASPECT_ANNOTATION_TYPES) {
             for (Method aspectMethod : methods) {
                 if (AnnotationUtil.hasAnnotation(aspectMethod, aspectAnnotationType)) {
-                    AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut(aspectClass.getClazz(), aspectMethod);
                     AbstractAspectJAdvice aspectJAdvice = AspectJAnnotationUtil.resolveAspectFor(aspectAnnotationType);
+                    AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut(aspectClass.getClazz(), aspectMethod);
                     aspectJAdvice.setAspectBean(aspectClass.getName(), aspectJFactory);
                     aspectJAdvice.setPointcut(aspectJExpressionPointcut);
                     advisors.add(new DefaultPointcutAdvisor(aspectJExpressionPointcut, aspectJAdvice));

@@ -1,11 +1,11 @@
 package org.aopalliance.aop;
 
 /**
- * 描述: 通知
+ * Tag interface for Advice. Implementations can be any type
+ * of advice, such as Interceptors.
  *
- * @author kfyty725
- * @date 2021/7/29 16:02
- * @email kfyty725@hotmail.com
+ * @author Rod Johnson
+ * @version $Id: Advice.java,v 1.1 2004/03/19 17:02:16 johnsonr Exp $
  */
 public interface Advice {
 }

@@ -6,6 +6,7 @@ import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Data;
 import org.aopalliance.aop.Advice;
+import org.aopalliance.aop.AspectException;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.weaver.tools.JoinPointMatch;
 import org.aspectj.weaver.tools.PointcutParameter;
@@ -137,6 +138,6 @@ public abstract class AbstractAspectJAdvice implements Advice {
         if (Objects.equals(this.throwing, parameterName)) {
             return throwable;
         }
-        throw new IllegalStateException("parameter binding failed, please add -parameters to compile the parameters and recompile, or check whether the pointcut expression is correct !");
+        throw new AspectException("parameter binding failed, please add -parameters to compile the parameters and recompile, or check whether the pointcut expression is correct.");
     }
 }

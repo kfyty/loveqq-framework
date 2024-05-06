@@ -8,6 +8,7 @@
     <artifactId>kfyty-framework</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0</version>
+    <url>https://github.com/kfyty/kfyty-framework</url>
     <description>ioc/aop/jdbc/mvc/javafx framework</description>
 
     <developers>
@@ -18,6 +19,18 @@
             <email>kfyty725@hotmail.com</email>
         </developer>
     </developers>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/kfyty/kfyty-framework</url>
+        <connection>https://github.com/kfyty/kfyty-framework.git</connection>
+    </scm>
 
     <modules>
         <module>kfyty-core</module>
@@ -87,7 +100,7 @@
         <compiler.plugin.version>3.10.1</compiler.plugin.version>
         <jar.plugin.version>3.2.2</jar.plugin.version>
         <gpg.plugin.version>3.2.2</gpg.plugin.version>
-        <staging.plugin.version>1.6.13</staging.plugin.version>
+        <central.publishing.plugin.version>0.4.0</central.publishing.plugin.version>
         <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <os.maven.version>1.5.0.Final</os.maven.version>
         <protobuf.maven.version>0.5.1</protobuf.maven.version>
@@ -463,14 +476,15 @@
             </plugin>
 
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${staging.plugin.version}</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central.publishing.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <publishingServerId>kfyty</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
                 </configuration>
             </plugin>
         </plugins>
@@ -534,15 +548,15 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>kfyty</id>
             <name>snapshot</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
 
         <repository>
-            <id>ossrh</id>
+            <id>kfyty</id>
             <name>releases</name>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://s01.oss.sonatype.org/content/repositories/releases/</url>
         </repository>
     </distributionManagement>
 </project>

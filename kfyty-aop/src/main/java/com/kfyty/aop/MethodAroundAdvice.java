@@ -1,9 +1,7 @@
 package com.kfyty.aop;
 
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
-import com.kfyty.core.proxy.MethodInterceptorChain;
-import com.kfyty.core.proxy.MethodProxy;
-import org.aopalliance.aop.Advice;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 import static com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy.currentJoinPoint;
@@ -15,10 +13,10 @@ import static com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy.currentJoinPo
  * @date 2021/7/29 16:04
  * @email kfyty725@hotmail.com
  */
-public interface MethodAroundAdvice extends Advice, MethodInterceptorChainPoint {
+public interface MethodAroundAdvice extends MethodInterceptor {
 
     @Override
-    default Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+    default Object invoke(MethodInvocation invocation) throws Throwable {
         return this.around((ProceedingJoinPoint) currentJoinPoint());
     }
 

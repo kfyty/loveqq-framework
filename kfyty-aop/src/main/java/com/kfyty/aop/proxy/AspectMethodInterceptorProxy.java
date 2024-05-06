@@ -5,6 +5,7 @@ import com.kfyty.aop.MethodMatcher;
 import com.kfyty.aop.PointcutAdvisor;
 import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
+import com.kfyty.aop.aspectj.adapter.AdviceMethodInterceptorChainPoint;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.proxy.MethodInterceptorChain;
@@ -65,21 +66,21 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
     protected List<MethodInterceptorChainPoint> findAdviceChainPoints(MethodProxy methodProxy) {
         return this.advisorPointCache.computeIfAbsent(methodProxy.getMethod(), k -> {
             List<Advisor> advisors = this.findAdvisors(methodProxy);
-            List<MethodInterceptorChainPoint> adviceChainPoint = new ArrayList<>();
+            List<AdviceMethodInterceptorChainPoint> adviceChainPoint = new ArrayList<>(advisors.size() + 1);
             next:
             for (Advisor advisor : advisors) {
                 Advice advice = advisor.getAdvice();
                 for (AdviceInterceptorPointAdapter adapter : this.adapters) {
-                    MethodInterceptorChainPoint point = adapter.adapt(advice);
+                    AdviceMethodInterceptorChainPoint point = adapter.adapt(advice);
                     if (point != null) {
                         adviceChainPoint.add(point);
                         continue next;
                     }
                 }
-                throw new IllegalStateException("no suitable adapter for advice: " + advice);
+                throw new IllegalStateException("No suitable adapter for advice: " + advice);
             }
             adviceChainPoint.sort(this.getAdviceChainPointsComparator());
-            return Collections.unmodifiableList(new ArrayList<>(adviceChainPoint));                                     // 释放多余的集合空间
+            return Collections.unmodifiableList(new ArrayList<>(adviceChainPoint));                                     // 不可变，并释放多余的集合空间
         });
     }
 
@@ -98,8 +99,7 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
         return filteredAdvisors;
     }
 
-    protected Comparator<MethodInterceptorChainPoint> getAdviceChainPointsComparator() {
-        return Comparator.comparing((MethodInterceptorChainPoint e) -> findAspectOrder(e.getClass()))
-                .thenComparing(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
+    protected Comparator<AdviceMethodInterceptorChainPoint> getAdviceChainPointsComparator() {
+        return Comparator.comparing((AdviceMethodInterceptorChainPoint e) -> findAspectOrder(e.getAdviceType())).thenComparing(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
     }
 }
