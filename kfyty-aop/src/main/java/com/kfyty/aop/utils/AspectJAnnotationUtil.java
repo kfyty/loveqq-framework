@@ -2,15 +2,15 @@ package com.kfyty.aop.utils;
 
 import com.kfyty.aop.AfterReturningAdvice;
 import com.kfyty.aop.MethodAfterAdvice;
-import com.kfyty.aop.MethodBeforeAdvice;
 import com.kfyty.aop.MethodAroundAdvice;
-import com.kfyty.aop.ThrowsAdvice;
+import com.kfyty.aop.MethodBeforeAdvice;
+import com.kfyty.aop.ThrowingAdvice;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.aop.aspectj.AspectJAfterReturningAdvice;
-import com.kfyty.aop.aspectj.AspectJAfterThrowsAdvice;
+import com.kfyty.aop.aspectj.AspectJThrowingAdvice;
 import com.kfyty.aop.aspectj.AspectJMethodAfterAdvice;
-import com.kfyty.aop.aspectj.AspectJMethodBeforeAdvice;
 import com.kfyty.aop.aspectj.AspectJMethodAroundAdvice;
+import com.kfyty.aop.aspectj.AspectJMethodBeforeAdvice;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
@@ -34,9 +34,12 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public abstract class AspectJAnnotationUtil {
+    /**
+     * 支持的注解类型，该顺序也是通知顺序
+     */
     @SuppressWarnings("unchecked")
     public static Class<? extends Annotation>[] ASPECT_ANNOTATION_TYPES = new Class[] {
-            Around.class, Before.class, AfterReturning.class, AfterThrowing.class, After.class
+            Around.class, Before.class, After.class, AfterReturning.class, AfterThrowing.class
     };
 
     public static String[] findArgNames(Method method) {
@@ -61,8 +64,15 @@ public abstract class AspectJAnnotationUtil {
     }
 
     public static int findAspectOrder(Class<?> adviceType) {
+        int index = 0;
         Class<? extends Annotation> annotationType = resolveAnnotationTypeFor(adviceType);
-        return annotationType.equals(Around.class) || annotationType.equals(Before.class) ? -1 : 1;
+        for (Class<? extends Annotation> aspectType : ASPECT_ANNOTATION_TYPES) {
+            if (aspectType == annotationType) {
+                return index;
+            }
+            index++;
+        }
+        return 99;
     }
 
     public static String findAspectExpression(Method method) {
@@ -82,17 +92,17 @@ public abstract class AspectJAnnotationUtil {
 
     public static AbstractAspectJAdvice resolveAspectFor(Class<?> annotationType) {
         Objects.requireNonNull(annotationType);
-        if (annotationType.equals(Around.class)) {
-            return new AspectJMethodAroundAdvice();
-        }
         if (annotationType.equals(Before.class)) {
             return new AspectJMethodBeforeAdvice();
+        }
+        if (annotationType.equals(Around.class)) {
+            return new AspectJMethodAroundAdvice();
         }
         if (annotationType.equals(AfterReturning.class)) {
             return new AspectJAfterReturningAdvice();
         }
         if (annotationType.equals(AfterThrowing.class)) {
-            return new AspectJAfterThrowsAdvice();
+            return new AspectJThrowingAdvice();
         }
         if (annotationType.equals(After.class)) {
             return new AspectJMethodAfterAdvice();
@@ -102,16 +112,16 @@ public abstract class AspectJAnnotationUtil {
 
     public static Class<? extends Annotation> resolveAnnotationTypeFor(Class<?> adviceType) {
         Objects.requireNonNull(adviceType);
-        if (MethodAroundAdvice.class.isAssignableFrom(adviceType)) {
-            return Around.class;
-        }
         if (MethodBeforeAdvice.class.isAssignableFrom(adviceType)) {
             return Before.class;
+        }
+        if (MethodAroundAdvice.class.isAssignableFrom(adviceType)) {
+            return Around.class;
         }
         if (AfterReturningAdvice.class.isAssignableFrom(adviceType)) {
             return AfterReturning.class;
         }
-        if (ThrowsAdvice.class.isAssignableFrom(adviceType)) {
+        if (ThrowingAdvice.class.isAssignableFrom(adviceType)) {
             return AfterThrowing.class;
         }
         if (MethodAfterAdvice.class.isAssignableFrom(adviceType)) {

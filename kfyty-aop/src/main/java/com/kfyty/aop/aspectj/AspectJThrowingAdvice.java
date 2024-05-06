@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj;
 
-import com.kfyty.aop.ThrowsAdvice;
+import com.kfyty.aop.ThrowingAdvice;
 import com.kfyty.core.utils.AnnotationUtil;
 import org.aspectj.lang.annotation.AfterThrowing;
 
@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  * @date 2021/7/31 16:12
  * @email kfyty725@hotmail.com
  */
-public class AspectJAfterThrowsAdvice extends AbstractAspectJAdvice implements ThrowsAdvice {
+public class AspectJThrowingAdvice extends AbstractAspectJAdvice implements ThrowingAdvice {
 
     @Override
     public void afterThrowing(Method method, Object[] args, Object target, Throwable throwable) {

@@ -1,9 +1,7 @@
 package com.kfyty.aop;
 
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
-import com.kfyty.core.proxy.MethodInterceptorChain;
-import com.kfyty.core.proxy.MethodProxy;
-import org.aopalliance.aop.Advice;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 
 import java.lang.reflect.Method;
 
@@ -14,12 +12,12 @@ import java.lang.reflect.Method;
  * @date 2021/7/29 16:02
  * @email kfyty725@hotmail.com
  */
-public interface MethodBeforeAdvice extends Advice, MethodInterceptorChainPoint {
+public interface MethodBeforeAdvice extends MethodInterceptor {
 
     @Override
-    default Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        this.before(methodProxy.getTargetMethod(), methodProxy.getArguments(), methodProxy.getTarget());
-        return chain.proceed(methodProxy);
+    default Object invoke(MethodInvocation invocation) throws Throwable {
+        this.before(invocation.getMethod(), invocation.getArguments(), invocation.getThis());
+        return invocation.proceed();
     }
 
     void before(Method method, Object[] args, Object target) throws Throwable;

@@ -6,22 +6,23 @@ import org.aopalliance.intercept.MethodInvocation;
 import java.lang.reflect.Method;
 
 /**
- * 描述: 方法后置通知
+ * 描述: 异常通知
  *
  * @author kfyty725
- * @date 2021/7/29 16:02
+ * @date 2021/7/29 16:04
  * @email kfyty725@hotmail.com
  */
-public interface MethodAfterAdvice extends MethodInterceptor {
+public interface ThrowingAdvice extends MethodInterceptor {
 
     @Override
     default Object invoke(MethodInvocation invocation) throws Throwable {
         try {
             return invocation.proceed();
-        } finally {
-            this.after(invocation.getMethod(), invocation.getArguments(), invocation.getThis());
+        } catch (Throwable throwable) {
+            this.afterThrowing(invocation.getMethod(), invocation.getArguments(), invocation.getThis(), throwable);
+            throw throwable;
         }
     }
 
-    void after(Method method, Object[] args, Object target) throws Throwable;
+    void afterThrowing(Method method, Object[] args, Object target, Throwable throwable);
 }

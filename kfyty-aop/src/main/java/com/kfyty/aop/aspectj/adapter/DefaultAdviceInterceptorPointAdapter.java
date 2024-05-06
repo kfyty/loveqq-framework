@@ -1,8 +1,9 @@
 package com.kfyty.aop.aspectj.adapter;
 
+import com.kfyty.aop.support.MethodInterceptorChainPointAdapter;
 import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import org.aopalliance.aop.Advice;
+import org.aopalliance.intercept.MethodInterceptor;
 
 /**
  * 描述: 默认的适配器
@@ -15,7 +16,13 @@ import org.aopalliance.aop.Advice;
 public class DefaultAdviceInterceptorPointAdapter implements AdviceInterceptorPointAdapter {
 
     @Override
-    public MethodInterceptorChainPoint adapt(Advice advice) {
-        return advice instanceof MethodInterceptorChainPoint ? (MethodInterceptorChainPoint) advice : null;
+    public AdviceMethodInterceptorChainPoint adapt(Advice advice) {
+        if (advice instanceof AdviceMethodInterceptorChainPoint) {
+            return (AdviceMethodInterceptorChainPoint) advice;
+        }
+        if (advice instanceof MethodInterceptor) {
+            return new MethodInterceptorChainPointAdapter((MethodInterceptor) advice);
+        }
+        return null;
     }
 }

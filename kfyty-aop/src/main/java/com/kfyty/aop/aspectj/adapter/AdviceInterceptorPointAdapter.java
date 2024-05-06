@@ -18,5 +18,5 @@ public interface AdviceInterceptorPointAdapter {
      * @param advice 通知
      * @return 代理拦截点
      */
-    MethodInterceptorChainPoint adapt(Advice advice);
+    AdviceMethodInterceptorChainPoint adapt(Advice advice);
 }

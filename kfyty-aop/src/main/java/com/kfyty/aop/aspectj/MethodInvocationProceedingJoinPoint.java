@@ -15,7 +15,7 @@ import java.lang.reflect.Parameter;
 import java.util.Arrays;
 
 /**
- * 描述: JoinPoint 简单实现
+ * 描述: JoinPoint 实现
  *
  * @author kfyty725
  * @date 2021/7/31 20:14
@@ -23,9 +23,11 @@ import java.util.Arrays;
  */
 public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint, JoinPoint.StaticPart {
     private Signature signature;
+
     private SourceLocation sourceLocation;
 
     private final MethodProxy methodProxy;
+
     private final MethodInterceptorChain interceptorChain;
 
     public MethodInvocationProceedingJoinPoint(MethodProxy methodProxy, MethodInterceptorChain interceptorChain) {
@@ -69,17 +71,17 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
     @Override
     public String toShortString() {
-        return "execution(" + getSignature().toShortString() + ")";
+        return "execution(" + this.getSignature().toShortString() + ")";
     }
 
     @Override
     public String toLongString() {
-        return "execution(" + getSignature().toLongString() + ")";
+        return "execution(" + this.getSignature().toLongString() + ")";
     }
 
     @Override
     public String toString() {
-        return "execution(" + getSignature().toString() + ")";
+        return "execution(" + this.getSignature().toString() + ")";
     }
 
     @Override
@@ -133,7 +135,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
         @Override
         public String getDeclaringTypeName() {
-            return this.getMethod().getDeclaringClass().getName();
+            return this.getDeclaringType().getName();
         }
 
         @Override
@@ -245,7 +247,6 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
         }
 
         @Override
-        @Deprecated
         public int getColumn() {
             throw new UnsupportedOperationException();
         }

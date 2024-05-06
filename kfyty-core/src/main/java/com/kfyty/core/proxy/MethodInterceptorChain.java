@@ -68,8 +68,8 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
     }
 
     @Override
-    protected Object process(MethodProxy methodProxy) throws Throwable {
-        if (methodProxy.getTargetMethod().getDeclaringClass().equals(Object.class)) {
+    protected Object invoke(MethodProxy methodProxy) throws Throwable {
+        if (methodProxy.getTargetMethod().getDeclaringClass() == Object.class) {
             return methodProxy.invoke();
         }
         final MethodInterceptorChain currentChain = currentChain();
