@@ -75,3 +75,31 @@ public class Main {
     }
 }
 ```
+
+### 最佳实践
+建议项目继承 kfyty-framework 父模块
+```xml
+    <parent>
+        <groupId>com.kfyty</groupId>
+        <artifactId>kfyty-framework</artifactId>
+        <version>1.0.0</version>
+    </parent>
+```
+
+打包时，需要在子模块添加以下配置，以生成 jar index
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+```
+同时添加以下配置，以设置自己的启动类，打包后即可读取 jar index 启动
+```xml
+    <properties>
+        <boot-start-class>com.kfyty.demo.Main</boot-start-class>
+    </properties>
+```
