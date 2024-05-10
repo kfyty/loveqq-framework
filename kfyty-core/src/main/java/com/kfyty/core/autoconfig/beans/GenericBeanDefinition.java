@@ -1,11 +1,13 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
+import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.core.generic.ActualGeneric;
@@ -250,7 +252,11 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     protected void ensureAutowiredProcessor(ApplicationContext context) {
         if (autowiredProcessor == null || autowiredProcessor.getContext() != context) {
-            autowiredProcessor = new AutowiredProcessor(context);
+            if (BeanFactoryPreProcessor.class.isAssignableFrom(this.beanType)) {
+                autowiredProcessor = new AutowiredProcessor(context, new DefaultAutowiredDescriptionResolver());
+            } else {
+                autowiredProcessor = new AutowiredProcessor(context);
+            }
         }
     }
 
@@ -260,7 +266,7 @@ public class GenericBeanDefinition implements BeanDefinition {
             return Collections.emptyList();
         }
         Parameter[] parameters = this.constructor.getParameters();
-        Autowired constructorAnnotation = findAnnotation(this.constructor, Autowired.class);
+        AutowiredDescription constructorDescription = autowiredProcessor.getResolver().resolve(this.constructor);
         List<Pair<Class<?>, Object>> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedList::new).orElseGet(LinkedList::new);
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
@@ -269,8 +275,8 @@ public class GenericBeanDefinition implements BeanDefinition {
                 constructorArgs.add(new Pair<>(parameter.getType(), this.resolvePlaceholderValue(value.value(), parameter.getParameterizedType())));
                 continue;
             }
-            Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(constructorAnnotation);
-            Object resolveBean = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired), parameter.getType());
+            AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
+            Object resolveBean = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), description, parameter.getType());
             constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }
         return constructorArgs;

@@ -3,9 +3,13 @@ package com.kfyty.core.utils;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
+import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+
+import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 
 /**
  * 描述: 作用域工具
@@ -42,7 +46,7 @@ public abstract class ScopeUtil {
     }
 
     public static Scope resolveScope(Class<?> clazz) {
-        if (AnnotationUtil.hasAnnotationElement(clazz, Configuration.class)) {
+        if (hasAnnotationElement(clazz, Configuration.class) || AutowiredDescription.INJECT_AVAILABLE && hasAnnotationElement(clazz, Singleton.class)) {
             return defaultScope();
         }
         Scope scope = AnnotationUtil.findAnnotationElement(clazz, Scope.class);

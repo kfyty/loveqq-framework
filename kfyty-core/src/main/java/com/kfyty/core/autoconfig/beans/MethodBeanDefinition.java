@@ -1,7 +1,6 @@
 package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Scope;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
@@ -49,7 +48,8 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
      * bean 的初始化方法名称
      */
-    @Getter @Setter
+    @Getter
+    @Setter
     private String initMethodName;
 
     /**
@@ -60,7 +60,8 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
      * bean 的销毁方法名称
      */
-    @Getter @Setter
+    @Getter
+    @Setter
     private String destroyMethodName;
 
     /**
@@ -116,12 +117,12 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
-        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean from bean method: {}", bean), bean);
+        return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from bean method: {}", bean), bean);
     }
 
     protected Object[] prepareMethodArgs() {
         int index = 0;
-        Autowired methodAnnotation = findAnnotation(this.beanMethod, Autowired.class);
+        AutowiredDescription methodDescription = autowiredProcessor.getResolver().resolve(this.beanMethod);
         Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
             Value value = findAnnotation(parameter, Value.class);
@@ -129,8 +130,8 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
                 parameters[index++] = this.resolvePlaceholderValue(value.value(), parameter.getParameterizedType());
                 continue;
             }
-            Autowired autowired = ofNullable(findAnnotation(parameter, Autowired.class)).orElse(methodAnnotation);
-            parameters[index++] = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), AutowiredDescription.from(autowired), parameter.getType());
+            AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(methodDescription);
+            parameters[index++] = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), description, parameter.getType());
         }
         return parameters;
     }

@@ -7,7 +7,7 @@
     <groupId>com.kfyty</groupId>
     <artifactId>kfyty-framework</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <url>https://github.com/kfyty/kfyty-framework</url>
     <description>ioc/aop/jdbc/mvc/javafx framework</description>
 
@@ -69,6 +69,7 @@
         <jstl.version>1.2</jstl.version>
         <servlet.api.version>6.0.0</servlet.api.version>
         <servlet.websocket.api.version>2.1.1</servlet.websocket.api.version>
+        <inject.api.version>2.0.1</inject.api.version>
         <annotation.api.version>3.0.0-M1</annotation.api.version>
         <validation.api.version>3.0.2</validation.api.version>
         <glassfish.jakarta.el.version>4.0.2</glassfish.jakarta.el.version>
@@ -86,7 +87,7 @@
         <lettuce.version>6.1.5.RELEASE</lettuce.version>
 
         <k-jte.version>1.0-SNAPSHOT</k-jte.version>
-        <kfyty.framework.version>1.0.0</kfyty.framework.version>
+        <kfyty.framework.version>1.0.1-SNAPSHOT</kfyty.framework.version>
 
         <slf4j.version>1.7.25</slf4j.version>
         <slf4j.log4j12.version>1.7.12</slf4j.log4j12.version>
@@ -222,6 +223,12 @@
                 <groupId>jakarta.annotation</groupId>
                 <artifactId>jakarta.annotation-api</artifactId>
                 <version>${annotation.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${inject.api.version}</version>
             </dependency>
 
             <dependency>

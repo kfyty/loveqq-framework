@@ -1,7 +1,6 @@
 package com.kfyty.boot.proxy;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Lookup;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
@@ -33,11 +32,11 @@ public class LookupMethodInterceptorProxy implements MethodInterceptorChainPoint
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Method method = methodProxy.getTargetMethod();
         Lookup annotation = AnnotationUtil.findAnnotation(method, Lookup.class);
-        if(annotation == null) {
+        if (annotation == null) {
             return chain.proceed(methodProxy);
         }
         String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.getBeanName(method.getReturnType());
-        AutowiredDescription description = AutowiredDescription.from(AnnotationUtil.findAnnotation(method, Autowired.class));
+        AutowiredDescription description = autowiredProcessor.getResolver().resolve(method);
         return this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(method), description);
     }
 }

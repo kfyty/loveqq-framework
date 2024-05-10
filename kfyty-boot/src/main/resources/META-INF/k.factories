@@ -15,7 +15,7 @@ com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.boot.processor.ConfigurationBeanPostProcessor,\
     com.kfyty.boot.processor.ValueAnnotationBeanPostProcessor,\
     com.kfyty.boot.processor.ConfigurationPropertiesBeanPostProcessor,\
-    com.kfyty.boot.processor.AutowiredAnnotationBeanPostProcessor,\
+    com.kfyty.boot.processor.AutowiredCapableBeanPostProcessor,\
     com.kfyty.boot.event.DefaultApplicationEventPublisher,\
     com.kfyty.boot.autoconfig.factory.DefaultEventListenerAnnotationListenerFactory,\
     com.kfyty.boot.processor.AsyncMethodBeanPostProcessor,\
