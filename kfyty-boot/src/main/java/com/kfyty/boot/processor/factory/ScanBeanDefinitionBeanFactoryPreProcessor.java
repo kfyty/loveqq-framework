@@ -23,6 +23,11 @@ import static com.kfyty.core.utils.ReflectUtil.isAbstract;
 public class ScanBeanDefinitionBeanFactoryPreProcessor implements BeanFactoryPreProcessor, InternalPriority {
 
     @Override
+    public boolean allowAutowired() {
+        return false;
+    }
+
+    @Override
     public void preProcessBeanFactory(BeanFactory beanFactory) {
         if (beanFactory instanceof ConfigurableApplicationContext) {
             this.preProcessBeanFactory((ConfigurableApplicationContext) beanFactory);

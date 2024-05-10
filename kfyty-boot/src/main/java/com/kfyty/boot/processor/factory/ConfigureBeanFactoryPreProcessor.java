@@ -48,6 +48,11 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
     }
 
     @Override
+    public boolean allowAutowired() {
+        return false;
+    }
+
+    @Override
     public void preProcessBeanFactory(BeanFactory beanFactory) {
         if (beanFactory instanceof ConfigurableApplicationContext) {
             this.preProcessBeanFactory((ConfigurableApplicationContext) beanFactory);

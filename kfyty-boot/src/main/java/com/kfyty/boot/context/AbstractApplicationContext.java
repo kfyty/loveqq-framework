@@ -173,7 +173,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void sortBeanDefinition() {
-        synchronized (this.getBeanDefinitions()) {
+        synchronized (this.beanDefinitions) {
             Map<String, BeanDefinition> sortBeanDefinition = this.getBeanDefinitions(e -> true);
             beanDefinitions.clear();
             beanDefinitions.putAll(sortBeanDefinition);

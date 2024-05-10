@@ -12,11 +12,12 @@ import com.kfyty.core.autoconfig.beans.BeanFactory;
 public interface BeanFactoryPreProcessor {
     /**
      * 是否进行依赖注入
+     * 主要是内置的默认前置处理器不可使用，它们是进行 bean 工厂初始化的处理器
      *
-     * @return 默认 false
+     * @return 默认 true
      */
     default boolean allowAutowired() {
-        return false;
+        return true;
     }
 
     /**

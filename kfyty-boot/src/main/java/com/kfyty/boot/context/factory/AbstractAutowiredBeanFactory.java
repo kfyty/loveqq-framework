@@ -145,14 +145,11 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        if (this == bean) {
-            return;
-        }
-        if (bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
+        if (this == bean || bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
             return;
         }
         if (this.autowiredCapableSupport == null) {
-            Objects.requireNonNull(this.getBean(AutowiredCapableSupport.class), "the bean does not exists of type: " + AutowiredCapableSupport.class);
+            this.autowiredCapableSupport = Objects.requireNonNull(this.getBean(AutowiredCapableSupport.class), "The bean doesn't exists of type: " + AutowiredCapableSupport.class);
         }
         this.autowiredCapableSupport.autowiredBean(beanName, bean);
     }

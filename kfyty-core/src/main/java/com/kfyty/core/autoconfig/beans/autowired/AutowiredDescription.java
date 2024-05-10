@@ -1,16 +1,7 @@
 package com.kfyty.core.autoconfig.beans.autowired;
 
-import com.kfyty.core.autoconfig.annotation.Autowired;
-import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
-
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
-
-import static com.kfyty.core.utils.CommonUtil.notEmpty;
 
 /**
  * 描述: 自动注入描述
@@ -22,15 +13,26 @@ import static com.kfyty.core.utils.CommonUtil.notEmpty;
 @RequiredArgsConstructor
 public class AutowiredDescription {
     /**
-     * jakarta api 是否可用
+     * jakarta-annotation api 是否可用
      */
-    private static boolean JAKARTA_AVAILABLE;
+    public static boolean JAKARTA_AVAILABLE;
+
+    /**
+     * jakarta-inject api 是否可用
+     */
+    public static boolean INJECT_AVAILABLE;
 
     static {
         try {
             JAKARTA_AVAILABLE = ReflectUtil.isPresent("jakarta.annotation.Resource");
         } catch (Throwable e) {
-            JAKARTA_AVAILABLE = false;
+            // nothing
+        }
+
+        try {
+            INJECT_AVAILABLE = ReflectUtil.isPresent("jakarta.inject.Inject");
+        } catch (Throwable e) {
+            // nothing
         }
     }
 
@@ -82,27 +84,5 @@ public class AutowiredDescription {
 
     public static boolean isLazied(AutowiredDescription description) {
         return description != null && description.lazied();
-    }
-
-    public static AutowiredDescription from(AccessibleObject accessibleObject) {
-        Autowired autowired = AnnotationUtil.findAnnotation(accessibleObject, Autowired.class);
-        if (autowired != null || !JAKARTA_AVAILABLE) {
-            return from(autowired);
-        }
-        Resource resource = AnnotationUtil.findAnnotation(accessibleObject, Resource.class);
-        if (resource != null) {
-            return from(accessibleObject, resource);
-        }
-        return null;
-    }
-
-    public static AutowiredDescription from(Autowired autowired) {
-        return autowired == null ? null : new AutowiredDescription(autowired.value(), autowired.required());
-    }
-
-    public static AutowiredDescription from(AccessibleObject accessibleObject, Resource resource) {
-        String name = accessibleObject == null ? null : (accessibleObject instanceof Field ? ((Field) accessibleObject).getName() : ((Executable) accessibleObject).getName());
-        String value = accessibleObject == null || notEmpty(resource.name()) ? resource.name() : name;
-        return new AutowiredDescription(value, true);
     }
 }

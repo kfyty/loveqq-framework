@@ -12,6 +12,6 @@ import com.kfyty.core.autoconfig.boostrap.BootstrapConfiguration;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@ComponentFilter(value = {"com.kfyty.aop.**", "com.kfyty.boot.context.**", "com.kfyty.boot.event.**", "com.kfyty.boot.processor.**", "com.kfyty.boot.autoconfig.**"}, annotations = BootstrapConfiguration.class)
+@ComponentFilter(value = {"com.kfyty.core.autoconfig.beans.autowired.**" ,"com.kfyty.aop.**", "com.kfyty.boot.context.**", "com.kfyty.boot.event.**", "com.kfyty.boot.processor.**", "com.kfyty.boot.autoconfig.**"}, annotations = BootstrapConfiguration.class)
 public class BeanFactoryBootstrapApplication {
 }

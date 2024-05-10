@@ -2,7 +2,6 @@ package com.kfyty.core.autoconfig.beans.autowired;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.LaziedObject;
-import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.generic.ActualGeneric;
@@ -22,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,12 +31,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isLazied;
 import static com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription.isRequired;
-import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
-import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver.doResolve;
 import static com.kfyty.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.core.utils.AopUtil.isJdkProxy;
 import static java.util.Optional.ofNullable;
@@ -61,23 +61,34 @@ public class AutowiredProcessor {
     @Getter
     private final ApplicationContext context;
 
+    /**
+     * 自动注入描述符解析器
+     */
+    @Getter
+    private final AutowiredDescriptionResolver resolver;
+
     public AutowiredProcessor(ApplicationContext context) {
+        this(context, Objects.requireNonNull(context.getBean(AutowiredDescriptionResolver.class), "The bean doesn't exists of type: " + AutowiredDescriptionResolver.class));
+    }
+
+    public AutowiredProcessor(ApplicationContext context, AutowiredDescriptionResolver resolver) {
         this.context = context;
-        this.resolving = new LinkedHashSet<>();
+        this.resolver = resolver;
+        this.resolving = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
     public Object doAutowired(Object bean, Field field) {
-        AutowiredDescription description = AutowiredDescription.from(field);
+        AutowiredDescription description = doResolve(field);
         if (description != null) {
-            return this.doAutowired(bean, field, description.markLazied(hasAnnotation(field, com.kfyty.core.autoconfig.annotation.Lazy.class)));
+            return this.doAutowired(bean, field, description);
         }
         return null;
     }
 
     public void doAutowired(Object bean, Method method) {
-        AutowiredDescription description = AutowiredDescription.from(method);
+        AutowiredDescription description = doResolve(method);
         if (description != null) {
-            this.doAutowired(bean, method, description.markLazied(hasAnnotation(method, com.kfyty.core.autoconfig.annotation.Lazy.class)));
+            this.doAutowired(bean, method, description);
         }
     }
 
@@ -95,11 +106,15 @@ public class AutowiredProcessor {
     }
 
     public void doAutowired(Object bean, Method method, AutowiredDescription description) {
+        this.doAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
+    }
+
+    public void doAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), parameter);
-            AutowiredDescription paramDescription = ofNullable(AutowiredDescription.from(findAnnotation(parameter, Autowired.class))).orElse(description);
+            AutowiredDescription paramDescription = ofNullable(parameterAutowiredDescriptionResolver.apply(parameter)).orElse(description);
             Object targetBean = this.doResolveBean(actualGeneric, paramDescription, parameter.getType());
             parameters[index++] = targetBean;
         }
