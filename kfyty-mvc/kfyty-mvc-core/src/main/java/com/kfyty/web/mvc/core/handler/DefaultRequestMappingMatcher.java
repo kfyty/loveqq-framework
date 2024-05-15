@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -66,6 +65,9 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
 
     protected MethodMapping fuzzyMatch(RequestMethod method, String requestURI) {
         RequestMethodMapping requestMethodMapping = this.requestMethodMappingMap.get(method);
+        if (requestMethodMapping == null) {
+            return null;
+        }
         for (Map<String, MethodMapping> mappingMap : requestMethodMapping.getUrlLengthMapping().values()) {
             for (Map.Entry<String, MethodMapping> entry : mappingMap.entrySet()) {
                 String pattern = entry.getValue().isRestfulUrl() ? entry.getKey().replaceAll("\\{.*}", "*") : entry.getKey();
@@ -78,7 +80,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     protected MethodMapping preciseMatch(RequestMethod method, String requestURI) {
-        Map<Integer, Map<String, MethodMapping>> urlLengthMapping = Optional.ofNullable(this.requestMethodMappingMap.get(method)).map(RequestMethodMapping::getUrlLengthMapping).orElse(null);
+        Map<Integer, Map<String, MethodMapping>> urlLengthMapping = ofNullable(this.requestMethodMappingMap.get(method)).map(RequestMethodMapping::getUrlLengthMapping).orElse(null);
         if (CommonUtil.empty(urlLengthMapping)) {
             return null;
         }

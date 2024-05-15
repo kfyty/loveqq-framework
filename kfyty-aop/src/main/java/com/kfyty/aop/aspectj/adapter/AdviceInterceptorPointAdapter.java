@@ -1,6 +1,7 @@
 package com.kfyty.aop.aspectj.adapter;
 
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.core.proxy.aop.AdviceMethodInterceptorChainPoint;
 import org.aopalliance.aop.Advice;
 
 /**

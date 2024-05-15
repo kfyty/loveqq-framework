@@ -55,6 +55,7 @@
     </modules>
 
     <properties>
+        <aspectj.version>1.9.7</aspectj.version>
         <cglib.version>3.3.0</cglib.version>
         <asm.version>9.5</asm.version>
         <javassist.version>3.28.0-GA</javassist.version>
@@ -151,6 +152,12 @@
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm</artifactId>
                 <version>${asm.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspectj.version}</version>
             </dependency>
 
             <dependency>
@@ -455,8 +462,10 @@
                         --add-opens=java.base/java.nio=ALL-UNNAMED
                         --add-opens java.base/java.util=ALL-UNNAMED
                         --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED
                         --add-opens=java.rmi/java.rmi=ALL-UNNAMED
                         --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+                        --add-opens=java.rmi/sun.rmi.transport.tcp=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>

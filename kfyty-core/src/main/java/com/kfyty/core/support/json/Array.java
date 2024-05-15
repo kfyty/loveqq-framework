@@ -1,5 +1,6 @@
 package com.kfyty.core.support.json;
 
+import com.kfyty.core.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.util.AbstractList;
@@ -166,6 +167,6 @@ public class Array extends AbstractList<Object> implements JSONAware {
 
     @Override
     public String toString() {
-        return this.decorate.toString();
+        return JsonUtil.toJson(this.decorate);
     }
 }

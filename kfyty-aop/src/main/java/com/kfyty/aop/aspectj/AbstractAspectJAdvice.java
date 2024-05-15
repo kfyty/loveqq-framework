@@ -1,7 +1,7 @@
 package com.kfyty.aop.aspectj;
 
 import com.kfyty.aop.Pointcut;
-import com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy;
+import com.kfyty.core.proxy.aop.adapter.ExposeInvocationInterceptorProxy;
 import com.kfyty.aop.utils.AspectJAnnotationUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.Data;

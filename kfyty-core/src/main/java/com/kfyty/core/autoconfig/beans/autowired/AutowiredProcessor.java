@@ -105,11 +105,11 @@ public class AutowiredProcessor {
         return targetBean;
     }
 
-    public void doAutowired(Object bean, Method method, AutowiredDescription description) {
-        this.doAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
+    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description) {
+        return this.doAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
     }
 
-    public void doAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
+    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
@@ -119,9 +119,7 @@ public class AutowiredProcessor {
             parameters[index++] = targetBean;
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
-        if (log.isDebugEnabled()) {
-            LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", parameters, bean));
-        }
+        return LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", parameters, bean), parameters);
     }
 
     /**

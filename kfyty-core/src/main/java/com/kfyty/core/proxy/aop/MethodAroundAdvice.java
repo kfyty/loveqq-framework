@@ -1,10 +1,9 @@
-package com.kfyty.aop;
+package com.kfyty.core.proxy.aop;
 
+import com.kfyty.core.proxy.aop.adapter.ExposeInvocationInterceptorProxy;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.aspectj.lang.ProceedingJoinPoint;
-
-import static com.kfyty.aop.proxy.ExposeInvocationInterceptorProxy.currentJoinPoint;
 
 /**
  * 描述: 方法环绕通知
@@ -17,7 +16,7 @@ public interface MethodAroundAdvice extends MethodInterceptor {
 
     @Override
     default Object invoke(MethodInvocation invocation) throws Throwable {
-        return this.around((ProceedingJoinPoint) currentJoinPoint());
+        return this.around((ProceedingJoinPoint) ExposeInvocationInterceptorProxy.currentJoinPoint());
     }
 
     Object around(ProceedingJoinPoint pjp) throws Throwable;

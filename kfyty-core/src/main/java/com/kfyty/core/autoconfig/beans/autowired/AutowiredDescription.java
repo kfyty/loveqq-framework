@@ -15,26 +15,12 @@ public class AutowiredDescription {
     /**
      * jakarta-annotation api 是否可用
      */
-    public static boolean JAKARTA_AVAILABLE;
+    public static boolean JAKARTA_AVAILABLE = ReflectUtil.isPresent("jakarta.annotation.Resource");
 
     /**
      * jakarta-inject api 是否可用
      */
-    public static boolean INJECT_AVAILABLE;
-
-    static {
-        try {
-            JAKARTA_AVAILABLE = ReflectUtil.isPresent("jakarta.annotation.Resource");
-        } catch (Throwable e) {
-            // nothing
-        }
-
-        try {
-            INJECT_AVAILABLE = ReflectUtil.isPresent("jakarta.inject.Inject");
-        } catch (Throwable e) {
-            // nothing
-        }
-    }
+    public static boolean INJECT_AVAILABLE = ReflectUtil.isPresent("jakarta.inject.Inject");
 
     /**
      * bean name

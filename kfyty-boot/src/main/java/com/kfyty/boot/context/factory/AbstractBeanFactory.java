@@ -1,5 +1,6 @@
 package com.kfyty.boot.context.factory;
 
+import com.kfyty.boot.autoconfig.factory.LazyProxyFactoryBean;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.DestroyBean;
@@ -13,15 +14,9 @@ import com.kfyty.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.lang.util.concurrent.WeakConcurrentHashMap;
-import com.kfyty.core.proxy.MethodInterceptorChain;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
-import com.kfyty.core.proxy.MethodProxy;
-import com.kfyty.core.proxy.factory.DynamicProxyFactory;
-import com.kfyty.core.utils.AopUtil;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -217,7 +212,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if (beanDefinitions.size() > 1) {
             throw new BeansException("more than one instance of type: " + clazz.getName());
         }
-        return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next().getBeanName(), isLazyInit);
+        return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next(), isLazyInit);
     }
 
     @Override
@@ -233,6 +228,16 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             return bean;
         }
         return (T) this.registerBean(this.getBeanDefinition(name), isLazyInit);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getBean(BeanDefinition beanDefinition, boolean isLazyInit) {
+        T bean = (T) this.beanInstances.get(beanDefinition.getBeanName());
+        if (bean != null) {
+            return bean;
+        }
+        return (T) this.registerBean(beanDefinition, isLazyInit);
     }
 
     @Override
@@ -283,10 +288,10 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             return this.getBean(beanDefinition.getBeanName());
         }
         synchronized (this.beanInstances) {
-            Object bean = ofNullable(this.beanReference.remove(beanDefinition.getBeanName())).orElseGet(() -> this.doCreateBean(beanDefinition));
             if (isLazyInit) {
-                return this.createLazied(beanDefinition, bean);
+                return new LazyProxyFactoryBean<>(beanDefinition).withBeanFactory(this).getObject();
             }
+            Object bean = ofNullable(this.beanReference.remove(beanDefinition.getBeanName())).orElseGet(() -> this.doCreateBean(beanDefinition));
             if (!this.contains(beanDefinition.getBeanName())) {
                 return this.registerBean(beanDefinition.getBeanName(), bean);
             }
@@ -419,6 +424,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 if (newBean != null && newBean != bean) {
                     bean = newBean;
                     this.replaceBean(beanName, newBean);
+                    this.invokeAwareMethod(beanName, bean);
                 }
             }
         }
@@ -467,36 +473,5 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
 
         return bean;
-    }
-
-    protected Object createLazied(BeanDefinition beanDefinition, Object bean) {
-        LazyInjectProxy proxy = new LazyInjectProxy(beanDefinition.getBeanName(), bean);
-        if (AopUtil.addProxyInterceptorPoint(bean, proxy)) {
-            return bean;
-        }
-        return DynamicProxyFactory.create(true).addInterceptorPoint(proxy).createProxy(bean, beanDefinition.getConstructArgTypes(), beanDefinition.getConstructArgValues());
-    }
-
-    /**
-     * 自动注入的懒加载代理
-     * 仅创建了 bean 示例，后续初始化操作懒加载进行
-     */
-    @RequiredArgsConstructor
-    private class LazyInjectProxy implements MethodInterceptorChainPoint {
-        private final String beanName;
-        private final Object bean;
-
-        @Override
-        public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-            if (!AbstractBeanFactory.this.contains(beanName)) {
-                synchronized (AbstractBeanFactory.this.beanInstances) {
-                    if (!AbstractBeanFactory.this.contains(beanName)) {
-                        AbstractBeanFactory.this.registerBean(beanName, bean);
-                    }
-                }
-            }
-            methodProxy.setTarget(AbstractBeanFactory.this.getBean(beanName));
-            return chain.proceed(methodProxy);
-        }
     }
 }

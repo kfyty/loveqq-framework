@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj;
 
-import com.kfyty.aop.MethodAroundAdvice;
+import com.kfyty.core.proxy.aop.MethodAroundAdvice;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.MethodSignature;

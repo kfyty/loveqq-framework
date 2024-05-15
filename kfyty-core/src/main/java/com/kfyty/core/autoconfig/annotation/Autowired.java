@@ -15,10 +15,19 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.PARAMETER})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.PARAMETER})
 public @interface Autowired {
-
+    /**
+     * 是否必须存在
+     *
+     * @return true/false
+     */
     boolean required() default true;
 
+    /**
+     * bean name
+     *
+     * @return name
+     */
     String value() default "";
 }

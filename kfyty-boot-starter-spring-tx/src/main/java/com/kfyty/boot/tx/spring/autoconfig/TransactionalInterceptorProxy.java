@@ -1,6 +1,6 @@
 package com.kfyty.boot.tx.spring.autoconfig;
 
-import com.kfyty.aop.MethodAroundAdvice;
+import com.kfyty.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.internal.InternalPriority;

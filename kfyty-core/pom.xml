@@ -29,6 +29,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
             <groupId>ognl</groupId>
             <artifactId>ognl</artifactId>
             <optional>true</optional>
