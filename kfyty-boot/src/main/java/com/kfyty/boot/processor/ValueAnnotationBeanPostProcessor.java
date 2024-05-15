@@ -3,14 +3,12 @@ package com.kfyty.boot.processor;
 import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Component;
-import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.AopUtil;
-import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,10 +48,10 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             Object property = resolvePlaceholderValue(annotation.value(), field.getGenericType(), this.placeholdersResolver, this.propertyContext);
             if (property != null) {
                 setFieldValue(target, field, property);
+                if (bean != target && AopUtil.isCglibProxy(bean)) {
+                    setFieldValue(bean, field, property);
+                }
             }
-        }
-        if (AnnotationUtil.hasAnnotationElement(targetClass, Configuration.class)) {
-            BeanUtil.copyProperties(target, bean);
         }
         return null;
     }

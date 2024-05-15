@@ -1,4 +1,4 @@
-package com.kfyty.aop;
+package com.kfyty.core.proxy.aop;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;

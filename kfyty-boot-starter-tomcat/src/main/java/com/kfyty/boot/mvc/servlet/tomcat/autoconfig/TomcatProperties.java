@@ -1,5 +1,6 @@
 package com.kfyty.boot.mvc.servlet.tomcat.autoconfig;
 
+import com.kfyty.core.support.Pair;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import lombok.Data;
@@ -32,15 +33,59 @@ public class TomcatProperties {
         }
     }
 
+    /**
+     * 端口
+     */
     private int port;
+
+    /**
+     * 是否启用虚拟线程
+     */
     private boolean virtualThread;
+
+    /**
+     * 协议
+     */
     private String protocol;
+
+    /**
+     * 上下文路径
+     */
     private String contextPath;
+
+    /**
+     * 项目中的静态资源路径，由 {@link org.apache.catalina.servlets.DefaultServlet} 解析
+     */
     private List<String> staticPattern;
+
+    /**
+     * 本地静态资源路径
+     */
+    private List<Pair<String, String>> resources;
+
+    /**
+     * {@link com.kfyty.web.mvc.servlet.DispatcherServlet} 路径映射
+     */
     private String dispatcherMapping;
+
+    /**
+     * 启动类
+     */
     private Class<?> primarySource;
+
+    /**
+     * 上传文件配置
+     */
     private MultipartConfigElement multipartConfig;
+
+    /**
+     * 过滤器
+     */
     private List<Filter> webFilters;
+
+    /**
+     * 监听器
+     */
     private List<EventListener> webListeners;
 
     public TomcatProperties() {
@@ -54,6 +99,7 @@ public class TomcatProperties {
         this.contextPath = DEFAULT_DISPATCHER_MAPPING;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
         this.staticPattern = new LinkedList<>();
+        this.resources = new LinkedList<>();
         this.primarySource = primarySource;
         this.multipartConfig = multipartConfig != null ? multipartConfig : new MultipartConfigElement("");
         this.webFilters = new LinkedList<>();
@@ -63,6 +109,10 @@ public class TomcatProperties {
 
     public void addStaticPattern(String pattern) {
         this.staticPattern.add(pattern);
+    }
+
+    public void addResource(String pattern, String location) {
+        this.resources.add(new Pair<>(pattern, location));
     }
 
     public void addWebFilter(Filter filter) {

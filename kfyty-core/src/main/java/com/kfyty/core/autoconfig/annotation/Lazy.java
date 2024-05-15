@@ -9,14 +9,14 @@ import java.lang.annotation.Target;
 /**
  * 描述: 延迟初始化
  * 使用该注解的 bean 将生成代理类
- * 作用于属性或方法上并且 bean 还未创建时，将返回延迟代理类进行依赖注入
  *
  * @author kfyty725
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
  */
+@Autowired
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 public @interface Lazy {
 }

@@ -103,7 +103,10 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
             if (description != null) {
-                this.autowiredProcessor.doAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
+                Object[] parameters = this.autowiredProcessor.doAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
+                if (bean != exposedBean && AopUtil.isCglibProxy(exposedBean)) {
+                    ReflectUtil.invokeMethod(exposedBean, method, parameters);
+                }
             }
         }
     }

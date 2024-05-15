@@ -49,7 +49,7 @@ public class DefaultAutowiredDescriptionResolver implements AutowiredDescription
     }
 
     protected static AutowiredDescription doResolveAutowired(AnnotatedElement element) {
-        Autowired autowired = AnnotationUtil.findAnnotation(element, Autowired.class);
+        Autowired autowired = AnnotationUtil.findAnnotationElement(element, Autowired.class);
         return autowired == null ? null : new AutowiredDescription(autowired.value(), autowired.required()).markLazied(hasAnnotation(element, Lazy.class));
     }
 

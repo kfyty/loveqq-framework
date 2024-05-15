@@ -27,6 +27,11 @@ public class LazyProxyFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware
      */
     private BeanFactory beanFactory;
 
+    public LazyProxyFactoryBean<T> withBeanFactory(BeanFactory beanFactory) {
+        this.setBeanFactory(beanFactory);
+        return this;
+    }
+
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;

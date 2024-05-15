@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj;
 
-import com.kfyty.aop.AfterReturningAdvice;
+import com.kfyty.core.proxy.aop.AfterReturningAdvice;
 import com.kfyty.core.utils.AnnotationUtil;
 import org.aspectj.lang.annotation.AfterReturning;
 

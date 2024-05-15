@@ -1,9 +1,9 @@
-package com.kfyty.aop.support;
+package com.kfyty.core.proxy.aop.adapter;
 
-import com.kfyty.aop.aspectj.adapter.AdviceMethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
+import com.kfyty.core.proxy.aop.AdviceMethodInterceptorChainPoint;
 import lombok.RequiredArgsConstructor;
 import org.aopalliance.intercept.MethodInterceptor;
 

@@ -1,4 +1,4 @@
-package com.kfyty.aop.aspectj.adapter;
+package com.kfyty.core.proxy.aop;
 
 import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 

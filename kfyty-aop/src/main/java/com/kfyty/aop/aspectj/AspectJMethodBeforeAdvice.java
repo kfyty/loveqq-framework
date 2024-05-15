@@ -1,6 +1,6 @@
 package com.kfyty.aop.aspectj;
 
-import com.kfyty.aop.MethodBeforeAdvice;
+import com.kfyty.core.proxy.aop.MethodBeforeAdvice;
 
 import java.lang.reflect.Method;
 

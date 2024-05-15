@@ -1,6 +1,7 @@
 package com.kfyty.boot.mvc.servlet.tomcat;
 
 import com.kfyty.boot.mvc.servlet.tomcat.autoconfig.TomcatProperties;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.Context;
+import org.apache.catalina.Host;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
@@ -45,6 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EventListener;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
@@ -64,6 +67,9 @@ public class TomcatWebServer implements ServletWebServer {
 
     @Setter
     private TomcatProperties config;
+
+    @Getter
+    private Host host;
 
     @Getter
     private ServletContext servletContext;
@@ -119,8 +125,9 @@ public class TomcatWebServer implements ServletWebServer {
         try {
             tomcat.setPort(this.getPort());
             tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
-            tomcat.getHost().setAutoDeploy(false);
+            tomcat.getHost().setAutoDeploy(true);
             this.prepareContext();
+            this.prepareResourceContext();
             this.tomcat.start();                                                                                        // 提前启动 tomcat 以触发一些必要的监听器
         } catch (Throwable throwable) {
             throw ExceptionUtil.wrap(throwable);
@@ -151,12 +158,26 @@ public class TomcatWebServer implements ServletWebServer {
         this.bindContextClassLoader(context);
         this.skipTldScanning(context);
         this.prepareResources(context);
-        this.prepareDefaultServlet(context);
+        this.prepareDefaultServlet(context, this.config.getStaticPattern());
         this.prepareJspServlet(context);
         this.prepareWebFilter(context);
         this.prepareWebListener(context);
         this.tomcat.getHost().addChild(context);
+        this.host = this.tomcat.getHost();
         this.servletContext = context.getServletContext();
+    }
+
+    private void prepareResourceContext() {
+        for (Pair<String, String> resource : this.config.getResources()) {
+            StandardContext context = new StandardContext();
+            context.setPath(resource.getKey());
+            context.setDocBase(resource.getValue());
+            context.setReloadable(true);
+            context.setFailCtxIfServletStartFails(true);
+            context.addLifecycleListener(new Tomcat.FixContextListener());
+            this.prepareDefaultServlet(context, Collections.singletonList("/*"));
+            this.host.addChild(context);
+        }
     }
 
     private void bindContextClassLoader(Context context) {
@@ -189,7 +210,7 @@ public class TomcatWebServer implements ServletWebServer {
         context.setResources(resources);
     }
 
-    private void prepareDefaultServlet(Context context) {
+    private void prepareDefaultServlet(Context context, List<String> patterns) {
         Wrapper defaultServlet = context.createWrapper();
         defaultServlet.setName("default");
         defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");
@@ -198,7 +219,7 @@ public class TomcatWebServer implements ServletWebServer {
         defaultServlet.setLoadOnStartup(1);
         defaultServlet.setOverridable(true);
         context.addChild(defaultServlet);
-        for (String pattern : this.config.getStaticPattern()) {
+        for (String pattern : patterns) {
             context.addServletMappingDecoded(pattern, "default");
         }
     }

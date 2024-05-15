@@ -1,5 +1,6 @@
 package com.kfyty.core.support.json;
 
+import com.kfyty.core.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -188,6 +189,6 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     @Override
     public String toString() {
-        return this.decorate.toString();
+        return JsonUtil.toJson(this.decorate);
     }
 }

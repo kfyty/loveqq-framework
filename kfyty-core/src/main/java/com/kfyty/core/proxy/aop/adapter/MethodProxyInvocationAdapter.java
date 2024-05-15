@@ -1,4 +1,4 @@
-package com.kfyty.aop.support;
+package com.kfyty.core.proxy.aop.adapter;
 
 import com.kfyty.core.proxy.MethodInterceptorChain;
 import com.kfyty.core.proxy.MethodProxy;

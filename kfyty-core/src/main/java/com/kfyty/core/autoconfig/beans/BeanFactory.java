@@ -24,6 +24,8 @@ public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoClosea
 
     <T> T getBean(String name, boolean isLazyInit);
 
+    <T> T getBean(BeanDefinition beanDefinition, boolean isLazyInit);
+
     <T> Map<String, T> getBeanOfType(Class<T> clazz);
 
     <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass);

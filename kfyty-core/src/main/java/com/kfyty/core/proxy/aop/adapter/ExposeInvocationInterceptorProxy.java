@@ -1,9 +1,8 @@
-package com.kfyty.aop.proxy;
+package com.kfyty.core.proxy.aop.adapter;
 
-import com.kfyty.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.kfyty.core.autoconfig.annotation.Order;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodProxy;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -20,7 +19,7 @@ import org.aspectj.lang.JoinPoint;
 public class ExposeInvocationInterceptorProxy implements MethodInterceptorChainPoint {
     private static final ThreadLocal<JoinPoint> CURRENT_JOIN_POINT = new ThreadLocal<>();
 
-    private final MethodInvocationProceedingJoinPoint joinPoint;
+    private final JoinPoint joinPoint;
 
     public static JoinPoint currentJoinPoint() {
         JoinPoint joinPoint = CURRENT_JOIN_POINT.get();

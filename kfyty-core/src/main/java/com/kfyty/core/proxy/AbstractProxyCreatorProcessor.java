@@ -6,6 +6,7 @@ import com.kfyty.core.autoconfig.InstantiationAwareBeanPostProcessor;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.core.utils.AopUtil;
+import com.kfyty.core.utils.LogUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -56,9 +57,6 @@ public abstract class AbstractProxyCreatorProcessor implements ApplicationContex
                 .create(bean, this.applicationContext)
                 .addInterceptorPoint(methodInterceptorChainPoint)
                 .createProxy(bean, this.getBeanDefinition(beanName));
-        if (log.isDebugEnabled()) {
-            log.debug("proxy target bean: {} -> {}", bean, proxy);
-        }
-        return proxy;
+        return LogUtil.logIfDebugEnabled(log, log -> log.debug("proxy target bean: {} -> {}", bean, proxy), proxy);
     }
 }

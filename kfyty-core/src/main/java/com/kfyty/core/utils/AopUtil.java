@@ -1,16 +1,14 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.ResolvableException;
-import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInterceptorChain;
+import com.kfyty.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.core.proxy.MethodInvocationInterceptor;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import static com.kfyty.core.utils.ReflectUtil.getFieldMap;
-import static com.kfyty.core.utils.ReflectUtil.getFieldValue;
 import static com.kfyty.core.utils.ReflectUtil.getMethod;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -23,9 +21,11 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AopUtil {
-    private static final String CGLIB_CLASS_SEPARATOR = "$$EnhancerByCGLIB$$";
+    public static final String CGLIB_TAG = "ByBootFramework";
 
-    private static final String CGLIB_PROXY_CALLBACK_FIELD = "CGLIB$CALLBACK_";
+    public static final String CGLIB_CLASS_SEPARATOR = "$$Enhancer" + CGLIB_TAG + "$$";
+
+    public static final String CGLIB_PROXY_CALLBACK_FIELD = "CGLIB$CALLBACK_0";
 
     /**
      * 测试给定实例是否是代理对象
@@ -44,6 +44,9 @@ public abstract class AopUtil {
      * @return true if jdk proxy
      */
     public static boolean isJdkProxy(Object instance) {
+        if (instance instanceof Class<?>) {
+            return Proxy.isProxyClass((Class<?>) instance);
+        }
         return Proxy.isProxyClass(instance.getClass());
     }
 
@@ -54,6 +57,9 @@ public abstract class AopUtil {
      * @return true if cglib proxy
      */
     public static boolean isCglibProxy(Object instance) {
+        if (instance instanceof Class<?>) {
+            return ((Class<?>) instance).getName().contains(CGLIB_CLASS_SEPARATOR);
+        }
         return instance.getClass().getName().contains(CGLIB_CLASS_SEPARATOR);
     }
 
@@ -125,7 +131,7 @@ public abstract class AopUtil {
     /**
      * 向给定的 bean 中添加代理拦截点
      *
-     * @param bean                  代理 bean
+     * @param bean                        代理 bean
      * @param methodInterceptorChainPoint 拦截点
      * @return true if success
      */
@@ -153,13 +159,12 @@ public abstract class AopUtil {
      */
     public static MethodInterceptorChain getProxyInterceptorChain(Object proxy) {
         if (!isProxy(proxy)) {
-            throw new ResolvableException("the instance is not a proxy !");
+            throw new ResolvableException("The instance is not a proxy: " + proxy);
         }
-        Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) :
-                getFieldMap(proxy.getClass()).entrySet().stream().filter(e -> e.getKey().startsWith(CGLIB_PROXY_CALLBACK_FIELD)).map(e -> getFieldValue(proxy, e.getValue())).filter(e -> e instanceof MethodInterceptorChain).findAny().orElse(null);
+        Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) : ReflectUtil.getFieldValue(proxy, CGLIB_PROXY_CALLBACK_FIELD);
         if (interceptorChain instanceof MethodInterceptorChain) {
             return (MethodInterceptorChain) interceptorChain;
         }
-        throw new ResolvableException("the proxy object has no MethodInterceptorChain: " + proxy);
+        throw new ResolvableException("The proxy object has no MethodInterceptorChain: " + proxy);
     }
 }

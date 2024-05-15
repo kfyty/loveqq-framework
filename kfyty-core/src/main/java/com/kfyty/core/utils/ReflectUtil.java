@@ -69,7 +69,7 @@ public abstract class ReflectUtil {
     /**
      * 属性提供者
      */
-    private static final Function3<Field, Class<?>, String, Boolean> FIELD_SUPPLIER = (clazz, fieldName, containPrivate) -> {
+    private static final Function3<Class<?>, String, Boolean, Field> FIELD_SUPPLIER = (clazz, fieldName, containPrivate) -> {
         try {
             return clazz.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
@@ -80,7 +80,7 @@ public abstract class ReflectUtil {
     /**
      * 方法提供者
      */
-    private static final Function4<Method, Class<?>, String, Boolean, Class<?>[]> METHOD_SUPPLIER = (clazz, methodName, containPrivate, parameterTypes) -> {
+    private static final Function4<Class<?>, String, Boolean, Class<?>[], Method> METHOD_SUPPLIER = (clazz, methodName, containPrivate, parameterTypes) -> {
         try {
             return clazz.getDeclaredMethod(methodName, parameterTypes);
         } catch (NoSuchMethodException e) {
@@ -110,12 +110,12 @@ public abstract class ReflectUtil {
     /**
      * 属性缓存 key 生成器
      */
-    private static final Function3<String, Class<?>, String, Boolean> FIELD_CACHE_KEY_GENERATOR = (clazz, fieldName, containPrivate) -> clazz.getName() + "#" + fieldName + "@" + containPrivate;
+    private static final Function3<Class<?>, String, Boolean, String> FIELD_CACHE_KEY_GENERATOR = (clazz, fieldName, containPrivate) -> clazz.getName() + "#" + fieldName + "@" + containPrivate;
 
     /**
      * 方法缓存 key 生成器
      */
-    public static final Function4<String, Class<?>, String, Class<?>[], Boolean> METHOD_CACHE_KEY_GENERATOR = (clazz, methodName, parameterTypes, containPrivate) -> CommonUtil.format("{}#{}({})@{}", clazz.getName(), methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
+    public static final Function4<Class<?>, String, Class<?>[], Boolean, String> METHOD_CACHE_KEY_GENERATOR = (clazz, methodName, parameterTypes, containPrivate) -> CommonUtil.format("{}#{}({})@{}", clazz.getName(), methodName, Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")), containPrivate);
 
     /**
      * 所有属性/方法缓存 key 生成器
@@ -190,18 +190,31 @@ public abstract class ReflectUtil {
     }
 
     public static boolean hasAnyInterfaces(Class<?> clazz) {
-        return clazz.isInterface() || clazz.getInterfaces().length > 0;
+        return getInterfaces(clazz).length > 0;
+    }
+
+    public static boolean hasAnyInterfaces(Class<?>[] classes, Predicate<Class<?>> test) {
+        if (CommonUtil.notEmpty(classes)) {
+            for (Class<?> clazz : classes) {
+                if (test.test(clazz)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static Class<?>[] getInterfaces(Class<?> clazz) {
-        if (!clazz.isInterface()) {
-            return clazz.getInterfaces();
+        if (clazz.isInterface()) {
+            return new Class<?>[]{clazz};
         }
-        Class<?>[] clazzInterfaces = clazz.getInterfaces();
-        Class<?>[] interfaces = new Class[clazzInterfaces.length + 1];
-        System.arraycopy(clazzInterfaces, 0, interfaces, 0, clazzInterfaces.length);
-        interfaces[clazzInterfaces.length] = clazz;
-        return interfaces;
+        Set<Class<?>> interfaces = new HashSet<>();
+        while (clazz != null) {
+            Class<?>[] classInterfaces = clazz.getInterfaces();
+            Collections.addAll(interfaces, classInterfaces);
+            clazz = clazz.getSuperclass();
+        }
+        return interfaces.toArray(CommonUtil.EMPTY_CLASS_ARRAY);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

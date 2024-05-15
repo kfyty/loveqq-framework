@@ -1,10 +1,10 @@
 package com.kfyty.aop.utils;
 
-import com.kfyty.aop.AfterReturningAdvice;
-import com.kfyty.aop.MethodAfterAdvice;
-import com.kfyty.aop.MethodAroundAdvice;
-import com.kfyty.aop.MethodBeforeAdvice;
-import com.kfyty.aop.ThrowingAdvice;
+import com.kfyty.core.proxy.aop.AfterReturningAdvice;
+import com.kfyty.core.proxy.aop.MethodAfterAdvice;
+import com.kfyty.core.proxy.aop.MethodAroundAdvice;
+import com.kfyty.core.proxy.aop.MethodBeforeAdvice;
+import com.kfyty.core.proxy.aop.ThrowingAdvice;
 import com.kfyty.aop.aspectj.AbstractAspectJAdvice;
 import com.kfyty.aop.aspectj.AspectJAfterReturningAdvice;
 import com.kfyty.aop.aspectj.AspectJThrowingAdvice;
