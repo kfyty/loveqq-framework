@@ -1,8 +1,8 @@
 package com.kfyty.core.utils;
 
 import com.kfyty.core.exception.ResolvableException;
-import com.kfyty.core.support.FilePart;
-import com.kfyty.core.support.FilePartDescription;
+import com.kfyty.core.support.io.FilePart;
+import com.kfyty.core.support.io.FilePartDescription;
 import com.kfyty.core.support.io.PathMatchingResourcePatternResolver;
 import lombok.extern.slf4j.Slf4j;
 

@@ -4,6 +4,7 @@ import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.lang.JarIndex;
 import com.kfyty.core.lang.JarIndexClassLoader;
+import com.kfyty.core.support.jar.JarManifest;
 import lombok.SneakyThrows;
 
 import java.io.File;

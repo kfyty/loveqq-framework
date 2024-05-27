@@ -11,6 +11,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,11 +31,22 @@ import java.util.concurrent.ConcurrentMap;
  * @email kfyty725@hotmail.com
  */
 public class SimpleGeneric extends QualifierGeneric {
-    public static final Class<?>[] SIMPLE_NESTED_GENERIC_CLASSES = new Class<?>[]{
-            Collection.class, List.class, Set.class, SortedSet.class, Queue.class, Deque.class,
-            Map.class, SortedMap.class, TreeMap.class, ConcurrentMap.class, ConcurrentHashMap.class,
-            Value.class
-    };
+    public static final List<Class<?>> SIMPLE_NESTED_GENERIC_CLASSES = new LinkedList<>();
+
+    static {
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Collection.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(List.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Set.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(SortedSet.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Queue.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Deque.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Map.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(SortedMap.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(TreeMap.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentMap.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentHashMap.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Value.class);
+    }
 
     @Getter
     @Setter

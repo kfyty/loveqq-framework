@@ -2,6 +2,7 @@ package com.kfyty.core.autoconfig.beans;
 
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.annotation.Order;
+import com.kfyty.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.support.Pair;
 
@@ -142,6 +143,13 @@ public interface BeanDefinition {
     BeanDefinition addConstructorArgs(Class<?> argType, Object arg);
 
     /**
+     * 添加属性值
+     *
+     * @param propertyValue 属性值配置
+     */
+    BeanDefinition addPropertyValue(PropertyValue propertyValue);
+
+    /**
      * 获取构造器参数
      */
     List<Pair<Class<?>, Object>> getConstructArgs();
@@ -155,6 +163,13 @@ public interface BeanDefinition {
      * 获取构造器参数值
      */
     Object[] getConstructArgValues();
+
+    /**
+     * 获取属性配置
+     *
+     * @return 属性配置
+     */
+    List<PropertyValue> getPropertyValues();
 
     /**
      * 创建 bean 实例
