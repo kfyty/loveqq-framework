@@ -1,6 +1,6 @@
 package com.kfyty.core.utils;
 
-import com.kfyty.core.support.DefaultMemberAccess;
+import com.kfyty.core.support.ognl.DefaultMemberAccess;
 import ognl.Ognl;
 import ognl.OgnlContext;
 

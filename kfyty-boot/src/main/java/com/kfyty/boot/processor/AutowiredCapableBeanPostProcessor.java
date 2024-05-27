@@ -6,13 +6,16 @@ import com.kfyty.core.autoconfig.annotation.Component;
 import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.AutowiredCapableSupport;
+import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescriptionResolver;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
+import com.kfyty.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.core.autoconfig.internal.InternalPriority;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AopUtil;
+import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
@@ -55,11 +59,10 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        this.preProcessSelfAutowired(bean);
         Object target = AopUtil.getTarget(bean);
-        Class<?> targetClass = target.getClass();
-        this.autowiredBeanField(targetClass, target, bean);
-        this.autowiredBeanMethod(targetClass, target, bean);
+        this.preProcessSelfAutowired(bean);
+        this.processProperty(beanName, target, bean);
+        this.processAutowired(beanName, target, bean);
     }
 
     protected void preProcessSelfAutowired(Object bean) {
@@ -71,7 +74,43 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         }
     }
 
-    protected void autowiredBeanField(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void processProperty(String beanName, Object target, Object exposedBean) {
+        if (beanName == null) {
+            return;
+        }
+        Class<?> targetClass = target.getClass();
+        BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
+        for (PropertyValue propertyValue : beanDefinition.getPropertyValues()) {
+            Field field = ReflectUtil.getField(targetClass, Objects.requireNonNull(propertyValue.getName(), "The name field is required"));
+            Objects.requireNonNull(field, CommonUtil.format("The field of name: {} doesn't exists", propertyValue.getName()));
+
+            // 属性值
+            Object autowired = null;
+            if (propertyValue.isPropertyValue()) {
+                autowired = propertyValue.getValue();
+            }
+            // 属性引用
+            else {
+                Objects.requireNonNull(propertyValue.getReference(), "The reference field is required");
+                Objects.requireNonNull(propertyValue.getReferenceType(), "The referenceType field is required");
+                autowired = this.autowiredProcessor.doResolveBean(ActualGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
+            }
+            if (autowired != null) {
+                ReflectUtil.setFieldValue(target, field, autowired);
+                if (target != exposedBean && AopUtil.isCglibProxy(exposedBean)) {
+                    ReflectUtil.setFieldValue(exposedBean, field, autowired);
+                }
+            }
+        }
+    }
+
+    protected void processAutowired(String beanName, Object target, Object exposedBean) {
+        Class<?> targetClass = target.getClass();
+        this.autowiredField(targetClass, target, exposedBean);
+        this.autowiredMethod(targetClass, target, exposedBean);
+    }
+
+    protected void autowiredField(Class<?> clazz, Object bean, Object exposedBean) {
         List<Pair<Field, AutowiredDescription>> laziedFields = new LinkedList<>();
         List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
@@ -99,7 +138,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         }
     }
 
-    protected void autowiredBeanMethod(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void autowiredMethod(Class<?> clazz, Object bean, Object exposedBean) {
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
             if (description != null) {

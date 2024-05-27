@@ -6,7 +6,7 @@ import cn.hutool.core.io.resource.InputStreamResource;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.Method;
 import cn.hutool.http.cookie.GlobalCookieManager;
-import com.kfyty.core.support.FilePart;
+import com.kfyty.core.support.io.FilePart;
 import com.kfyty.core.utils.JsonUtil;
 import com.kfyty.sdk.api.core.constant.ApiConstants;
 import com.kfyty.sdk.api.core.exception.ApiException;

@@ -1,4 +1,4 @@
-package com.kfyty.core.support;
+package com.kfyty.core.support.jar;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.kfyty.core.support;
+package com.kfyty.core.support.concurrent;
 
 import com.kfyty.core.utils.CompletableFutureUtil;
 import com.kfyty.core.utils.ExceptionUtil;

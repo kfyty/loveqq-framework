@@ -8,6 +8,7 @@ import com.kfyty.core.autoconfig.annotation.Value;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver;
+import com.kfyty.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.core.generic.ActualGeneric;
@@ -90,6 +91,11 @@ public class GenericBeanDefinition implements BeanDefinition {
      * 默认构造器参数
      */
     protected List<Pair<Class<?>, Object>> defaultConstructorArgs;
+
+    /**
+     * 属性值
+     */
+    protected List<PropertyValue> propertyValues;
 
     /**
      * 自动注入处理器，所有实例共享，以处理循环依赖
@@ -218,6 +224,15 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public BeanDefinition addPropertyValue(PropertyValue propertyValue) {
+        if (this.propertyValues == null) {
+            this.propertyValues = new LinkedList<>();
+        }
+        this.propertyValues.add(propertyValue);
+        return this;
+    }
+
+    @Override
     public List<Pair<Class<?>, Object>> getConstructArgs() {
         return this.prepareConstructorArgs();
     }
@@ -234,13 +249,18 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public List<PropertyValue> getPropertyValues() {
+        return this.propertyValues == null ? Collections.emptyList() : this.propertyValues;
+    }
+
+    @Override
     public Object createInstance(ApplicationContext context) {
         if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
         this.ensureAutowiredProcessor(context);
         Object bean = ReflectUtil.newInstance(this.beanType, this.getConstructArgs());
-        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean: {}", bean), bean);
+        return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean: {}", bean), bean);
     }
 
     protected void ensureConstructor() {

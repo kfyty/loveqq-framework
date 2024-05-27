@@ -1,1 +1,3 @@
-com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver,\
+    com.kfyty.core.support.json.JacksonAutoConfig

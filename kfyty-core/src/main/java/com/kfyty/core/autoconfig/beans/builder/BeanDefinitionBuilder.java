@@ -8,6 +8,8 @@ import com.kfyty.core.autoconfig.beans.FactoryBean;
 import com.kfyty.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
+import com.kfyty.core.autoconfig.beans.autowired.AutowiredDescription;
+import com.kfyty.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.core.io.FactoriesLoader;
 import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
@@ -78,6 +80,28 @@ public class BeanDefinitionBuilder {
 
     public BeanDefinitionBuilder addConstructorArgs(Class<?> argType, Object arg) {
         this.defaultConstructorArgs.add(new Pair<>(argType, arg));
+        return this;
+    }
+
+    public BeanDefinitionBuilder addPropertyValue(String name, Object value) {
+        return this.addPropertyValue(new PropertyValue().setName(name).setValue(value).setPropertyType(PropertyValue.PropertyType.VALUE));
+    }
+
+    public BeanDefinitionBuilder addPropertyValue(String name, Class<?> requiredType) {
+        return this.addPropertyValue(name, null, requiredType);
+    }
+
+    public BeanDefinitionBuilder addPropertyValue(String name, String reference, Class<?> requiredType) {
+        PropertyValue propertyValue = new PropertyValue()
+                .setName(name)
+                .setReferenceType(requiredType)
+                .setReference(new AutowiredDescription(reference, true))
+                .setPropertyType(PropertyValue.PropertyType.REFERENCE);
+        return this.addPropertyValue(propertyValue);
+    }
+
+    public BeanDefinitionBuilder addPropertyValue(PropertyValue propertyValue) {
+        this.beanDefinition.addPropertyValue(propertyValue);
         return this;
     }
 

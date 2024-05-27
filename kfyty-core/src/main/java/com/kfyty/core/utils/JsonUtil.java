@@ -45,8 +45,15 @@ import java.util.TimeZone;
  * @since JDK 1.8
  */
 public abstract class JsonUtil {
-    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
+    /**
+     * MAP_TYPE_REFERENCE
+     */
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
+
+    /**
+     * DEFAULT_OBJECT_MAPPER
+     */
+    private static ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
 
     static {
         SimpleModule module = new SimpleModule("json_string_deserializer");
@@ -68,6 +75,10 @@ public abstract class JsonUtil {
 
     public static ObjectMapper configure() {
         return DEFAULT_OBJECT_MAPPER;
+    }
+
+    public static ObjectMapper configure(ObjectMapper objectMapper) {
+        return DEFAULT_OBJECT_MAPPER = objectMapper;
     }
 
     public static ObjectReader configureReader() {
