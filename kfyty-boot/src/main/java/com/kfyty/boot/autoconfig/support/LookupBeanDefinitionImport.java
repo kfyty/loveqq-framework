@@ -36,7 +36,7 @@ public class LookupBeanDefinitionImport implements ConfigurableApplicationContex
 
     @Override
     public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
-        return e -> isAbstract(e) && this.applicationContext.doFilterComponent(e) && getMethods(e).stream().anyMatch(m -> hasAnnotation(m, Lookup.class));
+        return e -> isAbstract(e) && this.applicationContext.isMatchComponent(e) && getMethods(e).stream().anyMatch(m -> hasAnnotation(m, Lookup.class));
     }
 
     @Override

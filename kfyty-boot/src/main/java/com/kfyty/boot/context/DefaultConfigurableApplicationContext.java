@@ -5,6 +5,8 @@ import com.kfyty.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.core.autoconfig.beans.filter.ComponentMatcher;
+import com.kfyty.core.autoconfig.beans.filter.DefaultComponentMatcher;
 import com.kfyty.core.autoconfig.boostrap.Bootstrap;
 import com.kfyty.core.exception.ResolvableException;
 import com.kfyty.core.io.FactoriesLoader;
@@ -12,19 +14,18 @@ import com.kfyty.core.support.AntPathMatcher;
 import com.kfyty.core.support.PatternMatcher;
 import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.ReflectUtil;
-import com.kfyty.core.support.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
-import static com.kfyty.core.utils.AnnotationUtil.hasAnnotationElement;
 
 /**
  * 描述: 可配置的应用上下文
@@ -46,12 +47,15 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
 
     protected List<ComponentFilterDescription> excludeFilters;
 
+    protected List<ComponentMatcher> componentMatchers;
+
     public DefaultConfigurableApplicationContext() {
         super();
         this.patternMatcher = new AntPathMatcher();
         this.scannedClasses = new HashSet<>();
-        this.includeFilters = new ArrayList<>(4);
-        this.excludeFilters = new ArrayList<>(4);
+        this.includeFilters = new LinkedList<>();
+        this.excludeFilters = new LinkedList<>();
+        this.componentMatchers = new ArrayList<>(4);
     }
 
     @Override
@@ -82,6 +86,11 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     public List<ComponentFilterDescription> getExcludeFilters() {
         return this.excludeFilters;
+    }
+
+    @Override
+    public List<ComponentMatcher> getComponentMatcher() {
+        return this.componentMatchers;
     }
 
     @Override
@@ -120,13 +129,23 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
-    public boolean doFilterComponent(Class<?> beanClass) {
-        Pair<Boolean, ComponentFilterDescription> exclude = this.doFilterComponent(this.excludeFilters, beanClass, false);
-        if (!exclude.getKey() && exclude.getValue() != null) {
-            return !doFilterComponent(exclude.getValue().getDeclare());
+    public void addComponentMatcher(ComponentMatcher componentMatcher) {
+        this.componentMatchers.add(componentMatcher);
+    }
+
+    @Override
+    public boolean isMatchComponent(Class<?> beanClass) {
+        if (this.componentMatchers.isEmpty()) {
+            this.componentMatchers.add(new DefaultComponentMatcher());
         }
-        Pair<Boolean, ComponentFilterDescription> include = this.doFilterComponent(this.includeFilters, beanClass, true);
-        return include.getKey();
+        this.componentMatchers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
+        for (ComponentMatcher componentMatcher : this.componentMatchers) {
+            this.invokeAwareMethod(componentMatcher.getClass().getName(), componentMatcher);
+            if (componentMatcher.isMatch(beanClass, this.includeFilters, this.excludeFilters)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -179,28 +198,5 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
                     .getBeanDefinition();
             this.registerBeanDefinition(beanDefinition);
         }
-    }
-
-    /**
-     * 根据组件过滤器进行匹配
-     *
-     * @param filters   组件过滤条件
-     * @param beanClass 目标 bean class
-     * @param isInclude 当前匹配排除还是包含
-     * @return 匹配结果，以及对应的过滤组件
-     */
-    protected Pair<Boolean, ComponentFilterDescription> doFilterComponent(List<ComponentFilterDescription> filters, Class<?> beanClass, boolean isInclude) {
-        for (ComponentFilterDescription filter : filters) {
-            if (filter.getBasePackages().stream().anyMatch(e -> this.patternMatcher.matches(e, beanClass.getName()))) {
-                return new Pair<>(isInclude, filter);
-            }
-            if (filter.getClasses().contains(beanClass)) {
-                return new Pair<>(isInclude, filter);
-            }
-            if (filter.getAnnotations().stream().anyMatch(e -> hasAnnotationElement(beanClass, e))) {
-                return new Pair<>(isInclude, filter);
-            }
-        }
-        return new Pair<>(!isInclude, null);
     }
 }

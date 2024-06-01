@@ -57,7 +57,7 @@ public class ComponentFilterDescription {
 
     public static boolean contains(Collection<ComponentFilterDescription> filters, Annotation other) {
         if (!(other instanceof ComponentFilter)) {
-            throw new BeansException("the annotation must be ComponentFilter: " + other);
+            throw new BeansException("The annotation must be ComponentFilter: " + other);
         }
         if (CommonUtil.empty(filters)) {
             return false;
