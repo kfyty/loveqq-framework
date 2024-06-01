@@ -93,6 +93,9 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
             ComponentScan componentScan = AnnotationUtil.findAnnotationElement(clazz, ComponentScan.class);
             if (componentScan != null) {
                 this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
+                if (this.applicationContext.getComponentMatcher().stream().noneMatch(e -> e.getClass() == componentScan.matcher())) {
+                    this.applicationContext.addComponentMatcher(ReflectUtil.newInstance(componentScan.matcher()));
+                }
             }
             this.processAutoConfiguration(clazz, null, autoconfig);
         }

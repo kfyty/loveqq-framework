@@ -1,6 +1,7 @@
 package com.kfyty.core.autoconfig;
 
 import com.kfyty.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.core.autoconfig.beans.filter.ComponentMatcher;
 import com.kfyty.core.support.PatternMatcher;
 
 import java.util.Collection;
@@ -26,6 +27,8 @@ public interface ConfigurableApplicationContext extends ApplicationContext {
 
     List<ComponentFilterDescription> getExcludeFilters();
 
+    List<ComponentMatcher> getComponentMatcher();
+
     void setCommandLineArgs(String[] args);
 
     void setPrimarySource(Class<?> primarySource);
@@ -40,16 +43,13 @@ public interface ConfigurableApplicationContext extends ApplicationContext {
 
     void addExcludeFilter(ComponentFilterDescription componentFilter);
 
+    void addComponentMatcher(ComponentMatcher componentMatcher);
+
     /**
-     * 根据组件过滤器进行匹配
-     * 排除过滤：
-     * 若返回 true，则排除过滤匹配失败，继续执行包含过滤
-     * 若返回 false，说明可能被排除，此时需继续判断该注解的声明是否被排除
-     * 包含过滤：
-     * 直接返回即可
+     * 匹配该目标 class 是否可作为候选组件
      *
      * @param clazz 目标 bean class
      * @return 该 bean class 是否能够生成 bean 定义
      */
-    boolean doFilterComponent(Class<?> clazz);
+    boolean isMatchComponent(Class<?> clazz);
 }

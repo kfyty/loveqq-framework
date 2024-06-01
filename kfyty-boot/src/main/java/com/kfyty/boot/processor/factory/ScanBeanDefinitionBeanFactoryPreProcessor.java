@@ -40,7 +40,7 @@ public class ScanBeanDefinitionBeanFactoryPreProcessor implements BeanFactoryPre
             if (BeanFactoryPreProcessor.class.isAssignableFrom(scannedClass)) {
                 continue;
             }
-            if (!isAbstract(scannedClass) && applicationContext.doFilterComponent(scannedClass)) {
+            if (!isAbstract(scannedClass) && applicationContext.isMatchComponent(scannedClass)) {
                 BeanDefinition beanDefinition = genericBeanDefinition(scannedClass).getBeanDefinition();
                 applicationContext.registerBeanDefinition(beanDefinition);
             }
