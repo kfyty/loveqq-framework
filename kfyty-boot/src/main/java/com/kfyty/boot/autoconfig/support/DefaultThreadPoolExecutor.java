@@ -44,7 +44,7 @@ public class DefaultThreadPoolExecutor extends ThreadPoolExecutor implements Des
     }
 
     @Override
-    public void onDestroy() {
+    public void destroy() {
         log.info("shutdown default thread pool: {}", this);
         this.shutdown();
     }

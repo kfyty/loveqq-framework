@@ -1,5 +1,6 @@
 package com.kfyty.web.mvc.servlet.request.resolver;
 
+import com.kfyty.core.autoconfig.annotation.Order;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.web.mvc.core.request.support.ModelViewContainer;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * @date 2021/6/10 11:29
  * @email kfyty725@hotmail.com
  */
+@Order(Integer.MAX_VALUE)
 public class StringValueHandlerMethodReturnValueProcessor implements ServletHandlerMethodReturnValueProcessor {
 
     @Override

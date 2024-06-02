@@ -66,7 +66,7 @@ public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, 
     }
 
     @Override
-    public void onDestroy() {
+    public void destroy() {
         try {
             if (this.scheduler != null && this.hasTask) {
                 this.scheduler.shutdown(true);
