@@ -7,6 +7,7 @@ import com.kfyty.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.core.autoconfig.BeanPostProcessor;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.core.autoconfig.SerialInitialize;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
@@ -15,9 +16,13 @@ import com.kfyty.core.event.ApplicationEvent;
 import com.kfyty.core.event.ApplicationEventPublisher;
 import com.kfyty.core.event.ApplicationListener;
 import com.kfyty.core.event.ContextRefreshedEvent;
+import com.kfyty.core.utils.CompletableFutureUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import static com.kfyty.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THREAD_POOL_EXECUTOR;
 
 /**
  * 描述: 上下文基础实现
@@ -32,6 +37,9 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
+
+    @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
+    protected ExecutorService executorService;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -164,11 +172,25 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void finishBeanFactoryInitialization() {
+        // 读取全局配置
+        boolean concurrentInitialize = Boolean.parseBoolean(System.getProperty("k.concurrent-initialize", "true"));
+
+        // 先实例化串行 bean
         this.sortBeanDefinition();
-        for (BeanDefinition beanDefinition : this.getBeanDefinitions().values()) {
-            if (beanDefinition.isSingleton() && beanDefinition.isAutowireCandidate() && !beanDefinition.isLazyInit()) {
-                this.registerBean(beanDefinition);
+        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : this.getBeanDefinitions();
+        for (BeanDefinition value : beanDefinitions.values()) {
+            if (value.isSingleton() && value.isAutowireCandidate() && !value.isLazyInit()) {
+                this.registerBean(value);
             }
+        }
+
+        // 并发实例化剩余的单例 bean
+        if (concurrentInitialize) {
+            CompletableFutureUtil.consumer(this.executorService, this.getBeanDefinitions().values(), bd -> {
+                if (bd.isSingleton() && bd.isAutowireCandidate() && !bd.isLazyInit()) {
+                    this.registerBean(bd);
+                }
+            });
         }
     }
 

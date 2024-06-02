@@ -157,7 +157,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     }
 
     @Override
-    public void onDestroy() {
+    public void destroy() {
         this.close();
     }
 

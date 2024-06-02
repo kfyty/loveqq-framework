@@ -1,11 +1,13 @@
 package com.kfyty.boot.autoconfig.support;
 
+import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.core.event.ApplicationEvent;
 import com.kfyty.core.event.PropertyConfigRefreshedEvent;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,7 +29,10 @@ public class RefreshScopeProxyFactory implements ScopeProxyFactory {
     @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
         if (event instanceof PropertyConfigRefreshedEvent) {
+            HashMap<String, Object> removed = new HashMap<>(this.cache);
+            ApplicationContext context = (ApplicationContext) event.getSource();
             this.cache.clear();
+            removed.forEach(context::destroyBean);
         }
     }
 }

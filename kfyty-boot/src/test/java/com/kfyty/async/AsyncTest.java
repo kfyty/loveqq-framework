@@ -3,6 +3,7 @@ package com.kfyty.async;
 import com.kfyty.boot.K;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.core.autoconfig.SerialInitialize;
 import com.kfyty.core.autoconfig.annotation.Async;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.BootApplication;
@@ -73,7 +74,7 @@ class AsyncEvent extends ApplicationEvent<Integer> {
 }
 
 @Component
-class AsyncTaskImpl implements AsyncTask {
+class AsyncTaskImpl implements AsyncTask, SerialInitialize {
     @Autowired
     private AsyncTest asyncTest;
 

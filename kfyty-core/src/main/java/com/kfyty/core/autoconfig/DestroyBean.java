@@ -8,5 +8,5 @@ package com.kfyty.core.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface DestroyBean {
-    void onDestroy();
+    void destroy();
 }

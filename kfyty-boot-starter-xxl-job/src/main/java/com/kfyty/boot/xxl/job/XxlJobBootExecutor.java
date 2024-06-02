@@ -51,7 +51,7 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
     }
 
     @Override
-    public void onDestroy() {
+    public void destroy() {
         super.destroy();
     }
 

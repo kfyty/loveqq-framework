@@ -377,7 +377,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.getBeanPostProcessors().forEach(e -> e.postProcessBeforeDestroy(bean, name));
 
         if (bean instanceof DestroyBean) {
-            ((DestroyBean) bean).onDestroy();
+            ((DestroyBean) bean).destroy();
         }
 
         BeanDefinition beanDefinition = this.getBeanDefinition(name);
