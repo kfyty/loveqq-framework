@@ -71,6 +71,30 @@ public abstract class IOUtil {
     }
 
     /**
+     * 获取输入流
+     *
+     * @param path 路径
+     * @return 输入流
+     */
+    public static InputStream load(String path) {
+        return load(path, ClassLoaderUtil.classLoader(IOUtil.class));
+    }
+
+    /**
+     * 获取输入流
+     *
+     * @param path 路径
+     * @return 输入流
+     */
+    public static InputStream load(String path, ClassLoader classLoader) {
+        Path resolvedPath = getPath(path);
+        if (resolvedPath != null && resolvedPath.isAbsolute()) {
+            return newInputStream(resolvedPath.toFile());
+        }
+        return classLoader.getResourceAsStream(path);
+    }
+
+    /**
      * 读取输入流到字节数组
      *
      * @param in 输入流

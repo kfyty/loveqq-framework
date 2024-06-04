@@ -3,6 +3,7 @@ package com.kfyty.core.autoconfig.beans.autowired;
 import com.kfyty.core.autoconfig.ApplicationContext;
 import com.kfyty.core.autoconfig.LaziedObject;
 import com.kfyty.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.exception.BeansException;
 import com.kfyty.core.generic.ActualGeneric;
 import com.kfyty.core.generic.Generic;
@@ -16,7 +17,6 @@ import com.kfyty.core.utils.ReflectUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -162,7 +162,10 @@ public class AutowiredProcessor {
             resolveBean = beans;
         }
         if (returnType.isSimpleArray()) {
-            resolveBean = beans.values().toArray((Object[]) Array.newInstance(returnType.getSimpleActualType(), 0));
+            resolveBean = CommonUtil.copyToArray(returnType.getSimpleActualType(), beans.values());
+        }
+        if (beans.isEmpty()) {
+            return resolveBean;
         }
         if (resolveBean == null) {
             resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
@@ -260,25 +263,23 @@ public class AutowiredProcessor {
             return bean;
         }
         List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
-        for (Object value : beans.values()) {
-            SimpleGeneric generic = SimpleGeneric.from(getTargetClass(value));
+        loop:
+        for (Map.Entry<String, ?> entry : beans.entrySet()) {
+            Object value = entry.getValue();
+            SimpleGeneric generic = buildGeneric(this.context.getBeanDefinition(entry.getKey()));
             if (generic.size() != targetGenerics.size()) {
                 continue;
             }
-            boolean matched = true;
             List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
             for (int i = 0; i < generics.size(); i++) {
                 if (!Objects.equals(targetGenerics.get(i).get(), generics.get(i).get())) {
-                    matched = false;
-                    break;
+                    continue loop;
                 }
             }
-            if (matched) {
-                if (bean != null) {
-                    throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
-                }
-                bean = value;
-            }
+            bean = value;
+        }
+        if (bean == null) {
+            throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
         }
         return bean;
     }
@@ -293,5 +294,12 @@ public class AutowiredProcessor {
             }
         }
         return builder.append("└─────┘").toString();
+    }
+
+    public static SimpleGeneric buildGeneric(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            return SimpleGeneric.from(((MethodBeanDefinition) beanDefinition).getBeanMethod());
+        }
+        return SimpleGeneric.from(beanDefinition.getBeanType());
     }
 }

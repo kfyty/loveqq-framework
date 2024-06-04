@@ -46,4 +46,13 @@ public interface Transaction extends AutoCloseable {
      * @param autoCommit 是否自动提交
      */
     void setAutoCommit(boolean autoCommit) throws SQLException;
+
+    /**
+     * 返回超时时间
+     *
+     * @return 超时时间
+     */
+    default Integer getTimeout() {
+        return null;
+    }
 }

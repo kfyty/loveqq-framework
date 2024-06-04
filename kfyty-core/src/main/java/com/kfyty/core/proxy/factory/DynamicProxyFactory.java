@@ -80,11 +80,11 @@ public abstract class DynamicProxyFactory {
         // 存在非框架接口，优先使用 jdk 代理工厂
         String exclude = ApplicationContext.class.getPackage().getName();
         if (ReflectUtil.hasAnyInterfaces(ReflectUtil.getInterfaces(clazz), interfaces -> !interfaces.getPackage().getName().startsWith(exclude))) {
-            return create(false);
+            return create(fallbackProxyTargetClass);
         }
 
-        // 其他情况走默认处理
-        return create(fallbackProxyTargetClass);
+        // 没有任何接口走继承代理工厂
+        return create(true);
     }
 
     /**

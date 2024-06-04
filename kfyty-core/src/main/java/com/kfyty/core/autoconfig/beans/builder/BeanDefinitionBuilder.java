@@ -173,6 +173,9 @@ public class BeanDefinitionBuilder {
         if (component != null && CommonUtil.notEmpty(component.value())) {
             return component.value();
         }
+        if (FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(beanType.getName())) {
+            return beanType.getName();
+        }
         for (Annotation annotation : AnnotationUtil.findAnnotations(beanType)) {
             if (AnnotationUtil.hasAnnotationElement(annotation.annotationType(), Component.class)) {
                 String beanName = ReflectUtil.invokeMethod(annotation, "value");
@@ -180,9 +183,6 @@ public class BeanDefinitionBuilder {
                     return beanName;
                 }
             }
-        }
-        if (FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(beanType.getName())) {
-            return beanType.getName();
         }
         return BeanUtil.getBeanName(beanType);
     }

@@ -65,10 +65,14 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "PatternVariableCanBeUsed"})
     public <T> T getProperty(String key, SimpleGeneric targetType, T defaultValue) {
-        if (targetType.getResolveType() instanceof Class && !Map.class.isAssignableFrom((Class<?>) targetType.getResolveType())) {
-            return (T) this.getProperty(key, (Class<?>) targetType.getResolveType(), null);
+        Type resolveType = targetType.getResolveType();
+        if (resolveType instanceof Class) {
+            Class<?> resolveClass = (Class<?>) resolveType;
+            if (!resolveClass.isArray() && !Map.class.isAssignableFrom(resolveClass)) {
+                return (T) this.getProperty(key, resolveClass, null);
+            }
         }
 
         if (targetType.isMapGeneric()) {
@@ -162,7 +166,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             return retValue;
         }
 
-        if (rawType.isArray()) {
+        if (targetType.isSimpleArray()) {
             return CommonUtil.copyToArray(targetType.getSimpleActualType(), retValue);
         }
 

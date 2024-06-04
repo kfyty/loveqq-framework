@@ -25,6 +25,6 @@ public class MethodInterceptorChainPointAdapter implements AdviceMethodIntercept
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        return methodInterceptor.invoke(new MethodProxyInvocationAdapter(methodProxy, chain));
+        return this.methodInterceptor.invoke(new MethodProxyInvocationAdapter(methodProxy, chain));
     }
 }

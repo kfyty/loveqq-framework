@@ -13,7 +13,7 @@ import com.kfyty.database.jdbc.intercept.internal.IfInternalInterceptor;
 import com.kfyty.database.jdbc.intercept.internal.SubQueryInternalInterceptor;
 import com.kfyty.database.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.database.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
-import com.kfyty.database.jdbc.transaction.ManagedJdbcTransaction;
+import com.kfyty.boot.tx.spring.autoconfig.transaction.ManagedJdbcTransaction;
 
 import javax.sql.DataSource;
 import java.util.function.Predicate;

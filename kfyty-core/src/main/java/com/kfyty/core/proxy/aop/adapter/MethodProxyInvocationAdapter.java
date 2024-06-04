@@ -27,7 +27,7 @@ public class MethodProxyInvocationAdapter implements MethodInvocation {
 
     @Override
     public Object proceed() throws Throwable {
-        return chain.proceed(methodProxy);
+        return this.chain.proceed(this.methodProxy);
     }
 
     @Override

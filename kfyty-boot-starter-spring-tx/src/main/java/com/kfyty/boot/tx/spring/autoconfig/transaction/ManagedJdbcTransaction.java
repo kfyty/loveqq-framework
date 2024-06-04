@@ -1,9 +1,11 @@
-package com.kfyty.database.jdbc.transaction;
+package com.kfyty.boot.tx.spring.autoconfig.transaction;
 
 import com.kfyty.core.jdbc.JdbcTransaction;
 import com.kfyty.core.jdbc.transaction.TransactionIsolationLevel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.datasource.ConnectionHolder;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -30,7 +32,7 @@ public class ManagedJdbcTransaction extends JdbcTransaction {
 
     @Override
     public void commit() throws SQLException {
-        if (this.connection != null && !this.isConnectionTransactional && !this.isAutoCommit()) {
+        if (this.connection != null && !this.isConnectionTransactional && !this.autoCommit) {
             log.debug("Committing JDBC Connection [" + this.connection + "]");
             this.connection.commit();
         }
@@ -38,10 +40,19 @@ public class ManagedJdbcTransaction extends JdbcTransaction {
 
     @Override
     public void rollback() throws SQLException {
-        if (this.connection != null && !this.isConnectionTransactional && !this.isAutoCommit()) {
+        if (this.connection != null && !this.isConnectionTransactional && !this.autoCommit) {
             log.debug("Rolling back JDBC Connection [" + this.connection + "]");
             this.connection.rollback();
         }
+    }
+
+    @Override
+    public Integer getTimeout() {
+        ConnectionHolder holder = (ConnectionHolder) TransactionSynchronizationManager.getResource(dataSource);
+        if (holder != null && holder.hasTimeout()) {
+            return holder.getTimeToLiveInSeconds();
+        }
+        return null;
     }
 
     @Override
