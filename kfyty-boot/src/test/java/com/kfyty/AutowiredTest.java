@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
@@ -59,6 +60,22 @@ public class AutowiredTest {
 
     @Autowired
     private AutowiredTest  autowiredTest;
+
+    @Bean
+    public Supplier<Bean1> b1() {
+        return Bean1::new;
+    }
+
+    @Bean
+    public Supplier<Bean2> b2() {
+        return Bean2::new;
+    }
+
+    @Autowired
+    public void setB1B2(Supplier<Bean1> bean1Supplier, Supplier<Bean2> bean2Supplier) {
+        Assert.assertTrue(bean1Supplier.get() instanceof Bean1);
+        Assert.assertTrue(bean2Supplier.get() instanceof Bean2);
+    }
 
     @Test
     @PostMapping("test")

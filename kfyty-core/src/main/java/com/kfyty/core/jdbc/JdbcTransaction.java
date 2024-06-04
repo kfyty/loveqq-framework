@@ -86,7 +86,7 @@ public class JdbcTransaction implements Transaction {
     }
 
     protected Connection openConnection() throws SQLException {
-        this.connection = dataSource.getConnection();
+        this.connection = this.dataSource.getConnection();
         this.autoCommit = this.connection.getAutoCommit();
         if (this.level != null) {
             this.connection.setTransactionIsolation(this.level.getLevel());

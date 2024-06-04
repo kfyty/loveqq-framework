@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,11 +47,7 @@ public abstract class PropertiesUtil {
     }
 
     public static Properties load(String path, ClassLoader classLoader, Consumer<Properties> before, BiConsumer<Properties, ClassLoader> after) {
-        Path resolvedPath = IOUtil.getPath(path);
-        if (resolvedPath != null && resolvedPath.isAbsolute()) {
-            return load(isYaml(path), IOUtil.newInputStream(resolvedPath.toFile()), classLoader, before, after);
-        }
-        return load(isYaml(path), classLoader.getResourceAsStream(path), classLoader, before, after);
+        return load(isYaml(path), IOUtil.load(path, classLoader), classLoader, before, after);
     }
 
     public static Properties load(boolean isYaml, InputStream stream, ClassLoader classLoader, Consumer<Properties> before, BiConsumer<Properties, ClassLoader> after) {

@@ -43,6 +43,7 @@
         <module>kfyty-cloud-bootstrap</module>
         <module>kfyty-boot-starter-datasource</module>
         <module>kfyty-boot-starter-spring-tx</module>
+        <module>kfyty-boot-starter-mybatis</module>
         <module>kfyty-boot-starter-validator</module>
         <module>kfyty-boot-starter-tomcat</module>
         <module>kfyty-boot-starter-redisson</module>
@@ -50,7 +51,7 @@
         <module>kfyty-boot-starter-xxl-job</module>
         <module>kfyty-boot-starter-uid-generator</module>
         <module>kfyty-boot-starter-feign</module>
-		<module>kfyty-boot-starter-config-nacos</module>
+        <module>kfyty-boot-starter-config-nacos</module>
         <module>kfyty-boot-starter-discovery-nacos</module>
     </modules>
 
@@ -86,6 +87,7 @@
         <mssql.version>7.4.0.jre8</mssql.version>
         <redisson-version>3.25.2</redisson-version>
         <lettuce.version>6.1.5.RELEASE</lettuce.version>
+        <mybatis.version>3.5.16</mybatis.version>
 
         <k-jte.version>1.0-SNAPSHOT</k-jte.version>
         <kfyty.framework.version>1.0.1-SNAPSHOT</kfyty.framework.version>
@@ -326,6 +328,12 @@
                 <groupId>io.lettuce</groupId>
                 <artifactId>lettuce-core</artifactId>
                 <version>${lettuce.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
             </dependency>
 
             <dependency>

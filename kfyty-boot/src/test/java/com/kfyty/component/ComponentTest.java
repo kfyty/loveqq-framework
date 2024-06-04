@@ -85,6 +85,8 @@ class PropertiesConfig implements InitializingBean {
 
     private Properties opt;
 
+    private Integer[] idArr;
+
     private List<Integer> ids;
 
     private List<User> users;
@@ -119,6 +121,7 @@ class PropertiesConfig implements InitializingBean {
         Assert.assertEquals(this.url, "http://127.0.0.1:8080/");
         Assert.assertEquals(this.pair.getKey(), Long.valueOf(1L));
         Assert.assertEquals(this.pair.getValue(), "name_of_1");
+        Assert.assertEquals(this.idArr, new Integer[]{1, 2});
         Assert.assertEquals(this.ids, Arrays.asList(1, 2));
         Assert.assertEquals(this.users.size(), 2);
         Assert.assertEquals(this.user.getId(), "1");
