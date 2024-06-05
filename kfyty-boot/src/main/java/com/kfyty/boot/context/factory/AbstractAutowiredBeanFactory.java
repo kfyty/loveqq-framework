@@ -11,7 +11,9 @@ import com.kfyty.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.core.autoconfig.condition.ConditionContext;
 import com.kfyty.core.autoconfig.condition.annotation.Conditional;
 import com.kfyty.core.exception.BeansException;
+import com.kfyty.core.support.Pair;
 import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.core.utils.BeanUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
@@ -47,6 +50,13 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     protected final Map<String, ConditionalBeanDefinition> conditionBeanMap;
 
     /**
+     * 嵌套的 BeanDefinition 引用
+     * key: {@link Bean} 方法标记的 bean type
+     * value: parent bean definition
+     */
+    protected final Map<Pair<String, Class<?>>, String> nestedConditionReference;
+
+    /**
      * 自动注入能力支持
      */
     @Autowired(AutowiredCapableSupport.BEAN_NAME)
@@ -55,7 +65,8 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     public AbstractAutowiredBeanFactory() {
         super();
         this.conditionBeanMap = synchronizedMap(new LinkedHashMap<>());
-        this.conditionContext = new ConditionContext(this, this.conditionBeanMap);
+        this.nestedConditionReference = new ConcurrentHashMap<>();
+        this.conditionContext = new ConditionContext(this, this.conditionBeanMap, this.nestedConditionReference);
     }
 
     @Override
@@ -72,6 +83,21 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     @Override
     public void registerConditionBeanDefinition(BeanDefinition beanDefinition) {
         this.registerConditionBeanDefinition(beanDefinition.getBeanName(), beanDefinition);
+    }
+
+    @Override
+    public void resolveNestedBeanDefinitionReference(BeanDefinition beanDefinition) {
+        try {
+            for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
+                Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
+                if (beanAnnotation != null) {
+                    Pair<String, Class<?>> key = new Pair<>(BeanUtil.getBeanName(method, beanAnnotation), method.getReturnType());
+                    this.nestedConditionReference.put(key, beanDefinition.getBeanName());
+                }
+            }
+        } catch (Throwable e) {
+            // ignored
+        }
     }
 
     @Override
