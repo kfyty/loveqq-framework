@@ -4,6 +4,7 @@ import com.kfyty.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.core.autoconfig.beans.BeanFactory;
 import com.kfyty.core.method.MethodParameter;
 import com.kfyty.core.utils.BeanUtil;
+import com.kfyty.core.utils.LogUtil;
 import com.kfyty.core.utils.PackageUtil;
 import com.kfyty.core.utils.ReflectUtil;
 import com.kfyty.web.mvc.core.handler.DefaultRequestMappingMatcher;
@@ -166,9 +167,8 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
                 log.error("can't match url mapping: [{}] !", request.getRequestURI());
                 return;
             }
-            if (log.isDebugEnabled()) {
-                log.debug("matched URL mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI());
-            }
+
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("matched URL mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
 
             // 应用前置拦截器
             if (!this.processPreInterceptor(request, response, methodMapping)) {
@@ -178,12 +178,12 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
             // 解析参数并处理请求
             this.preparedRequestResponse(methodMapping, request, response);
             Object[] params = this.preparedMethodParams(request, response, methodMapping);
-            Object o = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
+            Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
 
             // 应用后置处理器并处理返回值
-            this.processPostInterceptor(request, response, methodMapping, o);
-            if (o != null) {
-                this.processReturnValue(o, new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params), request, response, params);
+            this.processPostInterceptor(request, response, methodMapping, retValue);
+            if (retValue != null) {
+                this.processReturnValue(retValue, new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params), request, response, params);
             }
         } catch (Throwable e) {
             log.error("process request error: {}", e.getMessage());

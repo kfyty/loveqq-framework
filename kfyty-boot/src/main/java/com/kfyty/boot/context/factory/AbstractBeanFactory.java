@@ -100,8 +100,14 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         // 注册 bean 定义
         this.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, true);
 
-        // 如果不解析嵌套的，或者注册为了条件 bean 定义，则直接返回
-        if (!resolveNested || !this.containsBeanDefinition(beanDefinition.getBeanName())) {
+        // 如果不解析嵌套的则直接返回
+        if (!resolveNested) {
+            return;
+        }
+
+        // 注册为了条件 bean 定义，解析嵌套的 bean 定义引用
+        if (!this.containsBeanDefinition(beanDefinition.getBeanName())) {
+            this.resolveNestedBeanDefinitionReference(beanDefinition);
             return;
         }
 

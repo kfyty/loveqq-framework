@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.Writer;
 
+import static com.kfyty.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
+
 /**
  * 描述:
  *
@@ -18,7 +20,7 @@ import java.io.Writer;
  * @date 2021/6/10 11:29
  * @email kfyty725@hotmail.com
  */
-@Order(0)
+@Order(HIGHEST_PRECEDENCE >> 1)
 public class ResponseBodyHandlerMethodReturnValueProcessor implements ServletHandlerMethodReturnValueProcessor {
 
     @Override

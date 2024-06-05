@@ -53,6 +53,7 @@
         <module>kfyty-boot-starter-feign</module>
         <module>kfyty-boot-starter-config-nacos</module>
         <module>kfyty-boot-starter-discovery-nacos</module>
+        <module>kfyty-boot-starter-thymeleaf</module>
     </modules>
 
     <properties>
