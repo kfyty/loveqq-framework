@@ -1,14 +1,20 @@
 package com.kfyty.boot.mvc.servlet.tomcat.autoconfig;
 
 import com.kfyty.core.support.Pair;
+import com.kfyty.core.utils.AnnotationUtil;
+import com.kfyty.web.mvc.servlet.filter.FilterRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.annotation.WebFilter;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.EventListener;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 描述:
@@ -81,7 +87,7 @@ public class TomcatProperties {
     /**
      * 过滤器
      */
-    private List<Filter> webFilters;
+    private List<FilterRegistrationBean> webFilters;
 
     /**
      * 监听器
@@ -116,6 +122,21 @@ public class TomcatProperties {
     }
 
     public void addWebFilter(Filter filter) {
+        WebFilter annotation = Objects.requireNonNull(AnnotationUtil.findAnnotation(filter, WebFilter.class), "WebFilter annotation is required");
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean()
+                .setFilter(filter)
+                .setFilterName(annotation.filterName())
+                .setDisplayName(annotation.displayName())
+                .setDescription(annotation.description())
+                .setSmallIcon(annotation.smallIcon())
+                .setLargeIcon(annotation.largeIcon())
+                .setUrlPatterns(Arrays.asList(annotation.urlPatterns()))
+                .setAsyncSupported(annotation.asyncSupported())
+                .setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
+        this.addWebFilter(filterRegistrationBean);
+    }
+
+    public void addWebFilter(FilterRegistrationBean filter) {
         this.webFilters.add(filter);
     }
 
@@ -132,5 +153,9 @@ public class TomcatProperties {
         this.addStaticPattern("*.jpg");
         this.addStaticPattern("*.jpeg");
         this.addStaticPattern("*.ico");
+        this.addStaticPattern("*.otf");
+        this.addStaticPattern("*.ttf");
+        this.addStaticPattern("*.woff");
+        this.addStaticPattern("*.woff2");
     }
 }

@@ -54,6 +54,7 @@
         <module>kfyty-boot-starter-config-nacos</module>
         <module>kfyty-boot-starter-discovery-nacos</module>
         <module>kfyty-boot-starter-thymeleaf</module>
+        <module>kfyty-boot-starter-pagehelper</module>
     </modules>
 
     <properties>
