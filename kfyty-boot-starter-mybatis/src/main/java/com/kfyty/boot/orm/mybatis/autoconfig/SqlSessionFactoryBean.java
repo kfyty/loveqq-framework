@@ -122,16 +122,15 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
         Optional.ofNullable(this.mybatisProperties.getVfs()).ifPresent(configuration::setVfsImpl);
         Optional.ofNullable(this.mybatisProperties.getDefaultScriptingLanguageDriver()).ifPresent(configuration::setDefaultScriptingLanguage);
 
-
         if (CommonUtil.notEmpty(this.mybatisProperties.getTypeAliasesPackage())) {
-            PackageUtil.scanClass(this.mybatisProperties.getTypeAliasesPackage())
+            PackageUtil.scanClass(this.mybatisProperties.getTypeAliasesPackage(), this.pathMatchingResourcePatternResolver)
                     .stream()
                     .filter(e -> !ReflectUtil.isAbstract(e))
                     .forEach(configuration.getTypeAliasRegistry()::registerAlias);
         }
 
         if (CommonUtil.notEmpty(this.mybatisProperties.getTypeHandlersPackage())) {
-            PackageUtil.scanClass(this.mybatisProperties.getTypeAliasesPackage())
+            PackageUtil.scanClass(this.mybatisProperties.getTypeHandlersPackage(), this.pathMatchingResourcePatternResolver)
                     .stream()
                     .filter(e -> !ReflectUtil.isAbstract(e))
                     .forEach(configuration.getTypeHandlerRegistry()::register);

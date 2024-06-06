@@ -26,7 +26,11 @@ public class PreDestroyProcessor implements BeanPostProcessor {
         Class<?> sourceClass = AopUtil.getTargetClass(bean);
         for (Method method : ReflectUtil.getMethods(sourceClass)) {
             if(AnnotationUtil.hasAnnotation(method, PreDestroy.class)) {
+                if (method.getDeclaringClass() != bean.getClass() && AopUtil.isJdkProxy(bean)) {
+                    bean = AopUtil.getTarget(bean);
+                }
                 ReflectUtil.invokeMethod(bean, method);
+                break;
             }
         }
     }

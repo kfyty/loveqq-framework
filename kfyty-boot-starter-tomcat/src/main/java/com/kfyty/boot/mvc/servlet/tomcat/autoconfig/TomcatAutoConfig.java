@@ -16,6 +16,7 @@ import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.web.mvc.core.autoconfig.WebServerProperties;
 import com.kfyty.web.mvc.core.autoconfig.annotation.EnableWebMvc;
 import com.kfyty.web.mvc.servlet.DispatcherServlet;
+import com.kfyty.web.mvc.servlet.filter.FilterRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.annotation.WebFilter;
@@ -44,6 +45,7 @@ public class TomcatAutoConfig {
     public TomcatProperties tomcatProperties(MultipartConfigElement multipartConfig) {
         TomcatProperties config = new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig);
         config.setPort(this.webServerProperties.getPort());
+        this.applicationContext.getBeanOfType(FilterRegistrationBean.class).values().forEach(config::addWebFilter);
         this.applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
         this.applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
         return config;

@@ -155,11 +155,11 @@ public class DefaultDataBinder implements DataBinder {
         Object oldValue = ReflectUtil.getFieldValue(target.getTarget(), field);
 
         // 集合
-        if (oldValue instanceof Collection<?>) {
+        if (oldValue instanceof Collection<?> && bindValue instanceof Collection<?>) {
             ((Collection<?>) oldValue).addAll((Collection) bindValue);
         }
         // map
-        else if (oldValue instanceof Map<?, ?>) {
+        else if (oldValue instanceof Map<?, ?> && bindValue instanceof Map<?,?>) {
             ((Map<?, ?>) oldValue).putAll((Map) bindValue);
         }
         // 其他情况

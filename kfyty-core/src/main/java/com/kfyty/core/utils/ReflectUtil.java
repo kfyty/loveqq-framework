@@ -236,7 +236,7 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isBaseDataType(Class<?> clazz) {
-        return clazz.isPrimitive() || Number.class.isAssignableFrom(clazz) ||
+        return clazz.isPrimitive() || Number.class.isAssignableFrom(clazz) || Boolean.class.isAssignableFrom(clazz) ||
                 Character.class.isAssignableFrom(clazz) || CharSequence.class.isAssignableFrom(clazz) ||
                 Date.class.isAssignableFrom(clazz) || LocalDate.class.isAssignableFrom(clazz) ||
                 LocalTime.class.isAssignableFrom(clazz) || LocalDateTime.class.isAssignableFrom(clazz) ||

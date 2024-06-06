@@ -2,19 +2,16 @@ package com.kfyty.boot.mvc.servlet.tomcat;
 
 import com.kfyty.boot.mvc.servlet.tomcat.autoconfig.TomcatProperties;
 import com.kfyty.core.support.Pair;
-import com.kfyty.core.utils.AnnotationUtil;
 import com.kfyty.core.utils.ClassLoaderUtil;
 import com.kfyty.core.utils.CommonUtil;
 import com.kfyty.core.utils.ExceptionUtil;
 import com.kfyty.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.web.mvc.servlet.ServletWebServer;
-import jakarta.servlet.Filter;
+import com.kfyty.web.mvc.servlet.filter.FilterRegistrationBean;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
-import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.annotation.WebInitParam;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -213,7 +210,7 @@ public class TomcatWebServer implements ServletWebServer {
     private void prepareDefaultServlet(Context context, List<String> patterns) {
         Wrapper defaultServlet = context.createWrapper();
         defaultServlet.setName("default");
-        defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");
+        defaultServlet.setServletClass("com.kfyty.boot.mvc.servlet.tomcat.servlet.DefaultStaticServlet");
         defaultServlet.addInitParameter("debug", "0");
         defaultServlet.addInitParameter("listings", "false");
         defaultServlet.setLoadOnStartup(1);
@@ -237,32 +234,27 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     private void prepareWebFilter(Context context) {
-        for (Filter webFilter : this.config.getWebFilters()) {
+        for (FilterRegistrationBean registrationBean : this.config.getWebFilters()) {
             FilterDef filterDef = new FilterDef();
-            WebFilter annotation = AnnotationUtil.findAnnotation(webFilter, WebFilter.class);
-            filterDef.setFilter(webFilter);
-            filterDef.setFilterClass(webFilter.getClass().getName());
-            filterDef.setFilterName(webFilter.getClass().getSimpleName());
-            filterDef.setAsyncSupported(Boolean.toString(annotation.asyncSupported()));
-            filterDef.setDisplayName(annotation.displayName());
-            filterDef.setDescription(annotation.description());
-            filterDef.setSmallIcon(annotation.smallIcon());
-            filterDef.setLargeIcon(annotation.largeIcon());
-            if (CommonUtil.notEmpty(annotation.filterName())) {
-                filterDef.setFilterName(annotation.filterName());
-            }
-            for (WebInitParam webInitParam : annotation.initParams()) {
-                filterDef.addInitParameter(webInitParam.name(), webInitParam.value());
+            filterDef.setFilter(registrationBean.getFilter());
+            filterDef.setFilterClass(registrationBean.getFilter().getClass().getName());
+            filterDef.setFilterName(registrationBean.getFilter().getClass().getSimpleName());
+            filterDef.setAsyncSupported(Boolean.toString(registrationBean.isAsyncSupported()));
+            filterDef.setDisplayName(registrationBean.getDisplayName());
+            filterDef.setDescription(registrationBean.getDescription());
+            filterDef.setSmallIcon(registrationBean.getSmallIcon());
+            filterDef.setLargeIcon(registrationBean.getLargeIcon());
+            registrationBean.getInitParam().forEach(e -> filterDef.addInitParameter(e.getKey(), e.getValue()));
+            if (CommonUtil.notEmpty(registrationBean.getFilterName())) {
+                filterDef.setFilterName(registrationBean.getFilterName());
             }
             context.addFilterDef(filterDef);
-            this.prepareWebFilterMapping(context, filterDef, annotation);
+            this.prepareWebFilterMapping(context, filterDef, registrationBean);
         }
     }
 
-    private void prepareWebFilterMapping(Context context, FilterDef filterDef, WebFilter annotation) {
-        String[] patterns = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : annotation.urlPatterns();
-        patterns = CommonUtil.empty(patterns) ? new String[]{"/*"} : patterns;
-        for (String pattern : patterns) {
+    private void prepareWebFilterMapping(Context context, FilterDef filterDef, FilterRegistrationBean registrationBean) {
+        for (String pattern : registrationBean.getUrlPatterns()) {
             FilterMap filterMap = new FilterMap();
             filterMap.setCharset(StandardCharsets.UTF_8);
             filterMap.setFilterName(filterDef.getFilterName());
@@ -296,6 +288,7 @@ public class TomcatWebServer implements ServletWebServer {
     @RequiredArgsConstructor
     private static class DispatcherServletConfigInitializer implements ServletContainerInitializer {
         private final TomcatProperties tomcatConfig;
+
         private final DispatcherServlet dispatcherServlet;
 
         @Override
