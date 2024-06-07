@@ -16,4 +16,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface ResponseBody {
+    /**
+     * 响应体类型
+     */
+    String value() default "application/json; charset=utf-8";
 }

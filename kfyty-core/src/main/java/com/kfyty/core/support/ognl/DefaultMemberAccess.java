@@ -1,5 +1,6 @@
 package com.kfyty.core.support.ognl;
 
+import lombok.Setter;
 import ognl.MemberAccess;
 
 import java.lang.reflect.AccessibleObject;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @date 2023/4/17 14:21
  * @email kfyty725@hotmail.com
  */
+@Setter
 public class DefaultMemberAccess implements MemberAccess {
     public boolean allowPrivateAccess;
 
@@ -37,29 +39,18 @@ public class DefaultMemberAccess implements MemberAccess {
     }
 
     public boolean getAllowPrivateAccess() {
-        return allowPrivateAccess;
-    }
-
-    public void setAllowPrivateAccess(boolean value) {
-        allowPrivateAccess = value;
+        return this.allowPrivateAccess;
     }
 
     public boolean getAllowProtectedAccess() {
-        return allowProtectedAccess;
-    }
-
-    public void setAllowProtectedAccess(boolean value) {
-        allowProtectedAccess = value;
+        return this.allowProtectedAccess;
     }
 
     public boolean getAllowPackageProtectedAccess() {
-        return allowPackageProtectedAccess;
+        return this.allowPackageProtectedAccess;
     }
 
-    public void setAllowPackageProtectedAccess(boolean value) {
-        allowPackageProtectedAccess = value;
-    }
-
+    @Override
     public Object setup(Map context, Object target, Member member, String propertyName) {
         Object result = null;
         if (isAccessible(context, target, member, propertyName)) {
@@ -72,6 +63,7 @@ public class DefaultMemberAccess implements MemberAccess {
         return result;
     }
 
+    @Override
     public void restore(Map context, Object target, Member member, String propertyName, Object state) {
         if (state != null) {
             ((AccessibleObject) member).setAccessible((Boolean) state);
@@ -82,6 +74,7 @@ public class DefaultMemberAccess implements MemberAccess {
      * Returns true if the given member is accessible or can be made accessible
      * by this object.
      */
+    @Override
     public boolean isAccessible(Map context, Object target, Member member, String propertyName) {
         int modifiers = member.getModifiers();
         boolean result = Modifier.isPublic(modifiers);
