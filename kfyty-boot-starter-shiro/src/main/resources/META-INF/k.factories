@@ -1,0 +1,5 @@
+com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.boot.security.shiro.ShiroProperties,\
+    com.kfyty.boot.security.shiro.ShiroAutoConfiguration,\
+    com.kfyty.boot.security.shiro.aspect.AuthorizationAttributeSourceAdvisor,\
+    com.kfyty.boot.security.shiro.processor.LifecycleBeanPostProcessor

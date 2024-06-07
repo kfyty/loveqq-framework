@@ -12,11 +12,16 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.core.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.core.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.core.utils.ReflectUtil.isBaseDataType;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * 描述:
@@ -46,7 +51,15 @@ public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArg
             return this.createDataBinder(paramName, param != null ? param : defaultValue).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
         }
         if (parameter.getParameterGeneric() instanceof Class) {
-            return this.createDataBinder(ServletUtil.getRequestParametersMap(request, paramName)).bind(new Instance(ReflectUtil.newInstance(parameter.getParamType())), paramName).getTarget();
+            String prefix = paramName + '.';
+            Map<String, String> parametersMap = ServletUtil.getRequestParametersMap(request);
+            Map<Boolean, List<Map.Entry<String, String>>> prefixGroupMap = parametersMap.entrySet().stream().collect(groupingBy(k -> k.getKey().startsWith(prefix)));
+            if (CommonUtil.empty(prefixGroupMap.get(true))) {
+                Map<String, String> paramMap = prefixGroupMap.getOrDefault(false, emptyList()).stream().collect(toMap(k -> paramName + '.' + k.getKey(), Map.Entry::getValue));
+                return this.createDataBinder(paramMap).bind(new Instance(ReflectUtil.newInstance(parameter.getParamType())), paramName).getTarget();
+            }
+            Map<String, String> paramMap = prefixGroupMap.get(true).stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return this.createDataBinder(paramMap).bind(new Instance(ReflectUtil.newInstance(parameter.getParamType())), paramName).getTarget();
         }
         return this.createDataBinder(ServletUtil.getRequestParametersMap(request, paramName)).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
     }

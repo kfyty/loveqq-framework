@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.kfyty.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
+import static com.kfyty.core.utils.CommonUtil.empty;
 import static com.kfyty.core.utils.CommonUtil.formatURI;
+import static com.kfyty.web.mvc.core.annotation.RequestMapping.DefaultMapping.DEFAULT;
 
 /**
  * 功能描述: 注解处理器
@@ -58,7 +60,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
     }
 
     protected void resolveRequestMappingAnnotation(String superUrl, RequestMapping annotation, MethodMapping methodMapping) {
-        String mappingPath = superUrl + formatURI(CommonUtil.empty(annotation.value()) ? methodMapping.getMappingMethod().getName() : annotation.value());
+        String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? methodMapping.getMappingMethod().getName() : annotation.value());
         List<String> paths = CommonUtil.split(mappingPath, "[/]");
         methodMapping.setUrl(mappingPath);
         methodMapping.setPaths(paths.toArray(EMPTY_STRING_ARRAY));
@@ -105,11 +107,12 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
 
                     @Override
                     public String produces() {
-                        String produces = ReflectUtil.invokeMethod(nestedAnnotation, "produces");
-                        if (CommonUtil.notEmpty(produces)) {
-                            return produces;
-                        }
-                        return AnnotationUtil.findAnnotation(nestedAnnotation.annotationType(), RequestMapping.class).produces();
+                        return ReflectUtil.invokeMethod(nestedAnnotation, "produces");
+                    }
+
+                    @Override
+                    public DefaultMapping defaultMapping() {
+                        return ReflectUtil.invokeMethod(nestedAnnotation, "defaultMapping");
                     }
 
                     @Override

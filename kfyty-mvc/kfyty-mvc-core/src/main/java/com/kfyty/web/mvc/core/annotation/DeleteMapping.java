@@ -21,5 +21,7 @@ public @interface DeleteMapping {
 
     String value() default "";
 
-    String produces() default "";
+    String produces() default "text/plain; charset=utf-8";
+
+    RequestMapping.DefaultMapping defaultMapping() default RequestMapping.DefaultMapping.DEFAULT;
 }

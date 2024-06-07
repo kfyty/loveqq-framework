@@ -2,6 +2,7 @@ package com.kfyty.boot.validator.annotation;
 
 import com.kfyty.boot.validator.constraints.FlexibleConstraintValidator;
 import com.kfyty.boot.validator.constraints.FlexibleValidator;
+import com.kfyty.boot.validator.context.IOCContext;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,6 +11,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.function.Function;
 
 /**
  * 描述: 自定义校验
@@ -30,7 +32,7 @@ public @interface Flexible {
 
     /**
      * 是否支持 ioc 容器
-     * 返回 true 时需设置 {@link com.kfyty.boot.validator.support.IOC}
+     * 返回 true 时需设置 {@link IOCContext#setIOC(Function)}
      *
      * @see com.kfyty.boot.validator.context.IOCContext
      */

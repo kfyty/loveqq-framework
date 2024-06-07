@@ -38,7 +38,7 @@ public abstract class AspectJAnnotationUtil {
      * 支持的注解类型，该顺序也是通知顺序
      */
     @SuppressWarnings("unchecked")
-    public static Class<? extends Annotation>[] ASPECT_ANNOTATION_TYPES = new Class[] {
+    public static Class<? extends Annotation>[] ASPECT_ANNOTATION_TYPES = new Class[]{
             Around.class, Before.class, After.class, AfterReturning.class, AfterThrowing.class
     };
 
@@ -64,8 +64,11 @@ public abstract class AspectJAnnotationUtil {
     }
 
     public static int findAspectOrder(Class<?> adviceType) {
-        int index = 0;
         Class<? extends Annotation> annotationType = resolveAnnotationTypeFor(adviceType);
+        if (annotationType == null) {
+            return 99;
+        }
+        int index = 0;
         for (Class<? extends Annotation> aspectType : ASPECT_ANNOTATION_TYPES) {
             if (aspectType == annotationType) {
                 return index;
@@ -127,6 +130,6 @@ public abstract class AspectJAnnotationUtil {
         if (MethodAfterAdvice.class.isAssignableFrom(adviceType)) {
             return After.class;
         }
-        throw new IllegalArgumentException("unsupported advice type: " + adviceType);
+        return null;
     }
 }

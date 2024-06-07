@@ -130,7 +130,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
             this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
             return;
         }
-        if (!conditionBeanMap.containsKey(name)) {
+        if (!this.conditionBeanMap.containsKey(name)) {
             super.registerBeanDefinition(name, beanDefinition);
         }
     }
@@ -142,7 +142,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void registerConditionBeanDefinition(String name, ConditionalBeanDefinition conditionalBeanDefinition) {
-        if (this.conditionBeanMap.containsKey(name)) {
+        if (this.conditionBeanMap.containsKey(name) || super.containsBeanDefinition(name)) {
             throw new BeansException("conflicting conditional bean definition: " + conditionalBeanDefinition.getBeanName());
         }
         this.conditionBeanMap.putIfAbsent(name, conditionalBeanDefinition);

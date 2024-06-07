@@ -1,8 +1,7 @@
 package com.kfyty.boot.validator.context;
 
-import com.kfyty.boot.validator.support.IOC;
-
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * 描述: ioc 上下文
@@ -12,13 +11,14 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public abstract class IOCContext {
-    private static IOC IOC;
+    private static Function<Class<?>, Object> IOC;
 
-    public static void setIOC(IOC ioc) {
+    public static void setIOC(Function<Class<?>, Object> ioc) {
         IOCContext.IOC = ioc;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T getBean(Class<T> clazz) {
-        return Objects.requireNonNull(IOCContext.IOC, "IOC required").getBean(clazz);
+        return (T) Objects.requireNonNull(IOCContext.IOC, "IOC required").apply(clazz);
     }
 }

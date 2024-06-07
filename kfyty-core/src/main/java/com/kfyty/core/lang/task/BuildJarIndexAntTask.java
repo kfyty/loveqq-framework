@@ -86,6 +86,9 @@ public class BuildJarIndexAntTask {
             // 非 class 文件，不保留 META-INF/maven 资源索引
             if (!entryName.endsWith(".class")) {
                 if (!entryName.startsWith("META-INF/maven")) {
+                    if (entryName.charAt(entryName.length() - 1) == '/') {
+                        entryName = entryName.substring(0, entryName.length() - 1);
+                    }
                     indexContainer.computeIfAbsent(jarPath, k -> new HashSet<>()).add(entryName);
                 }
                 continue;
@@ -94,7 +97,7 @@ public class BuildJarIndexAntTask {
             // class 文件索引
             int packageIndex = entryName.lastIndexOf('/');
             if (packageIndex > 0) {
-                String packageName = entryName.substring(0, packageIndex);
+                String packageName = entryName.substring(0, packageIndex - 1);
                 indexContainer.computeIfAbsent(jarPath, k -> new HashSet<>()).add(packageName);
             }
         }

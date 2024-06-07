@@ -34,9 +34,18 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements ServletHan
 
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer<HttpServletRequest, HttpServletResponse> container) throws Exception {
+        container.getResponse().setContentType(this.contentType(returnType));
         try (Writer out = container.getResponse().getWriter()) {
             out.write(returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue));
             out.flush();
         }
+    }
+
+    protected String contentType(MethodParameter returnType) {
+        ResponseBody responseBody = AnnotationUtil.findAnnotationElement(returnType.getMethod(), ResponseBody.class);
+        if (responseBody == null) {
+            responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource().getClass(), ResponseBody.class);
+        }
+        return responseBody.value();
     }
 }

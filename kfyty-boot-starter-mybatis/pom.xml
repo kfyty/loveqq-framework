@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>kfyty-boot-starter-mybatis</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

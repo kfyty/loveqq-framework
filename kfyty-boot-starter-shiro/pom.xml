@@ -9,10 +9,10 @@
         <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kfyty-boot-starter-pagehelper</artifactId>
+    <artifactId>kfyty-boot-starter-shiro</artifactId>
 
     <properties>
-        <pagehelper.version>6.1.0</pagehelper.version>
+        <shiro.version>1.13.0</shiro.version>
     </properties>
 
     <dependencies>
@@ -29,14 +29,28 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper</artifactId>
-            <version>${pagehelper.version}</version>
+            <groupId>com.kfyty</groupId>
+            <artifactId>kfyty-aop</artifactId>
+            <version>${kfyty.framework.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-web</artifactId>
+            <classifier>jakarta</classifier>
+            <version>${shiro.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>kfyty-mvc-servlet</artifactId>
+            <version>${kfyty.framework.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

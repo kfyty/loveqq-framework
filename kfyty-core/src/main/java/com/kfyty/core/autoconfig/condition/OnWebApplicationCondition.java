@@ -12,11 +12,11 @@ import com.kfyty.core.support.AnnotationMetadata;
  * @email kfyty725@hotmail.com
  */
 public class OnWebApplicationCondition implements Condition {
-    protected static final String WEB_SERVER_CLASS = "com.kfyty.mvc.WebServer";
+    protected static final String WEB_SERVER_CLASS = "com.kfyty.web.mvc.core.WebServer";
 
     @Override
     public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
-        Class<?> clazz = ReflectUtil.load(WEB_SERVER_CLASS, false);
+        Class<?> clazz = ReflectUtil.load(WEB_SERVER_CLASS, false, false);
         return clazz != null && CommonUtil.notEmpty(context.getBeanFactory().getBeanDefinitionNames(clazz));
     }
 }

@@ -34,4 +34,18 @@ public @interface RequestMapping {
      * @return content-type
      */
     String produces() default "text/plain; charset=utf-8";
+
+    /**
+     * {@link this#value()} 为空时的处理方式
+     *
+     * @return DefaultMapping
+     * @see DefaultMapping#EMPTY 空字符串
+     * @see DefaultMapping#DEFAULT 方法名称
+     */
+    DefaultMapping defaultMapping() default DefaultMapping.DEFAULT;
+
+    enum DefaultMapping {
+        EMPTY,
+        DEFAULT
+    }
 }

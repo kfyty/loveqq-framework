@@ -16,8 +16,8 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Conditional(OnNotWebApplicationCondition.class)
 public @interface ConditionalOnNotWebApplication {
 }

@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>kfyty-boot-starter-thymeleaf</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
 
     <properties>
         <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>

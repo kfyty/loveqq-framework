@@ -5,7 +5,6 @@ import com.kfyty.boot.validator.context.ValidatorContext;
 import com.kfyty.boot.validator.processor.MethodValidationBeanPostProcessor;
 import com.kfyty.boot.validator.proxy.ValidatorAccess;
 import com.kfyty.boot.validator.proxy.ValidatorProxy;
-import com.kfyty.boot.validator.support.IOC;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.annotation.Value;
@@ -62,13 +61,7 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         ValidatorContext.setValidator(event.getSource().getBean(Validator.class));
-        IOCContext.setIOC(new IOC() {
-
-            @Override
-            public <T> T getBean(Class<T> clazz) {
-                return event.getSource().getBean(clazz);
-            }
-        });
+        IOCContext.setIOC(clazz -> event.getSource().getBean(clazz));
     }
 
     /**

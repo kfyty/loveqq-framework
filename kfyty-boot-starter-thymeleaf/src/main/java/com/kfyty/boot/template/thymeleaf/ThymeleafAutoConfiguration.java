@@ -1,11 +1,14 @@
 package com.kfyty.boot.template.thymeleaf;
 
+import com.kfyty.boot.template.thymeleaf.expression.DefaultVariableExpressionEvaluator;
 import com.kfyty.core.autoconfig.annotation.Autowired;
 import com.kfyty.core.autoconfig.annotation.Bean;
 import com.kfyty.core.autoconfig.annotation.Configuration;
 import com.kfyty.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.dialect.IDialect;
+import org.thymeleaf.standard.StandardDialect;
+import org.thymeleaf.standard.expression.IStandardVariableExpressionEvaluator;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
@@ -26,6 +29,9 @@ public class ThymeleafAutoConfiguration {
     @Autowired
     private ThymeleafProperties thymeleafProperties;
 
+    @Autowired(required = false)
+    private IStandardVariableExpressionEvaluator standardVariableExpressionEvaluator;
+
     @Bean
     @ConditionalOnMissingBean
     public ITemplateResolver templateResolver() {
@@ -41,6 +47,10 @@ public class ThymeleafAutoConfiguration {
     @Bean
     public TemplateEngine templateEngine(ITemplateResolver templateResolver) {
         TemplateEngine templateEngine = new TemplateEngine();
+        IDialect dialect = templateEngine.getDialects().iterator().next();              // 默认标准方言
+        if (dialect instanceof StandardDialect) {
+            ((StandardDialect) dialect).setVariableExpressionEvaluator(new DefaultVariableExpressionEvaluator(this.standardVariableExpressionEvaluator));
+        }
         templateEngine.setTemplateResolver(templateResolver);
         templateEngine.setAdditionalDialects(this.dialects);
         return templateEngine;
