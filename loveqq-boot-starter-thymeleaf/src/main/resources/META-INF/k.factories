@@ -1,0 +1,6 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.template.thymeleaf.autoconfig.ThymeleafProperties,\
+    com.kfyty.loveqq.framework.boot.template.thymeleaf.autoconfig.ThymeleafAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.template.thymeleaf.autoconfig.web.WebApplicationThymeleafAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.template.thymeleaf.autoconfig.processor.LoveqqInputFieldTagProcessor,\
+    com.kfyty.loveqq.framework.boot.template.thymeleaf.autoconfig.processor.LoveqqInputCheckboxTagProcessor

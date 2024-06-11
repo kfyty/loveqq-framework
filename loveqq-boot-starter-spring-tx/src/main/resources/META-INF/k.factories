@@ -1,0 +1,1 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.loveqq.framework.boot.tx.spring.autoconfig.DataSourceTransactionAutoConfiguration

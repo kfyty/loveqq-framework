@@ -1,5 +1,0 @@
-com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration,\
-    com.kfyty.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration$HikariDataSourceAutoConfig,\
-    com.kfyty.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration$DruidDataSourceAutoConfig,\
-    com.kfyty.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration$TomcatDataSourceAutoConfig
