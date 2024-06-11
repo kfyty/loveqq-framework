@@ -1,0 +1,29 @@
+com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=\
+    com.kfyty.loveqq.framework.boot.processor.factory.ConfigureBeanFactoryPreProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.factory.ScanBeanDefinitionBeanFactoryPreProcessor
+
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver,\
+    com.kfyty.loveqq.framework.boot.processor.factory.ImportBeanDefinitionBeanFactoryPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.factory.LazyProxyBeanFactoryPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.factory.internal.HardCodeBeanFactoryPostProcessor,\
+    com.kfyty.loveqq.framework.boot.context.env.DefaultDataBinder,\
+    com.kfyty.loveqq.framework.boot.context.env.DefaultGenericPropertiesContext,\
+    com.kfyty.loveqq.framework.boot.context.env.DefaultPropertyPlaceholdersResolver,\
+    com.kfyty.loveqq.framework.boot.processor.ConfigurationBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.ValueAnnotationBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.ConfigurationPropertiesBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.AutowiredCapableBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher,\
+    com.kfyty.loveqq.framework.boot.autoconfig.factory.DefaultEventListenerAnnotationListenerFactory,\
+    com.kfyty.loveqq.framework.boot.processor.AsyncMethodBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.LookupMethodBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.EventListenerAnnotationBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.BeanCustomizerBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.PostConstructProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.PreDestroyProcessor,\
+    com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig,\
+    com.kfyty.loveqq.framework.boot.autoconfig.ScopeProxyFactoryAutoConfig,\
+    com.kfyty.loveqq.framework.boot.autoconfig.LookupBeanDefinitionAutoConfig

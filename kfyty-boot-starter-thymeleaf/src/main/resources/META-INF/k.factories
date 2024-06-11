@@ -1,4 +1,0 @@
-com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.boot.template.thymeleaf.ThymeleafProperties,\
-    com.kfyty.boot.template.thymeleaf.ThymeleafAutoConfiguration,\
-    com.kfyty.boot.template.thymeleaf.web.WebApplicationThymeleafAutoConfiguration

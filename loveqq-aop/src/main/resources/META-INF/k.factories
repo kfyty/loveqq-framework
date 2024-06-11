@@ -1,0 +1,4 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.aop.processor.AspectJBeanPostProcessor,\
+    com.kfyty.loveqq.framework.aop.aspectj.creator.AspectJAdvisorCreator,\
+    com.kfyty.loveqq.framework.aop.aspectj.adapter.DefaultAdviceInterceptorPointAdapter

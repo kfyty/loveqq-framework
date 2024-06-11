@@ -1,0 +1,5 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.security.shiro.autoconfig.ShiroProperties,\
+    com.kfyty.loveqq.framework.boot.security.shiro.autoconfig.ShiroAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.security.shiro.autoconfig.aspect.AuthorizationAttributeSourceAdvisor,\
+    com.kfyty.loveqq.framework.boot.security.shiro.autoconfig.processor.LifecycleBeanPostProcessor

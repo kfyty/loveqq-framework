@@ -1,0 +1,3 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.NacosDiscoveryProperties,\
+    com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.NacosDiscoveryAutoConfiguration

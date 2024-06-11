@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kfyty</groupId>
-    <artifactId>kfyty-framework</artifactId>
+    <artifactId>loveqq-framework</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <url>https://github.com/kfyty/kfyty-framework</url>
     <description>ioc/aop/jdbc/mvc/javafx framework</description>
 
@@ -33,29 +33,29 @@
     </scm>
 
     <modules>
-        <module>kfyty-core</module>
-        <module>kfyty-boot</module>
-        <module>kfyty-database</module>
-        <module>kfyty-mvc</module>
-        <module>kfyty-javafx</module>
-        <module>kfyty-aop</module>
-        <module>kfyty-sdk</module>
-        <module>kfyty-cloud-bootstrap</module>
-        <module>kfyty-boot-starter-datasource</module>
-        <module>kfyty-boot-starter-spring-tx</module>
-        <module>kfyty-boot-starter-mybatis</module>
-        <module>kfyty-boot-starter-validator</module>
-        <module>kfyty-boot-starter-tomcat</module>
-        <module>kfyty-boot-starter-redisson</module>
-        <module>kfyty-boot-starter-quartz</module>
-        <module>kfyty-boot-starter-xxl-job</module>
-        <module>kfyty-boot-starter-uid-generator</module>
-        <module>kfyty-boot-starter-feign</module>
-        <module>kfyty-boot-starter-config-nacos</module>
-        <module>kfyty-boot-starter-discovery-nacos</module>
-        <module>kfyty-boot-starter-thymeleaf</module>
-        <module>kfyty-boot-starter-pagehelper</module>
-        <module>kfyty-boot-starter-shiro</module>
+        <module>loveqq-core</module>
+        <module>loveqq-boot</module>
+        <module>loveqq-data-jdbc</module>
+        <module>loveqq-mvc</module>
+        <module>loveqq-javafx</module>
+        <module>loveqq-aop</module>
+        <module>loveqq-sdk</module>
+        <module>loveqq-boot-cloud-bootstrap</module>
+        <module>loveqq-boot-starter-datasource</module>
+        <module>loveqq-boot-starter-spring-tx</module>
+        <module>loveqq-boot-starter-mybatis</module>
+        <module>loveqq-boot-starter-validator</module>
+        <module>loveqq-boot-starter-tomcat</module>
+        <module>loveqq-boot-starter-redisson</module>
+        <module>loveqq-boot-starter-quartz</module>
+        <module>loveqq-boot-starter-xxl-job</module>
+        <module>loveqq-boot-starter-uid-generator</module>
+        <module>loveqq-boot-starter-feign</module>
+        <module>loveqq-boot-starter-config-nacos</module>
+        <module>loveqq-boot-starter-discovery-nacos</module>
+        <module>loveqq-boot-starter-thymeleaf</module>
+        <module>loveqq-boot-starter-pagehelper</module>
+        <module>loveqq-boot-starter-shiro</module>
     </modules>
 
     <properties>
@@ -82,7 +82,7 @@
         <protobuf.java.version>3.23.2</protobuf.java.version>
         <java.websocket.version>1.5.3</java.websocket.version>
 
-        <druid.version>1.1.15</druid.version>
+        <druid.version>1.2.23</druid.version>
         <hikari.version>4.0.3</hikari.version>
         <tomcat.jdbc.version>11.0.0-M15</tomcat.jdbc.version>
         <mysql.version>8.0.16</mysql.version>
@@ -93,7 +93,7 @@
         <mybatis.version>3.5.16</mybatis.version>
 
         <k-jte.version>1.0-SNAPSHOT</k-jte.version>
-        <kfyty.framework.version>1.0.1-SNAPSHOT</kfyty.framework.version>
+        <loveqq.framework.version>1.0.0</loveqq.framework.version>
 
         <slf4j.version>1.7.25</slf4j.version>
         <slf4j.log4j12.version>1.7.12</slf4j.log4j12.version>
@@ -118,7 +118,7 @@
         <maven.target.version>21</maven.target.version>
 
         <boot-lib-output>boot-lib</boot-lib-output>
-        <boot-main-class>com.kfyty.core.support.BootLauncher</boot-main-class>
+        <boot-main-class>com.kfyty.loveqq.framework.core.support.BootLauncher</boot-main-class>
         <boot-start-class></boot-start-class>
     </properties>
 
@@ -530,7 +530,7 @@
                             </goals>
                             <configuration>
                                 <target>
-                                    <java classname="com.kfyty.core.lang.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
+                                    <java classname="com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
                                         <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
                                         <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
                                         <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />

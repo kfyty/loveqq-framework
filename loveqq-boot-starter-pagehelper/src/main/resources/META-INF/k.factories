@@ -1,0 +1,3 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.pagehelper.autoconfig.PageHelperProperties,\
+    com.kfyty.loveqq.framework.boot.pagehelper.autoconfig.PageHelperAutoConfiguration

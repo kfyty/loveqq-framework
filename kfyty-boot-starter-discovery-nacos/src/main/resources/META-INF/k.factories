@@ -1,3 +1,0 @@
-com.kfyty.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.cloud.discovery.nacos.autoconfig.NacosDiscoveryProperties,\
-    com.kfyty.cloud.discovery.nacos.autoconfig.NacosDiscoveryAutoConfiguration
