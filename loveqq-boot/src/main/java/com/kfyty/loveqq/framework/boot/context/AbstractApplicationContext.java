@@ -6,12 +6,15 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
+import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionBeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
@@ -113,7 +116,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     protected void registerDefaultBean() {
         this.registerBean(BeanFactory.class, this);
+        this.registerBean(BeanDefinitionRegistry.class, this);
+        this.registerBean(ConditionBeanDefinitionRegistry.class, this);
+
         this.registerBean(ApplicationContext.class, this);
+        this.registerBean(ConfigurableApplicationContext.class, this);
     }
 
     protected void beforeRefresh() {
