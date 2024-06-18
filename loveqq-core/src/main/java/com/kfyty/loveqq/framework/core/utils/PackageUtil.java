@@ -52,6 +52,9 @@ public abstract class PackageUtil {
     }
 
     public static Set<Class<?>> scanClass(String basePackage) {
+        if (basePackage.contains("*")) {
+            return scanClass(basePackage, new PathMatchingResourcePatternResolver());
+        }
         return scanClass(basePackage, null);
     }
 

@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
@@ -116,9 +117,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @SneakyThrows(IOException.class)
     protected Class<?> findJarClass(String name, List<JarFile> jarFiles) throws ClassNotFoundException {
         String jarClassPath = name.replace('.', '/') + ".class";
-        for (JarFile jarFile : jarFiles) {
+        for (Iterator<JarFile> i = jarFiles.iterator(); i.hasNext(); ) {
+            JarFile jarFile = i.next();
             try (InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
                 if (inputStream != null) {
+                    if (i.hasNext()) {
+                        this.logMatchedMoreJarFiles(jarClassPath, jarFile, jarFiles);
+                    }
                     URL jarURL = this.jarIndex.getJarURL(jarFile);
                     byte[] classBytes = this.transform(name, this.read(inputStream));
                     this.definePackageIfNecessary(name, jarURL, jarFile.getManifest());
@@ -154,6 +159,32 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * class 存在于多个 jar file 时，打印警告日志
+     * 因为可能因此出现运行异常的情况
+     *
+     * @param name        class
+     * @param usedJarFile 使用的 jar file
+     * @param jarFiles    匹配的 jar files
+     */
+    protected void logMatchedMoreJarFiles(String name, JarFile usedJarFile, List<JarFile> jarFiles) {
+        boolean matchedMore = false;
+        StringBuilder builder = new StringBuilder("More than one jar file found of class: " + name);
+        for (JarFile jarFile : jarFiles) {
+            if (jarFile.getJarEntry(name) != null) {
+                builder.append("\r\n    at: [")
+                        .append(jarFile.getName())
+                        .append(jarFile != usedJarFile ? "]" : "] was used.");
+                if (jarFile != usedJarFile) {
+                    matchedMore = true;
+                }
+            }
+        }
+        if (matchedMore) {
+            System.err.println(builder);
+        }
+    }
+
+    /**
      * 如果 class 的包名不存在的则定义包名
      *
      * @param className class name
@@ -182,7 +213,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     protected byte[] read(InputStream in) throws IOException {
         int n = -1;
-        byte[] buffer = new byte[4096];
+        byte[] buffer = new byte[Math.max(4096, in.available())];
         try (ByteArrayOutputStream out = new ByteArrayOutputStream(in.available())) {
             while ((n = in.read(buffer)) != -1) {
                 out.write(buffer, 0, n);

@@ -1,0 +1,2 @@
+com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=\
+    com.kfyty.loveqq.framework.boot.logging.logback.autoconfig.LogbackAutoConfiguration

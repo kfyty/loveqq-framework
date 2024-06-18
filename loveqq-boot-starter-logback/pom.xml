@@ -2,33 +2,36 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>loveqq-framework</artifactId>
         <version>1.0.1</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>loveqq-boot-starter-redisson</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>loveqq-boot-starter-logback</artifactId>
+
+    <properties>
+        <logback.version>1.5.6</logback.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-core</artifactId>
             <version>${loveqq.framework.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>${redisson-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.reactivex.rxjava3</groupId>
-                    <artifactId>rxjava</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
     </dependencies>
 </project>
