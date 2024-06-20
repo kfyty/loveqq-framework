@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver.doResolve;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.getTargetClass;
@@ -215,7 +216,7 @@ public class AutowiredProcessor {
                 i.remove();
                 continue;
             }
-            if (this.context.contains(entry.getKey())) {
+            if (this.context.contains(entry.getKey())) {                                        // 这里只能先直接判断，而不是获取判断非空
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
             } else if (isGeneric) {
                 try {
@@ -236,12 +237,15 @@ public class AutowiredProcessor {
                         }
                     }
                 } else {
-                    BeanDefinition beanDefinition = targetBeanDefinitions.size() == 1 ? targetBeanDefinitions.values().iterator().next() : targetBeanDefinitions.get(targetBeanName);
+                    BeanDefinition beanDefinition = targetBeanDefinitions.size() != 1 ? null : targetBeanDefinitions.values().iterator().next();
+                    if (beanDefinition == null) {
+                        beanDefinition = targetBeanDefinitions.values().stream().filter(BeanDefinition::isPrimary).findAny().orElse(targetBeanDefinitions.get(targetBeanName));
+                    }
                     if (beanDefinition == null) {
                         if (!AutowiredDescription.isRequired(autowired)) {
                             return beanOfType;
                         }
-                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, but no bean definition found of name: {}", targetType, targetBeanName));
+                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, and no primary found", targetType));
                     }
                     beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition, AutowiredDescription.isLazied(autowired)));
                 }
@@ -249,8 +253,15 @@ public class AutowiredProcessor {
                 this.removeResolving(targetBeanName, targetType, isGeneric);
             }
         }
-        if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty() || AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            throw new BeansException("resolve target bean failed, the bean does not exists of name: " + targetBeanName);
+        if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty()) {
+            throw new BeansException("resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
+        }
+        if (AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
+            Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if (primaryBeanOfType.size() > 1) {
+                throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
+            }
+            return primaryBeanOfType;
         }
         return beanOfType;
     }

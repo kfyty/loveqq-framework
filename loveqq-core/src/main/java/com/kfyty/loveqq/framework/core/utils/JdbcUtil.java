@@ -33,7 +33,7 @@ public abstract class JdbcUtil {
             return obj;
         } catch (SQLException e) {
             transaction.rollback();
-            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.error("execute SQL statement error: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
             throw e;
         } finally {
             commitTransactionIfNecessary(transaction);
@@ -48,7 +48,7 @@ public abstract class JdbcUtil {
             return updateCount;
         } catch (SQLException e) {
             transaction.rollback();
-            log.error("failed execute SQL statement: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
+            log.error("execute SQL statement error: {} --> parameters: {}", sql, params == null ? null : Arrays.stream(params).map(MethodParameter::getValue).collect(Collectors.toList()));
             throw e;
         } finally {
             commitTransactionIfNecessary(transaction);

@@ -1,10 +1,12 @@
 package com.kfyty.loveqq.framework.core.autoconfig.beans;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
+import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
@@ -81,6 +83,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         super(beanName, beanType, scope);
         this.parentDefinition = parentDefinition;
         this.beanMethod = beanMethod;
+    }
+
+    @Override
+    public boolean isPrimary() {
+        return AnnotationUtil.hasAnnotation(this.beanMethod, Primary.class);
     }
 
     public Method getInitMethod(Object bean) {

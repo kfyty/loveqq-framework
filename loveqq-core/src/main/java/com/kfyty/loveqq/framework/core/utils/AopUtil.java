@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getMethod;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 
@@ -21,7 +20,7 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AopUtil {
-    public static final String CGLIB_TAG = "ByBootFramework";
+    public static final String CGLIB_TAG = "ByLoveqqFramework";
 
     public static final String CGLIB_CLASS_SEPARATOR = "$$Enhancer" + CGLIB_TAG + "$$";
 

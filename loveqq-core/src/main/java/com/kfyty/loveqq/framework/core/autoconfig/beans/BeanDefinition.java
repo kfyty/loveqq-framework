@@ -10,8 +10,6 @@ import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.kfyty.loveqq.framework.core.utils.BeanUtil.getBeanOrder;
-
 /**
  * 描述: bean 定义
  *
@@ -119,6 +117,13 @@ public interface BeanDefinition {
      * 是否单例
      */
     boolean isSingleton();
+
+    /**
+     * 是否主实例
+     *
+     * @return true if primary bean
+     */
+    boolean isPrimary();
 
     /**
      * 是否是 {@link FactoryBean}

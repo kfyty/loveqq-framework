@@ -37,7 +37,8 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
     static {
         ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
         if (loggerFactory instanceof LoggerContext) {
-            ((LoggerContext) loggerFactory).getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.INFO);
+            String level = System.getProperty("logging.root", "INFO");
+            ((LoggerContext) loggerFactory).getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.toLevel(level));
         }
     }
 
