@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescription;
@@ -197,6 +198,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public boolean isSingleton() {
         return this.getScope().equals(SCOPE_SINGLETON);
+    }
+
+    @Override
+    public boolean isPrimary() {
+        return AnnotationUtil.hasAnnotation(this.getBeanType(), Primary.class);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class TransactionalInterceptorProxy implements MethodAroundAdvice, Intern
     @Override
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         Transactional transactional = this.obtainTransactional(((MethodSignature) pjp.getStaticPart().getSignature()).getMethod());
-        TransactionAttribute transactionAttribute = this.parseTransactionAnnotation(transactional);
+        TransactionAttribute transactionAttribute = this.resolveTransactionAttribute(transactional);
         if (transactionAttribute == null) {
             return pjp.proceed();
         }
@@ -57,7 +57,7 @@ public class TransactionalInterceptorProxy implements MethodAroundAdvice, Intern
         return annotation;
     }
 
-    protected TransactionAttribute parseTransactionAnnotation(Transactional transactional) {
+    protected TransactionAttribute resolveTransactionAttribute(Transactional transactional) {
         if (transactional == null) {
             return null;
         }
@@ -76,7 +76,7 @@ public class TransactionalInterceptorProxy implements MethodAroundAdvice, Intern
         }
         Object bean = CommonUtil.notEmpty(beanName) ? this.beanFactory.getBean(beanName) : this.beanFactory.getBean(PlatformTransactionManager.class);
         if (bean == null) {
-            throw new IllegalArgumentException("the PlatformTransactionManager does not exists !");
+            throw new IllegalArgumentException("The PlatformTransactionManager does not exists !");
         }
         return (PlatformTransactionManager) bean;
     }

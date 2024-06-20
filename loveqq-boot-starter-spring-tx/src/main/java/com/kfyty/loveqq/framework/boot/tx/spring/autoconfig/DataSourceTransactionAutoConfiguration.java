@@ -9,6 +9,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 
@@ -30,14 +31,13 @@ public class DataSourceTransactionAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public TransactionalInterceptorProxy transactionalInterceptorProxy(BeanFactory beanFactory) {
-        return new TransactionalInterceptorProxy(beanFactory);
+    @ConditionalOnMissingBean(name = "transactionInterceptorAdvisor")
+    public Advisor transactionInterceptorAdvisor(BeanFactory beanFactory) {
+        return new AnnotationPointcutAdvisor(Transactional.class, new TransactionalInterceptorProxy(beanFactory));
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "transactionInterceptorAdvisor")
-    public Advisor transactionInterceptorAdvisor(TransactionalInterceptorProxy transactionalInterceptorProxy) {
-        return new AnnotationPointcutAdvisor(Transactional.class, transactionalInterceptorProxy);
+    public TransactionTemplate transactionTemplate(DataSourceTransactionManager dataSourceTransactionManager) {
+        return new TransactionTemplate(dataSourceTransactionManager);
     }
 }

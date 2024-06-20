@@ -54,6 +54,11 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         }
     }
 
+    @Override
+    public boolean isPrimary() {
+        return this.factoryBeanDefinition.isPrimary();
+    }
+
     /**
      * 因为该 bean 可能被注入到自身而导致递归提前创建，因此执行方法后需要再次判断
      */
