@@ -109,12 +109,14 @@
         <central.publishing.plugin.version>0.4.0</central.publishing.plugin.version>
         <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <os.maven.version>1.5.0.Final</os.maven.version>
+        <smart.doc.maven.version>3.0.5</smart.doc.maven.version>
         <protobuf.maven.version>0.5.1</protobuf.maven.version>
         <dependency.plugin.version>3.3.0</dependency.plugin.version>
         <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
 
         <maven.source.version>21</maven.source.version>
         <maven.target.version>21</maven.target.version>
+        <smart-doc-config>./src/main/resources/smart-doc.json</smart-doc-config>
 
         <boot-lib-output>boot-lib</boot-lib-output>
         <boot-main-class>com.kfyty.loveqq.framework.core.support.BootLauncher</boot-main-class>
@@ -546,6 +548,15 @@
                             <version>${ant.version}</version>
                         </dependency>
                     </dependencies>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.ly.smart-doc</groupId>
+                    <artifactId>smart-doc-maven-plugin</artifactId>
+                    <version>${smart.doc.maven.version}</version>
+                    <configuration>
+                        <configFile>${smart-doc-config}</configFile>
+                    </configuration>
                 </plugin>
 
                 <plugin>

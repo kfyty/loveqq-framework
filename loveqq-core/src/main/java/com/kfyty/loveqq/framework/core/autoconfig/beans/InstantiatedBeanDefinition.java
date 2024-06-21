@@ -27,7 +27,7 @@ public class InstantiatedBeanDefinition extends GenericBeanDefinition {
         if (context.contains(this.getBeanName())) {
             return context.getBean(this.getBeanName());
         }
-        throw new BeansException("the bean definition does not support instantiation: " + this);
+        throw new BeansException("The bean definition doesn't support instantiation: " + this);
     }
 
     public static BeanDefinition from(String beanName, Class<?> beanType) {
