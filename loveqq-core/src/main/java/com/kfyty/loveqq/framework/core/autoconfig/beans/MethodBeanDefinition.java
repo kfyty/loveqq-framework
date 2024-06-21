@@ -97,7 +97,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         if (this.initMethod == null) {
             this.initMethod = ReflectUtil.getMethod(bean.getClass(), this.initMethodName);
         }
-        return initMethod;
+        return this.initMethod;
     }
 
     public Method getDestroyMethod(Object bean) {
@@ -107,7 +107,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         if (this.destroyMethod == null) {
             this.destroyMethod = ReflectUtil.getMethod(bean.getClass(), this.destroyMethodName);
         }
-        return destroyMethod;
+        return this.destroyMethod;
     }
 
     /**
