@@ -76,7 +76,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     public static FactoryBean<?> getSnapshotFactoryBean(BeanDefinition beanDefinition) {
-        return SNAPSHOT_FACTORY_BEAN_CACHE.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), ((GenericBeanDefinition) beanDefinition).defaultConstructorArgs));
+        return SNAPSHOT_FACTORY_BEAN_CACHE.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), beanDefinition.getDefaultConstructArgs()));
     }
 
     public static Map<String, FactoryBean<?>> getSnapshotFactoryBeanMap() {

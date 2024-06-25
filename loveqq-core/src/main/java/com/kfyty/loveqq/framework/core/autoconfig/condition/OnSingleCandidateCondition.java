@@ -1,11 +1,11 @@
 package com.kfyty.loveqq.framework.core.autoconfig.condition;
 
-import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnSingleCandidate;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnSingleCandidate;
 import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * 描述:
@@ -25,7 +25,7 @@ public class OnSingleCandidateCondition extends AbstractBeanCondition {
             }
         }
         for (Class<?> conditionType : this.conditionTypes(metadata)) {
-            List<String> beanDefinitionNames = beanFactory.getBeanDefinitionNames(conditionType);
+            Collection<String> beanDefinitionNames = beanFactory.getBeanDefinitionNames(conditionType);
             if (beanDefinitionNames.size() != 1) {
                 return false;
             }

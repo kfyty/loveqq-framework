@@ -19,7 +19,6 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
-import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -64,7 +62,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     public AbstractAutowiredBeanFactory() {
         super();
-        this.conditionBeanMap = synchronizedMap(new LinkedHashMap<>());
+        this.conditionBeanMap = new ConcurrentHashMap<>();
         this.nestedConditionReference = new ConcurrentHashMap<>();
         this.conditionContext = new ConditionContext(this, this.conditionBeanMap, this.nestedConditionReference);
     }
@@ -111,22 +109,23 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     }
 
     @Override
+    @SuppressWarnings("PatternVariableCanBeUsed")
     public void registerConditionBeanDefinition(String name, BeanDefinition beanDefinition) {
         if (beanDefinition instanceof MethodBeanDefinition) {
-            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((MethodBeanDefinition) beanDefinition).getParentDefinition().getBeanName());
-            if (parentConditionalBeanDefinition != null || hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Conditional.class)) {
+            MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
+            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(methodBeanDefinition.getParentDefinition().getBeanName());
+            if (parentConditionalBeanDefinition != null || hasAnnotationElement(methodBeanDefinition.getBeanMethod(), Conditional.class)) {
                 this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
-        }
-        if (beanDefinition instanceof FactoryBeanDefinition) {
-            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanName());
+        } else if (beanDefinition instanceof FactoryBeanDefinition) {
+            FactoryBeanDefinition factoryBeanDefinition = (FactoryBeanDefinition) beanDefinition;
+            ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(factoryBeanDefinition.getFactoryBeanDefinition().getBeanName());
             if (parentConditionalBeanDefinition != null) {
                 this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
-        }
-        if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
+        } else if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
             this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
             return;
         }
@@ -150,16 +149,15 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void resolveConditionBeanDefinitionRegistry() {
-        Map<String, ConditionalBeanDefinition> conditionalBeanDefinition = CommonUtil.sort(this.conditionBeanMap, (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
-        Map<String, ConditionalBeanDefinition> currentConditionalMap = new LinkedHashMap<>(conditionalBeanDefinition);
+        Map<String, ConditionalBeanDefinition> currentConditionalMap = CommonUtil.sort(this.conditionBeanMap, (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
         for (ConditionalBeanDefinition value : currentConditionalMap.values()) {
             if (!value.isRegistered() && !this.conditionContext.shouldSkip(value)) {
                 value.setRegistered(true);
-                this.registerBeanDefinition(value.getBeanName(), value.getBeanDefinition());
-                this.resolveRegisterNestedBeanDefinition(value.getBeanDefinition());
+                this.registerBeanDefinition(value.getBeanName(), value);
+                this.resolveRegisterNestedBeanDefinition(value);
             }
         }
-        if (currentConditionalMap.size() != conditionalBeanDefinition.size()) {
+        if (currentConditionalMap.size() != this.conditionBeanMap.size()) {
             this.resolveConditionBeanDefinitionRegistry();
         }
     }

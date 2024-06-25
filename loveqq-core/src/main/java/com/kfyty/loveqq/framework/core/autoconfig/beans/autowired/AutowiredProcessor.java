@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
 import com.kfyty.loveqq.framework.core.generic.Generic;
@@ -306,8 +305,9 @@ public class AutowiredProcessor {
     }
 
     public static SimpleGeneric buildGeneric(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return SimpleGeneric.from(((MethodBeanDefinition) beanDefinition).getBeanMethod());
+        Method beanMethod = beanDefinition.getBeanMethod();
+        if (beanMethod != null) {
+            return SimpleGeneric.from(beanMethod);
         }
         return SimpleGeneric.from(beanDefinition.getBeanType());
     }

@@ -11,6 +11,7 @@ import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.getSnapshotFactoryBean;
@@ -68,15 +70,15 @@ public class ConditionContext {
         this.beanFactory = beanFactory;
         this.conditionBeanMap = conditionBeanMap;
         this.nestedConditionReference = nestedConditionReference;
-        this.resolvedCondition = new HashSet<>();
-        this.matchedCondition = new HashSet<>() {
+        this.resolvedCondition = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.matchedCondition = Collections.synchronizedSet(new HashSet<>() {
             @Override
             public boolean add(String s) {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("The bean condition match succeed and will register bean: {}", conditionBeanMap.get(s)));
                 return super.add(s);
             }
-        };
-        this.skippedCondition = new HashSet<>() {
+        });
+        this.skippedCondition = Collections.synchronizedSet(new HashSet<>() {
             @Override
             public boolean add(String s) {
                 if (super.contains(s)) {
@@ -85,7 +87,7 @@ public class ConditionContext {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("The bean condition match failed and will skip register bean: {}", conditionBeanMap.get(s)));
                 return super.add(s);
             }
-        };
+        });
     }
 
     /**
@@ -169,8 +171,8 @@ public class ConditionContext {
                 this.skippedCondition.add(conditionBeanName);                               // 依赖条件不成立，该条件也不成立
             } else {                                                                        // 更新 bean 定义缓存，用于二次条件校验
                 nestedCondition.setRegistered(true);
-                this.beanFactory.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition.getBeanDefinition());
-                this.beanFactory.resolveRegisterNestedBeanDefinition(nestedCondition.getBeanDefinition());
+                this.beanFactory.registerBeanDefinition(nestedCondition.getBeanName(), nestedCondition);
+                this.beanFactory.resolveRegisterNestedBeanDefinition(nestedCondition);
 
                 // 解析嵌套的 bean 定义后，可能有新增 bean 定义，需要重新查找嵌套的条件解析
                 this.resolveNestedConditionBeanDefinition(current, metadata, condition, this.findNestedConditional(current, metadata, condition));
@@ -207,7 +209,7 @@ public class ConditionContext {
         for (Class<?> conditionType : abstractBeanCondition.conditionTypes(metadata)) {
             List<ConditionalBeanDefinition> collect = this.conditionBeanMap.values()
                     .stream()
-                    .filter(e -> conditionType.isAssignableFrom(e.getBeanType()) || e.getBeanDefinition().isFactoryBean() && conditionType.isAssignableFrom(getSnapshotFactoryBean(e.getBeanDefinition()).getBeanType()))
+                    .filter(e -> conditionType.isAssignableFrom(e.getBeanType()) || e.isFactoryBean() && conditionType.isAssignableFrom(getSnapshotFactoryBean(e).getBeanType()))
                     .collect(Collectors.toList());
             List<ConditionalBeanDefinition> reference = this.nestedConditionReference.keySet()
                     .stream()
@@ -219,6 +221,6 @@ public class ConditionContext {
             collect.addAll(reference);
             collect.stream().filter(e -> !e.getBeanName().equals(current.getBeanName())).forEach(e -> nested.put(e.getBeanName(), e));
         }
-        return CommonUtil.sort(nested, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue().getBeanDefinition(), b2.getValue().getBeanDefinition()));
+        return CommonUtil.sort(nested, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
     }
 }

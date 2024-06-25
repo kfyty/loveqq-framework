@@ -11,7 +11,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.InstantiatedBeanDefinition;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
@@ -23,7 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -75,7 +73,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     protected ApplicationContext applicationContext;
 
     public AbstractBeanFactory() {
-        this.beanDefinitions = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.beanDefinitions = new ConcurrentHashMap<>();
         this.beanInstances = new ConcurrentHashMap<>();
         this.beanReference = new ConcurrentHashMap<>();
         this.beanPostProcessors = Collections.synchronizedMap(new LinkedHashMap<>());
@@ -122,6 +120,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if (exists != null) {
             throw new BeansException(CommonUtil.format("Conflicting bean definition: [{}:{}] -> [{}:{}]", beanDefinition.getBeanName(), beanDefinition.getBeanType(), exists.getBeanName(), exists.getBeanType()));
         }
+        this.beanDefinitionsForType.clear();
     }
 
     @Override
@@ -131,7 +130,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             return;
         }
         this.registerConditionBeanDefinition(name, beanDefinition);
-        this.beanDefinitionsForType.clear();
     }
 
     @Override
@@ -145,8 +143,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     @Override
-    public List<String> getBeanDefinitionNames(Class<?> beanType) {
-        return this.getBeanDefinitions().values().stream().filter(e -> beanType.isAssignableFrom(e.getBeanType())).map(BeanDefinition::getBeanName).collect(Collectors.toList());
+    public Collection<String> getBeanDefinitionNames(Class<?> beanType) {
+        return this.getBeanDefinitions(beanType).keySet();
     }
 
     @Override
@@ -177,10 +175,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType, boolean isAutowireCandidate) {
+        Supplier<Map<String, BeanDefinition>> mapFactory = () -> new LinkedHashMap<>(2);
         return this.getBeanDefinitions(beanType).entrySet()
                 .stream()
                 .filter(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
     }
 
     @Override
@@ -195,12 +194,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate) {
-        Supplier<Map<String, BeanDefinition>> mapFactory = () -> new LinkedHashMap<>(2);
         return this.getBeanDefinitions().entrySet()
                 .stream()
                 .filter(beanDefinitionPredicate)
                 .sorted((b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
@@ -473,10 +471,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
         bean = this.getExposedBean(beanDefinition, bean);
 
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            final Object finalBean = bean;
-            ofNullable(((MethodBeanDefinition) beanDefinition).getInitMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(finalBean, e));
-        }
+        final Object invokeInitBean = bean;
+        ofNullable(beanDefinition.getInitMethod(invokeInitBean)).ifPresent(e -> ReflectUtil.invokeMethod(invokeInitBean, e));
 
         bean = this.getExposedBean(beanDefinition, bean);
 
@@ -502,9 +498,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             ((DestroyBean) bean).destroy();
         }
 
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            ofNullable(((MethodBeanDefinition) beanDefinition).getDestroyMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
-        }
+        ofNullable(beanDefinition.getDestroyMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
 
         this.beanReference.remove(beanName);
         this.beanInstances.remove(beanName);

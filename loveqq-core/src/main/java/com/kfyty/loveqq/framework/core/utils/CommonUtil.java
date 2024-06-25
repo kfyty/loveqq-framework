@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -241,14 +242,12 @@ public abstract class CommonUtil {
     }
 
     public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
-        Map<K, V> sorted = unsortedMap
+        Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>(unsortedMap.size());
+        return unsortedMap
                 .entrySet()
                 .stream()
                 .sorted(comparator)
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
-        unsortedMap.clear();
-        unsortedMap.putAll(sorted);
-        return unsortedMap;
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
     }
 
     public static String underline2CamelCase(String s) {
