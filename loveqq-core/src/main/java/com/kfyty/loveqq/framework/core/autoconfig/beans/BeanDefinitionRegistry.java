@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.beans;
 
 import java.lang.annotation.Annotation;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -26,7 +26,7 @@ public interface BeanDefinitionRegistry {
 
     void removeBeanDefinition(String beanName);
 
-    List<String> getBeanDefinitionNames(Class<?> beanType);
+    Collection<String> getBeanDefinitionNames(Class<?> beanType);
 
     BeanDefinition getBeanDefinition(String beanName);
 

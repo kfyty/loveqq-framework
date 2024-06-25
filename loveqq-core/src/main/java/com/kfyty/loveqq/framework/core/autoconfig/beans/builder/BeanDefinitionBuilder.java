@@ -11,7 +11,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
-import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -20,8 +19,6 @@ import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.LinkedList;
-import java.util.List;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.addSnapFactoryBeanCache;
@@ -36,11 +33,9 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
  */
 public class BeanDefinitionBuilder {
     private final GenericBeanDefinition beanDefinition;
-    private final List<Pair<Class<?>, Object>> defaultConstructorArgs;
 
     private BeanDefinitionBuilder(GenericBeanDefinition beanDefinition) {
         this.beanDefinition = beanDefinition;
-        this.defaultConstructorArgs = new LinkedList<>();
     }
 
     public BeanDefinitionBuilder setBeanName(String beanName) {
@@ -78,8 +73,18 @@ public class BeanDefinitionBuilder {
         return this;
     }
 
+    public BeanDefinitionBuilder setInitMethod(String initMethod) {
+        this.beanDefinition.setInitMethod(initMethod);
+        return this;
+    }
+
+    public BeanDefinitionBuilder setDestroyMethod(String destroyMethod) {
+        this.beanDefinition.setDestroyMethod(destroyMethod);
+        return this;
+    }
+
     public BeanDefinitionBuilder addConstructorArgs(Class<?> argType, Object arg) {
-        this.defaultConstructorArgs.add(new Pair<>(argType, arg));
+        this.beanDefinition.addConstructorArgs(argType, arg);
         return this;
     }
 
@@ -129,12 +134,9 @@ public class BeanDefinitionBuilder {
         if (CommonUtil.empty(this.beanDefinition.getScope())) {
             this.setScope(BeanDefinition.SCOPE_SINGLETON);
         }
-        if (CommonUtil.notEmpty(this.defaultConstructorArgs)) {
-            this.defaultConstructorArgs.forEach(e -> this.beanDefinition.addConstructorArgs(e.getKey(), e.getValue()));
-        }
         if (this.beanDefinition.isFactoryBean()) {
             if (!(this.beanDefinition instanceof MethodBeanDefinition) && this.beanDefinition.getBeanName().equals(resolveBeanName(this.beanDefinition.getBeanType()))) {
-                FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.defaultConstructorArgs);
+                FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.beanDefinition.getDefaultConstructArgs());
                 this.setBeanName(resolveBeanName(factoryBean.getBeanType()));
                 addSnapFactoryBeanCache(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName(), factoryBean);
             }
@@ -156,10 +158,10 @@ public class BeanDefinitionBuilder {
     public static BeanDefinitionBuilder genericBeanDefinition(BeanDefinition source, Method beanMethod, Bean bean) {
         MethodBeanDefinition beanDefinition = new MethodBeanDefinition(BeanUtil.getBeanName(beanMethod, bean), beanMethod.getReturnType(), source, beanMethod);
         if (CommonUtil.notEmpty(bean.initMethod())) {
-            beanDefinition.setInitMethodName(bean.initMethod());
+            beanDefinition.setInitMethod(bean.initMethod());
         }
         if (CommonUtil.notEmpty(bean.destroyMethod())) {
-            beanDefinition.setDestroyMethodName(bean.destroyMethod());
+            beanDefinition.setDestroyMethod(bean.destroyMethod());
         }
         return new BeanDefinitionBuilder(beanDefinition);
     }

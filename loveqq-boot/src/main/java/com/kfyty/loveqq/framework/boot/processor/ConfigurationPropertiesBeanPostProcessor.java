@@ -6,11 +6,12 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
+
+import java.lang.reflect.Method;
 
 /**
  * 描述: 绑定 bean 属性配置
@@ -37,8 +38,9 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
 
     protected ConfigurationProperties obtainConfigurationPropertiesAnnotation(String beanName) {
         BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), ConfigurationProperties.class);
+        Method beanMethod = beanDefinition.getBeanMethod();
+        if (beanMethod != null) {
+            return AnnotationUtil.findAnnotation(beanMethod, ConfigurationProperties.class);
         }
         return AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), ConfigurationProperties.class);
     }

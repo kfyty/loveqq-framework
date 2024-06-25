@@ -184,8 +184,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         boolean concurrentInitialize = Boolean.parseBoolean(System.getProperty("k.concurrent-initialize", "false"));
 
         // 先实例化串行 bean
-        this.sortBeanDefinition();
-        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : this.getBeanDefinitions();
+        Map<String, BeanDefinition> sortedBeanDefinition = this.getSortedBeanDefinition();
+        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : sortedBeanDefinition;
         for (BeanDefinition value : beanDefinitions.values()) {
             if (value.isSingleton() && value.isAutowireCandidate() && !value.isLazyInit()) {
                 this.registerBean(value);
@@ -194,7 +194,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
         // 并发实例化剩余的单例 bean
         if (concurrentInitialize) {
-            CompletableFutureUtil.consumer(this.executorService, this.getBeanDefinitions().values(), bd -> {
+            CompletableFutureUtil.consumer(this.executorService, sortedBeanDefinition.values(), bd -> {
                 if (bd.isSingleton() && bd.isAutowireCandidate() && !bd.isLazyInit()) {
                     this.registerBean(bd);
                 }
@@ -202,11 +202,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         }
     }
 
-    protected void sortBeanDefinition() {
-        synchronized (this.beanDefinitions) {
-            Map<String, BeanDefinition> sortBeanDefinition = this.getBeanDefinitions(e -> true);
-            beanDefinitions.clear();
-            beanDefinitions.putAll(sortBeanDefinition);
-        }
+    protected Map<String, BeanDefinition> getSortedBeanDefinition() {
+        return this.getBeanDefinitions(e -> true);
     }
 }

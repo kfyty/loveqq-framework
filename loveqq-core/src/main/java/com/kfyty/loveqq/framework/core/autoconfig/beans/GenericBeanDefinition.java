@@ -25,6 +25,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -97,6 +98,16 @@ public class GenericBeanDefinition implements BeanDefinition {
      * 属性值
      */
     protected List<PropertyValue> propertyValues;
+
+    /**
+     * bean 的初始化方法
+     */
+    protected String initMethod;
+
+    /**
+     * bean 的销毁方法
+     */
+    protected String destroyMethod;
 
     /**
      * 自动注入处理器，所有实例共享，以处理循环依赖
@@ -216,6 +227,42 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isMethodBean() {
+        return this.getBeanMethod() != null;
+    }
+
+    @Override
+    public Method getBeanMethod() {
+        return null;
+    }
+
+    @Override
+    public Method getInitMethod(Object bean) {
+        if (this.initMethod == null) {
+            return null;
+        }
+        return ReflectUtil.getMethod(bean.getClass(), this.initMethod);
+    }
+
+    @Override
+    public Method getDestroyMethod(Object bean) {
+        if (this.destroyMethod == null) {
+            return null;
+        }
+        return ReflectUtil.getMethod(bean.getClass(), this.destroyMethod);
+    }
+
+    @Override
+    public void setInitMethod(String initMethod) {
+        this.initMethod = initMethod;
+    }
+
+    @Override
+    public void setDestroyMethod(String destroyMethod) {
+        this.destroyMethod = destroyMethod;
+    }
+
+    @Override
     public void setAutowireCandidate(boolean autowireCandidate) {
         this.isAutowireCandidate = autowireCandidate;
     }
@@ -241,6 +288,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     @Override
     public List<Pair<Class<?>, Object>> getConstructArgs() {
         return this.prepareConstructorArgs();
+    }
+
+    @Override
+    public List<Pair<Class<?>, Object>> getDefaultConstructArgs() {
+        return this.defaultConstructorArgs;
     }
 
     @Override

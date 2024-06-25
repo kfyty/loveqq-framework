@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
@@ -114,11 +115,14 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
      */
     public static int getBeanOrder(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof ConditionalBeanDefinition) {
+            return getBeanOrder(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
+        }
         if (beanDefinition instanceof FactoryBeanDefinition) {
             return getBeanOrder(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
-            Order order = AnnotationUtil.findAnnotation(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Order.class);
+            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Order.class);
             return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
         }
         if (beanDefinition instanceof GenericBeanDefinition) {
@@ -135,11 +139,14 @@ public abstract class BeanUtil {
      * @return true is lazy init
      */
     public static boolean isLazyInit(BeanDefinition beanDefinition) {
+        if (beanDefinition instanceof ConditionalBeanDefinition) {
+            return isLazyInit(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
+        }
         if (beanDefinition instanceof FactoryBeanDefinition) {
             return isLazyInit(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
-            boolean isLazyInit = AnnotationUtil.hasAnnotationElement(((MethodBeanDefinition) beanDefinition).getBeanMethod(), Lazy.class);
+            boolean isLazyInit = AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanMethod(), Lazy.class);
             return isLazyInit || isLazyInit(((MethodBeanDefinition) beanDefinition).getParentDefinition());
         }
         if (beanDefinition instanceof GenericBeanDefinition) {

@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 
+import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.List;
 
@@ -143,6 +144,48 @@ public interface BeanDefinition {
     void setAutowireCandidate(boolean autowireCandidate);
 
     /**
+     * 是否是 {@link com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean} 定义的 bean
+     *
+     * @return true if method bean
+     */
+    boolean isMethodBean();
+
+    /**
+     * 获取 bean 方法
+     *
+     * @return bean method
+     */
+    Method getBeanMethod();
+
+    /**
+     * 获取初始化方法
+     *
+     * @return init method
+     */
+    Method getInitMethod(Object bean);
+
+    /**
+     * 获取销毁方法
+     *
+     * @return destroy method
+     */
+    Method getDestroyMethod(Object bean);
+
+    /**
+     * 设置初始化方法
+     *
+     * @param initMethod 初始化方法
+     */
+    void setInitMethod(String initMethod);
+
+    /**
+     * 设置销毁方法
+     *
+     * @param destroyMethod 销毁方法
+     */
+    void setDestroyMethod(String destroyMethod);
+
+    /**
      * 添加默认的构造器参数，参数索引从 0 开始
      * 其他的参数将从 bean 工厂获取
      */
@@ -157,8 +200,15 @@ public interface BeanDefinition {
 
     /**
      * 获取构造器参数
+     * 实际用于创建 bean 的构造器参数
      */
     List<Pair<Class<?>, Object>> getConstructArgs();
+
+    /**
+     * 获取默认的构造器参数
+     * 定义 bean 定义时的构造器参数
+     */
+    List<Pair<Class<?>, Object>> getDefaultConstructArgs();
 
     /**
      * 获取构造器参数类型
