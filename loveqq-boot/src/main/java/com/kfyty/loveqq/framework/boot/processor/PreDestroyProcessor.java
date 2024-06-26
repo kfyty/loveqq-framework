@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.boot.processor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -19,6 +20,7 @@ import java.lang.reflect.Method;
  */
 @Component
 @Order(Integer.MIN_VALUE)
+@ConditionalOnClass("jakarta.annotation.PreDestroy")
 public class PreDestroyProcessor implements BeanPostProcessor {
 
     @Override
