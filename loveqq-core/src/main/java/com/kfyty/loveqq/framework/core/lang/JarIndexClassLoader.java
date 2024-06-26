@@ -31,6 +31,11 @@ import java.util.jar.Manifest;
  */
 public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
+     * 是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开
+     */
+    private static final boolean DEPENDENCY_CHECK = Boolean.parseBoolean(System.getProperty("k.dependency.check", "false"));
+
+    /**
      * jar index
      */
     protected final JarIndex jarIndex;
@@ -121,7 +126,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             JarFile jarFile = i.next();
             try (InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
                 if (inputStream != null) {
-                    if (i.hasNext()) {
+                    if (DEPENDENCY_CHECK && i.hasNext()) {
                         this.logMatchedMoreJarFiles(jarClassPath, jarFile, jarFiles);
                     }
                     URL jarURL = this.jarIndex.getJarURL(jarFile);
