@@ -30,7 +30,7 @@ public class PathVariableMethodArgumentResolver extends AbstractHandlerMethodArg
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, HttpServletRequest request) throws IOException {
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         String paramName = parameter.getParameterName(findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
-        Integer paramIndex = mapping.getRestfulURLMappingIndex(paramName);
+        Integer paramIndex = mapping.getRestfulMappingIndex(paramName);
         return this.createDataBinder(paramName, paths.get(paramIndex)).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
     }
 }

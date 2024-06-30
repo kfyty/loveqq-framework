@@ -150,7 +150,7 @@ public class DispatcherServlet extends HttpServlet implements BeanFactoryAware {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
-        MethodMapping methodMapping = this.requestMappingMatcher.doMatchRequest(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
+        MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
             // 无匹配，转发到 404
             if (methodMapping == null) {
