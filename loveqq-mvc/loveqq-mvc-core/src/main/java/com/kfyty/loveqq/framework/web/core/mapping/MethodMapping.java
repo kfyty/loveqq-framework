@@ -8,9 +8,12 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
+import static com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandler.RESTFUL_URL_PATTERN;
 
 /**
  * 功能描述: url 映射
@@ -27,11 +30,6 @@ public class MethodMapping {
      * URL
      */
     private String url;
-
-    /**
-     * url 长度
-     */
-    private int length;
 
     /**
      * url 路径
@@ -51,12 +49,12 @@ public class MethodMapping {
     /**
      * 是否是 restful 风格 url
      */
-    private boolean restfulUrl;
+    private boolean restful;
 
     /**
      * restful 风格 url 数据索引
      */
-    private Pair<String, Integer>[] restfulURLMappingIndex;
+    private Pair<String, Integer>[] restfulMappingIndex;
 
     /**
      * 映射方法
@@ -68,37 +66,46 @@ public class MethodMapping {
      */
     private Object controller;
 
-    public static MethodMapping newURLMapping(Object controller, Method mappingMethod) {
+    public static MethodMapping create(String url, RequestMethod requestMethod, Object controller, Method mappingMethod) {
         MethodMapping methodMapping = new MethodMapping();
         methodMapping.setController(controller);
         methodMapping.setMappingMethod(mappingMethod);
+        methodMapping.setRequestMethod(requestMethod);
+        methodMapping.setUrl(url);
+        methodMapping.setPaths(CommonUtil.split(url, "[/]").toArray(EMPTY_STRING_ARRAY));
+        resolveRestfulVariableIfNecessary(methodMapping);
         return methodMapping;
     }
 
-    public Integer getRestfulURLMappingIndex(String path) {
-        for (Pair<String, Integer> urlMappingIndex : this.restfulURLMappingIndex) {
+    public Integer getLength() {
+        return this.paths.length;
+    }
+
+    public Integer getRestfulMappingIndex(String path) {
+        if (this.restfulMappingIndex == null) {
+            throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
+        }
+        for (Pair<String, Integer> urlMappingIndex : this.restfulMappingIndex) {
             if (Objects.equals(urlMappingIndex.getKey(), path)) {
                 return urlMappingIndex.getValue();
             }
         }
-        throw new IllegalArgumentException("the restful path index does not exists: restful=" + this.url + ", path=" + path);
+        throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
     }
 
-    public Map<Integer, Map<String, MethodMapping>> buildUrlLengthMapping(RequestMethodMapping requestMethodMapping) {
-        Map<String, MethodMapping> innerMap = new HashMap<>();
-        Map<Integer, Map<String, MethodMapping>> outerMap = new HashMap<>();
-        Map<Integer, Map<String, MethodMapping>> urlLengthMappingMap = requestMethodMapping == null ? null : requestMethodMapping.getUrlLengthMapping();
-        if (urlLengthMappingMap == null || !urlLengthMappingMap.containsKey(this.length)) {
-            innerMap.put(this.url, this);
-            outerMap.put(this.length, innerMap);
-            return outerMap;
+    @SuppressWarnings("unchecked")
+    public static void resolveRestfulVariableIfNecessary(MethodMapping methodMapping) {
+        if (!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
+            return;
         }
-        Map<String, MethodMapping> urlMappingMap = urlLengthMappingMap.get(this.length);
-        if (urlMappingMap.containsKey(this.url)) {
-            throw new IllegalArgumentException(CommonUtil.format("mapping method already exists: [URL:{}, RequestMethod: {}] !", url, requestMethod));
+        String[] paths = methodMapping.getPaths();
+        List<Pair<String, Integer>> mappingIndex = new ArrayList<>();
+        for (int i = 0; i < paths.length; i++) {
+            if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(paths[i]).matches()) {
+                mappingIndex.add(new Pair<>(paths[i].replaceAll("[{}]", ""), i));
+            }
         }
-        innerMap.put(this.url, this);
-        urlMappingMap.putAll(innerMap);
-        return null;
+        methodMapping.setRestful(true);
+        methodMapping.setRestfulMappingIndex(mappingIndex.toArray(new Pair[0]));
     }
 }

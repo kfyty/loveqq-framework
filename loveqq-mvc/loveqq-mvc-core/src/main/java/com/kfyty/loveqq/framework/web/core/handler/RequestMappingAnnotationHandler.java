@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
-import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.formatURI;
 import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.DefaultMapping.DEFAULT;
@@ -35,7 +33,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
      */
     public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
 
-    public synchronized List<MethodMapping> resolveRequestMapping(Object controller) {
+    public List<MethodMapping> resolveRequestMapping(Object controller) {
         String superUrl = CommonUtil.EMPTY_STRING;
         List<MethodMapping> retValue = new ArrayList<>();
         Class<?> controllerClass = AopUtil.getTargetClass(controller);
@@ -50,40 +48,19 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
     protected void processMethodAnnotation(String superUrl, Class<?> controllerClass, Object controller, List<MethodMapping> methodMappings) {
         List<Method> methods = ReflectUtil.getMethods(controllerClass);
         for (Method method : methods) {
-            RequestMapping requestMapping = findRequestMapping(method);
-            if (requestMapping != null) {
-                MethodMapping methodMapping = MethodMapping.newURLMapping(controller, method);
-                resolveRequestMappingAnnotation(superUrl, requestMapping, methodMapping);
-                methodMappings.add(methodMapping);
+            RequestMapping annotation = findRequestMapping(method);
+            if (annotation != null) {
+                String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? method.getName() : annotation.value());
+                MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.requestMethod(), controller, method);
+                methodMappings.add(this.resolveRequestMappingAnnotation(annotation, methodMapping));
             }
         }
     }
 
-    protected void resolveRequestMappingAnnotation(String superUrl, RequestMapping annotation, MethodMapping methodMapping) {
-        String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? methodMapping.getMappingMethod().getName() : annotation.value());
-        List<String> paths = CommonUtil.split(mappingPath, "[/]");
-        methodMapping.setUrl(mappingPath);
-        methodMapping.setPaths(paths.toArray(EMPTY_STRING_ARRAY));
-        methodMapping.setLength(paths.size());
+    protected MethodMapping resolveRequestMappingAnnotation(RequestMapping annotation, MethodMapping methodMapping) {
         methodMapping.setProduces(annotation.produces());
-        methodMapping.setRequestMethod(annotation.requestMethod());
-        this.resolvePathVariableIfNecessary(methodMapping, paths);
-        log.info("discovery request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}] !", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void resolvePathVariableIfNecessary(MethodMapping methodMapping, List<String> paths) {
-        if (!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
-            return;
-        }
-        List<Pair<String, Integer>> mappingIndex = new ArrayList<>();
-        for (int i = 0; i < paths.size(); i++) {
-            if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(paths.get(i)).matches()) {
-                mappingIndex.add(new Pair<>(paths.get(i).replaceAll("[{}]", ""), i));
-            }
-        }
-        methodMapping.setRestfulUrl(true);
-        methodMapping.setRestfulURLMappingIndex(mappingIndex.toArray(new Pair[0]));
+        log.info("Resolved request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
+        return methodMapping;
     }
 
     public static RequestMapping findRequestMapping(Method method) {
