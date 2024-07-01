@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.aop.aspectj;
 
 import com.kfyty.loveqq.framework.aop.Pointcut;
 import com.kfyty.loveqq.framework.aop.utils.AspectJAnnotationUtil;
-import com.kfyty.loveqq.framework.core.proxy.aop.adapter.ExposeInvocationInterceptorProxy;
+import com.kfyty.loveqq.framework.core.proxy.aop.JoinPointHolder;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Data;
 import org.aopalliance.aop.Advice;
@@ -88,7 +88,7 @@ public abstract class AbstractAspectJAdvice implements Advice {
     }
 
     protected JoinPoint getJoinPoint() {
-        return ExposeInvocationInterceptorProxy.currentJoinPoint();
+        return JoinPointHolder.currentJoinPoint();
     }
 
     protected void onSetPointcut() {

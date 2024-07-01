@@ -1,4 +1,4 @@
-package com.kfyty.aop.proxy;
+package com.kfyty.loveqq.framework.aop.proxy;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;

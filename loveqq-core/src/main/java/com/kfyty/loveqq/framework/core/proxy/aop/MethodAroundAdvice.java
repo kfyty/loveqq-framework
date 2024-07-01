@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.core.proxy.aop;
 
-import com.kfyty.loveqq.framework.core.proxy.aop.adapter.ExposeInvocationInterceptorProxy;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -16,7 +15,7 @@ public interface MethodAroundAdvice extends MethodInterceptor {
 
     @Override
     default Object invoke(MethodInvocation invocation) throws Throwable {
-        return this.around((ProceedingJoinPoint) ExposeInvocationInterceptorProxy.currentJoinPoint());
+        return this.around((ProceedingJoinPoint) JoinPointHolder.currentJoinPoint());
     }
 
     Object around(ProceedingJoinPoint pjp) throws Throwable;

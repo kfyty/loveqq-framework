@@ -11,10 +11,11 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.proxy.aop.AdviceMethodInterceptorChainPoint;
-import com.kfyty.loveqq.framework.core.proxy.aop.adapter.ExposeInvocationInterceptorProxy;
+import com.kfyty.loveqq.framework.core.proxy.aop.JoinPointHolder;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.aop.Advice;
+import org.aspectj.lang.JoinPoint;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -38,7 +39,9 @@ import static com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain.METHO
 @Order(Order.HIGHEST_PRECEDENCE)
 public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint, InternalPriority {
     private final List<Advisor> advisors;
+
     private final List<AdviceInterceptorPointAdapter> adapters;
+
     private final Map<Method, List<MethodInterceptorChainPoint>> advisorPointCache;
 
     public AspectMethodInterceptorProxy(List<Advisor> advisors, List<AdviceInterceptorPointAdapter> adapters) {
@@ -53,15 +56,20 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
         if (CommonUtil.empty(advices)) {
             return chain.proceed(methodProxy);
         }
-        return this.buildMethodInvocationProceedingJoinPoint(methodProxy, chain, advices).proceed();
+        JoinPoint prevJoinPoint = null;
+        try {
+            MethodInvocationProceedingJoinPoint currentJoinPoint = this.buildMethodInvocationProceedingJoinPoint(methodProxy, chain, advices);
+            prevJoinPoint = JoinPointHolder.set(currentJoinPoint);
+            return currentJoinPoint.proceed();
+        } finally {
+            JoinPointHolder.set(prevJoinPoint);
+        }
     }
 
     protected MethodInvocationProceedingJoinPoint buildMethodInvocationProceedingJoinPoint(MethodProxy methodProxy, MethodInterceptorChain chain, List<MethodInterceptorChainPoint> advices) {
         MethodInterceptorChain aopChain = new MethodInterceptorChain(chain.getTarget(), advices);
-        MethodInvocationProceedingJoinPoint joinPoint = new MethodInvocationProceedingJoinPoint(methodProxy, aopChain);
-        aopChain.addInterceptorPoint(0, new ExposeInvocationInterceptorProxy(joinPoint))
-                .addInterceptorPoint(advices.size() + 1, new com.kfyty.aop.proxy.AopInterceptorChainBridgeProxy(chain));
-        return joinPoint;
+        aopChain.addInterceptorPoint(advices.size(), new AopInterceptorChainBridgeProxy(chain));
+        return new MethodInvocationProceedingJoinPoint(methodProxy, aopChain);
     }
 
     protected List<MethodInterceptorChainPoint> findAdviceChainPoints(MethodProxy methodProxy) {
