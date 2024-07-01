@@ -103,6 +103,9 @@ public class MethodProxy {
         if (this.target == null || AnnotationUtil.hasAnnotationElement(this.target, Configuration.class)) {
             return this.methodProxy.invokeSuper(this.proxy, args);
         }
+        if (this.methodProxy != null) {
+            return this.methodProxy.invoke(this.target, args);
+        }
         return ReflectUtil.invokeMethod(this.target, this.method, args);
     }
 
