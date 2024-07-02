@@ -89,17 +89,19 @@ public class TransactionalInterceptorProxy implements MethodAroundAdvice, Intern
     }
 
     protected Boolean rollbackFor(Throwable ex, Transactional transactional) {
+        Class<?> exClass = ex.getClass();
+        String exName = exClass.getName();
         if (CommonUtil.notEmpty(transactional.rollbackFor())) {
-            return Arrays.stream(transactional.rollbackFor()).anyMatch(e -> e.isAssignableFrom(ex.getClass()));
+            return Arrays.stream(transactional.rollbackFor()).anyMatch(e -> e.isAssignableFrom(exClass));
         }
         if (CommonUtil.notEmpty(transactional.rollbackForClassName())) {
-            return Arrays.stream(transactional.rollbackForClassName()).anyMatch(e -> e.equals(ex.getClass().getName()));
+            return Arrays.stream(transactional.rollbackForClassName()).anyMatch(e -> e.equals(exName));
         }
         if (CommonUtil.notEmpty(transactional.noRollbackFor())) {
-            return Arrays.stream(transactional.noRollbackFor()).noneMatch(e -> e.isAssignableFrom(ex.getClass()));
+            return Arrays.stream(transactional.noRollbackFor()).noneMatch(e -> e.isAssignableFrom(exClass));
         }
         if (CommonUtil.notEmpty(transactional.noRollbackForClassName())) {
-            return Arrays.stream(transactional.noRollbackForClassName()).noneMatch(e -> e.equals(ex.getClass().getName()));
+            return Arrays.stream(transactional.noRollbackForClassName()).noneMatch(e -> e.equals(exName));
         }
         return null;
     }

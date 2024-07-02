@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.InstantiationAwareBeanPostProc
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.support.Instance;
@@ -15,12 +16,14 @@ import java.lang.reflect.Method;
 
 /**
  * 描述: 绑定 bean 属性配置
+ * 该后置处理器必须比 {@link ValueAnnotationBeanPostProcessor} 排序靠后
  *
  * @author kfyty725
  * @date 2022/5/25 22:38
  * @email kfyty725@hotmail.com
  */
 @Component
+@Order(Order.HIGHEST_PRECEDENCE + 1)
 public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Autowired
     protected ApplicationContext applicationContext;

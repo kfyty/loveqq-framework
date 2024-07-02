@@ -17,4 +17,9 @@ public class AnnotationPointcutAdvisor extends DefaultPointcutAdvisor {
     public AnnotationPointcutAdvisor(Class<? extends Annotation> annotationType, Advice advice) {
         super(new AnnotationPointcut(annotationType), advice);
     }
+
+    @SafeVarargs
+    public AnnotationPointcutAdvisor(Advice advice, Class<? extends Annotation>... annotationType) {
+        super(new AnnotationPointcut(annotationType), advice);
+    }
 }

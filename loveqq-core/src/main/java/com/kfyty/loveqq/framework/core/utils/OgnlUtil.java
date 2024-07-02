@@ -40,6 +40,17 @@ public abstract class OgnlUtil {
      *
      * @param express 表达式
      * @param root    跟对象
+     * @return 值
+     */
+    public static String compute(String express, Object root) {
+        return compute(express, root, String.class);
+    }
+
+    /**
+     * 解析表达式
+     *
+     * @param express 表达式
+     * @param root    跟对象
      * @param clazz   返回值类型
      * @return 值
      */

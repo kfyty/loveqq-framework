@@ -5,7 +5,6 @@ import com.kfyty.loveqq.framework.aop.PointcutAdvisor;
 import com.kfyty.loveqq.framework.aop.support.annotated.AnnotationMethodMatcher;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -66,18 +65,7 @@ public class AuthorizationAttributeSourceAdvisor extends AnnotationsAuthorizingM
 
     @Override
     public Pointcut getPointcut() {
-        return () -> new AnnotationMethodMatcher(null) {
-
-            @Override
-            public boolean matches(Method method, Class<?> targetClass) {
-                for (Class<? extends Annotation> authAnnotationClass : AUTH_ANNOTATION_CLASSES) {
-                    if (AnnotationUtil.hasAnnotation(method, authAnnotationClass) || AnnotationUtil.hasAnnotation(targetClass, authAnnotationClass)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        };
+        return () -> new AnnotationMethodMatcher(AUTH_ANNOTATION_CLASSES);
     }
 
     protected org.apache.shiro.aop.MethodInvocation createMethodInvocation(MethodInvocation mi) {

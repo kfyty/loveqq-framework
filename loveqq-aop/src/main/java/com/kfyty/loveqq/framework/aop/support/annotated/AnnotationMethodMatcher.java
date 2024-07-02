@@ -17,10 +17,11 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation
  * @email kfyty725@hotmail.com
  */
 public class AnnotationMethodMatcher implements MethodMatcher {
-    private final Class<? extends Annotation> annotationType;
+    private final Class<? extends Annotation>[] annotationTypes;
 
-    public AnnotationMethodMatcher(Class<? extends Annotation> annotationType) {
-        this.annotationType = annotationType;
+    @SafeVarargs
+    public AnnotationMethodMatcher(Class<? extends Annotation>... annotationType) {
+        this.annotationTypes = annotationType;
     }
 
     @Override
@@ -30,6 +31,11 @@ public class AnnotationMethodMatcher implements MethodMatcher {
 
     @Override
     public boolean matches(Method method, Class<?> targetClass) {
-        return hasAnnotation(targetClass, this.annotationType) || hasAnnotation(method, this.annotationType);
+        for (Class<? extends Annotation> annotationType : this.annotationTypes) {
+            if (hasAnnotation(targetClass, annotationType) || hasAnnotation(method, annotationType)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

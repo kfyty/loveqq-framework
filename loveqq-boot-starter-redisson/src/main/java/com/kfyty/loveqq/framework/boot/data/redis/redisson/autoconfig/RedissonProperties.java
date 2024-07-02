@@ -47,6 +47,11 @@ public class RedissonProperties extends Config {
     private String loadBalancer;
 
     /**
+     * 是否开启响应式客户端
+     */
+    private Boolean reactive;
+
+    /**
      * 单机模式
      */
     @NestedConfigurationProperty
