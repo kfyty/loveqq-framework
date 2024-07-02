@@ -18,7 +18,6 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.isAbstract;
  * @date 2021/6/13 17:27
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 @Component
 public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor {
 

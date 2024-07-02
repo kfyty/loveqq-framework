@@ -7,7 +7,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 描述:
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2021/6/13 17:27
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 @Component
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ConfigurationBeanPostProcessor extends AbstractProxyCreatorProcessor {

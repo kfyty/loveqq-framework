@@ -39,6 +39,7 @@
         <module>loveqq-mvc</module>
         <module>loveqq-javafx</module>
         <module>loveqq-aop</module>
+        <module>loveqq-cache</module>
         <module>loveqq-sdk</module>
         <module>loveqq-boot-cloud-bootstrap</module>
         <module>loveqq-boot-starter-datasource</module>

@@ -13,19 +13,24 @@ import java.lang.annotation.Annotation;
  * @email kfyty725@hotmail.com
  */
 public class AnnotationPointcut implements AnnotatedPointcut {
-    private final Class<? extends Annotation> annotationType;
+    private final Class<? extends Annotation>[] annotationType;
 
-    public AnnotationPointcut(Class<? extends Annotation> annotationType) {
+    @SafeVarargs
+    public AnnotationPointcut(Class<? extends Annotation>... annotationType) {
         this.annotationType = annotationType;
     }
 
     @Override
     public Class<? extends Annotation> annotationType() {
+        throw new UnsupportedOperationException("See this.annotationTypes()");
+    }
+
+    public Class<? extends Annotation>[] annotationTypes() {
         return this.annotationType;
     }
 
     @Override
     public MethodMatcher getMethodMatcher() {
-        return new AnnotationMethodMatcher(this.annotationType());
+        return new AnnotationMethodMatcher(this.annotationTypes());
     }
 }

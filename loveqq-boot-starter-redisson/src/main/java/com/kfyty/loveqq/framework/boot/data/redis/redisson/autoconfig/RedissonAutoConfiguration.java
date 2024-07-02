@@ -5,8 +5,10 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.RedissonReactiveClient;
 
 /**
  * 描述: redisson 自动配置类
@@ -24,5 +26,12 @@ public class RedissonAutoConfiguration {
     @ConditionalOnMissingBean
     public RedissonClient redissonClient(RedissonProperties redissonProperties) {
         return Redisson.create(redissonProperties.buildConfig());
+    }
+
+    @Bean(destroyMethod = "shutdown")
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "k.redis.redisson", value = "reactive", havingValue = "true")
+    public RedissonReactiveClient reactiveRedissonClient(RedissonClient redissonClient) {
+        return redissonClient.reactive();
     }
 }

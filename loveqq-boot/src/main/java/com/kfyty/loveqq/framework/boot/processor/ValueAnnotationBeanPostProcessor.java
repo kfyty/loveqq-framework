@@ -10,7 +10,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -25,7 +24,6 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
  * @date 2019/8/27 10:43
  * @since JDK 1.8
  */
-@Slf4j
 @Component
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
