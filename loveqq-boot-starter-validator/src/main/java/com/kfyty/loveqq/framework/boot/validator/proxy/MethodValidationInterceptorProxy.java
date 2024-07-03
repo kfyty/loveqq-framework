@@ -41,15 +41,16 @@ public class MethodValidationInterceptorProxy implements MethodInterceptorChainP
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object target = methodProxy.getTarget();
         Method method = methodProxy.getTargetMethod();
-        this.beforeValid(target, method, methodProxy.getArguments());
+        Class<?>[] groups = this.obtainValidGroup(method);
+        this.beforeValid(target, method, methodProxy.getArguments(), groups);
         Object retValue = chain.proceed(methodProxy);
-        this.afterValid(target, method, retValue);
+        this.afterValid(target, method, retValue, groups);
         return retValue;
     }
 
-    protected void beforeValid(Object target, Method method, Object[] args) {
+    protected void beforeValid(Object target, Method method, Object[] args, Class<?>[] groups) {
         if (hasAnnotation(method, Valid.class)) {
-            this.doValid(v -> v.forExecutables().validateParameters(target, method, args, this.obtainValidGroup(method)));
+            this.doValid(v -> v.forExecutables().validateParameters(target, method, args, groups));
         }
         Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
@@ -62,9 +63,9 @@ public class MethodValidationInterceptorProxy implements MethodInterceptorChainP
         }
     }
 
-    protected void afterValid(Object target, Method method, Object retValue) {
+    protected void afterValid(Object target, Method method, Object retValue, Class<?>[] groups) {
         if (hasAnnotation(method, Valid.class)) {
-            this.doValid(v -> v.forExecutables().validateReturnValue(target, method, retValue, this.obtainValidGroup(method)));
+            this.doValid(v -> v.forExecutables().validateReturnValue(target, method, retValue, groups));
         }
     }
 

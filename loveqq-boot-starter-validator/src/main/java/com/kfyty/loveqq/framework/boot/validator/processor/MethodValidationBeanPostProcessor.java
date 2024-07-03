@@ -2,13 +2,14 @@ package com.kfyty.loveqq.framework.boot.validator.processor;
 
 import com.kfyty.loveqq.framework.boot.validator.proxy.MethodValidationInterceptorProxy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import jakarta.validation.Constraint;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
-import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -23,7 +24,8 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation
  * @date 2021/9/25 15:37
  * @email kfyty725@hotmail.com
  */
-@Slf4j
+@Component
+@ConditionalOnMissingBean
 public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProcessor {
     @Autowired
     private Validator validator;

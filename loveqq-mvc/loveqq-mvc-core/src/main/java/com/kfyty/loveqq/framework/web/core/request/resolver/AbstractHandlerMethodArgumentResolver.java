@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver;
+package com.kfyty.loveqq.framework.web.core.request.resolver;
 
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
@@ -15,7 +15,7 @@ import java.util.Map;
  * @date 2021/6/4 9:45
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractHandlerMethodArgumentResolver implements ServletHandlerMethodArgumentResolver, BeanFactoryAware {
+public abstract class AbstractHandlerMethodArgumentResolver implements BeanFactoryAware {
     /**
      * 默认的数据绑定器 class
      */

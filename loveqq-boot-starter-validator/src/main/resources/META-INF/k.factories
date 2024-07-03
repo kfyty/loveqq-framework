@@ -1,2 +1,5 @@
 java.lang.instrument.ClassFileTransformer=com.kfyty.loveqq.framework.boot.validator.agent.ValidatorValueContextInstrumentation
-com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.loveqq.framework.boot.validator.autoconfig.ValidationAutoConfiguration
+
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.validator.autoconfig.ValidationAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.validator.processor.MethodValidationBeanPostProcessor
