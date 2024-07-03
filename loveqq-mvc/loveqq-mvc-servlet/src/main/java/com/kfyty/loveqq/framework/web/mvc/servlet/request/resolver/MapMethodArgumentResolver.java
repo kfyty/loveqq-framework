@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractHandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.mvc.servlet.util.ServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -19,7 +20,7 @@ import java.util.Map;
  * @email kfyty725@hotmail.com
  */
 @Order(1)
-public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver {
+public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver implements ServletHandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

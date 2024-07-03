@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.CookieValue;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractHandlerMethodArgumentResolver;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -21,7 +22,7 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotatio
  * @date 2021/6/4 10:25
  * @email kfyty725@hotmail.com
  */
-public class CookieValueMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver {
+public class CookieValueMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver implements ServletHandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

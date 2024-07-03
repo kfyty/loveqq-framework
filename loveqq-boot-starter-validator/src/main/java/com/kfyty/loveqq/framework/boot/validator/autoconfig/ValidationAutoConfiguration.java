@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.boot.validator.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.validator.context.IOCContext;
 import com.kfyty.loveqq.framework.boot.validator.context.ValidatorContext;
-import com.kfyty.loveqq.framework.boot.validator.processor.MethodValidationBeanPostProcessor;
 import com.kfyty.loveqq.framework.boot.validator.proxy.ValidatorAccess;
 import com.kfyty.loveqq.framework.boot.validator.proxy.ValidatorProxy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
@@ -50,12 +49,6 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
     public Validator validator() {
         Validator validator = this.validatorFactory().getValidator();
         return this.isProxyValidator ? this.createValidatorProxy(validator) : validator;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public MethodValidationBeanPostProcessor methodValidationBeanPostProcessor() {
-        return new MethodValidationBeanPostProcessor();
     }
 
     @Override

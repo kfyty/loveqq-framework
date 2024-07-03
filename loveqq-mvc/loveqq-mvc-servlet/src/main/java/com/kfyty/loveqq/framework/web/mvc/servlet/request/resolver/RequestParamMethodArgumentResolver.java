@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestParam;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractHandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.mvc.servlet.util.ServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -31,7 +32,7 @@ import static java.util.stream.Collectors.toMap;
  * @email kfyty725@hotmail.com
  */
 @Order(Integer.MAX_VALUE)
-public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver {
+public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver implements ServletHandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

@@ -1,14 +1,19 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet.util;
 
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
-import com.kfyty.loveqq.framework.web.mvc.servlet.multipart.DefaultMultipartFile;
+import com.kfyty.loveqq.framework.web.core.multipart.DefaultMultipartFile;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -92,7 +97,7 @@ public class ServletUtil {
                 params.add(new Pair<>(entry.getKey(), value));
             }
         }
-        List<MultipartFile> files = DefaultMultipartFile.from(request);
+        List<MultipartFile> files = ServletUtil.from(request);
         for (Iterator<MultipartFile> i = files.iterator(); i.hasNext(); ) {
             MultipartFile file = i.next();
             if (file.isFile()) {
@@ -191,5 +196,26 @@ public class ServletUtil {
             }
         }
         return map;
+    }
+
+    public static List<MultipartFile> from(HttpServletRequest request) {
+        try {
+            List<MultipartFile> multipartFiles = new ArrayList<>();
+            if (CommonUtil.notEmpty(request.getParts())) {
+                for (Part part : request.getParts()) {
+                    Lazy<InputStream> inputStream = new Lazy<>(() -> {
+                        try {
+                            return part.getInputStream();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    multipartFiles.add(new DefaultMultipartFile(part.getName(), part.getSubmittedFileName(), part.getContentType(), part.getSubmittedFileName() != null, part.getSize(), inputStream));
+                }
+            }
+            return multipartFiles;
+        } catch (IOException | ServletException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
