@@ -67,6 +67,7 @@
         <asm.version>9.5</asm.version>
         <javassist.version>3.28.0-GA</javassist.version>
         <reactor.core.version>3.6.0</reactor.core.version>
+        <reactor.netty.version>1.1.20</reactor.netty.version>
         <ognl.version>3.3.5</ognl.version>
         <jackson.version>2.16.2</jackson.version>
         <snakeyaml.version>2.2</snakeyaml.version>
@@ -191,6 +192,12 @@
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-core</artifactId>
                 <version>${reactor.core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.projectreactor.netty</groupId>
+                <artifactId>reactor-netty</artifactId>
+                <version>${reactor.netty.version}</version>
             </dependency>
 
             <dependency>

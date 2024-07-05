@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet.filter;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.mvc.servlet.RegistrationBean;
+import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import jakarta.servlet.Filter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
