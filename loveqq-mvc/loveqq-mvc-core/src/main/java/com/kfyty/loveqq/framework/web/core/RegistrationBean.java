@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.web.mvc.servlet;
+package com.kfyty.loveqq.framework.web.core;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 描述: servlet 组件注册
+ * 描述: 组件注册
  *
  * @author kfyty725
  * @date 2021/5/28 14:49

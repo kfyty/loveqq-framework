@@ -46,8 +46,7 @@ public class TomcatAutoConfig {
     @Bean
     @ConfigurationProperties("k.mvc.tomcat")
     public TomcatProperties tomcatProperties(MultipartConfigElement multipartConfig) {
-        TomcatProperties config = new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig);
-        config.setPort(this.webServerProperties.getPort());
+        TomcatProperties config = this.webServerProperties.copy(new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig));
         this.applicationContext.getBeanWithAnnotation(WebServlet.class).values().forEach(e -> config.addWebServlet((Servlet) e));
         this.applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
         this.applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));

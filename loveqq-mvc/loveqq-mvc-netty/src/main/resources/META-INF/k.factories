@@ -1,0 +1,3 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.web.mvc.netty.request.filter.RequestResponseContextHolderFilter,\
+    com.kfyty.loveqq.framework.web.mvc.netty.autoconfig.WebServerMvcAutoConfig

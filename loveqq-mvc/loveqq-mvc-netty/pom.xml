@@ -5,24 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.kfyty</groupId>
-        <artifactId>loveqq-framework</artifactId>
+        <artifactId>loveqq-mvc</artifactId>
         <version>1.0.1</version>
     </parent>
 
-    <artifactId>loveqq-mvc</artifactId>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>loveqq-mvc-core</module>
-        <module>loveqq-mvc-netty</module>
-        <module>loveqq-mvc-servlet</module>
-    </modules>
+    <artifactId>loveqq-mvc-netty</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-core</artifactId>
+            <artifactId>loveqq-mvc-core</artifactId>
             <version>${loveqq.framework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
         </dependency>
     </dependencies>
 </project>

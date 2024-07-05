@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterRegistrationBean;
@@ -11,7 +12,8 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebServlet;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.EventListener;
@@ -28,32 +30,10 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Data
-@Slf4j
-public class TomcatProperties {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class TomcatProperties extends WebServerProperties {
     public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
-
-    public static final String DEFAULT_DISPATCHER_MAPPING = "/";
-
-    public static boolean VIRTUAL_THREAD_SUPPORTED = false;
-
-    static {
-        try {
-            Class.forName("java.lang.BaseVirtualThread", false, TomcatProperties.class.getClassLoader());
-            VIRTUAL_THREAD_SUPPORTED = true;
-        } catch (Throwable e) {
-            log.warn("virtual thread doesn't supported");
-        }
-    }
-
-    /**
-     * 端口
-     */
-    private int port;
-
-    /**
-     * 是否启用虚拟线程
-     */
-    private boolean virtualThread;
 
     /**
      * 协议
@@ -66,24 +46,9 @@ public class TomcatProperties {
     private String contextPath;
 
     /**
-     * 项目中的静态资源路径，由 {@link org.apache.catalina.servlets.DefaultServlet} 解析
+     * 分发路径映射
      */
-    private List<String> staticPattern;
-
-    /**
-     * 本地静态资源路径
-     */
-    private List<Pair<String, String>> resources;
-
-    /**
-     * {@link DispatcherServlet} 路径映射
-     */
-    private String dispatcherMapping;
-
-    /**
-     * 启动类
-     */
-    private Class<?> primarySource;
+    protected String dispatcherMapping;
 
     /**
      * 上传文件配置
@@ -110,27 +75,14 @@ public class TomcatProperties {
     }
 
     public TomcatProperties(Class<?> primarySource, MultipartConfigElement multipartConfig) {
-        this.port = 8080;
-        this.virtualThread = true;
+        super(primarySource);
         this.protocol = DEFAULT_PROTOCOL;
         this.contextPath = DEFAULT_DISPATCHER_MAPPING;
         this.dispatcherMapping = DEFAULT_DISPATCHER_MAPPING;
-        this.staticPattern = new LinkedList<>();
-        this.resources = new LinkedList<>();
-        this.primarySource = primarySource;
         this.multipartConfig = multipartConfig != null ? multipartConfig : new MultipartConfigElement("");
         this.webServlets = new LinkedList<>();
         this.webFilters = new LinkedList<>();
         this.webListeners = new LinkedList<>();
-        this.addDefaultStaticPattern();
-    }
-
-    public void addStaticPattern(String pattern) {
-        this.staticPattern.add(pattern);
-    }
-
-    public void addResource(String pattern, String location) {
-        this.resources.add(new Pair<>(pattern, location));
     }
 
     public void addWebServlet(Servlet servlet) {
@@ -177,20 +129,5 @@ public class TomcatProperties {
 
     public void addWebListener(EventListener listener) {
         this.webListeners.add(listener);
-    }
-
-    protected void addDefaultStaticPattern() {
-        this.addStaticPattern("/static/*");
-        this.addStaticPattern("*.js");
-        this.addStaticPattern("*.css");
-        this.addStaticPattern("*.html");
-        this.addStaticPattern("*.png");
-        this.addStaticPattern("*.jpg");
-        this.addStaticPattern("*.jpeg");
-        this.addStaticPattern("*.ico");
-        this.addStaticPattern("*.otf");
-        this.addStaticPattern("*.ttf");
-        this.addStaticPattern("*.woff");
-        this.addStaticPattern("*.woff2");
     }
 }

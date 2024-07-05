@@ -1,14 +1,14 @@
-package com.kfyty.loveqq.framework.web.mvc.servlet;
+package com.kfyty.loveqq.framework.web.mvc.netty.filter;
 
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
-import jakarta.servlet.Servlet;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * 描述: web 服务器
+ * 描述: 过滤器注册
  *
  * @author kfyty725
  * @date 2021/5/28 14:49
@@ -18,10 +18,12 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ServletRegistrationBean extends RegistrationBean<ServletRegistrationBean> {
-    private Servlet servlet;
+public class FilterRegistrationBean extends RegistrationBean<FilterRegistrationBean> {
+    private Filter filter;
 
-    private String name;
+    private String filterName = CommonUtil.EMPTY_STRING;
 
-    private int loadOnStartup = -1;
+    {
+        addUrlPattern("/*");
+    }
 }
