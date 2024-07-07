@@ -51,6 +51,8 @@ public class WebServerProperties {
 
     /**
      * 本地静态资源路径
+     * key: uri
+     * value: 本地磁盘基础路径
      */
     protected List<Pair<String, String>> resources;
 
@@ -69,7 +71,6 @@ public class WebServerProperties {
         this.primarySource = primarySource;
         this.staticPattern = new LinkedList<>();
         this.resources = new LinkedList<>();
-        this.addDefaultStaticPattern();
     }
 
     public void addStaticPattern(String pattern) {
@@ -83,24 +84,24 @@ public class WebServerProperties {
     public <T extends WebServerProperties> T copy(T subClass) {
         subClass.setVirtualThread(this.virtualThread);
         subClass.setPort(this.port);
-        subClass.setStaticPattern(this.staticPattern);
         subClass.setResources(this.resources);
-        subClass.setPrimarySource(this.primarySource);
+        if (subClass.getPrimarySource() == null) {
+            subClass.setPrimarySource(this.primarySource);
+        }
         return subClass;
     }
 
-    protected void addDefaultStaticPattern() {
-        this.addStaticPattern("/static/*");
-        this.addStaticPattern("*.js");
-        this.addStaticPattern("*.css");
-        this.addStaticPattern("*.html");
-        this.addStaticPattern("*.png");
-        this.addStaticPattern("*.jpg");
-        this.addStaticPattern("*.jpeg");
-        this.addStaticPattern("*.ico");
-        this.addStaticPattern("*.otf");
-        this.addStaticPattern("*.ttf");
-        this.addStaticPattern("*.woff");
-        this.addStaticPattern("*.woff2");
+    protected void addDefaultStaticSuffixPattern(String pattern) {
+        this.addStaticPattern(pattern + ".js");
+        this.addStaticPattern(pattern + ".css");
+        this.addStaticPattern(pattern + ".html");
+        this.addStaticPattern(pattern + ".png");
+        this.addStaticPattern(pattern + ".jpg");
+        this.addStaticPattern(pattern + ".jpeg");
+        this.addStaticPattern(pattern + ".ico");
+        this.addStaticPattern(pattern + ".otf");
+        this.addStaticPattern(pattern + ".ttf");
+        this.addStaticPattern(pattern + ".woff");
+        this.addStaticPattern(pattern + ".woff2");
     }
 }

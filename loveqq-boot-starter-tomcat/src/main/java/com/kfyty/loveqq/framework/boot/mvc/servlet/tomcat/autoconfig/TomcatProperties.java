@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
-import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
@@ -83,6 +83,8 @@ public class TomcatProperties extends WebServerProperties {
         this.webServlets = new LinkedList<>();
         this.webFilters = new LinkedList<>();
         this.webListeners = new LinkedList<>();
+        this.addStaticPattern("/static/*");
+        this.addDefaultStaticSuffixPattern("*");
     }
 
     public void addWebServlet(Servlet servlet) {

@@ -17,7 +17,7 @@ import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.autoconfig.annotation.EnableWebMvc;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
-import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;

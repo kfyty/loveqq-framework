@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat;
 
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatProperties;
+import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.servlet.DefaultStaticServlet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathDirResourceSet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathJarResourceSet;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -10,7 +11,7 @@ import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
-import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -95,7 +96,7 @@ public class TomcatWebServer implements ServletWebServer {
     public void start() {
         this.prepareConnector();
         this.started = true;
-        log.info("tomcat started on port({})", this.getPort());
+        log.info("Tomcat started on port({})", this.getPort());
     }
 
     @Override
@@ -214,7 +215,7 @@ public class TomcatWebServer implements ServletWebServer {
     private void prepareDefaultServlet(Context context, List<String> patterns) {
         Wrapper defaultServlet = context.createWrapper();
         defaultServlet.setName("default");
-        defaultServlet.setServletClass("com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.servlet.DefaultStaticServlet");
+        defaultServlet.setServletClass(DefaultStaticServlet.class.getName());
         defaultServlet.addInitParameter("debug", "0");
         defaultServlet.addInitParameter("listings", "false");
         defaultServlet.setLoadOnStartup(1);

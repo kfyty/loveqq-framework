@@ -15,7 +15,7 @@ import java.nio.file.Path;
  * @date 2021/6/4 13:59
  * @email kfyty725@hotmail.com
  */
-public interface MultipartFile {
+public interface MultipartFile extends AutoCloseable {
     /**
      * 是否是文件
      *

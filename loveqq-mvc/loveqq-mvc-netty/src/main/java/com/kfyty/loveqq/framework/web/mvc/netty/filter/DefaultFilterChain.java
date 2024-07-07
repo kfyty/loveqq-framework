@@ -1,11 +1,16 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.filter;
 
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
-import reactor.netty.http.server.HttpServerRequest;
-import reactor.netty.http.server.HttpServerResponse;
+import com.kfyty.loveqq.framework.core.support.PatternMatcher;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * 描述: 默认实现
@@ -23,31 +28,40 @@ public class DefaultFilterChain implements FilterChain {
     /**
      * 路径匹配器
      */
-    private final AntPathMatcher matcher;
+    private final PatternMatcher matcher;
 
     /**
      * 过滤器
      */
     private final List<Filter> filters;
 
-    public DefaultFilterChain(List<Filter> filters) {
+    /**
+     * 处理器
+     */
+    private final Supplier<Publisher<Void>> handler;
+
+    public DefaultFilterChain(List<Filter> filters, Supplier<Publisher<Void>> handler) {
+        this(new AntPathMatcher(), filters, handler);
+    }
+
+    public DefaultFilterChain(PatternMatcher patternMatcher, List<Filter> filters, Supplier<Publisher<Void>> handler) {
         this.index = 0;
-        this.matcher = new AntPathMatcher();
+        this.matcher = patternMatcher;
         this.filters = filters;
+        this.handler = Objects.requireNonNull(handler);
     }
 
     @Override
-    public void doFilter(HttpServerRequest request, HttpServerResponse response) {
+    public Mono<Void> doFilter(ServerRequest request, ServerResponse response) {
         if (this.filters == null || this.index >= this.filters.size()) {
-            return;
+            return Mono.from(this.handler.get());
         }
         Filter filter = this.filters.get(index++);
-        String requestUri = request.uri();
-        boolean anyMatch = Arrays.stream(filter.getPattern()).anyMatch(pattern -> this.matcher.match(pattern, requestUri));
+        String requestUri = request.getRequestURI();
+        boolean anyMatch = Arrays.stream(filter.getPattern()).anyMatch(pattern -> this.matcher.matches(pattern, requestUri));
         if (anyMatch) {
-            filter.doFilter(request, response, this);
-        } else {
-            this.doFilter(request, response);
+            return filter.doFilter(request, response, this);
         }
+        return this.doFilter(request, response);
     }
 }

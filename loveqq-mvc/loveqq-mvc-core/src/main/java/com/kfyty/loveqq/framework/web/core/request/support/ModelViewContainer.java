@@ -1,6 +1,8 @@
 package com.kfyty.loveqq.framework.web.core.request.support;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -13,18 +15,18 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class ModelViewContainer<Request, Response> {
+public class ModelViewContainer {
     private String prefix;
     private String suffix;
     private Model model;
-    private Request request;
-    private Response response;
+    private ServerRequest request;
+    private ServerResponse response;
 
-    public ModelViewContainer(Request request, Response response) {
+    public ModelViewContainer(ServerRequest request, ServerResponse response) {
         this(CommonUtil.EMPTY_STRING, CommonUtil.EMPTY_STRING, request, response);
     }
 
-    public ModelViewContainer(String prefix, String suffix, Request request, Response response) {
+    public ModelViewContainer(String prefix, String suffix, ServerRequest request, ServerResponse response) {
         this.prefix = prefix;
         this.suffix = suffix;
         this.request = request;

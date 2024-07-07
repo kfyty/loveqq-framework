@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.boot.security.shiro.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import jakarta.servlet.Filter;
 import lombok.Getter;
 import org.apache.shiro.mgt.SecurityManager;

@@ -7,11 +7,11 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
+import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
+import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
+import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
-import com.kfyty.loveqq.framework.web.mvc.servlet.interceptor.HandlerInterceptor;
-import com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.ServletHandlerMethodArgumentResolver;
-import com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.ServletHandlerMethodReturnValueProcessor;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.WebFilter;
@@ -34,10 +34,10 @@ public class WebServletMvcAutoConfig {
     private List<HandlerInterceptor> interceptorChain;
 
     @Autowired(required = false)
-    private List<ServletHandlerMethodArgumentResolver> argumentResolvers;
+    private List<HandlerMethodArgumentResolver> argumentResolvers;
 
     @Autowired(required = false)
-    private List<ServletHandlerMethodReturnValueProcessor> returnValueProcessors;
+    private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
 
     @Bean
     public MultipartConfigElement multipartConfig(@Value("${k.mvc.multipart.location:}") String location,
@@ -53,12 +53,16 @@ public class WebServletMvcAutoConfig {
     }
 
     @Bean
-    public DispatcherServlet dispatcherServlet(RequestMappingMatcher requestMappingMatcher) {
+    public DispatcherServlet dispatcherServlet(RequestMappingMatcher requestMappingMatcher,
+                                               @Value("${k.server.view.prefix:}") String prefix,
+                                               @Value("${k.server.view.suffix:.jsp}") String suffix) {
         DispatcherServlet dispatcherServlet = new DispatcherServlet();
-        this.interceptorChain.forEach(dispatcherServlet::addInterceptor);
-        this.argumentResolvers.forEach(dispatcherServlet::addArgumentResolver);
-        this.returnValueProcessors.forEach(dispatcherServlet::addReturnProcessor);
+        dispatcherServlet.setInterceptorChains(this.interceptorChain);
+        dispatcherServlet.setArgumentResolvers(this.argumentResolvers);
+        dispatcherServlet.setReturnValueProcessors(this.returnValueProcessors);
         dispatcherServlet.setRequestMappingMatcher(requestMappingMatcher);
+        dispatcherServlet.setPrefix(prefix);
+        dispatcherServlet.setSuffix(suffix);
         return dispatcherServlet;
     }
 }

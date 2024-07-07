@@ -46,7 +46,7 @@ public class DefaultMultipartFile implements MultipartFile {
 
     @Override
     public boolean isEmpty() {
-        return getSize() < 1;
+        return this.getSize() < 1;
     }
 
     @Override
@@ -73,6 +73,13 @@ public class DefaultMultipartFile implements MultipartFile {
         }
         try (InputStream in = this.getInputStream()) {
             IOUtil.copy(in, IOUtil.newOutputStream(dest));
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (this.inputStreamLazy.isCreated()) {
+            IOUtil.close(this.inputStreamLazy.get());
         }
     }
 }
