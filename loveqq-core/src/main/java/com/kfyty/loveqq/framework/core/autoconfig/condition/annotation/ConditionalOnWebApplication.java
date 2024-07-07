@@ -20,4 +20,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Conditional(OnWebApplicationCondition.class)
 public @interface ConditionalOnWebApplication {
+    /**
+     * web 应用类型
+     *
+     * @return 应用类型
+     */
+    WebApplicationType value() default WebApplicationType.NONE;
+
+    enum WebApplicationType {
+        NONE,
+        SERVLET,
+        SERVER;
+    }
 }

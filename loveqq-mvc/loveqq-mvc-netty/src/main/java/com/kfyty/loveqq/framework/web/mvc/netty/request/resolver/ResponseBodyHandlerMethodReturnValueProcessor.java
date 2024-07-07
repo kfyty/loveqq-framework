@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.request.resolver;
 
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -7,8 +8,6 @@ import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
@@ -20,6 +19,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
  * @date 2021/6/10 11:29
  * @email kfyty725@hotmail.com
  */
+@Component
 @Order(HIGHEST_PRECEDENCE >> 1)
 public class ResponseBodyHandlerMethodReturnValueProcessor implements ServerHandlerMethodReturnValueProcessor {
 
@@ -33,10 +33,10 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements ServerHand
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer<HttpServerRequest, HttpServerResponse> container) throws Exception {
-        container.getResponse().header(HttpHeaderNames.CONTENT_TYPE, this.contentType(returnType));
-        String data = returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
-        return container.getResponse().sendString(Mono.just(data));
+    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+        HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
+        serverResponse.header(HttpHeaderNames.CONTENT_TYPE, this.contentType(returnType));
+        return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
     }
 
     protected String contentType(MethodParameter returnType) {

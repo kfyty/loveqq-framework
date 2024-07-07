@@ -19,8 +19,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperConstructor;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperMethod;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -34,7 +32,7 @@ public abstract class AnnotationUtil {
     /**
      * Class 注解元素缓存
      */
-    private static final Map<Pair<Object, Class<? extends Annotation>>, Boolean> HAS_ANNOTATION_ELEMENT_CACHE = new WeakConcurrentHashMap<>();
+    private static final Map<Pair<Object, Class<? extends Annotation>>, Annotation> ANNOTATION_ELEMENT_CACHE = new WeakConcurrentHashMap<>();
 
     /* ------------------------------------------ 基础方法 ------------------------------------------ */
 
@@ -77,7 +75,7 @@ public abstract class AnnotationUtil {
     }
 
     public static boolean hasAnnotationElement(Object source, Class<? extends Annotation> annotation) {
-        return HAS_ANNOTATION_ELEMENT_CACHE.computeIfAbsent(new Pair<>(source, annotation), k -> findAnnotationElement(source, annotation) != null);
+        return findAnnotationElement(source, annotation) != null;
     }
 
     @SafeVarargs
@@ -248,11 +246,14 @@ public abstract class AnnotationUtil {
 
     /* ------------------------------------------ 获取注解元素 ------------------------------------------ */
 
+    @SuppressWarnings("unchecked")
     public static <T extends Annotation> T findAnnotationElement(Object source, Class<T> annotationClass) {
-        if (source instanceof AnnotatedElement) {
-            return findAnnotationElement((AnnotatedElement) source, annotationClass);
-        }
-        return findAnnotationElement(source.getClass(), annotationClass);
+        return (T) ANNOTATION_ELEMENT_CACHE.computeIfAbsent(new Pair<>(source, annotationClass), k -> {
+            if (source instanceof AnnotatedElement) {
+                return findAnnotationElement((AnnotatedElement) source, annotationClass);
+            }
+            return findAnnotationElement(source.getClass(), annotationClass);
+        });
     }
 
     public static <T extends Annotation> T findAnnotationElement(AnnotatedElement annotatedElement, Class<T> annotationClass) {

@@ -10,9 +10,9 @@ import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
  * @date 2021/6/10 11:15
  * @email kfyty725@hotmail.com
  */
-public interface HandlerMethodReturnValueProcessor<Request, Response> {
+public interface HandlerMethodReturnValueProcessor {
 
     boolean supportsReturnType(Object returnValue, MethodParameter returnType);
 
-    void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer<Request, Response> container) throws Exception;
+    void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception;
 }

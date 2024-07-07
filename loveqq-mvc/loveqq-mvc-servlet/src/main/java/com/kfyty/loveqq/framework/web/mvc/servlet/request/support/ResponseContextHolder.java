@@ -9,22 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * @date 2021/6/18 13:32
  * @email kfyty725@hotmail.com
  */
-public class ResponseContextHolder {
-    private static final ThreadLocal<HttpServletResponse> servletResponseLocal = new ThreadLocal<>();
+public class ResponseContextHolder extends com.kfyty.loveqq.framework.web.core.request.support.ResponseContextHolder {
 
-    public static void setCurrentResponse(HttpServletResponse response) {
-        servletResponseLocal.set(response);
-    }
-
-    public static HttpServletResponse getCurrentResponse() {
-        HttpServletResponse request = servletResponseLocal.get();
-        if(request == null) {
-            throw new IllegalStateException("the current thread is not bound to response !");
-        }
-        return request;
-    }
-
-    public static void removeCurrentResponse() {
-        servletResponseLocal.remove();
+    public static HttpServletResponse getResponse() {
+        return (HttpServletResponse) get().getRawResponse();
     }
 }

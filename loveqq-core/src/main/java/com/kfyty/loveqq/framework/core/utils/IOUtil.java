@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
+import io.netty.buffer.ByteBuf;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -102,6 +104,18 @@ public abstract class IOUtil {
      */
     public static byte[] read(InputStream in) {
         return copy(in, new ByteArrayOutputStream()).toByteArray();
+    }
+
+    /**
+     * 读取输入流到字节数组
+     *
+     * @param byteBuf 输入缓冲
+     * @return 字节数组
+     */
+    public static byte[] read(ByteBuf byteBuf) {
+        byte[] bytes = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(bytes, 0, bytes.length);
+        return bytes;
     }
 
     /**
@@ -244,6 +258,16 @@ public abstract class IOUtil {
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    /**
+     * 返回一个输入流生产者
+     *
+     * @param byteBuf 字节缓冲区
+     * @return 输入流生产者
+     */
+    public static Supplier<InputStream> newInputStream(ByteBuf byteBuf) {
+        return () -> new ByteArrayInputStream(read(byteBuf));
     }
 
     /**

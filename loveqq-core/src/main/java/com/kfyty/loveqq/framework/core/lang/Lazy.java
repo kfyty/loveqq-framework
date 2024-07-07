@@ -34,6 +34,15 @@ public class Lazy<T> implements LaziedObject<T> {
         return this.provider.get();
     }
 
+    /**
+     * 返回是否创建过了实例
+     *
+     * @return true is created
+     */
+    public boolean isCreated() {
+        return this.value != null;
+    }
+
     @Override
     public T get() {
         if (this.value == null) {
@@ -53,11 +62,14 @@ public class Lazy<T> implements LaziedObject<T> {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
         return obj instanceof Lazy && Objects.equals(this.provider, ((Lazy<?>) obj).provider);
     }
 
     @Override
     public String toString() {
-        return this.value == null ? "not init: " + this.provider : this.value.toString();
+        return this.value == null ? "Not init: " + this.provider : this.value.toString();
     }
 }

@@ -6,12 +6,15 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnWebApplication;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.processor.IProcessor;
 import org.thymeleaf.standard.expression.IStandardVariableExpressionEvaluator;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
+import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
+import org.thymeleaf.web.IWebApplication;
 
 import java.util.Set;
 
@@ -45,6 +48,18 @@ public class ThymeleafAutoConfiguration {
         templateResolver.setCharacterEncoding(this.thymeleafProperties.getCharacterEncoding());
         templateResolver.setPrefix(this.thymeleafProperties.getPrefix());
         templateResolver.setSuffix(this.thymeleafProperties.getSuffix());
+        return templateResolver;
+    }
+
+    @Bean
+    @ConditionalOnWebApplication
+    public ITemplateResolver webApplicationTemplateResolver(ThymeleafProperties thymeleafProperties, IWebApplication webApplication) {
+        WebApplicationTemplateResolver templateResolver = new WebApplicationTemplateResolver(webApplication);
+        templateResolver.setCacheable(thymeleafProperties.isCacheable());
+        templateResolver.setTemplateMode(thymeleafProperties.getTemplateMode());
+        templateResolver.setCharacterEncoding(thymeleafProperties.getCharacterEncoding());
+        templateResolver.setPrefix(thymeleafProperties.getPrefix());
+        templateResolver.setSuffix(thymeleafProperties.getSuffix());
         return templateResolver;
     }
 

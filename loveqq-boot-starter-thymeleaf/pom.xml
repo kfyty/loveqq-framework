@@ -46,5 +46,12 @@
             <version>${loveqq.framework.version}</version>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>loveqq-mvc-netty</artifactId>
+            <version>${loveqq.framework.version}</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

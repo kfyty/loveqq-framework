@@ -59,6 +59,7 @@
         <module>loveqq-boot-starter-pagehelper</module>
         <module>loveqq-boot-starter-shiro</module>
         <module>loveqq-boot-starter-mail</module>
+        <module>loveqq-boot-starter-netty</module>
     </modules>
 
     <properties>
@@ -66,6 +67,7 @@
         <cglib.version>3.3.0</cglib.version>
         <asm.version>9.5</asm.version>
         <javassist.version>3.28.0-GA</javassist.version>
+        <netty.version>4.1.110.Final</netty.version>
         <reactor.core.version>3.6.0</reactor.core.version>
         <reactor.netty.version>1.1.20</reactor.netty.version>
         <ognl.version>3.3.5</ognl.version>
@@ -186,6 +188,12 @@
                 <groupId>ognl</groupId>
                 <artifactId>ognl</artifactId>
                 <version>${ognl.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${netty.version}</version>
             </dependency>
 
             <dependency>

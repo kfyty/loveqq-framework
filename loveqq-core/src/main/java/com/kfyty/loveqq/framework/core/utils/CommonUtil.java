@@ -3,7 +3,9 @@ package com.kfyty.loveqq.framework.core.utils;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -80,6 +82,16 @@ public abstract class CommonUtil {
      * #{}、${} 正则匹配
      */
     public static final Pattern PARAMETERS_PATTERN = Pattern.compile("(\\$\\{.*?})|(#\\{.*?})");
+
+    /**
+     * 空字节数组
+     */
+    public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+    /**
+     * 空输入流
+     */
+    public static final InputStream EMPTY_INPUT_STREAM = new ByteArrayInputStream(EMPTY_BYTE_ARRAY);
 
     /**
      * 空对象数组
@@ -334,16 +346,19 @@ public abstract class CommonUtil {
     }
 
     public static Map<String, String> resolveURLParameters(String url, String prefix) {
-        if (empty(url)) {
+        if (empty(url) || url.indexOf('=') < 0) {
             return Collections.emptyMap();
         }
-        Map<String, String> query = new HashMap<>();
-        String parameter = url.contains("?") ? url.substring(url.indexOf('?') + 1) : url;
+        int index = url.indexOf('?');
+        String parameter = index < 0 ? url : url.substring(index + 1);
         String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
+        Map<String, String> query = new HashMap<>();
         List<String> split = split(parameter, "&");
         for (String params : split) {
             String[] paramPair = params.split("=");
-            query.put(paramPrefix + paramPair[0], paramPair[1]);
+            if (paramPair.length > 1) {
+                query.put(paramPrefix + paramPair[0], paramPair[1]);
+            }
         }
         return query;
     }

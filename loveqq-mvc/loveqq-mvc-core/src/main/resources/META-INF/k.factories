@@ -1,0 +1,10 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.web.core.request.resolver.ModelMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.MapMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.RequestHeaderMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.CookieValueMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.RequestAttributeMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.PathVariableMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.RequestBodyMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.MultipartFileMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.core.request.resolver.RequestParamMethodArgumentResolver

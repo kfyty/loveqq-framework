@@ -1,4 +1,8 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.web.mvc.servlet.request.filter.RequestResponseContextHolderFilter,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.filter.RequestResponseContextHolderFilter,\
     com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig.WebServletMvcAutoConfig,\
-    com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig.WebServletSocketAutoConfig
+    com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig.WebServletSocketAutoConfig,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.RedirectViewHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.ResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.SessionAttributeMethodArgumentResolver,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.StringValueHandlerMethodReturnValueProcessor

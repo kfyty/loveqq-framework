@@ -12,6 +12,10 @@
     <artifactId>loveqq-boot-starter-mail</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <jakarta.mail>2.0.3</jakarta.mail>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
@@ -28,6 +32,12 @@
         <dependency>
             <groupId>jakarta.mail</groupId>
             <artifactId>jakarta.mail-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>${jakarta.mail}</version>
         </dependency>
     </dependencies>
 </project>
