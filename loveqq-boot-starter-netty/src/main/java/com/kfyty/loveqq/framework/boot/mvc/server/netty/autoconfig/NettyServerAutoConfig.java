@@ -4,23 +4,24 @@ import com.kfyty.loveqq.framework.boot.mvc.server.netty.NettyWebServer;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.DefaultResourceResolver;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.ResourceResolver;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.Condition;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.ConditionContext;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Conditional;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnEnableWebMvc;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
+import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
-import com.kfyty.loveqq.framework.web.core.autoconfig.annotation.EnableWebMvc;
 import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 描述: netty 服务器自动配置
@@ -30,7 +31,7 @@ import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@Conditional(NettyServerAutoConfig.NettyServerAutoConfigCondition.class)
+@ConditionalOnEnableWebMvc
 public class NettyServerAutoConfig {
     @Autowired
     private ApplicationContext applicationContext;
@@ -49,8 +50,7 @@ public class NettyServerAutoConfig {
     public NettyProperties nettyServerProperties(ResourceResolver resourceResolver) {
         NettyProperties config = this.webServerProperties.copy(new NettyProperties());
         config.setResourceResolver(resourceResolver);
-        this.applicationContext.getBeanOfType(Filter.class).values().forEach(config::addWebFilter);
-        this.applicationContext.getBeanOfType(FilterRegistrationBean.class).values().forEach(config::addWebFilter);
+        this.collectAndConfigFilter(config);
         return config;
     }
 
@@ -59,16 +59,29 @@ public class NettyServerAutoConfig {
         return new NettyWebServer(config, dispatcherHandler);
     }
 
-    static class NettyServerAutoConfigCondition implements Condition {
-
-        @Override
-        public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
-            BeanFactory beanFactory = context.getBeanFactory();
-            if (beanFactory instanceof ConfigurableApplicationContext) {
-                Class<?> primarySource = ((ConfigurableApplicationContext) beanFactory).getPrimarySource();
-                return AnnotationUtil.hasAnnotation(primarySource, EnableWebMvc.class);
+    protected void collectAndConfigFilter(NettyProperties config) {
+        List<Object> filters = this.collectBeans(Filter.class, FilterRegistrationBean.class);
+        for (Object filter : filters) {
+            if (filter instanceof FilterRegistrationBean) {
+                config.addWebFilter((FilterRegistrationBean) filter);
+            } else {
+                config.addWebFilter((Filter) filter);
             }
-            return false;
         }
+    }
+
+    protected List<Object> collectBeans(Class<?> filterClass, Class<? extends RegistrationBean<?>> filterRegistrationClass) {
+        List<Object> beans = new ArrayList<>();
+        Collection<?> beansWithAnnotation = this.applicationContext.getBeanOfType(filterClass).values();
+        Collection<?> beansWithRegistration = this.applicationContext.getBeanOfType(filterRegistrationClass).values();
+
+        beans.addAll(beansWithAnnotation);
+        beans.addAll(beansWithRegistration);
+
+        if (!beansWithAnnotation.isEmpty() && !beansWithRegistration.isEmpty()) {
+            return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+        }
+
+        return beans;
     }
 }

@@ -8,7 +8,6 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
-import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.mvc.netty.exception.NettyServerException;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor;
@@ -18,15 +17,16 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
+import java.io.IOException;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.kfyty.loveqq.framework.web.core.request.RequestMethod.matchRequestMethod;
 import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor.writeReturnValue;
@@ -42,62 +42,52 @@ import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHa
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DispatcherHandler extends AbstractDispatcher<DispatcherHandler> {
-    /**
-     * 404
-     */
-    public static final String NOT_FOUND = "404";
 
-    public Object service(ServerRequest req, ServerResponse resp) {
-        ServerRequest prevRequest = RequestContextHolder.set(req);
-        ServerResponse prevResponse = ResponseContextHolder.set(resp);
-        try {
-            return this.processRequest(req, resp);
-        } finally {
-            RequestContextHolder.set(prevRequest);
-            ResponseContextHolder.set(prevResponse);
-        }
+    public Publisher<Void> service(ServerRequest req, ServerResponse resp) {
+        return this.processRequest(req, resp);
     }
 
     protected void preparedRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
         response.setHeader(HttpHeaderNames.CONTENT_TYPE.toString(), mapping.getProduces());
     }
 
-    protected Object processRequest(ServerRequest request, ServerResponse response) {
-        Throwable exception = null;
+    protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
+        if (methodMapping == null) {
+            return ((HttpServerResponse) response.getRawResponse()).sendNotFound();
+        }
+        AtomicReference<Throwable> throwableReference = new AtomicReference<>();
+        return Mono.just(methodMapping)
+                .doOnNext(mapping -> LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI())))
+                .filter(mapping -> this.processPreInterceptor(request, response, mapping))
+                .doOnNext(mapping -> this.preparedRequestResponse(mapping, request, response))
+                .map(mapping -> this.preparedMethodParams(request, response, mapping))
+                .map(params -> new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params))
+                .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
+                .doOnNext(p -> this.processPostInterceptor(request, response, methodMapping, p.getT2()))
+                .flatMap(p -> Mono.from(this.processReturnValue(p.getT2(), p.getT1(), request, response, p.getT1().getMethodArgs())))
+                .doOnError(throwableReference::set)
+                .doFinally(s -> this.processCompletionInterceptor(request, response, methodMapping, throwableReference.get()));
+    }
+
+    protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
+        ServerRequest prevRequest = RequestContextHolder.set(request);
+        ServerResponse prevResponse = ResponseContextHolder.set(response);
         try {
-            // 无匹配，重定向到 404
-            if (methodMapping == null) {
-                log.error("Can't match uri mapping: [{}] !", request.getRequestURI());
-                return NOT_FOUND;
+            Object invoked = ReflectUtil.invokeMethod(mapping.getController(), mapping.getMappingMethod(), returnType.getMethodArgs());
+            if (invoked instanceof NettyOutbound) {
+                return Mono.from((NettyOutbound) invoked);
             }
-
-            LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
-
-            // 应用前置拦截器
-            if (!this.processPreInterceptor(request, response, methodMapping)) {
-                return null;
+            if (invoked instanceof Mono<?>) {
+                return (Mono<?>) invoked;
             }
-
-            // 解析参数并处理请求
-            this.preparedRequestResponse(methodMapping, request, response);
-            Object[] params = this.preparedMethodParams(request, response, methodMapping);
-            Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
-
-            // 应用后置处理器并处理返回值
-            this.processPostInterceptor(request, response, methodMapping, retValue);
-            if (retValue != null) {
-                return this.processReturnValue(retValue, new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params), request, response, params);
+            if (invoked instanceof Flux<?>) {
+                return ((Flux<?>) invoked).collectList();
             }
-            return null;
-        } catch (Throwable e) {
-            log.error("process request error: {}", e.getMessage());
-            exception = e;
-            return Mono.error(e instanceof NettyServerException ? e : new NettyServerException(e));
+            return invoked == null ? Mono.empty() : Mono.just(invoked);
         } finally {
-            if (methodMapping != null) {
-                this.processCompletionInterceptor(request, response, methodMapping, exception);
-            }
+            RequestContextHolder.set(prevRequest);
+            ResponseContextHolder.set(prevResponse);
         }
     }
 
@@ -113,41 +103,30 @@ public class DispatcherHandler extends AbstractDispatcher<DispatcherHandler> {
     }
 
     @Override
-    protected Object processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object... params) throws Throwable {
-        if (retValue instanceof NettyOutbound) {
-            return retValue;
-        }
-        HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
-        if (retValue instanceof Mono<?>) {
-            return ((Mono<?>) retValue).map(e -> this.mappingReturnValue(e, methodParameter, request, response, params)).flatMap(e -> Mono.from(writeReturnValue(e, serverResponse)));
-        }
-        if (retValue instanceof Flux<?>) {
-            return ((Flux<?>) retValue).collectList().map(e -> this.mappingReturnValue(e, methodParameter, request, response, params)).flatMap(e -> Mono.from(writeReturnValue(e, serverResponse)));
-        }
-        return writeReturnValue(super.processReturnValue(retValue, methodParameter, request, response, params), serverResponse);
-    }
-
-    protected Object mappingReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object[] params) {
+    protected Object[] preparedMethodParams(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
         try {
-            return this.processReturnValue(retValue, methodParameter, request, response, params, () -> new IllegalArgumentException("Can't resolve return value, no return value processor support !"));
-        } catch (Throwable e) {
+            return super.preparedMethodParams(request, response, methodMapping);
+        } catch (IOException e) {
             throw new NettyServerException(e);
         }
     }
 
     @Override
-    protected Object processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object[] params, Supplier<? extends Throwable> ex) throws Throwable {
-        ModelViewContainer container = new ModelViewContainer(this.prefix, this.suffix, request, response);
-        Arrays.stream(params).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
-        for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
-            if (returnValueProcessor.supportsReturnType(retValue, methodParameter)) {
-                if (returnValueProcessor instanceof ServerHandlerMethodReturnValueProcessor) {
-                    return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).processReturnValue(retValue, methodParameter, container);
-                }
-                returnValueProcessor.handleReturnValue(retValue, methodParameter, container);
-                return null;
-            }
+    protected Publisher<Void> processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object... params) {
+        try {
+            HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
+            Object processedReturnValue = super.processReturnValue(retValue, methodParameter, request, response, params);
+            return writeReturnValue(processedReturnValue, serverResponse);
+        } catch (Exception e) {
+            throw new NettyServerException(e);
         }
-        throw ex.get();
+    }
+
+    @Override
+    protected Object handleReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+        if (returnValueProcessor instanceof ServerHandlerMethodReturnValueProcessor) {
+            return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).processReturnValue(retValue, returnType, container);
+        }
+        return super.handleReturnValue(retValue, returnType, container, returnValueProcessor);
     }
 }

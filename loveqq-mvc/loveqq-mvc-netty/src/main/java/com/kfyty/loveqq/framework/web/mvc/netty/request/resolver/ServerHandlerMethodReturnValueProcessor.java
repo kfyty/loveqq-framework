@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.mvc.netty.request.resolver;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerResponse;
@@ -29,7 +30,7 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
         Object processedReturnValue = this.processReturnValue(returnValue, returnType, container);
         if (processedReturnValue != null) {
             HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
-            writeReturnValue(processedReturnValue, serverResponse).then().subscribe();
+            Mono.from(writeReturnValue(processedReturnValue, serverResponse)).subscribe();
         }
     }
 
@@ -50,7 +51,13 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
      * @param response 响应
      * @return 响应值
      */
-    static NettyOutbound writeReturnValue(Object retValue, HttpServerResponse response) {
+    static Publisher<Void> writeReturnValue(Object retValue, HttpServerResponse response) {
+        if (retValue == null) {
+            return Mono.empty();
+        }
+        if (retValue instanceof NettyOutbound) {
+            return (NettyOutbound) retValue;
+        }
         if (retValue instanceof CharSequence) {
             return response.sendString(Mono.just(retValue.toString()));
         }

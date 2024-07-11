@@ -2,22 +2,17 @@ package com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.TomcatWebServer;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.Condition;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.ConditionContext;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Conditional;
-import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnEnableWebMvc;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
+import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
-import com.kfyty.loveqq.framework.web.core.autoconfig.annotation.EnableWebMvc;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
-import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
@@ -25,7 +20,13 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebListener;
 import jakarta.servlet.annotation.WebServlet;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.EventListener;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 描述:
@@ -35,7 +36,7 @@ import java.util.EventListener;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@Conditional(TomcatAutoConfig.TomcatWebServerAutoConfigCondition.class)
+@ConditionalOnEnableWebMvc
 public class TomcatAutoConfig {
     @Autowired
     private ApplicationContext applicationContext;
@@ -47,11 +48,9 @@ public class TomcatAutoConfig {
     @ConfigurationProperties("k.mvc.tomcat")
     public TomcatProperties tomcatProperties(MultipartConfigElement multipartConfig) {
         TomcatProperties config = this.webServerProperties.copy(new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig));
-        this.applicationContext.getBeanWithAnnotation(WebServlet.class).values().forEach(e -> config.addWebServlet((Servlet) e));
-        this.applicationContext.getBeanWithAnnotation(WebFilter.class).values().forEach(e -> config.addWebFilter((Filter) e));
-        this.applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
-        this.applicationContext.getBeanOfType(ServletRegistrationBean.class).values().forEach(config::addWebServlet);
-        this.applicationContext.getBeanOfType(FilterRegistrationBean.class).values().forEach(config::addWebFilter);
+        this.collectAndConfigListener(config);
+        this.collectAndConfigFilter(config);
+        this.collectAndConfigServlet(config);
         return config;
     }
 
@@ -60,16 +59,44 @@ public class TomcatAutoConfig {
         return new TomcatWebServer(config, dispatcherServlet);
     }
 
-    static class TomcatWebServerAutoConfigCondition implements Condition {
+    protected void collectAndConfigListener(TomcatProperties config) {
+        this.applicationContext.getBeanWithAnnotation(WebListener.class).values().forEach(e -> config.addWebListener((EventListener) e));
+    }
 
-        @Override
-        public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
-            BeanFactory beanFactory = context.getBeanFactory();
-            if (beanFactory instanceof ConfigurableApplicationContext) {
-                Class<?> primarySource = ((ConfigurableApplicationContext) beanFactory).getPrimarySource();
-                return AnnotationUtil.hasAnnotation(primarySource, EnableWebMvc.class);
+    protected void collectAndConfigFilter(TomcatProperties config) {
+        List<Object> filters = this.collectBeans(WebFilter.class, FilterRegistrationBean.class);
+        for (Object filter : filters) {
+            if (filter instanceof FilterRegistrationBean) {
+                config.addWebFilter((FilterRegistrationBean) filter);
+            } else {
+                config.addWebFilter((Filter) filter);
             }
-            return false;
         }
+    }
+
+    protected void collectAndConfigServlet(TomcatProperties config) {
+        List<Object> servlets = this.collectBeans(WebServlet.class, ServletRegistrationBean.class);
+        for (Object servlet : servlets) {
+            if (servlet instanceof ServletRegistrationBean) {
+                config.addWebServlet((ServletRegistrationBean) servlet);
+            } else {
+                config.addWebServlet((Servlet) servlet);
+            }
+        }
+    }
+
+    protected List<Object> collectBeans(Class<? extends Annotation> annotation, Class<? extends RegistrationBean<?>> clazz) {
+        List<Object> beans = new ArrayList<>();
+        Collection<?> beansWithAnnotation = this.applicationContext.getBeanWithAnnotation(annotation).values();
+        Collection<?> beansWithRegistration = this.applicationContext.getBeanOfType(clazz).values();
+
+        beans.addAll(beansWithAnnotation);
+        beans.addAll(beansWithRegistration);
+
+        if (!beansWithAnnotation.isEmpty() && !beansWithRegistration.isEmpty()) {
+            return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+        }
+
+        return beans;
     }
 }
