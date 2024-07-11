@@ -92,7 +92,6 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
         try {
             // 无匹配，转发到 404
             if (methodMapping == null) {
-                log.error("Can't match url mapping: [{}] !", request.getRequestURI());
                 this.processReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);
                 return;
             }

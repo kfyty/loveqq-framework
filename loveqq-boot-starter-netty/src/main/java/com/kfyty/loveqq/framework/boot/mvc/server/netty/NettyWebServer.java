@@ -7,6 +7,8 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.multipart.DefaultMultipartFile;
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
@@ -29,7 +31,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.DisposableServer;
-import reactor.netty.NettyOutbound;
 import reactor.netty.http.HttpOperations;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
@@ -197,26 +198,13 @@ public class NettyWebServer implements ServerWebServer {
         });
     }
 
-    @SuppressWarnings("unchecked")
     protected Publisher<Void> processRequest(HttpServerRequest serverRequest, HttpServerResponse serverResponse, InputStream body, List<Pair<String, Object>> formData) {
         // 构建通用请求/响应对象
-        NettyServerRequest request = new NettyServerRequest(serverRequest).init(body, formData);
-        NettyServerResponse response = new NettyServerResponse(serverResponse);
+        ServerRequest request = new NettyServerRequest(serverRequest).init(body, formData);
+        ServerResponse response = new NettyServerResponse(serverResponse);
 
         // 构建请求处理器生产者
-        Supplier<Publisher<Void>> requestProcessorSupplier = () -> {
-            Object retValue = this.dispatcherHandler.service(request, response);
-            if (retValue == null) {
-                return Mono.empty();
-            }
-            if (retValue == DispatcherHandler.NOT_FOUND) {
-                return serverResponse.sendNotFound();
-            }
-            if (retValue instanceof NettyOutbound) {
-                return (NettyOutbound) retValue;
-            }
-            return (Publisher<Void>) retValue;
-        };
+        Supplier<Publisher<Void>> requestProcessorSupplier = () -> this.dispatcherHandler.service(request, response);
 
         return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(request, response);
     }

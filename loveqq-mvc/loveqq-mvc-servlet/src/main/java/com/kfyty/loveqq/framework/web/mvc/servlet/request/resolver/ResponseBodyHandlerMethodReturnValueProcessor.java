@@ -45,9 +45,9 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
     }
 
     protected String contentType(MethodParameter returnType) {
-        ResponseBody responseBody = AnnotationUtil.findAnnotationElement(returnType.getMethod(), ResponseBody.class);
+        ResponseBody responseBody = AnnotationUtil.findAnnotationElement((Object) returnType.getMethod(), ResponseBody.class);
         if (responseBody == null) {
-            responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource().getClass(), ResponseBody.class);
+            responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource(), ResponseBody.class);
         }
         return responseBody.value();
     }

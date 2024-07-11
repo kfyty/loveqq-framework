@@ -4,7 +4,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -22,7 +21,6 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * 描述: 基础请求分发实现
@@ -96,7 +94,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return (T) this;
     }
 
-    protected boolean processPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) throws Exception {
+    protected boolean processPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             if (!interceptor.preHandle(request, response, handler)) {
                 return false;
@@ -105,19 +103,15 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return true;
     }
 
-    protected void processPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) throws Exception {
+    protected void processPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             interceptor.postHandle(request, response, handler, value);
         }
     }
 
     protected void processCompletionInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable e) {
-        try {
-            for (HandlerInterceptor interceptor : this.interceptorChains) {
-                interceptor.afterCompletion(request, response, handler, e);
-            }
-        } catch (Exception ex) {
-            throw ExceptionUtil.wrap(e);
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            interceptor.afterCompletion(request, response, handler, e);
         }
     }
 
@@ -164,19 +158,19 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return null;
     }
 
-    protected Object processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object... params) throws Throwable {
-        return this.processReturnValue(retValue, methodParameter, request, response, params, () -> new IllegalArgumentException("Can't resolve return value, no return value processor support !"));
-    }
-
-    protected Object processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object[] params, Supplier<? extends Throwable> ex) throws Throwable {
+    protected Object processReturnValue(Object retValue, MethodParameter returnType, ServerRequest request, ServerResponse response, Object... params) throws Exception {
         ModelViewContainer container = new ModelViewContainer(this.prefix, this.suffix, request, response);
         Arrays.stream(params).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
-            if (returnValueProcessor.supportsReturnType(retValue, methodParameter)) {
-                returnValueProcessor.handleReturnValue(retValue, methodParameter, container);
-                return null;
+            if (returnValueProcessor.supportsReturnType(retValue, returnType)) {
+                return this.handleReturnValue(retValue, returnType, container, returnValueProcessor);
             }
         }
-        throw ex.get();
+        throw new IllegalArgumentException("Can't resolve return value, no return value processor support !");
+    }
+
+    protected Object handleReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+        returnValueProcessor.handleReturnValue(retValue, returnType, container);
+        return null;
     }
 }

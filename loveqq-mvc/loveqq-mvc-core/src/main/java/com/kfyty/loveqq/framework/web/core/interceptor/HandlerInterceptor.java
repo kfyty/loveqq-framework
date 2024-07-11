@@ -13,13 +13,13 @@ import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
  */
 public interface HandlerInterceptor {
 
-    default boolean preHandle(ServerRequest request, ServerResponse response, MethodMapping handler) throws Exception {
+    default boolean preHandle(ServerRequest request, ServerResponse response, MethodMapping handler) {
         return true;
     }
 
-    default void postHandle(ServerRequest request, ServerResponse response, MethodMapping handler, Object retValue) throws Exception {
+    default void postHandle(ServerRequest request, ServerResponse response, MethodMapping handler, Object retValue) {
     }
 
-    default void afterCompletion(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) throws Exception {
+    default void afterCompletion(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) {
     }
 }
