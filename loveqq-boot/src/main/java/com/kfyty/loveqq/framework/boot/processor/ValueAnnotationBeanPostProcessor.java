@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -34,7 +35,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
     protected GenericPropertiesContext propertyContext;
 
     @Override
-    public Object postProcessAfterInstantiation(Object bean, String beanName) {
+    public Object postProcessAfterInstantiation(Object bean, String beanName, BeanDefinition beanDefinition) {
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(targetClass).entrySet()) {

@@ -55,12 +55,12 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
         // 非嵌入式 tomcat 环境下，servlet 示实例非 ioc 容器管理的，需复制属性
         DispatcherServlet bean = this.getBeanFactory().getBean(DispatcherServlet.class);
         if (this != bean) {
+            this.setPrefix(bean.getPrefix());
+            this.setSuffix(bean.getSuffix());
             this.setArgumentResolvers(bean.getArgumentResolvers());
             this.setReturnValueProcessors(bean.getReturnValueProcessors());
             this.setInterceptorChains(bean.getInterceptorChains());
             this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
-            this.setPrefix(bean.getPrefix());
-            this.setSuffix(bean.getSuffix());
         }
     }
 

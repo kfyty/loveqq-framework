@@ -21,7 +21,7 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-boot-starter-tomcat</artifactId>
+            <artifactId>loveqq-boot-starter-netty</artifactId>
             <version>${loveqq.framework.version}</version>
             <optional>true</optional>
         </dependency>
@@ -39,8 +39,8 @@
         </dependency>
 
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
             <optional>true</optional>
             <scope>provided</scope>
         </dependency>

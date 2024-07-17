@@ -1,11 +1,11 @@
-package com.kfyty.loveqq.framework.boot.web;
+package com.kfyty.loveqq.framework.web.mvc.servlet.listener;
 
-import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -13,6 +13,11 @@ import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
+
+import java.lang.reflect.Method;
+import java.util.Objects;
+
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
 
 /**
  * 描述: mvc 监听器，用于从 tomcat 中启动自动配置
@@ -24,7 +29,12 @@ import jakarta.servlet.ServletContextListener;
 @Component
 @EnableAutoConfiguration
 @ComponentScan(excludeFilter = @ComponentFilter("com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatAutoConfig"))
-public class WebMvcAutoConfigListener implements ServletContextListener {
+public class WebMvcAutoConfigListener implements ServletContextListener, ApplicationContextAware {
+    /**
+     * ioc 容器启动类
+     */
+    private static final String LAUNCH_CLASS_NAME = "com.kfyty.loveqq.framework.boot.K";
+
     /**
      * BeanFactory 属性 key
      *
@@ -43,13 +53,18 @@ public class WebMvcAutoConfigListener implements ServletContextListener {
     private volatile ApplicationContext applicationContext;
 
     @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
     public void contextInitialized(ServletContextEvent sce) {
         synchronized (WebMvcAutoConfigListener.class) {
             if (this.applicationContext == null) {
-                this.scanBasePackageConfig(sce.getServletContext());
-                this.applicationContext = K.run(WebMvcAutoConfigListener.class);
-                sce.getServletContext().setAttribute(BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE, this.applicationContext);
+                this.configScanBasePackage(sce.getServletContext());
+                this.applicationContext = this.launch(WebMvcAutoConfigListener.class);
             }
+            sce.getServletContext().setAttribute(BEAN_FACTORY_SERVLET_CONTEXT_ATTRIBUTE, Objects.requireNonNull(this.applicationContext));
         }
     }
 
@@ -63,9 +78,14 @@ public class WebMvcAutoConfigListener implements ServletContextListener {
         }
     }
 
-    protected void scanBasePackageConfig(ServletContext servletContext) {
+    protected void configScanBasePackage(ServletContext servletContext) {
         String basePackage = servletContext.getInitParameter(BASE_PACKAGE_PARAM_NAME);
         ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
         ReflectUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
+    }
+
+    protected ApplicationContext launch(Class<?> launchClass) {
+        Method method = ReflectUtil.getMethod(ReflectUtil.load(LAUNCH_CLASS_NAME), "run", Class.class, String[].class);
+        return (ApplicationContext) ReflectUtil.invokeMethod(null, method, launchClass, EMPTY_STRING_ARRAY);
     }
 }

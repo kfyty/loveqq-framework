@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig;
 
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 
 /**
@@ -14,7 +15,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor, 
      * bean 实例化之后立即调用，此时可能还未注入属性
      * 返回值若不为空，则替换原 bean
      */
-    default Object postProcessAfterInstantiation(Object bean, String beanName) {
+    default Object postProcessAfterInstantiation(Object bean, String beanName, BeanDefinition beanDefinition) {
         return null;
     }
 }

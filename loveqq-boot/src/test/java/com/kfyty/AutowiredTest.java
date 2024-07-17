@@ -1,7 +1,6 @@
 package com.kfyty;
 
 import com.kfyty.loveqq.framework.boot.K;
-import com.kfyty.loveqq.framework.boot.web.WebMvcAutoConfigListener;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ImportBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
@@ -9,8 +8,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Service;
@@ -53,7 +50,6 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
 @Slf4j
 @RestController
 @BootApplication
-@ComponentScan(excludeFilter = @ComponentFilter(classes = WebMvcAutoConfigListener.class))
 public class AutowiredTest {
     @Value("${id}")
     private Integer id;
@@ -99,7 +95,7 @@ public class AutowiredTest {
         Assert.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
         Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
         Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
-        Assert.assertEquals(3, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assert.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
         Assert.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
     }
 }

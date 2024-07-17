@@ -244,7 +244,7 @@ public class AutowiredProcessor {
                         if (!AutowiredDescription.isRequired(autowired)) {
                             return beanOfType;
                         }
-                        throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean definition of type {}, and no primary found", targetType));
+                        throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean definition of type {}, and no primary found", targetType));
                     }
                     beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition, AutowiredDescription.isLazied(autowired)));
                 }
@@ -253,12 +253,12 @@ public class AutowiredProcessor {
             }
         }
         if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty()) {
-            throw new BeansException("resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
+            throw new BeansException("Resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
         }
         if (AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
             Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             if (primaryBeanOfType.size() > 1) {
-                throw new BeansException(CommonUtil.format("resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
+                throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
             }
             return primaryBeanOfType;
         }
@@ -287,7 +287,7 @@ public class AutowiredProcessor {
             bean = value;
         }
         if (bean == null) {
-            throw new BeansException("resolve target bean failed, more than one generic bean found of name: " + beanName);
+            throw new BeansException("Resolve target bean failed, more than one generic bean found of name: " + beanName);
         }
         return bean;
     }
