@@ -37,7 +37,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         String superUrl = CommonUtil.EMPTY_STRING;
         List<MethodMapping> retValue = new ArrayList<>();
         Class<?> controllerClass = AopUtil.getTargetClass(controller);
-        RequestMapping annotation = AnnotationUtil.findAnnotation(controllerClass, RequestMapping.class);
+        RequestMapping annotation = findRequestMapping(controllerClass);
         if (annotation != null) {
             superUrl = formatURI(annotation.value());
         }
@@ -63,13 +63,13 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         return methodMapping;
     }
 
-    public static RequestMapping findRequestMapping(Method method) {
-        RequestMapping annotation = AnnotationUtil.findAnnotation(method, RequestMapping.class);
+    public static RequestMapping findRequestMapping(Object target) {
+        RequestMapping annotation = AnnotationUtil.findAnnotation(target, RequestMapping.class);
         if (annotation != null) {
             return annotation;
         }
-        for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(method)) {
-            if (AnnotationUtil.hasAnnotation(nestedAnnotation.annotationType(), RequestMapping.class)) {
+        for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(target)) {
+            if (AnnotationUtil.hasAnnotationElement(nestedAnnotation.annotationType(), RequestMapping.class)) {
                 return new RequestMapping() {
 
                     @Override

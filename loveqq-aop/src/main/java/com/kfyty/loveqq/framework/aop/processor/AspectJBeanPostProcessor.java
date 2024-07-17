@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
+import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +58,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
     private List<AdviceInterceptorPointAdapter> adviceInterceptorPointAdapters;
 
     @Override
-    public Object postProcessAfterInstantiation(Object bean, String beanName) {
-        BeanDefinition beanDefinition = this.getBeanDefinition(beanName);
+    public Object postProcessAfterInstantiation(Object bean, String beanName, BeanDefinition beanDefinition) {
         if (!beanDefinition.isAutowireCandidate()) {
             return null;
         }
@@ -67,7 +67,12 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
         if (CommonUtil.empty(advisors)) {
             return null;
         }
-        return this.createProxy(bean, beanName, new AspectMethodInterceptorProxy(advisors, this.adviceInterceptorPointAdapters));
+        return this.createProxy(bean, beanDefinition, new AspectMethodInterceptorProxy(advisors, this.adviceInterceptorPointAdapters));
+    }
+
+    @Override
+    public MethodInterceptorChainPoint createProxyPoint() {
+        throw new UnsupportedOperationException("AspectJBeanPostProcessor.createProxyPoint");
     }
 
     /**

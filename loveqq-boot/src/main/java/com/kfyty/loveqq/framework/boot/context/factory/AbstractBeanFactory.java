@@ -410,7 +410,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             }
             this.removeBeanReference(name);
             this.invokeAwareMethod(name, bean);
-            this.invokeBeanPostProcessAfterInstantiation(name, bean);
+            this.invokeBeanPostProcessAfterInstantiation(name, bean, beanDefinition);
             return beanDefinition;
         }
     }
@@ -432,10 +432,10 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
     }
 
-    protected Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean) {
+    protected Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean, BeanDefinition beanDefinition) {
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
-                Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName);
+                Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName, beanDefinition);
                 if (newBean != null && newBean != bean) {
                     bean = newBean;
                     this.replaceBean(beanName, newBean);
