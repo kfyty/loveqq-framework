@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
@@ -27,27 +28,13 @@ public class ThreadPoolExecutorAutoConfig {
     public static final String DEFAULT_THREAD_POOL_EXECUTOR = "defaultThreadPoolExecutor";
 
     /**
-     * 是否支持虚拟线程
-     */
-    public static boolean VIRTUAL_THREAD_SUPPORTED = false;
-
-    static {
-        try {
-            Class.forName("java.lang.BaseVirtualThread", false, ThreadPoolExecutorAutoConfig.class.getClassLoader());
-            VIRTUAL_THREAD_SUPPORTED = true;
-        } catch (Throwable e) {
-            log.warn("virtual thread doesn't supported");
-        }
-    }
-
-    /**
      * 默认线程池
      *
      * @return 线程池
      */
     @Bean(DEFAULT_THREAD_POOL_EXECUTOR)
     public ExecutorService defaultThreadPoolExecutor() {
-        if (VIRTUAL_THREAD_SUPPORTED) {
+        if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("thread-handler-", 0).factory());
         }
         return new DefaultThreadPoolExecutor();

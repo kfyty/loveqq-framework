@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
@@ -33,6 +34,9 @@ public class NettyServerMvcAutoConfig {
     @Autowired
     private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
 
+    @Autowired(required = false)
+    private List<ExceptionHandler> exceptionHandlers;
+
     @Bean
     public DispatcherHandler dispatcherHandler(RequestMappingMatcher requestMappingMatcher,
                                                @Value("${k.server.view.prefix:}") String prefix,
@@ -41,6 +45,7 @@ public class NettyServerMvcAutoConfig {
         dispatcherHandler.setInterceptorChains(this.interceptorChain);
         dispatcherHandler.setArgumentResolvers(this.argumentResolvers);
         dispatcherHandler.setReturnValueProcessors(this.returnValueProcessors);
+        dispatcherHandler.setExceptionHandlers(this.exceptionHandlers);
         dispatcherHandler.setRequestMappingMatcher(requestMappingMatcher);
         dispatcherHandler.setPrefix(prefix);
         dispatcherHandler.setSuffix(suffix);

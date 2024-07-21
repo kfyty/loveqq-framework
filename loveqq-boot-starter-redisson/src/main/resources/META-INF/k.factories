@@ -1,3 +1,4 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.RedissonAutoConfiguration,\
-    com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.RedissonRedisService
+    com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.converter.StringToCodecConverter,\
+    com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.RedissonRedisService,\
+    com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.RedissonAutoConfiguration

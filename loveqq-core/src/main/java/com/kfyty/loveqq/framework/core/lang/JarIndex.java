@@ -57,17 +57,45 @@ public class JarIndex {
         this.loadJarIndex(mainJarPath, jarIndex);
     }
 
+    /**
+     * 获取所有的 jar url
+     *
+     * @return jar urls
+     */
     public List<URL> getJarURLs() {
         return this.jarMap.values().stream().map(this::getJarURL).collect(Collectors.toList());
     }
 
+    /**
+     * 获取启动类所在的 jar 路径
+     *
+     * @return main class jar path
+     */
     public String getMainJarPath() {
         return this.mainJarPath;
     }
 
+    /**
+     * 根据 JarFile 构建一个 URL
+     *
+     * @param jarFile Jar file
+     * @return jar file url
+     */
     @SneakyThrows(MalformedURLException.class)
     public URL getJarURL(JarFile jarFile) {
         return new URL("file", "", -1, '/' + jarFile.getName());                                   // 必须使用 file 协议，否则读取不到 resources
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
+     * @param packageName 包名
+     * @param jar         jar 路径
+     * @param jarFile     jar 文件
+     */
+    public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
+        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jar);
+        this.jarMap.put(jar, jarFile);
     }
 
     public List<String> getJars(String name) {
@@ -82,11 +110,6 @@ public class JarIndex {
     public List<JarFile> getJarFiles(String name) {
         List<String> jars = this.getJars(name);
         return jars.stream().map(this.jarMap::get).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
-        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jar);
-        this.jarMap.put(jar, jarFile);
     }
 
     @SneakyThrows(IOException.class)
@@ -116,7 +139,7 @@ public class JarIndex {
 
         String jar = currentLine;
         while ((currentLine = reader.readLine()) != null) {
-            if (currentLine.length() < 1 || currentLine.equals("\n") || currentLine.equals("\r\n")) {
+            if (currentLine.isEmpty() || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕
             }
             this.jarIndex.computeIfAbsent(currentLine, k -> new LinkedList<>()).add(jar);

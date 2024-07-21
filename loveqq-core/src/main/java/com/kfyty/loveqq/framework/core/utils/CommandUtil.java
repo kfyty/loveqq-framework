@@ -12,7 +12,7 @@ import java.io.IOException;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class CommandUtil {
+public abstract class CommandUtil {
 
     public static String executeCommand(String commandTemplate, Object... args) {
         return executeCommand(Integer.MAX_VALUE, true, commandTemplate, args);

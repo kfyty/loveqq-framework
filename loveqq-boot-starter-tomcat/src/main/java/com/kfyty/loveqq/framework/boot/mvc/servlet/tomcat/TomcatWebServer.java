@@ -139,7 +139,7 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setPort(getPort());
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
-        if (this.config.isVirtualThread() && TomcatProperties.VIRTUAL_THREAD_SUPPORTED) {
+        if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             connector.getProtocolHandler().setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
         }
         tomcat.getService().addConnector(connector);

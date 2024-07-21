@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.mapping;
 
+import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
@@ -91,6 +92,10 @@ public class MethodMapping {
             }
         }
         throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
+    }
+
+    public MethodParameter buildMethodParameter(Object[] parameters) {
+        return new MethodParameter(this.controller, this.mappingMethod, parameters);
     }
 
     @SuppressWarnings("unchecked")

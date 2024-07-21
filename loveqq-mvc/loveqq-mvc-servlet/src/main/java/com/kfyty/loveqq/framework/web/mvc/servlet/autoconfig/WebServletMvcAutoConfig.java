@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
@@ -39,6 +40,9 @@ public class WebServletMvcAutoConfig {
     @Autowired(required = false)
     private List<HandlerMethodReturnValueProcessor> returnValueProcessors;
 
+    @Autowired(required = false)
+    private List<ExceptionHandler> exceptionHandlers;
+
     @Bean
     public MultipartConfigElement multipartConfig(@Value("${k.mvc.multipart.location:}") String location,
                                                   @Value("${k.mvc.multipart.maxFileSize:-1}") int maxFileSize,
@@ -60,6 +64,7 @@ public class WebServletMvcAutoConfig {
         dispatcherServlet.setInterceptorChains(this.interceptorChain);
         dispatcherServlet.setArgumentResolvers(this.argumentResolvers);
         dispatcherServlet.setReturnValueProcessors(this.returnValueProcessors);
+        dispatcherServlet.setExceptionHandlers(this.exceptionHandlers);
         dispatcherServlet.setRequestMappingMatcher(requestMappingMatcher);
         dispatcherServlet.setPrefix(prefix);
         dispatcherServlet.setSuffix(suffix);

@@ -13,7 +13,6 @@ import com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandl
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
-import com.kfyty.loveqq.framework.web.core.processor.ControllerAdviceBeanPostProcessor;
 
 import java.util.List;
 import java.util.Map;
@@ -29,11 +28,6 @@ import java.util.Map;
 @ConditionalOnBean(WebServer.class)
 @Import(config = WebServerProperties.class)
 public class WebMvcAutoConfig implements ContextAfterRefreshed {
-
-    @Bean
-    public ControllerAdviceBeanPostProcessor controllerAdviceBeanPostProcessor() {
-        return new ControllerAdviceBeanPostProcessor();
-    }
 
     @Bean
     public RequestMappingHandler requestMappingHandler() {

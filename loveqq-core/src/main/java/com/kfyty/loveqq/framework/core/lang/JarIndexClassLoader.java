@@ -49,10 +49,32 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         this.jarIndex = jarIndex;
     }
 
+    /**
+     * 返回是否是 IDE 从文件夹启动
+     *
+     * @return true if from IDE started
+     */
     public boolean isExploded() {
         return !this.jarIndex.getMainJarPath().endsWith(".jar");
     }
 
+    /**
+     * 返回是否是 java 内部类
+     *
+     * @param name 类型
+     * @return true if java class
+     */
+    public boolean isJavaClass(String name) {
+        return name.startsWith("java.");
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
+     * @param packageName 包名
+     * @param jar         jar 路径
+     * @param jarFile     jar 文件
+     */
     public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
         this.jarIndex.addJarIndexMapping(packageName, jar, jarFile);
     }
@@ -92,6 +114,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (this.isJavaClass(name)) {
+            return super.loadClass(name, resolve);
+        }
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {

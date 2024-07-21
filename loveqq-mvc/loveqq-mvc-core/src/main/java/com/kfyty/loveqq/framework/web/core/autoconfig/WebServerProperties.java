@@ -23,17 +23,6 @@ import java.util.List;
 public class WebServerProperties {
     public static final String DEFAULT_DISPATCHER_MAPPING = "/";
 
-    public static boolean VIRTUAL_THREAD_SUPPORTED = false;
-
-    static {
-        try {
-            Class.forName("java.lang.BaseVirtualThread", false, WebServerProperties.class.getClassLoader());
-            VIRTUAL_THREAD_SUPPORTED = true;
-        } catch (Throwable e) {
-            log.warn("virtual thread doesn't supported");
-        }
-    }
-
     /**
      * 是否启用虚拟线程
      */

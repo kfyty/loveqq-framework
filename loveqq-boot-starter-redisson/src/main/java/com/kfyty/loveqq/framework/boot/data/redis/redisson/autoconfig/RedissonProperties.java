@@ -6,7 +6,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfiguration
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.Setter;
-import org.redisson.client.codec.Codec;
 import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
 import org.redisson.config.MasterSlaveServersConfig;
@@ -35,11 +34,6 @@ public class RedissonProperties extends Config {
      * 配置模式: 即下面的五种嵌套配置的属性名
      */
     private String model;
-
-    /**
-     * 编码方式实现的全限定名
-     */
-    private String codec;
 
     /**
      * 负载均衡器实现的全限定名
@@ -121,9 +115,6 @@ public class RedissonProperties extends Config {
         }
         if (this.model.equals("cluster")) {
             this.setClusterServersConfig(this.cluster);
-        }
-        if (CommonUtil.notEmpty(this.codec)) {
-            this.setCodec((Codec) newInstance(load(codec)));
         }
         if (CommonUtil.notEmpty(this.loadBalancer)) {
             LoadBalancer balancer = (LoadBalancer) newInstance(load(this.loadBalancer));

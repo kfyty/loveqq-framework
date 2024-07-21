@@ -5,9 +5,13 @@ import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.support.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import lombok.SneakyThrows;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,6 +26,7 @@ import java.util.jar.JarOutputStream;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.newInputStream;
+import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.load;
 
 /**
  * 描述: 构建 jar 索引 ant 任务
@@ -47,15 +52,30 @@ public class BuildJarIndexAntTask {
     public static final String OUTPUT_DEFAULT_JAR = "OUTPUT_DEFAULT_JAR";
 
     /**
+     * 源码 MANIFEST.MF 目录
+     */
+    public static final String PROJECT_SOURCE_CODE_MANIFEST_DIRECTORY = "src/main/resources/" + BootLauncher.JAR_MANIFEST_LOCATION;
+
+    /**
+     * 源码 jar.idx 目录
+     */
+    public static final String PROJECT_SOURCE_CODE_JAR_INDEX_DIRECTORY = "src/main/resources/" + BootLauncher.JAR_INDEX_LOCATION;
+
+    /**
      * 由 maven-antrun-plugin 调用
      *
      * @param args 由 maven-antrun-plugin 传参
      */
     public static void main(String[] args) throws Exception {
         Map<String, String> properties = loadCommandLineProperties(args, "-");
-        File file = new File(properties.get(OUTPUT_DIRECTORY), properties.getOrDefault(OUTPUT_JAR, properties.get(OUTPUT_DEFAULT_JAR)));
-        JarFile jarFile = new JarFile(file.exists() ? file : new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR)));
-        writeJarIndex(buildJarIndex(scanJarIndex(jarFile)), jarFile);
+        File file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_JAR));
+        if (!file.exists()) {
+            file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR));
+        }
+        JarFile jarFile = new JarFile(file);
+        String jarIndex = buildJarIndex(scanJarIndex(jarFile));
+        JarFile sourceJarFile = writeJarIndex(jarIndex, jarFile);
+        writeJarIndexToProjectSourceCode(jarIndex, sourceJarFile);
         System.out.println("[INFO] Build jar index succeed");
     }
 
@@ -126,12 +146,13 @@ public class BuildJarIndexAntTask {
     }
 
     /**
-     * 写入 jar.idx 文件
+     * 写入 jar.idx 文件到 jar
      *
      * @param jarIndex jar.idx
      * @param jarFile  目标 jar 文件
+     * @return 原始 jar file
      */
-    public static void writeJarIndex(String jarIndex, JarFile jarFile) throws IOException {
+    public static JarFile writeJarIndex(String jarIndex, JarFile jarFile) throws IOException {
         // 同时读取和写入，复制一份
         JarFile copy = new JarFile(IOUtil.writeToTemp(newInputStream(new File(jarFile.getName()))));
         try (JarOutputStream jarOut = new JarOutputStream(Files.newOutputStream(Paths.get(jarFile.getName())))) {
@@ -145,6 +166,33 @@ public class BuildJarIndexAntTask {
             jarOut.putNextEntry(new JarEntry(BootLauncher.JAR_INDEX_LOCATION));
             jarOut.write(jarIndex.getBytes(StandardCharsets.UTF_8));
             jarOut.closeEntry();
+            jarOut.flush();
+        }
+        return copy;
+    }
+
+    /**
+     * 写入 jar.idx 文件到工程源码
+     * 从而支持 IDE 中从 {@link BootLauncher} 启动
+     *
+     * @param jarIndex jar.idx
+     * @param jarFile  jar 文件
+     */
+    @SneakyThrows(URISyntaxException.class)
+    public static void writeJarIndexToProjectSourceCode(String jarIndex, JarFile jarFile) throws IOException {
+        String startClass = jarFile.getManifest().getMainAttributes().getValue(BootLauncher.START_CLASS_KEY);
+        File projectSourceCodeDirectory = Paths.get(load(startClass).getProtectionDomain().getCodeSource().getLocation().toURI()).getParent().getParent().toFile();
+
+        // 写入 MANIFEST.MF
+        try (InputStream manifest = jarFile.getInputStream(jarFile.getJarEntry(BootLauncher.JAR_MANIFEST_LOCATION));
+             FileOutputStream out = new FileOutputStream(new File(projectSourceCodeDirectory, PROJECT_SOURCE_CODE_MANIFEST_DIRECTORY))) {
+            IOUtil.copy(manifest, out);
+        }
+
+        // 写入 jar.idx
+        try (FileOutputStream out = new FileOutputStream(new File(projectSourceCodeDirectory, PROJECT_SOURCE_CODE_JAR_INDEX_DIRECTORY))) {
+            out.write(jarIndex.getBytes(StandardCharsets.UTF_8));
+            out.flush();
         }
     }
 }

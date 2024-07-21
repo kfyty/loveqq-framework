@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 
+import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -60,6 +60,7 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
             this.setArgumentResolvers(bean.getArgumentResolvers());
             this.setReturnValueProcessors(bean.getReturnValueProcessors());
             this.setInterceptorChains(bean.getInterceptorChains());
+            this.setExceptionHandlers(bean.getExceptionHandlers());
             this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
         }
     }
@@ -70,7 +71,7 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
         super.init(config);
         this.setPrefix(ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).orElse(this.prefix));
         this.setSuffix(ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).orElse(this.suffix));
-        log.info("initialize DispatcherServlet success !");
+        log.info("initialize DispatcherServlet succeed !");
     }
 
     @Override
@@ -86,16 +87,18 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
+        Object[] parameters = null;
         ServerRequest serverRequest = new ServletServerRequest(request);
         ServerResponse serverResponse = new ServletServerResponse(response);
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
             // 无匹配，转发到 404
             if (methodMapping == null) {
-                this.processReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);
+                this.handleReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);
                 return;
             }
 
+            this.preparedRequestResponse(methodMapping, request, response);
             LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched URI mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
 
             // 应用前置拦截器
@@ -104,19 +107,18 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
             }
 
             // 解析参数并处理请求
-            this.preparedRequestResponse(methodMapping, request, response);
-            Object[] params = this.preparedMethodParams(serverRequest, serverResponse, methodMapping);
-            Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), params);
+            parameters = this.preparedMethodParams(serverRequest, serverResponse, methodMapping);
+            Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), parameters);
 
             // 应用后置处理器并处理返回值
             this.processPostInterceptor(serverRequest, serverResponse, methodMapping, retValue);
             if (retValue != null) {
-                this.processReturnValue(retValue, new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params), serverRequest, serverResponse, params);
+                this.handleReturnValue(retValue, methodMapping.buildMethodParameter(parameters), serverRequest, serverResponse);
             }
         } catch (Throwable e) {
-            log.error("process request error: {}", e.getMessage());
             exception = e;
-            throw e instanceof ServletException ? (ServletException) e : new ServletException(e);
+            log.error("process request error: {}", e.getMessage(), e);
+            this.handleException(serverRequest, serverResponse, methodMapping, parameters, e);
         } finally {
             if (methodMapping != null) {
                 this.processCompletionInterceptor(serverRequest, serverResponse, methodMapping, exception);
@@ -133,5 +135,16 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
             return response.getRawResponse();
         }
         return super.resolveRequestResponseParam(parameter, request, response);
+    }
+
+    protected void handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Object[] params, Throwable throwable) throws ServletException {
+        try {
+            Object handled = super.handleException(request, response, mapping, throwable);
+            if (handled != null) {
+                this.handleReturnValue(handled, mapping.buildMethodParameter(params), request, response);
+            }
+        } catch (Throwable e) {
+            throw e instanceof ServletException ? (ServletException) e : new ServletException(unwrap(e));
+        }
     }
 }
