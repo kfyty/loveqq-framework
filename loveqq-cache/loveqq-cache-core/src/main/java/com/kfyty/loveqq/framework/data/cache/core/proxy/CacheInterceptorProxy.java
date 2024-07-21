@@ -1,8 +1,9 @@
-package com.kfyty.loveqq.framework.data.cache.core.autoconfig;
+package com.kfyty.loveqq.framework.data.cache.core.proxy;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
+import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
@@ -11,7 +12,6 @@ import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import com.kfyty.loveqq.framework.data.cache.core.NullValue;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
@@ -20,6 +20,13 @@ import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.notEmpty;
+import static com.kfyty.loveqq.framework.core.utils.OgnlUtil.compute;
+import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 缓存代理
@@ -28,7 +35,6 @@ import java.util.Objects;
  * @date 2024/7/4 10:51
  * @email kfyty725@hotmail.com
  */
-@RequiredArgsConstructor
 @Order(Order.HIGHEST_PRECEDENCE)
 public class CacheInterceptorProxy implements MethodAroundAdvice {
     /**
@@ -36,41 +42,80 @@ public class CacheInterceptorProxy implements MethodAroundAdvice {
      */
     private final Cache cache;
 
+    /**
+     * 通用线程池
+     */
+    private final ScheduledExecutorService executorService;
+
+    public CacheInterceptorProxy(Cache cache, int scheduledCore) {
+        this(cache, new ScheduledThreadPoolExecutor(scheduledCore, new NamedThreadFactory("pre-cache-clear")));
+        Runtime.getRuntime().addShutdownHook(new Thread(this.executorService::shutdown));
+    }
+
+    public CacheInterceptorProxy(Cache cache, ScheduledExecutorService executorService) {
+        this.cache = cache;
+        this.executorService = executorService;
+    }
+
     @Override
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         Method method = ((MethodSignature) pjp.getStaticPart().getSignature()).getMethod();
-        Lazy<Map<String, Object>> context = new Lazy<>(() -> this.buildContext(null, method, pjp.getArgs(), pjp.getArgs()));
+        Lazy<Map<String, Object>> context = new Lazy<>(() -> this.buildContext(null, method, pjp.getArgs(), pjp.getTarget()));
+
+        Cacheable cacheable = AnnotationUtil.findAnnotation(method, Cacheable.class);
+        CacheClear cacheClear = AnnotationUtil.findAnnotation(method, CacheClear.class);
+
+        String cacheableName = null;
+        String cacheClearName = null;
 
         // 先从缓存中获取
-        Cacheable cacheable = AnnotationUtil.findAnnotation(method, Cacheable.class);
         if (cacheable != null) {
-            String cacheName = CommonUtil.notEmpty(cacheable.value()) ? OgnlUtil.compute(cacheable.value(), context.get()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
-            Object cache = this.cache.get(cacheName);
+            cacheableName = notEmpty(cacheable.value()) ? ofNullable(compute(cacheable.value(), context.get())).orElse(cacheable.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+            Object cache = this.cache.get(cacheableName);
             if (cache != null) {
                 return cache == NullValue.INSTANCE ? null : cache;                      // NullValue 返回 null
             }
         }
 
+        // 前置清理
+        if (cacheClear != null) {
+            cacheClearName = notEmpty(cacheClear.value()) ? ofNullable(compute(cacheClear.value(), context.get())).orElse(cacheClear.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+            if (cacheClear.preClear()) {
+                if (cacheClear.preClearTimeout() <= 0) {
+                    this.cache.clear(cacheClearName);
+                } else {
+                    final String cacheNameToUse = cacheClearName;
+                    this.executorService.schedule(() -> this.cache.clear(cacheNameToUse), cacheClear.preClearTimeout(), TimeUnit.MILLISECONDS);
+                }
+            }
+        }
+
         // 执行目标方法
         Object retValue = pjp.proceed();
-        CacheClear cacheClear = AnnotationUtil.findAnnotation(method, CacheClear.class);
 
         // 放入或删除缓存
-        if (cacheable != null || cacheClear != null) {
-            context.get().put("retVal", retValue);
-            if (cacheable != null) {
-                this.processCacheable(cacheable, retValue, method, pjp, context.get());
-            }
-            if (cacheClear != null) {
-                this.processCacheClear(cacheClear, method, pjp, context.get());
-            }
+        if (cacheable == null && cacheClear == null) {
+            return retValue;
+        }
+
+        // 放入 context
+        context.get().put("retVal", retValue);
+
+        if (cacheable != null) {
+            this.processCacheable(cacheableName, cacheable, retValue, method, pjp, context.get());
+        }
+
+        if (cacheClear != null) {
+            this.processCacheClear(cacheClearName, cacheClear, method, pjp, context.get());
         }
 
         return retValue;
     }
 
-    protected void processCacheable(Cacheable cacheable, Object retValue, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-        String cacheName = CommonUtil.notEmpty(cacheable.value()) ? OgnlUtil.compute(cacheable.value(), context) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+    protected void processCacheable(String cacheName, Cacheable cacheable, Object retValue, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+        if (cacheName == null) {
+            cacheName = notEmpty(cacheable.value()) ? ofNullable(compute(cacheable.value(), context)).orElse(cacheable.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+        }
         if (CommonUtil.empty(cacheable.condition()) || OgnlUtil.getBoolean(cacheable.condition(), context)) {
             if (retValue == null && !cacheable.putIfNull()) {
                 return;
@@ -85,8 +130,10 @@ public class CacheInterceptorProxy implements MethodAroundAdvice {
         }
     }
 
-    protected void processCacheClear(CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-        String cacheName = CommonUtil.notEmpty(cacheClear.value()) ? OgnlUtil.compute(cacheClear.value(), context) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+    protected void processCacheClear(String cacheName, CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+        if (cacheName == null) {
+            cacheName = notEmpty(cacheClear.value()) ? ofNullable(compute(cacheClear.value(), context)).orElse(cacheClear.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+        }
         if (CommonUtil.empty(cacheClear.condition()) || OgnlUtil.getBoolean(cacheClear.condition(), context)) {
             this.cache.clear(cacheName);
         }

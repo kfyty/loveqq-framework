@@ -27,7 +27,9 @@ import reactor.netty.http.server.HttpServerResponse;
 import java.io.IOException;
 import java.lang.reflect.Parameter;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
 import static com.kfyty.loveqq.framework.web.core.request.RequestMethod.matchRequestMethod;
 import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor.writeReturnValue;
 
@@ -58,37 +60,44 @@ public class DispatcherHandler extends AbstractDispatcher<DispatcherHandler> {
         }
         AtomicReference<Throwable> throwableReference = new AtomicReference<>();
         return Mono.just(methodMapping)
+                .doOnNext(mapping -> this.preparedRequestResponse(mapping, request, response))
                 .doOnNext(mapping -> LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI())))
                 .filter(mapping -> this.processPreInterceptor(request, response, mapping))
-                .doOnNext(mapping -> this.preparedRequestResponse(mapping, request, response))
                 .map(mapping -> this.preparedMethodParams(request, response, mapping))
                 .map(params -> new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .doOnNext(p -> this.processPostInterceptor(request, response, methodMapping, p.getT2()))
-                .flatMap(p -> Mono.from(this.processReturnValue(p.getT2(), p.getT1(), request, response, p.getT1().getMethodArgs())))
-                .doOnError(throwableReference::set)
+                .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
+                .doOnError(e -> this.onError(throwableReference, e))
                 .doFinally(s -> this.processCompletionInterceptor(request, response, methodMapping, throwableReference.get()));
     }
 
+    @SuppressWarnings("unchecked")
     protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
-        ServerRequest prevRequest = RequestContextHolder.set(request);
-        ServerResponse prevResponse = ResponseContextHolder.set(response);
-        try {
-            Object invoked = ReflectUtil.invokeMethod(mapping.getController(), mapping.getMappingMethod(), returnType.getMethodArgs());
-            if (invoked instanceof NettyOutbound) {
-                return Mono.from((NettyOutbound) invoked);
+        Supplier<?> supplier = () -> {
+            ServerRequest prevRequest = RequestContextHolder.set(request);
+            ServerResponse prevResponse = ResponseContextHolder.set(response);
+            try {
+                return ReflectUtil.invokeMethod(mapping.getController(), mapping.getMappingMethod(), returnType.getMethodArgs());
+            } finally {
+                RequestContextHolder.set(prevRequest);
+                ResponseContextHolder.set(prevResponse);
             }
-            if (invoked instanceof Mono<?>) {
-                return (Mono<?>) invoked;
-            }
-            if (invoked instanceof Flux<?>) {
-                return ((Flux<?>) invoked).collectList();
-            }
-            return invoked == null ? Mono.empty() : Mono.just(invoked);
-        } finally {
-            RequestContextHolder.set(prevRequest);
-            ResponseContextHolder.set(prevResponse);
-        }
+        };
+        return Mono.fromSupplier(supplier)
+                .flatMap(invoked -> {
+                    if (invoked instanceof NettyOutbound) {
+                        return Mono.from((NettyOutbound) invoked);
+                    }
+                    if (invoked instanceof Mono<?>) {
+                        return (Mono<?>) invoked;
+                    }
+                    if (invoked instanceof Flux<?>) {
+                        return ((Flux<?>) invoked).collectList();
+                    }
+                    return invoked == null ? Mono.empty() : Mono.just(invoked);
+                })
+                .onErrorResume(e -> this.handleException(request, response, mapping, returnType.getMethodArgs(), e));
     }
 
     @Override
@@ -111,11 +120,21 @@ public class DispatcherHandler extends AbstractDispatcher<DispatcherHandler> {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    protected Mono handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Object params, Throwable throwable) {
+        try {
+            Object handled = super.handleException(request, response, mapping, throwable);
+            return handled == null ? Mono.empty() : Mono.just(handled);
+        } catch (Throwable e) {
+            throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
+        }
+    }
+
     @Override
-    protected Publisher<Void> processReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response, Object... params) {
+    protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response) {
         try {
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
-            Object processedReturnValue = super.processReturnValue(retValue, methodParameter, request, response, params);
+            Object processedReturnValue = super.handleReturnValue(retValue, methodParameter, request, response);
             return writeReturnValue(processedReturnValue, serverResponse);
         } catch (Exception e) {
             throw new NettyServerException(e);
@@ -123,10 +142,15 @@ public class DispatcherHandler extends AbstractDispatcher<DispatcherHandler> {
     }
 
     @Override
-    protected Object handleReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+    protected Object doProcessReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
         if (returnValueProcessor instanceof ServerHandlerMethodReturnValueProcessor) {
             return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).processReturnValue(retValue, returnType, container);
         }
-        return super.handleReturnValue(retValue, returnType, container, returnValueProcessor);
+        return super.doProcessReturnValue(retValue, returnType, container, returnValueProcessor);
+    }
+
+    protected void onError(AtomicReference<Throwable> throwableReference, Throwable throwable) {
+        throwableReference.set(throwable);
+        log.error("process request error: {}", throwable.getMessage(), throwable);
     }
 }

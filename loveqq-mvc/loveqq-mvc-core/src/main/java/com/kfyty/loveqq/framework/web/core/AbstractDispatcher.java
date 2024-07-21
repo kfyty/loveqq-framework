@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
+import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
@@ -76,6 +77,11 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      */
     protected List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>(4);
 
+    /**
+     * 控制器异常处理器
+     */
+    protected List<ExceptionHandler> exceptionHandlers = new ArrayList<>(4);
+
     @SuppressWarnings("unchecked")
     public T addInterceptor(HandlerInterceptor interceptor) {
         this.interceptorChains.add(interceptor);
@@ -91,6 +97,12 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     @SuppressWarnings("unchecked")
     public T addReturnProcessor(HandlerMethodReturnValueProcessor returnValueProcessor) {
         this.returnValueProcessors.add(returnValueProcessor);
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T addExceptionHandler(ExceptionHandler exceptionHandler) {
+        this.exceptionHandlers.add(exceptionHandler);
         return (T) this;
     }
 
@@ -127,7 +139,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
             }
 
             MethodParameter methodParameter = new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), parameter);
-            MethodParameter arguments = this.processMethodArguments(methodParameter, methodMapping, request);
+            MethodParameter arguments = this.resolveMethodArguments(methodParameter, methodMapping, request);
             if (arguments != null) {
                 paramValues[index++] = arguments.getValue();
                 continue;
@@ -148,7 +160,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return null;
     }
 
-    protected MethodParameter processMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) throws IOException {
+    protected MethodParameter resolveMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) throws IOException {
         for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
             if (argumentResolver.supportsParameter(methodParameter)) {
                 methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
@@ -158,18 +170,33 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return null;
     }
 
-    protected Object processReturnValue(Object retValue, MethodParameter returnType, ServerRequest request, ServerResponse response, Object... params) throws Exception {
+    protected Object handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+        for (ExceptionHandler exceptionHandler : this.exceptionHandlers) {
+            if (exceptionHandler.canHandle(mapping, throwable)) {
+                Object handled = exceptionHandler.handle(request, response, mapping, throwable);
+                if (handled == null) {
+                    throw throwable;
+                }
+                return handled;
+            }
+        }
+        throw throwable;
+    }
+
+    protected Object handleReturnValue(Object retValue, MethodParameter returnType, ServerRequest request, ServerResponse response) throws Exception {
         ModelViewContainer container = new ModelViewContainer(this.prefix, this.suffix, request, response);
-        Arrays.stream(params).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
+        if (returnType != null) {
+            Arrays.stream(returnType.getMethodArgs()).filter(e -> e != null && Model.class.isAssignableFrom(e.getClass())).findFirst().ifPresent(e -> container.setModel((Model) e));
+        }
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
             if (returnValueProcessor.supportsReturnType(retValue, returnType)) {
-                return this.handleReturnValue(retValue, returnType, container, returnValueProcessor);
+                return this.doProcessReturnValue(retValue, returnType, container, returnValueProcessor);
             }
         }
         throw new IllegalArgumentException("Can't resolve return value, no return value processor support !");
     }
 
-    protected Object handleReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+    protected Object doProcessReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
         returnValueProcessor.handleReturnValue(retValue, returnType, container);
         return null;
     }

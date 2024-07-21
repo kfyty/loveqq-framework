@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Cacheable {
     /**
-     * 缓存名称，可使用 ognl 表达式
+     * 缓存名称，可使用 ognl 表达式，注意：此时表达式的 retVal 属性不可用
      *
      * @return cache name
      */

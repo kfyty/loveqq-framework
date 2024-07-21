@@ -44,6 +44,11 @@ import static java.util.stream.Collectors.toMap;
 @Slf4j
 public abstract class CommonUtil {
     /**
+     * 是否支持虚拟线程
+     */
+    public static boolean VIRTUAL_THREAD_SUPPORTED = false;
+
+    /**
      * 空字符串
      */
     public static final String EMPTY_STRING = "";
@@ -112,6 +117,15 @@ public abstract class CommonUtil {
      * 空 Class 数组
      */
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
+
+    static {
+        try {
+            Class.forName("java.lang.BaseVirtualThread", false, CommonUtil.class.getClassLoader());
+            VIRTUAL_THREAD_SUPPORTED = true;
+        } catch (Throwable e) {
+            log.warn("Virtual thread doesn't supported");
+        }
+    }
 
     @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static boolean empty(Object obj) {

@@ -1,8 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.annotation;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.web.core.processor.ControllerAdviceBeanPostProcessor;
-import com.kfyty.loveqq.framework.web.core.proxy.ControllerExceptionAdviceInterceptorProxy;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -17,8 +15,8 @@ import java.lang.annotation.Target;
  * 如果自定义处理，可以返回 null，获取线程上下文的请求响应对应自行处理
  *
  * @see Controller
- * @see ControllerAdviceBeanPostProcessor
- * @see ControllerExceptionAdviceInterceptorProxy
+ * @see com.kfyty.loveqq.framework.web.core.handler.ControllerAdviceExceptionHandlerResolver
+ * @see com.kfyty.loveqq.framework.web.core.handler.AnnotatedExceptionHandler
  */
 @Component
 @Documented

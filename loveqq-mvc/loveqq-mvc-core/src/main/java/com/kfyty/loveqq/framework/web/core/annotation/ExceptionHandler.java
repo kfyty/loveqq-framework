@@ -1,7 +1,5 @@
 package com.kfyty.loveqq.framework.web.core.annotation;
 
-import com.kfyty.loveqq.framework.web.core.proxy.ControllerExceptionAdviceInterceptorProxy;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * 异常处理
  *
- * @see ControllerExceptionAdviceInterceptorProxy
+ * @see com.kfyty.loveqq.framework.web.core.handler.AnnotatedExceptionHandler
  */
 @Documented
 @Target(ElementType.METHOD)
