@@ -173,11 +173,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     protected Object handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
         for (ExceptionHandler exceptionHandler : this.exceptionHandlers) {
             if (exceptionHandler.canHandle(mapping, throwable)) {
-                Object handled = exceptionHandler.handle(request, response, mapping, throwable);
-                if (handled == null) {
-                    throw throwable;
-                }
-                return handled;
+                return exceptionHandler.handle(request, response, mapping, throwable);
             }
         }
         throw throwable;
