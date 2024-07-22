@@ -28,7 +28,7 @@ public interface ExceptionHandler {
      * @param response  响应
      * @param mapping   路由
      * @param throwable 异常
-     * @return 处理后的返回值，将作为控制器返回值继续处理
+     * @return 处理后的返回值，将作为控制器返回值继续处理，如果 {@link this#canHandle(MethodMapping, Throwable)} 匹配通过，但该方法无法处理，应抛出原始入参异常
      */
     Object handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable;
 }
