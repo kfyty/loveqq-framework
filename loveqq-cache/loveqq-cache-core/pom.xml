@@ -12,4 +12,12 @@
     <artifactId>loveqq-cache-core</artifactId>
     <packaging>jar</packaging>
     <description>cache 核心</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 </project>
