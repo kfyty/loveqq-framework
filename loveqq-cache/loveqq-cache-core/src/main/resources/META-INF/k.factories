@@ -1,2 +1,3 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.data.cache.core.autoconfig.CacheAutoConfiguration
+    com.kfyty.loveqq.framework.data.cache.core.autoconfig.CacheAutoConfiguration,\
+    com.kfyty.loveqq.framework.data.cache.core.autoconfig.CacheAspectAutoConfiguration
