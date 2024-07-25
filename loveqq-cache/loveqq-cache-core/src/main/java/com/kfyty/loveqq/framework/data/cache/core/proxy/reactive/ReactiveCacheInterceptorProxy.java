@@ -131,12 +131,10 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         return Mono.just(retValue)
                 .flatMap(value -> {
                     Mono<Object> prev = this.getReactiveCache().putIfAbsentAsync(cacheName, value, cacheable.ttl(), cacheable.unit());
-                    return prev == null ? Mono.empty() : prev.doOnNext(prevValue -> {
-                                if (!Objects.equals(prevValue, value)) {
-                                    this.cache.clear(cacheName);
-                                }
-                            })
-                            .then();
+                    if (prev == null) {
+                        return Mono.empty();
+                    }
+                    return prev.flatMap(prevValue -> Objects.equals(prevValue, value) ? Mono.empty() : this.getReactiveCache().clearAsync(cacheName));
                 });
     }
 
