@@ -35,7 +35,7 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
 
     protected Mono<Boolean> processPreInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).preHandleAsync(request, response, handler);
+            return this.interceptorChains.isEmpty() ? Mono.just(true) : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).preHandleAsync(request, response, handler);
         }
         ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
         return interceptor.preHandleAsync(request, response, handler).filterWhen(e -> this.processPreInterceptorAsync(request, response, handler, index + 1));
@@ -43,7 +43,7 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
 
     protected Mono<Void> processPostInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Object value, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).postHandleAsync(request, response, handler, value);
+            return this.interceptorChains.isEmpty() ? Mono.empty() : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).postHandleAsync(request, response, handler, value);
         }
         ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
         return interceptor.postHandleAsync(request, response, handler, value).then(this.processPostInterceptorAsync(request, response, handler, value, index + 1));
@@ -51,7 +51,7 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
 
     protected Mono<Void> processCompletionInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).afterCompletionAsync(request, response, handler, ex);
+            return this.interceptorChains.isEmpty() ? Mono.empty() : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).afterCompletionAsync(request, response, handler, ex);
         }
         ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
         return interceptor.afterCompletionAsync(request, response, handler, ex).then(this.processCompletionInterceptorAsync(request, response, handler, ex, index + 1));
