@@ -36,6 +36,11 @@ public class NettyServerRequest implements ServerRequest {
     private final Map<String, Object> attributes;
 
     /**
+     * uri
+     */
+    private final String uri;
+
+    /**
      * query and form parameters
      */
     private Map<String, String> parameters;
@@ -53,6 +58,7 @@ public class NettyServerRequest implements ServerRequest {
     public NettyServerRequest(HttpServerRequest request) {
         this.request = request;
         this.attributes = new ConcurrentHashMap<>();
+        this.uri = this.resolveURI(request.uri());
     }
 
     public NettyServerRequest init(InputStream body, List<Pair<String, Object>> formData) {
@@ -80,12 +86,12 @@ public class NettyServerRequest implements ServerRequest {
 
     @Override
     public String getRequestURL() {
-        return this.request.scheme() + "://" + this.request.hostName() + ":" + this.request.hostPort() + this.request.fullPath();
+        return this.request.scheme() + "://" + this.request.hostName() + ":" + this.request.hostPort() + this.getRequestURI();
     }
 
     @Override
     public String getRequestURI() {
-        return this.request.fullPath();
+        return this.uri;
     }
 
     @Override
@@ -176,5 +182,18 @@ public class NettyServerRequest implements ServerRequest {
     @Override
     public Object getRawRequest() {
         return this.request;
+    }
+
+    protected String resolveURI(String uri) {
+        int index1 = uri.indexOf('?');
+        int index2 = uri.indexOf('#');
+        int index = Math.min(index1 > -1 ? index1 : Integer.MAX_VALUE, index2 > -1 ? index2 : Integer.MAX_VALUE);
+        if (index < Integer.MAX_VALUE) {
+            uri = uri.substring(0, index);
+        }
+        if (uri.isEmpty()) {
+            return uri;
+        }
+        return uri.charAt(0) == '/' ? uri : '/' + uri;
     }
 }
