@@ -38,8 +38,8 @@ public class MapperAutoConfig implements ImportBeanDefinition {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "transactionFactory")
-    public Supplier<Transaction> transactionFactory(DataSource dataSource) {
+    @ConditionalOnMissingBean(name = "jdbcTransactionFactory")
+    public Supplier<Transaction> jdbcTransactionFactory(DataSource dataSource) {
         return () -> new ManagedJdbcTransaction(dataSource);
     }
 

@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.cloud.bootstrap;
 
 import com.kfyty.loveqq.framework.boot.context.factory.ApplicationContextFactory;
-import com.kfyty.loveqq.framework.cloud.bootstrap.empty.BeanFactoryBootstrapApplication;
+import com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BeanFactoryBootstrapApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
@@ -44,18 +44,18 @@ public class BeanFactoryBootstrap implements Bootstrap {
         log.info("Bootstrap starting...");
         try (ApplicationContext bootstrapContext = new ApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
             bootstrapContext.refresh();
-            this.copyBeanFactory(bootstrapContext, applicationContext);
+            this.copyBootstrapConfiguration(bootstrapContext, applicationContext);
         }
         log.info("Bootstrap succeed completed.");
     }
 
     /**
-     * 复制 {@link BeanFactory}
+     * 复制 {@link BootstrapConfiguration} 标注的 bean
      *
      * @param bootstrapContext   引导 BeanFactory
      * @param applicationContext 启动 BeanFactory
      */
-    protected void copyBeanFactory(ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
+    protected void copyBootstrapConfiguration(ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
         for (Map.Entry<String, BeanDefinition> entry : bootstrapContext.getBeanDefinitionWithAnnotation(BootstrapConfiguration.class).entrySet()) {
             this.registerBootstrapBean(entry.getKey(), entry.getValue(), bootstrapContext, applicationContext);
         }
@@ -96,7 +96,7 @@ public class BeanFactoryBootstrap implements Bootstrap {
      * @param bean               引导 bean
      * @param applicationContext 应用上下文
      */
-    private void invokeAware(Object bean, ConfigurableApplicationContext applicationContext) {
+    protected void invokeAware(Object bean, ConfigurableApplicationContext applicationContext) {
         if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(applicationContext);
         }

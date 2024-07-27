@@ -27,20 +27,27 @@
         </dependency>
 
         <dependency>
-            <groupId>ognl</groupId>
-            <artifactId>ognl</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-boot-starter-datasource</artifactId>
             <version>${loveqq.framework.version}</version>
         </dependency>
 
         <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.jfinal</groupId>
             <artifactId>enjoy</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -54,6 +61,7 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
