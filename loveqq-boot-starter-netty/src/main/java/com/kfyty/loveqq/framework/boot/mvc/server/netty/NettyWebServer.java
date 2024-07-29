@@ -19,15 +19,23 @@ import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerResponse;
+import com.kfyty.loveqq.framework.web.mvc.netty.ws.DefaultSession;
+import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpData;
+import io.netty.util.ReferenceCounted;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.DisposableServer;
@@ -36,6 +44,8 @@ import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.netty.http.server.HttpServerState;
+import reactor.netty.http.websocket.WebsocketInbound;
+import reactor.netty.http.websocket.WebsocketOutbound;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -43,8 +53,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -103,20 +118,31 @@ public class NettyWebServer implements ServerWebServer {
     @Setter
     private DispatcherHandler dispatcherHandler;
 
+    /**
+     * websocket 处理器
+     */
+    @Setter
+    private Map<String, WebSocketHandler> webSocketHandlerMap;
+
     public NettyWebServer() {
         this(new NettyProperties());
     }
 
     public NettyWebServer(NettyProperties config) {
-        this(config, null);
+        this(config, null, new ConcurrentHashMap<>(4));
     }
 
-    public NettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler) {
+    public NettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler, Map<String, WebSocketHandler> webSocketHandlerMap) {
         this.config = config;
         this.filters = config.getWebFilters().stream().map(FilterRegistrationBean::getFilter).collect(Collectors.toList());
         this.dispatcherHandler = dispatcherHandler;
+        this.webSocketHandlerMap = webSocketHandlerMap;
         this.patternMatcher = new AntPathMatcher();
         this.configNettyServer();
+    }
+
+    public void addWebSocketHandler(WebSocketHandler webSocketHandler) {
+        this.webSocketHandlerMap.putIfAbsent(webSocketHandler.getEndPoint(), webSocketHandler);
     }
 
     @Override
@@ -175,11 +201,59 @@ public class NettyWebServer implements ServerWebServer {
         return server.childObserve(new ResourceConnectionObserver(this.patternMatcher, this.config));
     }
 
+    protected BiFunction<? super WebsocketInbound, ? super WebsocketOutbound, ? extends Publisher<Void>> upgradeWebSocketHandler(ServerRequest request, WebSocketHandler webSocketHandler) {
+        AtomicReference<Connection> reference = new AtomicReference<>();
+        ((HttpServerRequest) request.getRawRequest()).withConnection(reference::set);
+        return (inbound, outbound) -> {
+            DefaultSession session = new DefaultSession(request, reference.get(), inbound, outbound);
+            webSocketHandler.onOpen(session);
+            inbound.aggregateFrames()
+                    .receive()
+                    .map(ByteBuf::retain)
+                    .publishOn(Schedulers.parallel())
+                    .doOnDiscard(ByteBuf.class, ReferenceCounted::release)
+                    .subscribe(new CoreSubscriber<>() {
+
+                        @Override
+                        public void onSubscribe(Subscription s) {
+                            s.request(Long.MAX_VALUE);
+                        }
+
+                        @Override
+                        public void onNext(ByteBuf byteBuf) {
+                            webSocketHandler.onMessage(session, byteBuf);
+                        }
+
+                        @Override
+                        public void onError(Throwable throwable) {
+                            webSocketHandler.onError(session, throwable);
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            webSocketHandler.onClose(session);
+                        }
+                    });
+            return outbound.neverComplete();
+        };
+    }
+
     protected HttpServer prepareDispatcherHandler(HttpServer server) {
         return server.handle((request, response) -> {
             // 资源处理器已处理
             if (response.hasSentHeaders()) {
                 return Mono.empty();
+            }
+
+            // websocket
+            if (request.requestHeaders().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)) {
+                ServerRequest serverRequest = new NettyServerRequest(request).init(EMPTY_INPUT_STREAM, Collections.emptyList());
+                WebSocketHandler webSocketHandler = this.webSocketHandlerMap.get(serverRequest.getRequestURI());
+                if (webSocketHandler == null) {
+                    return response.sendNotFound();
+                }
+                Supplier<Publisher<Void>> requestProcessorSupplier = () -> response.sendWebsocket(this.upgradeWebSocketHandler(serverRequest, webSocketHandler));
+                return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(serverRequest, null);
             }
 
             // 接收数据后执行，否则拿不到数据

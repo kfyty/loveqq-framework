@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.HttpCookie;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 
@@ -168,6 +169,13 @@ public interface ServerRequest {
      * @return 属性
      */
     Map<String, Object> getAttributeMap();
+
+    /**
+     * 获取远程地址
+     *
+     * @return 远程地址
+     */
+    InetSocketAddress getRemoteAddress();
 
     /**
      * 获取原始请求
