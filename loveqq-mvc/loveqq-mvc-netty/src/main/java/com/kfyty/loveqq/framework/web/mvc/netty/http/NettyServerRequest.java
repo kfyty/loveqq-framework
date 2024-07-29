@@ -10,6 +10,7 @@ import reactor.netty.http.server.HttpServerRequest;
 
 import java.io.InputStream;
 import java.net.HttpCookie;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -177,6 +178,11 @@ public class NettyServerRequest implements ServerRequest {
     @Override
     public Map<String, Object> getAttributeMap() {
         return this.attributes;
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return this.request.remoteAddress();
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.mvc.netty.filter.ws.WsFilter;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -57,6 +58,17 @@ public class DefaultFilterChain implements FilterChain {
             return Mono.from(this.handler.get());
         }
         Filter filter = this.filters.get(index++);
+        if (filter instanceof WsFilter) {
+            if (!filter.isWebSocket(request)) {                                                                         // websocket 过滤器，但请求是普通的
+                return this.doFilter(request, response);
+            }
+        }
+        // 普通过滤器，但请求是 websocket
+        else if (filter.isWebSocket(request)) {
+            return this.doFilter(request, response);
+        }
+
+        // 匹配过滤器
         String requestUri = request.getRequestURI();
         boolean anyMatch = Arrays.stream(filter.getPattern()).anyMatch(pattern -> this.matcher.matches(pattern, requestUri));
         if (anyMatch) {

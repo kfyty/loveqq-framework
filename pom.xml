@@ -473,13 +473,24 @@
                 <version>${dependency.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
+                        <id>copy-runtime-dependencies</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <excludeScope>provided</excludeScope>
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>${project.build.directory}/${boot-lib-output}</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-system-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>system</includeScope>
                             <outputDirectory>${project.build.directory}/${boot-lib-output}</outputDirectory>
                         </configuration>
                     </execution>

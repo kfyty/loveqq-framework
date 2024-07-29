@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.web.mvc.netty.filter;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import reactor.core.publisher.Mono;
 
 /**
@@ -19,6 +21,17 @@ public interface Filter {
      */
     default String[] getPattern() {
         return new String[]{"/*"};
+    }
+
+    /**
+     * 返回是否 websocket 请求
+     *
+     * @param request 请求
+     * @return true if websocket
+     */
+    default boolean isWebSocket(ServerRequest request) {
+        String connection = request.getHeader(HttpHeaderNames.CONNECTION.toString());
+        return connection != null && connection.equalsIgnoreCase(HttpHeaderValues.UPGRADE.toString());
     }
 
     /**

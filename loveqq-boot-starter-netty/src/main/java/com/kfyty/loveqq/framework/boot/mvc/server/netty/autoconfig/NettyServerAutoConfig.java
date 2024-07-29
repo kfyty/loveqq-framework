@@ -16,11 +16,13 @@ import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -55,8 +57,9 @@ public class NettyServerAutoConfig {
     }
 
     @Bean(destroyMethod = "stop")
-    public NettyWebServer nettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler) {
-        return new NettyWebServer(config, dispatcherHandler);
+    public NettyWebServer nettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler, @Autowired(required = false) List<WebSocketHandler> webSocketHandlers) {
+        Map<String, WebSocketHandler> webSocketHandlerMap = webSocketHandlers.stream().collect(Collectors.toMap(WebSocketHandler::getEndPoint, v -> v));
+        return new NettyWebServer(config, dispatcherHandler, webSocketHandlerMap);
     }
 
     protected void collectAndConfigFilter(NettyProperties config) {

@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpCookie;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -191,6 +192,11 @@ public class ServletServerRequest implements ServerRequest {
             attributes.put(value, this.request.getAttribute(value));
         }
         return attributes;
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return new InetSocketAddress(this.request.getRemoteHost(), this.request.getRemotePort());
     }
 
     @Override
