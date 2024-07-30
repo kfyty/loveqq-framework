@@ -14,8 +14,8 @@ import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.SneakyThrows;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,8 +51,8 @@ public class AsyncTest implements ContextAfterRefreshed {
     @EventListener
     public void onContextRefreshed(ContextRefreshedEvent event) {
         latch.await();
-        Assert.assertEquals(this.async[0], 1);
-        Assert.assertEquals(this.async[1], 2);
+        Assertions.assertEquals(this.async[0], 1);
+        Assertions.assertEquals(this.async[1], 2);
     }
 }
 

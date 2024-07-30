@@ -5,8 +5,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,8 +43,8 @@ public class LinkedArrayListTest {
         list.add(3);
         list.add(1, 2);
         list.add(0, 0);
-        Assert.assertEquals(list, Arrays.asList(0, 1, 2, 3));
-        Assert.assertArrayEquals(list.toArray(Integer[]::new), new Integer[] {0, 1, 2, 3});
+        Assertions.assertEquals(list, Arrays.asList(0, 1, 2, 3));
+        Assertions.assertArrayEquals(list.toArray(Integer[]::new), new Integer[] {0, 1, 2, 3});
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream);
@@ -54,8 +54,8 @@ public class LinkedArrayListTest {
         ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
         List<Integer> o = (List<Integer>) ois.readObject();
         IOUtil.close(ois);
-        Assert.assertEquals(o, Arrays.asList(0, 1, 2, 3));
-        Assert.assertEquals(((LinkedArrayList<?>) list).clone(), Arrays.asList(0, 1, 2, 3));
+        Assertions.assertEquals(o, Arrays.asList(0, 1, 2, 3));
+        Assertions.assertEquals(((LinkedArrayList<?>) list).clone(), Arrays.asList(0, 1, 2, 3));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class LinkedArrayListTest {
         list.add(4);
         list.add(2, 5);
         list.add(5, 6);
-        Assert.assertEquals(list, Arrays.asList(1, 2, 5, 3, 4, 6));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 5, 3, 4, 6));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class LinkedArrayListTest {
         list.add(4);
         list.remove(3);
         list.remove(1);
-        Assert.assertEquals(list, Arrays.asList(1, 3));
+        Assertions.assertEquals(list, Arrays.asList(1, 3));
     }
 
     @Test
@@ -92,10 +92,10 @@ public class LinkedArrayListTest {
         list.add(0, 5);
         list.add(0, 6);
         list.add(0, 7);
-        Assert.assertEquals(list, Arrays.asList(7, 6, 5, 4, 3, 2, 1));
+        Assertions.assertEquals(list, Arrays.asList(7, 6, 5, 4, 3, 2, 1));
         list.clear();
         list.addAll(Arrays.asList(1, 2));
-        Assert.assertEquals(list, Arrays.asList(1, 2));
+        Assertions.assertEquals(list, Arrays.asList(1, 2));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class LinkedArrayListTest {
         list.add(2);
         list.add(10);
         list.addAll(2, Arrays.asList(3, 4, 5, 6, 7, 8, 9));
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class LinkedArrayListTest {
         list.add(10);
         list.add(11);
         list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
     }
 
     @Test
@@ -125,7 +125,7 @@ public class LinkedArrayListTest {
         list.add(10);
         list.add(11);
         list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
     }
 
     @Test
@@ -135,7 +135,7 @@ public class LinkedArrayListTest {
         list.add(10);
         list.add(11);
         list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
     }
 
     @Test
@@ -145,7 +145,7 @@ public class LinkedArrayListTest {
         list.add(10);
         list.add(11);
         list.addAll(0, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+        Assertions.assertEquals(list, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
     }
 
     @Test
@@ -166,13 +166,13 @@ public class LinkedArrayListTest {
                 list1.addAll(index, Collections.singletonList(value));
                 list2.addAll(index, Collections.singletonList(value));
             }
-            Assert.assertEquals(list2, list1);
+            Assertions.assertEquals(list2, list1);
         }
         for (int i = 0; i < count - 10; i++) {
             int index = random.nextInt(list1.size());
             list1.remove(index);
             list2.remove(index);
-            Assert.assertEquals(list2, list1);
+            Assertions.assertEquals(list2, list1);
         }
         log.info("Correctness testing complete");
     }

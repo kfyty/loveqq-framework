@@ -2,8 +2,8 @@ package com.kfyty.core;
 
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * 描述:
@@ -47,8 +47,8 @@ public class JsonTest {
     @Test
     public void test() {
         User user = JsonUtil.toObject(json, User.class);
-        Assert.assertEquals(user.getChildStr(), "{\"id\":\"3\",\"arr\":[{\"id\":10},{\"id\":12}],\"ids\":[1,2,3]}");
-        Assert.assertEquals(user.getList(), "[{\"id\":\"5\"},{\"id\":\"6\"}]");
+        Assertions.assertEquals(user.getChildStr(), "{\"id\":\"3\",\"arr\":[{\"id\":10},{\"id\":12}],\"ids\":[1,2,3]}");
+        Assertions.assertEquals(user.getList(), "[{\"id\":\"5\"},{\"id\":\"6\"}]");
     }
 
     @Data

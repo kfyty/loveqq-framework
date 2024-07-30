@@ -33,7 +33,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefini
  */
 @Data
 @Slf4j
-public class ConditionContext {
+public class ConditionContext implements AutoCloseable {
     /**
      * BeanFactory
      */
@@ -222,5 +222,14 @@ public class ConditionContext {
             collect.stream().filter(e -> !e.getBeanName().equals(current.getBeanName())).forEach(e -> nested.put(e.getBeanName(), e));
         }
         return CommonUtil.sort(nested, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
+    }
+
+    @Override
+    public void close() {
+        this.conditionBeanMap.clear();
+        this.nestedConditionReference.clear();
+        this.resolvedCondition.clear();
+        this.matchedCondition.clear();
+        this.skippedCondition.clear();
     }
 }
