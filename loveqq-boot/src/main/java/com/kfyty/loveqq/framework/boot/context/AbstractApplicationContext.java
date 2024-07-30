@@ -38,11 +38,11 @@ import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoC
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
     protected final Thread shutdownHook = new Thread(this::close);
 
-    @Autowired
-    protected ApplicationEventPublisher applicationEventPublisher;
-
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
     protected ExecutorService executorService;
+
+    @Autowired
+    protected ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -103,6 +103,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     public void close() {
         super.close();
+        this.executorService = null;
         this.applicationEventPublisher = null;
     }
 

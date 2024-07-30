@@ -9,6 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import lombok.Data;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.cache.Cache;
@@ -35,6 +36,7 @@ import java.util.Set;
  * @date 2024/6/03 18:55
  * @email kfyty725@hotmail.com
  */
+@Data
 public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private MybatisProperties mybatisProperties;

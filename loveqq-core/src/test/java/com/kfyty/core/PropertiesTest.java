@@ -1,8 +1,8 @@
 package com.kfyty.core;
 
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -18,6 +18,6 @@ public class PropertiesTest {
     @Test
     public void propertiesTest() {
         Properties load = PropertiesUtil.load("application.properties");
-        Assert.assertEquals(load.getProperty("k.nested.prop"), "哈喽");
+        Assertions.assertEquals(load.getProperty("k.nested.prop"), "哈喽");
     }
 }

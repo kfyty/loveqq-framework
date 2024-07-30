@@ -26,8 +26,8 @@ import com.kfyty.loveqq.framework.web.core.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -69,8 +69,8 @@ public class AutowiredTest {
 
     @Autowired
     public void setB1B2(Supplier<Bean1> bean1Supplier, Supplier<Bean2> bean2Supplier) {
-        Assert.assertTrue(bean1Supplier.get() instanceof Bean1);
-        Assert.assertTrue(bean2Supplier.get() instanceof Bean2);
+        Assertions.assertTrue(bean1Supplier.get() instanceof Bean1);
+        Assertions.assertTrue(bean2Supplier.get() instanceof Bean2);
     }
 
     @Test
@@ -81,22 +81,22 @@ public class AutowiredTest {
 
     @Bean
     public Bean1 bean1() {
-        Assert.assertNotNull(this.autowiredTest);
+        Assertions.assertNotNull(this.autowiredTest);
         return new Bean1();
     }
 
     @PostConstruct
     public void afterPropertiesSet() {
         Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
-        Assert.assertTrue(AnnotationUtil.hasAnnotationElement(this.autowiredTest, Component.class));
-        Assert.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
-        Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
-        Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
-        Assert.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
-        Assert.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
-        Assert.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
-        Assert.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
-        Assert.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
+        Assertions.assertTrue(AnnotationUtil.hasAnnotationElement(this.autowiredTest, Component.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
+        Assertions.assertFalse(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
+        Assertions.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
+        Assertions.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assertions.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
     }
 }
 
@@ -107,26 +107,26 @@ class Config {
 
     @Autowired
     public Config(Factory factory, HelloInter helloInter, List<Inter> inters) {
-        Assert.assertNotNull(factory);
-        Assert.assertSame(helloInter.bean5(), helloInter.bean5());
-        Assert.assertEquals("kfyty", helloInter.hello("kfyty"));
+        Assertions.assertNotNull(factory);
+        Assertions.assertSame(helloInter.bean5(), helloInter.bean5());
+        Assertions.assertEquals("kfyty", helloInter.hello("kfyty"));
     }
 
     @Bean
     public Bean2 bean2(Bean1 bean1, Bean3 bean3, Inter1 inter1, List<Inter> inters, Inter[] interArr) {
-        Assert.assertNotNull(test);
+        Assertions.assertNotNull(test);
         Map<String, Inter> interMap = Arrays.stream(interArr).collect(Collectors.toMap(k -> BeanUtil.getBeanName(k.getClass()), Function.identity()));
-        Assert.assertSame(bean1, test.bean1());
-        Assert.assertSame(bean3, this.bean3(inter1, interMap));
-        Assert.assertSame(bean3, this.bean3(inter1, interMap));
-        Assert.assertEquals(2, inters.size());
-        Assert.assertEquals(inters, Arrays.stream(interArr).collect(Collectors.toList()));
+        Assertions.assertSame(bean1, test.bean1());
+        Assertions.assertSame(bean3, this.bean3(inter1, interMap));
+        Assertions.assertSame(bean3, this.bean3(inter1, interMap));
+        Assertions.assertEquals(2, inters.size());
+        Assertions.assertEquals(inters, Arrays.stream(interArr).collect(Collectors.toList()));
         return new Bean2();
     }
 
     @Bean
     public Bean3 bean3(@Autowired("inter1") Inter inter1, Map<String, Inter> interMap) {
-        Assert.assertNotNull(test);
+        Assertions.assertNotNull(test);
         return new Bean3();
     }
 }
@@ -149,7 +149,7 @@ abstract class InterImpl<T> implements Inter {
 
     @Resource
     public void setTT(T t) {
-        Assert.assertSame(this.t, t);
+        Assertions.assertSame(this.t, t);
     }
 }
 
@@ -163,15 +163,15 @@ class Inter1 extends InterImpl<Bean1> implements InitializingBean {
 
     @Bean
     public Bean4 bean4(Bean1 bean1) {
-        Assert.assertNotNull(this.t);
-        Assert.assertNotNull(this.bean1);
+        Assertions.assertNotNull(this.t);
+        Assertions.assertNotNull(this.bean1);
         return new Bean4();
     }
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertSame(bean1, this.t);
-        Assert.assertNotNull(bean4);
+        Assertions.assertSame(bean1, this.t);
+        Assertions.assertNotNull(bean4);
     }
 }
 
@@ -185,8 +185,8 @@ class Inter2 extends InterImpl<Bean2> implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertSame(bean2, this.t);
-        Assert.assertSame(self, this);
+        Assertions.assertSame(bean2, this.t);
+        Assertions.assertSame(self, this);
     }
 }
 
@@ -258,14 +258,14 @@ class HelloInterImpl implements HelloInter, InitializingBean {
     @Bean
     @Override
     public Bean5 bean5() {
-        Assert.assertNotNull(factory);
+        Assertions.assertNotNull(factory);
         return new Bean5();
     }
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertNotNull(this.factory);
-        Assert.assertTrue(this.flag);
+        Assertions.assertNotNull(this.factory);
+        Assertions.assertTrue(this.flag);
     }
 }
 
@@ -283,13 +283,13 @@ class TestEventListener implements ITestEvent, ApplicationListener<TestEvent>, I
 
     @Override
     public void onApplicationEvent(TestEvent testEvent) {
-        Assert.assertEquals(testEvent.getSource(), "event");
+        Assertions.assertEquals(testEvent.getSource(), "event");
     }
 
     @Override
     @EventListener(TestEvent.class)
     public void onTestEvent(TestEvent testEvent) {
-        Assert.assertEquals(testEvent.getSource(), "event");
+        Assertions.assertEquals(testEvent.getSource(), "event");
     }
 
     @Override
@@ -337,7 +337,7 @@ class BaseController<T, K> {
 
     @Autowired
     public void setServiceT(Base<T, K> service) {
-        Assert.assertSame(this.service, service);
+        Assertions.assertSame(this.service, service);
     }
 }
 
@@ -356,6 +356,6 @@ class DefaultController extends IntBaseController<Entity> implements Initializin
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertSame(this.defaultBase, this.service);
+        Assertions.assertSame(this.defaultBase, this.service);
     }
 }

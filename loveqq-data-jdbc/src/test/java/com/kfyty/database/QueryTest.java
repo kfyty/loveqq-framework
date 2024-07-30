@@ -16,8 +16,8 @@ import com.kfyty.loveqq.framework.data.jdbc.sql.dynamic.DynamicProvider;
 import com.kfyty.loveqq.framework.data.jdbc.sql.dynamic.enjoy.EnjoyDynamicProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ public class QueryTest {
 
     private UserMapper userMapper;
 
-    @Before
+    @BeforeEach
     public void prepare() throws Exception {
         Properties load = PropertiesUtil.load(PATH);
         DataSource dataSource = new HikariDataSource(new HikariConfig(load));

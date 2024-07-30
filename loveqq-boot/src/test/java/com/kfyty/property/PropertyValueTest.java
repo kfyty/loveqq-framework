@@ -10,8 +10,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import lombok.Getter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class PropertyValueTest implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Assert.assertSame(this.propertyValueBean.getId(), 1);
+        Assertions.assertSame(this.propertyValueBean.getId(), 1);
     }
 
     @Getter

@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
 
@@ -35,8 +35,8 @@ public class ConditionTest {
 
     @EventListener
     public void onComplete(ContextRefreshedEvent event) {
-        Assert.assertSame(this.isOverride, true);
-        Assert.assertSame(this.cons.size(), 5);
+        Assertions.assertSame(this.isOverride, true);
+        Assertions.assertSame(this.cons.size(), 5);
     }
 }
 

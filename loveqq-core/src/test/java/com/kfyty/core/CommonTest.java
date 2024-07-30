@@ -5,8 +5,8 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMa
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,14 +29,14 @@ public class CommonTest {
     public void removePrefixTest() {
         String s = "/api/test/api";
         String removePrefix = CommonUtil.removePrefix("/api", s);
-        Assert.assertEquals(removePrefix, "/test/api");
+        Assertions.assertEquals(removePrefix, "/test/api");
     }
 
     @Test
     public void resolveURLParamTest() {
         Map<String, String> map = CommonUtil.resolveURLParameters("http://aaa.com/aaa?p.a=1");
         Map<String, String> map2 = CommonUtil.resolveURLParameters("a=1", "p");
-        Assert.assertEquals(map, map2);
+        Assertions.assertEquals(map, map2);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class CommonTest {
         String s = "<a><b><c>";
         List<String> r = new ArrayList<>();
         CommonUtil.iteratorSplit(s, "<", ">", r::add);
-        Assert.assertEquals(r, Arrays.asList("a", "b", "c"));
+        Assertions.assertEquals(r, Arrays.asList("a", "b", "c"));
     }
 
     @Test

@@ -155,6 +155,7 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
         this.scannedClasses.clear();
         this.includeFilters.clear();
         this.excludeFilters.clear();
+        this.componentMatchers.clear();
     }
 
     @Override

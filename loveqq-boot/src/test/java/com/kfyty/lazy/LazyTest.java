@@ -9,8 +9,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
@@ -49,21 +49,21 @@ public class LazyTest implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Assert.assertFalse(configLazyF);
-        Assert.assertFalse(lazyBeanF);
-        Assert.assertFalse(scopeLazyBeanF);
-        Assert.assertSame(this.configLazy.lazyBean(), this.lazyBean);
-        Assert.assertSame(this.scopeLazyBean, this.scopeLazyBean2);
+        Assertions.assertFalse(configLazyF);
+        Assertions.assertFalse(lazyBeanF);
+        Assertions.assertFalse(scopeLazyBeanF);
+        Assertions.assertSame(this.configLazy.lazyBean(), this.lazyBean);
+        Assertions.assertSame(this.scopeLazyBean, this.scopeLazyBean2);
 
-        Assert.assertNotEquals(this.scopeLazyBean.test(), this.scopeLazyBean.test());
-        Assert.assertTrue(scopeLazyBeanF);
+        Assertions.assertNotEquals(this.scopeLazyBean.test(), this.scopeLazyBean.test());
+        Assertions.assertTrue(scopeLazyBeanF);
 
         this.configLazy.test();
-        Assert.assertTrue(configLazyF);
-        Assert.assertFalse(lazyBeanF);
+        Assertions.assertTrue(configLazyF);
+        Assertions.assertFalse(lazyBeanF);
 
         this.lazyBean.test();
-        Assert.assertTrue(lazyBeanF);
+        Assertions.assertTrue(lazyBeanF);
     }
 
     @Lazy

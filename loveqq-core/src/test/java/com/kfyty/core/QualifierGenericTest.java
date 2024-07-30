@@ -4,8 +4,8 @@ import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -63,13 +63,13 @@ public class QualifierGenericTest {
         SimpleGeneric mapT = SimpleGeneric.from(QualifierGenericTest.class.getMethod("mapT"));
         SimpleGeneric mapList = SimpleGeneric.from(QualifierGenericTest.class.getMethod("mapList"));
         QualifierGeneric nested = QualifierGeneric.from(QualifierGenericTest.class.getMethod("nested"));
-        Assert.assertFalse(t.isSimpleGeneric());
-        Assert.assertTrue(arrT.isSimpleArray());
-        Assert.assertTrue(List.class.isAssignableFrom(listT.getSourceType()) && !Map.class.isAssignableFrom(listT.getFirst().get()));
-        Assert.assertTrue(Set.class.isAssignableFrom(setT.getSourceType()));
-        Assert.assertTrue(map.isMapGeneric() && map.getMapValueType().get().equals(Object.class));
-        Assert.assertTrue(mapT.isMapGeneric() && mapT.getMapValueType().get().equals(Entity.class));
-        Assert.assertTrue(List.class.isAssignableFrom(mapList.getSourceType()) && mapList.getFirst().get().equals(Map.class));
+        Assertions.assertFalse(t.isSimpleGeneric());
+        Assertions.assertTrue(arrT.isSimpleArray());
+        Assertions.assertTrue(List.class.isAssignableFrom(listT.getSourceType()) && !Map.class.isAssignableFrom(listT.getFirst().get()));
+        Assertions.assertTrue(Set.class.isAssignableFrom(setT.getSourceType()));
+        Assertions.assertTrue(map.isMapGeneric() && map.getMapValueType().get().equals(Object.class));
+        Assertions.assertTrue(mapT.isMapGeneric() && mapT.getMapValueType().get().equals(Entity.class));
+        Assertions.assertTrue(List.class.isAssignableFrom(mapList.getSourceType()) && mapList.getFirst().get().equals(Map.class));
     }
 
     @Test
@@ -88,17 +88,17 @@ public class QualifierGenericTest {
         ActualGeneric fromService = ActualGeneric.from(DefaultController.class, service);
         ActualGeneric fromBaseService = ActualGeneric.from(DefaultController.class, baseService);
         ActualGeneric fromEntityClass = ActualGeneric.from(DefaultController.class, entityClass);
-        Assert.assertFalse(fromT.isSimpleGeneric());
-        Assert.assertEquals(fromT.getSourceType(), Entity.class);
-        Assert.assertEquals(fromK.getSourceType(), Integer.class);
-        Assert.assertEquals(fromBaseT.getSourceType(), Entity.class);
-        Assert.assertEquals(fromArrT.getSourceType(), Entity[].class);
-        Assert.assertEquals(fromArrT.getFirst().get(), Entity.class);
-        Assert.assertEquals(fromService.getFirst().get(), Integer.class);
-        Assert.assertEquals(fromService.getSecond().get(), Entity.class);
-        Assert.assertEquals(fromBaseService.getFirst().get(), Integer.class);
-        Assert.assertEquals(fromBaseService.getSecond().get(), Entity.class);
-        Assert.assertEquals(fromEntityClass.getSimpleActualType(), Entity.class);
+        Assertions.assertFalse(fromT.isSimpleGeneric());
+        Assertions.assertEquals(fromT.getSourceType(), Entity.class);
+        Assertions.assertEquals(fromK.getSourceType(), Integer.class);
+        Assertions.assertEquals(fromBaseT.getSourceType(), Entity.class);
+        Assertions.assertEquals(fromArrT.getSourceType(), Entity[].class);
+        Assertions.assertEquals(fromArrT.getFirst().get(), Entity.class);
+        Assertions.assertEquals(fromService.getFirst().get(), Integer.class);
+        Assertions.assertEquals(fromService.getSecond().get(), Entity.class);
+        Assertions.assertEquals(fromBaseService.getFirst().get(), Integer.class);
+        Assertions.assertEquals(fromBaseService.getSecond().get(), Entity.class);
+        Assertions.assertEquals(fromEntityClass.getSimpleActualType(), Entity.class);
     }
 }
 

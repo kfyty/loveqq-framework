@@ -22,8 +22,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,9 +56,9 @@ public class ComponentTest implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Assert.assertNotNull(a);
-        Assert.assertNull(b);
-        Assert.assertNotNull(c);
+        Assertions.assertNotNull(a);
+        Assertions.assertNull(b);
+        Assertions.assertNotNull(c);
     }
 }
 
@@ -113,29 +113,29 @@ class PropertiesConfig implements InitializingBean {
     private Pair<String, List<String>> listPair;
 
     public PropertiesConfig(@Value("${k.prop.ip}") String ip) {
-        Assert.assertEquals(ip, "127.0.0.1");
+        Assertions.assertEquals(ip, "127.0.0.1");
     }
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertEquals(this.url, "http://127.0.0.1:8080/");
-        Assert.assertEquals(this.pair.getKey(), Long.valueOf(1L));
-        Assert.assertEquals(this.pair.getValue(), "name_of_1");
-        Assert.assertEquals(this.idArr, new Integer[]{1, 2});
-        Assert.assertEquals(this.ids, Arrays.asList(1, 2));
-        Assert.assertEquals(this.users.size(), 2);
-        Assert.assertEquals(this.user.getId(), "1");
-        Assert.assertEquals(this.user.getName(), "name");
-        Assert.assertEquals(this.users.get(1).getName(), "name2");
-        Assert.assertEquals(this.userMap.get("1").getChildren().get(0).getExtra().get(0), "map");
-        Assert.assertEquals(this.opt.getProperty("user.enable"), "true");
-        Assert.assertEquals(this.configLists.get(0).get(0).getId(), "unique_list_list");
-        Assert.assertEquals(this.listConfigMap.get(0).get("map").getId(), "unique_list_map");
-        Assert.assertEquals(this.configMapMap.get("map").get("nested").getId(), "unique_map_map");
-        Assert.assertEquals(this.configListMap.get("list").get(0).getId(), "unique_map_list");
-        Assert.assertEquals(this.values.get(), Arrays.asList("1", "2"));
-        Assert.assertEquals(this.valueUser.get().getId(), "id");
-        Assert.assertEquals(this.listPair.getValue(), Arrays.asList("1", "2"));
+        Assertions.assertEquals(this.url, "http://127.0.0.1:8080/");
+        Assertions.assertEquals(this.pair.getKey(), Long.valueOf(1L));
+        Assertions.assertEquals(this.pair.getValue(), "name_of_1");
+        Assertions.assertArrayEquals(this.idArr, new Integer[]{1, 2});
+        Assertions.assertEquals(this.ids, Arrays.asList(1, 2));
+        Assertions.assertEquals(this.users.size(), 2);
+        Assertions.assertEquals(this.user.getId(), "1");
+        Assertions.assertEquals(this.user.getName(), "name");
+        Assertions.assertEquals(this.users.get(1).getName(), "name2");
+        Assertions.assertEquals(this.userMap.get("1").getChildren().get(0).getExtra().get(0), "map");
+        Assertions.assertEquals(this.opt.getProperty("user.enable"), "true");
+        Assertions.assertEquals(this.configLists.get(0).get(0).getId(), "unique_list_list");
+        Assertions.assertEquals(this.listConfigMap.get(0).get("map").getId(), "unique_list_map");
+        Assertions.assertEquals(this.configMapMap.get("map").get("nested").getId(), "unique_map_map");
+        Assertions.assertEquals(this.configListMap.get("list").get(0).getId(), "unique_map_list");
+        Assertions.assertEquals(this.values.get(), Arrays.asList("1", "2"));
+        Assertions.assertEquals(this.valueUser.get().getId(), "id");
+        Assertions.assertEquals(this.listPair.getValue(), Arrays.asList("1", "2"));
     }
 
     @Data
@@ -171,11 +171,11 @@ abstract class A implements InitializingBean, CommandLineRunner {
 
     @Override
     public void afterPropertiesSet() {
-        Assert.assertNotNull(this.componentS1);
-        Assert.assertNotNull(this.componentS2);
-        Assert.assertSame(this.componentS1, this.componentS2);
-        Assert.assertNotEquals(this.componentS1.getTime(), this.componentS2.getTime());
-        Assert.assertEquals(1, this.componentS.size());
+        Assertions.assertNotNull(this.componentS1);
+        Assertions.assertNotNull(this.componentS2);
+        Assertions.assertSame(this.componentS1, this.componentS2);
+        Assertions.assertNotEquals(this.componentS1.getTime(), this.componentS2.getTime());
+        Assertions.assertEquals(1, this.componentS.size());
     }
 
     @Override
@@ -183,10 +183,10 @@ abstract class A implements InitializingBean, CommandLineRunner {
         C c1 = this.c();
         C c2 = this.c();
         List<C> cs = this.cList();
-        Assert.assertNotNull(c1);
-        Assert.assertNotNull(c2);
-        Assert.assertEquals(c1, c2);
-        Assert.assertEquals(1, cs.size());
+        Assertions.assertNotNull(c1);
+        Assertions.assertNotNull(c2);
+        Assertions.assertEquals(c1, c2);
+        Assertions.assertEquals(1, cs.size());
     }
 }
 
@@ -279,17 +279,17 @@ class ComplexBean implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        Assert.assertNotEquals(this.lazyAAA.get(), this.lazyAAA.get());
-        Assert.assertSame(this.aaa, this.aaa2);
-        Assert.assertNotEquals(this.aaa.getTime(), this.aaa2.getTime());
-        Assert.assertSame(this.bbb, this.bbb2);
-        Assert.assertSame(this.aaa.getBBB(), this.bbb);
-        Assert.assertNotSame(this.ccc1, this.ccc2);
-        Assert.assertEquals(this.ccc1.getTime(), this.ccc1.getTime());
-        Assert.assertSame(this.protoTypeDDDFactory, this.protoTypeDDDFactory2);
-        Assert.assertSame(this.ddd, this.ddd2);
-        Assert.assertNotEquals(this.ddd.getTime(), this.ddd2.getTime());
-        Assert.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
+        Assertions.assertNotEquals(this.lazyAAA.get(), this.lazyAAA.get());
+        Assertions.assertSame(this.aaa, this.aaa2);
+        Assertions.assertNotEquals(this.aaa.getTime(), this.aaa2.getTime());
+        Assertions.assertSame(this.bbb, this.bbb2);
+        Assertions.assertSame(this.aaa.getBBB(), this.bbb);
+        Assertions.assertNotSame(this.ccc1, this.ccc2);
+        Assertions.assertEquals(this.ccc1.getTime(), this.ccc1.getTime());
+        Assertions.assertSame(this.protoTypeDDDFactory, this.protoTypeDDDFactory2);
+        Assertions.assertSame(this.ddd, this.ddd2);
+        Assertions.assertNotEquals(this.ddd.getTime(), this.ddd2.getTime());
+        Assertions.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
     }
 
     @Component
