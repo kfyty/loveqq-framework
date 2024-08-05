@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import lombok.Getter;
 
@@ -89,5 +90,14 @@ public class IOC implements BeanFactoryPreProcessor {
             return (ConfigurableApplicationContext) beanFactory;
         }
         throw new IllegalStateException("The bean factory doesn't instance of ConfigurableApplicationContext.");
+    }
+
+    /**
+     * 发布事件
+     *
+     * @param event 事件
+     */
+    public static void publishEvent(ApplicationEvent<?> event) {
+        getApplicationContext().publishEvent(event);
     }
 }

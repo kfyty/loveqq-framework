@@ -179,7 +179,7 @@ public class SqlSession implements InvocationHandler {
      */
     private Annotation[] processAnnotation(Method method) {
         Predicate<Annotation> annotationFilter = e -> e.annotationType().equals(Query.class) || e.annotationType().equals(Execute.class);
-        Annotation[] annotations = Arrays.stream(flatRepeatableAnnotation(findAnnotations(method))).filter(annotationFilter).toArray(Annotation[]::new);
+        Annotation[] annotations = flatRepeatableAnnotation(findAnnotations(method), annotationFilter, Annotation[]::new);
         if (CommonUtil.notEmpty(annotations)) {
             return annotations;
         }

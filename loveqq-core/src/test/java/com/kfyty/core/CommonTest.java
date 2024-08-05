@@ -52,7 +52,7 @@ public class CommonTest {
     public void iteratorSplitTest() {
         String s = "<a><b><c>";
         List<String> r = new ArrayList<>();
-        CommonUtil.iteratorSplit(s, "<", ">", r::add);
+        CommonUtil.split(s, "<", ">", r::add);
         Assertions.assertEquals(r, Arrays.asList("a", "b", "c"));
     }
 

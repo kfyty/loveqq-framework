@@ -18,18 +18,17 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public abstract class SerializableUtil {
-    private static final int DEFAULT_BYTE_ARRAY_SIZE = 512;
 
     public static byte[] serialize(Object o) {
         Objects.requireNonNull(o);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(DEFAULT_BYTE_ARRAY_SIZE);
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(IOUtil.DEFAULT_BUFFER_SIZE);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(o);
             objectOutputStream.flush();
+            return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             throw new ResolvableException("serialize object failed: " + o, e);
         }
-        return byteArrayOutputStream.toByteArray();
     }
 
     public static Object deserialize(byte[] bytes) {
@@ -37,7 +36,7 @@ public abstract class SerializableUtil {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             return objectInputStream.readObject();
         } catch (Exception e) {
-            throw new ResolvableException("deserialize object failed: ", e);
+            throw new ResolvableException("deserialize object failed.", e);
         }
     }
 

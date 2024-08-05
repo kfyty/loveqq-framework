@@ -11,7 +11,8 @@ import java.lang.annotation.Target;
 
 /**
  * 描述: 用于过滤需要生成 bean 定义的 Class
- * 一般和 ComponentScan 结合使用，单独使用时，等价为 ${@link ComponentScan#includeFilter()}
+ * <p>
+ * 一般和 {@link ComponentScan} 结合使用
  *
  * @author kfyty725
  * @date 2021/5/21 16:46
@@ -19,7 +20,7 @@ import java.lang.annotation.Target;
  * @see ConfigurableApplicationContext#isMatchComponent(Class)
  */
 @Documented
-@Target(ElementType.TYPE)
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentFilter {
     /**

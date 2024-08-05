@@ -115,6 +115,9 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
     public static void triggerViewBind(Object controller) {
         Map<String, Field> fieldMap = ReflectUtil.getFieldMap(controller.getClass());
         for (Field value : fieldMap.values()) {
+            if (value.getDeclaringClass() == Object.class) {
+                continue;
+            }
             Object fieldValue = ReflectUtil.getFieldValue(controller, value, false);
             if (fieldValue != null && AopUtil.isProxy(fieldValue)) {
                 AopUtil.getProxyInterceptorChain(fieldValue)

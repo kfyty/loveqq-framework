@@ -100,7 +100,7 @@ public abstract class AopUtil {
      * @return 获取原目标中声明的方法
      */
     public static Method getTargetMethod(Class<?> targetClass, Method method) {
-        if (Proxy.isProxyClass(targetClass) || method.getDeclaringClass().equals(targetClass)) {
+        if (isJdkProxy(targetClass) || method.getDeclaringClass().equals(targetClass) || method.getDeclaringClass() == Object.class) {
             return method;
         }
         return ofNullable(ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);

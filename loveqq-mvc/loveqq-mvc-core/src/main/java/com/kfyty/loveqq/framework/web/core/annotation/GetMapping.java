@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.annotation;
 
+import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
 import java.lang.annotation.Documented;
@@ -18,10 +19,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @RequestMapping(requestMethod = RequestMethod.GET)
 public @interface GetMapping {
-
+    @AliasFor(annotation = RequestMapping.class)
     String value() default "";
 
+    @AliasFor(annotation = RequestMapping.class)
     String produces() default "text/plain; charset=utf-8";
 
+    @AliasFor(annotation = RequestMapping.class)
     RequestMapping.DefaultMapping defaultMapping() default RequestMapping.DefaultMapping.DEFAULT;
 }

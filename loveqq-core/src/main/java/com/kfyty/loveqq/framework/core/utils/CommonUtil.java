@@ -127,6 +127,8 @@ public abstract class CommonUtil {
         }
     }
 
+    /* ------------------------------------------ 集合操作 ------------------------------------------ */
+
     @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static boolean empty(Object obj) {
         if (obj instanceof CharSequence) {
@@ -156,85 +158,6 @@ public abstract class CommonUtil {
             return ((Optional<?>) obj).isPresent() ? 1 : 0;
         }
         return 1;
-    }
-
-    public static Map<String, String> loadCommandLineProperties(String[] commandLineArgs, String keySeparator) {
-        Map<String, String> propertySources = new HashMap<>(8);
-        for (String key : commandLineArgs) {
-            if (key.startsWith(keySeparator)) {
-                int index = key.indexOf('=');
-                if (index == -1) {
-                    throw new IllegalArgumentException("please set property value of key: " + key);
-                }
-                propertySources.put(key.substring(keySeparator.length(), index), key.substring(index + 1));
-            }
-        }
-        return propertySources;
-    }
-
-    public static String getGetter(String name) {
-        return "get" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
-    }
-
-    public static String getSetter(String name) {
-        return "set" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
-    }
-
-    public static void consumer(Object o, Consumer<Object> consumer) {
-        consumer(o, consumer, entry -> entry);
-    }
-
-    public static void consumer(Object o, Consumer<Object> consumer, Function<Map.Entry<?, ?>, Object> entryMapping) {
-        mapping(o, e -> {
-            consumer.accept(e);
-            return null;
-        }, entryMapping);
-    }
-
-    public static <T> List<T> mapping(Object o, Function<Object, T> mapping) {
-        return mapping(o, mapping, entry -> entry);
-    }
-
-    public static <T> List<T> mapping(Object o, Function<Object, T> mapping, Function<Map.Entry<?, ?>, Object> entryMapping) {
-        if (o == null) {
-            return emptyList();
-        }
-        if (o instanceof Collection) {
-            return ((Collection<?>) o).stream().map(mapping).collect(Collectors.toList());
-        }
-        if (o.getClass().isArray()) {
-            return (o instanceof Object[] ? Arrays.stream((Object[]) o) : toList(o).stream()).map(mapping).collect(Collectors.toList());
-        }
-        if (o instanceof Map) {
-            return ((Map<?, ?>) o).entrySet().stream().map(entryMapping).map(mapping).collect(Collectors.toList());
-        }
-        return singletonList(mapping.apply(o));
-    }
-
-    public static List<String> split(String source, String pattern) {
-        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toList());
-    }
-
-    public static <T> List<T> split(String source, String pattern, Function<String, T> mapping) {
-        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toList());
-    }
-
-    public static Set<String> split(String source, String pattern, boolean distinct) {
-        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
-    }
-
-    public static <T> Set<T> split(String source, String pattern, Function<String, T> mapping, boolean distinct) {
-        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toSet());
-    }
-
-    public static void iteratorSplit(String source, String start, String end, Consumer<String> substring) {
-        int startIndex = source.indexOf(start);
-        int endIndex = source.indexOf(end, startIndex);
-        while (startIndex != -1 && endIndex != -1) {
-            substring.accept(source.substring(startIndex + start.length(), endIndex));
-            startIndex = source.indexOf(start, endIndex);
-            endIndex = source.indexOf(end, startIndex);
-        }
     }
 
     public static List<?> toList(Object value) {
@@ -267,14 +190,104 @@ public abstract class CommonUtil {
         return instance;
     }
 
-    public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
-        Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>(unsortedMap.size());
-        return unsortedMap
-                .entrySet()
-                .stream()
-                .sorted(comparator)
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
+    /* ------------------------------------------ 字符串操作 ------------------------------------------ */
+
+    public static String getGetter(String name) {
+        return "get" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
     }
+
+    public static String getSetter(String name) {
+        return "set" + (name.length() == 1 ? name.toUpperCase() : Character.toUpperCase(name.charAt(0)) + name.substring(1));
+    }
+
+    public static List<String> split(String source, String pattern) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toList());
+    }
+
+    public static <T> List<T> split(String source, String pattern, Function<String, T> mapping) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toList());
+    }
+
+    public static Set<String> split(String source, String pattern, boolean distinct) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).collect(Collectors.toSet());
+    }
+
+    public static <T> Set<T> split(String source, String pattern, Function<String, T> mapping, boolean distinct) {
+        return Arrays.stream(source.split(pattern)).filter(CommonUtil::notEmpty).map(mapping).collect(Collectors.toSet());
+    }
+
+    public static void split(String source, String start, String end, Consumer<String> substring) {
+        int startIndex = source.indexOf(start);
+        int endIndex = source.indexOf(end, startIndex);
+        while (startIndex != -1 && endIndex != -1) {
+            substring.accept(source.substring(startIndex + start.length(), endIndex));
+            startIndex = source.indexOf(start, endIndex);
+            endIndex = source.indexOf(end, startIndex);
+        }
+    }
+
+    public static String format(String s, Object... params) {
+        int index = -1;
+        int paramIndex = 0;
+        StringBuilder sb = new StringBuilder(s);
+        while ((index = sb.indexOf("{}", index)) != -1) {
+            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
+        }
+        return sb.toString();
+    }
+
+    public static String processPlaceholder(String s, Map<String, String> params) {
+        return PlaceholdersUtil.resolve(s, EMPTY_STRING, "{", "}", params);
+    }
+
+    public static String removePrefix(String prefix, String target) {
+        if (target.startsWith(prefix)) {
+            return target.substring(prefix.length());
+        }
+        return target;
+    }
+
+    public static String toString(Object obj) {
+        if (obj == null) {
+            return "null";
+        }
+        if (obj.getClass().isArray()) {
+            return toList(obj).toString();
+        }
+        return obj.toString();
+    }
+
+    /* ------------------------------------------ URI 字符串操作 ------------------------------------------ */
+
+    public static String formatURI(String uri) {
+        uri = uri.trim();
+        uri = uri.charAt(0) == '/' ? uri : '/' + uri;
+        return uri.length() == 1 ? uri : uri.charAt(uri.length() - 1) == '/' ? uri.substring(0, uri.length() - 1) : uri;
+    }
+
+    public static Map<String, String> resolveURLParameters(String url) {
+        return resolveURLParameters(url, EMPTY_STRING);
+    }
+
+    public static Map<String, String> resolveURLParameters(String url, String prefix) {
+        if (empty(url) || url.indexOf('=') < 0) {
+            return Collections.emptyMap();
+        }
+        int index = url.indexOf('?');
+        String parameter = index < 0 ? url : url.substring(index + 1);
+        String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
+        Map<String, String> query = new HashMap<>();
+        List<String> split = split(parameter, "&");
+        for (String params : split) {
+            String[] paramPair = params.split("=");
+            if (paramPair.length > 1) {
+                query.put(paramPrefix + paramPair[0], paramPair[1]);
+            }
+        }
+        return query;
+    }
+
+    /* ------------------------------------------ 驼峰/下划线转换操作 ------------------------------------------ */
 
     public static String underline2CamelCase(String s) {
         return underline2CamelCase(s, false);
@@ -328,54 +341,51 @@ public abstract class CommonUtil {
         return lower ? builder.toString() : builder.toString().toUpperCase();
     }
 
-    public static String format(String s, Object... params) {
-        int index = -1;
-        int paramIndex = 0;
-        StringBuilder sb = new StringBuilder(s);
-        while ((index = sb.indexOf("{}", index)) != -1) {
-            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
+    /* ------------------------------------------ 集合排序操作 ------------------------------------------ */
+
+    public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
+        Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>(unsortedMap.size());
+        return unsortedMap
+                .entrySet()
+                .stream()
+                .sorted(comparator)
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
+    }
+
+    /* ------------------------------------------ 集合消费/映射操作 ------------------------------------------ */
+
+    public static void consumer(Object o, Consumer<Object> consumer) {
+        consumer(o, consumer, Map.Entry::getValue);
+    }
+
+    public static void consumer(Object o, Consumer<Object> consumer, Function<Map.Entry<?, ?>, Object> entryMapping) {
+        mapping(o, e -> {
+            consumer.accept(e);
+            return null;
+        }, entryMapping);
+    }
+
+    public static <T> List<T> mapping(Object o, Function<Object, T> mapping) {
+        return mapping(o, mapping, Map.Entry::getValue);
+    }
+
+    public static <T> List<T> mapping(Object o, Function<Object, T> mapping, Function<Map.Entry<?, ?>, Object> entryMapping) {
+        if (o == null) {
+            return emptyList();
         }
-        return sb.toString();
-    }
-
-    public static String processPlaceholder(String s, Map<String, String> params) {
-        return PlaceholdersUtil.resolve(s, EMPTY_STRING, "{", "}", params);
-    }
-
-    public static String formatURI(String uri) {
-        uri = uri.trim();
-        uri = uri.startsWith("/") ? uri : "/" + uri;
-        return !uri.endsWith("/") ? uri : uri.substring(0, uri.length() - 1);
-    }
-
-    public static String removePrefix(String prefix, String target) {
-        if (target.startsWith(prefix)) {
-            return target.substring(prefix.length());
+        if (o instanceof Collection) {
+            return ((Collection<?>) o).stream().map(mapping).collect(Collectors.toList());
         }
-        return target;
+        if (o.getClass().isArray()) {
+            return (o instanceof Object[] ? Arrays.stream((Object[]) o) : toList(o).stream()).map(mapping).collect(Collectors.toList());
+        }
+        if (o instanceof Map) {
+            return ((Map<?, ?>) o).entrySet().stream().map(entryMapping).map(mapping).collect(Collectors.toList());
+        }
+        return singletonList(mapping.apply(o));
     }
 
-    public static Map<String, String> resolveURLParameters(String url) {
-        return resolveURLParameters(url, EMPTY_STRING);
-    }
-
-    public static Map<String, String> resolveURLParameters(String url, String prefix) {
-        if (empty(url) || url.indexOf('=') < 0) {
-            return Collections.emptyMap();
-        }
-        int index = url.indexOf('?');
-        String parameter = index < 0 ? url : url.substring(index + 1);
-        String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
-        Map<String, String> query = new HashMap<>();
-        List<String> split = split(parameter, "&");
-        for (String params : split) {
-            String[] paramPair = params.split("=");
-            if (paramPair.length > 1) {
-                query.put(paramPrefix + paramPair[0], paramPair[1]);
-            }
-        }
-        return query;
-    }
+    /* ------------------------------------------ 其他操作 ------------------------------------------ */
 
     public static void sleep(long time) {
         sleep(time, TimeUnit.MILLISECONDS);
@@ -387,6 +397,20 @@ public abstract class CommonUtil {
         } catch (InterruptedException e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    public static Map<String, String> loadCommandLineProperties(String[] commandLineArgs, String keySeparator) {
+        Map<String, String> propertySources = new HashMap<>(8);
+        for (String key : commandLineArgs) {
+            if (key.startsWith(keySeparator)) {
+                int index = key.indexOf('=');
+                if (index == -1) {
+                    throw new IllegalArgumentException("Please set property value of key: " + key);
+                }
+                propertySources.put(key.substring(keySeparator.length(), index), key.substring(index + 1));
+            }
+        }
+        return propertySources;
     }
 
     /**

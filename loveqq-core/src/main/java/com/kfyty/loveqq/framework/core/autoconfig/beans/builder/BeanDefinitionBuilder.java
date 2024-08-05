@@ -14,10 +14,8 @@ import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
@@ -177,14 +175,6 @@ public class BeanDefinitionBuilder {
         }
         if (FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(beanType.getName())) {
             return beanType.getName();
-        }
-        for (Annotation annotation : AnnotationUtil.findAnnotations(beanType)) {
-            if (AnnotationUtil.hasAnnotationElement(annotation.annotationType(), Component.class)) {
-                String beanName = ReflectUtil.invokeMethod(annotation, "value");
-                if (CommonUtil.notEmpty(beanName)) {
-                    return beanName;
-                }
-            }
         }
         return BeanUtil.getBeanName(beanType);
     }

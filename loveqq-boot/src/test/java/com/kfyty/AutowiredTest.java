@@ -91,12 +91,12 @@ public class AutowiredTest {
         Assertions.assertTrue(AnnotationUtil.hasAnnotationElement(this.autowiredTest, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
-        Assertions.assertFalse(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
         Assertions.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
-        Assertions.assertEquals(2, AnnotationUtil.findAnnotations(this.autowiredTest).length);
-        Assertions.assertEquals(2, AnnotationUtil.findAnnotations(method).length);
+        Assertions.assertEquals(9, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assertions.assertEquals(6, AnnotationUtil.findAnnotations(method).length);
     }
 }
 

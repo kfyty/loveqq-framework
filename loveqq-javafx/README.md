@@ -171,8 +171,8 @@ package com.kfyty.javafx.demo;
 
 import com.kfyty.loveqq.framework.core.event.GenericApplicationEvent;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.javafx.core.AbstractController;
-import com.kfyty.loveqq.framework.javafx.core.BootstrapApplication;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FController;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FView;
 import javafx.fxml.FXML;
@@ -242,7 +242,7 @@ public class NewWindowController extends AbstractController<AnchorPane> {
     @Override
     public void onClose(WindowEvent event) {
         System.out.println(STR."publish close new window event: \{this.window}");
-        BootstrapApplication.publishEvent(new GenericApplicationEvent<>(event, STR."close window: \{this.window}"));
+        IOC.publishEvent(new GenericApplicationEvent<>(event, STR."close window: \{this.window}"));
     }
 }
 ```

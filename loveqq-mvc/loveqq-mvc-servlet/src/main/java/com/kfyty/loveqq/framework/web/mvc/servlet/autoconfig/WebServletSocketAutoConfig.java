@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
@@ -21,7 +22,7 @@ import jakarta.websocket.server.ServerEndpoint;
  */
 @Configuration
 @ConditionalOnBean(ServletContext.class)
-@ComponentFilter(annotations = ServerEndpoint.class)
+@ComponentScan(includeFilter = @ComponentFilter(annotations = ServerEndpoint.class))
 public class WebServletSocketAutoConfig implements ContextAfterRefreshed, BeanFactoryAware {
     private BeanFactory beanFactory;
 

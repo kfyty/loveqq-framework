@@ -4,8 +4,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FController;
 import com.kfyty.loveqq.framework.javafx.core.event.PrimaryStageLoadedEvent;
 import com.kfyty.loveqq.framework.javafx.core.factory.FXMLComponentFactoryBean;
@@ -54,9 +54,9 @@ public class BootstrapApplication extends AbstractApplication implements Command
         for (BeanDefinition beanDefinition : beanDefinitions) {
             FController annotation = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), FController.class);
             if (annotation != null && annotation.main()) {
-                Scene root = BootstrapApplication.getBean(annotation.value());
+                Scene root = IOC.getBean(annotation.value());
                 FXMLComponentFactoryBean.initWindowProperties(primaryStage, annotation);
-                BootstrapApplication.publishEvent(new PrimaryStageLoadedEvent(this.bindLifeCycle(primaryStage, root)));
+                IOC.publishEvent(new PrimaryStageLoadedEvent(this.bindLifeCycle(primaryStage, root)));
                 primaryStage.show();
                 break;
             }
@@ -72,17 +72,5 @@ public class BootstrapApplication extends AbstractApplication implements Command
 
     public static HostServices getHostService() {
         return hostServices;
-    }
-
-    public static <T> T getBean(Class<T> clazz) {
-        return applicationContext.getBean(clazz);
-    }
-
-    public static <T> T getBean(String name) {
-        return applicationContext.getBean(name);
-    }
-
-    public static void publishEvent(ApplicationEvent<?> event) {
-        applicationContext.publishEvent(event);
     }
 }
