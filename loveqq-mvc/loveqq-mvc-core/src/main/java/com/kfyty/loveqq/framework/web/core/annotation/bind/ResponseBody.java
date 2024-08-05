@@ -19,5 +19,5 @@ public @interface ResponseBody {
     /**
      * 响应体类型
      */
-    String value() default "application/json; charset=utf-8";
+    String contentType() default "application/json; charset=utf-8";
 }

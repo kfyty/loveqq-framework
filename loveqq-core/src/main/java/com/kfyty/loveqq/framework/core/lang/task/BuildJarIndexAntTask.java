@@ -71,6 +71,12 @@ public class BuildJarIndexAntTask {
         File file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_JAR));
         if (!file.exists()) {
             file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR));
+            if (!file.exists()) {
+                file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR).replace(".jar", "-SNAPSHOT.jar"));
+            }
+            if (!file.exists()) {
+                throw new IllegalArgumentException("The OUTPUT_JAR parameter error, please set project.build.finalName and rebuild.");
+            }
         }
         JarFile jarFile = new JarFile(file);
         String jarIndex = buildJarIndex(scanJarIndex(jarFile));

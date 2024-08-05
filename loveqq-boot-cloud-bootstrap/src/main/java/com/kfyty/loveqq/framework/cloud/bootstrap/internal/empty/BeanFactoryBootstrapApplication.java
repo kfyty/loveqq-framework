@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.boostrap.BootstrapConfiguration;
 
@@ -17,7 +18,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.boostrap.BootstrapConfiguratio
  * @email kfyty725@hotmail.com
  */
 @Component
-@ComponentFilter(annotations = BootstrapConfiguration.class, value = {
+@ComponentScan(includeFilter = @ComponentFilter(annotations = BootstrapConfiguration.class, value = {
         "com.kfyty.loveqq.framework.core.autoconfig.**",
         "com.kfyty.loveqq.framework.aop.processor.**",
         "com.kfyty.loveqq.framework.aop.aspectj.creator.**",
@@ -26,6 +27,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.boostrap.BootstrapConfiguratio
         "com.kfyty.loveqq.framework.boot.context.**",
         "com.kfyty.loveqq.framework.boot.event.**",
         "com.kfyty.loveqq.framework.boot.processor.**"
-})
+}))
 public class BeanFactoryBootstrapApplication {
 }

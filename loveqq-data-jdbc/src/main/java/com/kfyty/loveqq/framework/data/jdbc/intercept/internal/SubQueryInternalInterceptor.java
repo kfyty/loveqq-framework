@@ -42,7 +42,7 @@ public class SubQueryInternalInterceptor implements QueryInterceptor {
             return chain.proceed();
         }
         SubQuery[] subQueries = invokeMethod(annotation, "subQuery");
-        CommonUtil.consumer(retValue, e -> this.processSubQuery(chain.getSqlSession(), chain.getMapperMethod().getMethod(), subQueries, e), Map.Entry::getValue);
+        CommonUtil.consumer(retValue, e -> this.processSubQuery(chain.getSqlSession(), chain.getMapperMethod().getMethod(), subQueries, e));
         return chain.proceed();
     }
 

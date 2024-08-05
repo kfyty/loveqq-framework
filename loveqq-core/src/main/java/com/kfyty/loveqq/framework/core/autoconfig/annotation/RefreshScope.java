@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -20,4 +21,11 @@ import java.lang.annotation.Target;
 @Scope(BeanDefinition.SCOPE_REFRESH)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface RefreshScope {
+    /**
+     * 是否使用作用域代理
+     *
+     * @return 默认 true
+     */
+    @AliasFor(annotation = Scope.class)
+    boolean scopeProxy() default true;
 }

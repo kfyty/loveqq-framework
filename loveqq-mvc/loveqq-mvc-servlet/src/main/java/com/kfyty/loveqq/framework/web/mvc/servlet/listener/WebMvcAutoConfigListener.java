@@ -81,7 +81,7 @@ public class WebMvcAutoConfigListener implements ServletContextListener, Applica
     protected void configScanBasePackage(ServletContext servletContext) {
         String basePackage = servletContext.getInitParameter(BASE_PACKAGE_PARAM_NAME);
         ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
-        ReflectUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
+        AnnotationUtil.setAnnotationValue(annotation, "value", new String[]{basePackage});
     }
 
     protected ApplicationContext launch(Class<?> launchClass) {

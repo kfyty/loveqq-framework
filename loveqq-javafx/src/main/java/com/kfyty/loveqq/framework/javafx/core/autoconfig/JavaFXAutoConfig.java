@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.javafx.core.autoconfig;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListenerFactory;
@@ -21,7 +22,7 @@ import com.kfyty.loveqq.framework.javafx.core.processor.FControllerBeanPostProce
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@ComponentFilter(annotations = FController.class)
+@ComponentScan(includeFilter = @ComponentFilter(annotations = FController.class))
 public class JavaFXAutoConfig {
 
     @Bean

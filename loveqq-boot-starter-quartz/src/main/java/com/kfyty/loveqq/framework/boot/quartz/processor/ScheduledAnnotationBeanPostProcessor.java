@@ -95,7 +95,7 @@ public class ScheduledAnnotationBeanPostProcessor implements BeanPostProcessor, 
 
     protected void processScheduledTask(Object bean) {
         for (Method method : ReflectUtil.getMethods(bean.getClass())) {
-            Scheduled scheduled = AnnotationUtil.findAnnotation(method, Scheduled.class);
+            Scheduled scheduled = AnnotationUtil.findAnnotation((Object) method, Scheduled.class);
             if (scheduled != null) {
                 this.buildJob(bean, method, scheduled);
             }

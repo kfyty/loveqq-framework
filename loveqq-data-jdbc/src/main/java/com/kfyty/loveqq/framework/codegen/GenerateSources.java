@@ -106,7 +106,7 @@ public class GenerateSources {
 
         if (CommonUtil.notEmpty(configuration.getQueryTableSql())) {
             Query annotation = AnnotationUtil.findAnnotation(ReflectUtil.getMethod(configuration.getDatabaseMapper(), "findTableList"), Query.class);
-            ReflectUtil.setAnnotationValue(annotation, "value", configuration.getQueryTableSql());
+            AnnotationUtil.setAnnotationValue(annotation, "value", configuration.getQueryTableSql());
             tables.addAll(databaseMapper.findTableList());
         }
 

@@ -4,9 +4,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
+import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.RequiredArgsConstructor;
-
-import java.lang.reflect.Method;
 
 /**
  * 描述: 延迟初始化代理
@@ -22,7 +21,7 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        if (!this.beanFactory.contains(beanName) && this.isToStringHashCode(methodProxy)) {
+        if (!this.beanFactory.contains(beanName) && ReflectUtil.isEqualsHashCodeToString(methodProxy.getTargetMethod())) {
             return chain.proceed(methodProxy);
         }
         String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
@@ -33,16 +32,5 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
         } finally {
             ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
         }
-    }
-
-    protected boolean isToStringHashCode(MethodProxy methodProxy) {
-        Method method = methodProxy.getTargetMethod();
-        if (method.getName().equals("toString") && method.getParameterCount() == 0) {
-            return true;
-        }
-        if (method.getName().equals("hashCode") && method.getParameterCount() == 0) {
-            return true;
-        }
-        return false;
     }
 }

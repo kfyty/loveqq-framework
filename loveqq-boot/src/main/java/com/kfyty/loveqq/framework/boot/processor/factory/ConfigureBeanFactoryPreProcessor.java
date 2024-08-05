@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.boot.processor.factory;
 
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
@@ -107,21 +106,12 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
         }
 
         Object declaring = wrapper == null ? clazz : wrapper.getDeclaring();
-
-        this.processComponentFilter(declaring, true, AnnotationUtil.findAnnotation(clazz, ComponentFilter.class));
-
         ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
-        BootApplication bootApplication = AnnotationUtil.findAnnotation(clazz, BootApplication.class);
         EnableAutoConfiguration enableAutoConfiguration = AnnotationUtil.findAnnotation(clazz, EnableAutoConfiguration.class);
 
         if (componentScan != null) {
             this.processComponentFilter(declaring, true, componentScan.includeFilter());
             this.processComponentFilter(declaring, false, componentScan.excludeFilter());
-        }
-
-        if (bootApplication != null) {
-            this.excludeQualifierAutoConfigNames.addAll(Arrays.asList(bootApplication.excludeNames()));
-            this.excludeQualifierAutoConfigNames.addAll(Arrays.stream(bootApplication.exclude()).map(Class::getName).collect(Collectors.toList()));
         }
 
         if (enableAutoConfiguration != null) {

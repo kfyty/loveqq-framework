@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.javafx.core;
 
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.javafx.core.event.ViewCloseEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -45,7 +46,7 @@ public interface LifeCycleBinder {
             window.setOnHidden(lifeCycleController::onHidden);
             window.setOnCloseRequest(event -> {
                 lifeCycleController.onClose(event);
-                BootstrapApplication.publishEvent(new ViewCloseEvent(component));
+                IOC.publishEvent(new ViewCloseEvent(component));
             });
         }
         return window;

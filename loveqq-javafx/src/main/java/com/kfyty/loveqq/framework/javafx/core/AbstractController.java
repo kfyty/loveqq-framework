@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FController;
 import com.kfyty.loveqq.framework.javafx.core.proxy.ViewModelBindProxy;
 import javafx.fxml.FXMLLoader;
@@ -96,7 +97,7 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
      */
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass, String parameters) {
         FController fController = AnnotationUtil.findAnnotation(childWindowControllerClass, FController.class);
-        Stage child = BootstrapApplication.getBean(fController.value());
+        Stage child = IOC.getBean(fController.value());
         return this.openWindow(child, parameters);
     }
 

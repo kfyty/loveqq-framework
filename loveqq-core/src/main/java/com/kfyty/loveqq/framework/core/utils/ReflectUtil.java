@@ -8,7 +8,6 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMa
 import com.kfyty.loveqq.framework.core.support.Pair;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -18,7 +17,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
@@ -189,6 +187,22 @@ public abstract class ReflectUtil {
         return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
     }
 
+    public static boolean isEquals(Method method) {
+        return method.getName().equals("equals") && method.getParameterCount() == 1 && method.getReturnType() == boolean.class;
+    }
+
+    public static boolean isHashCode(Method method) {
+        return method.getName().equals("hashCode") && method.getParameterCount() == 0 && method.getReturnType() == int.class;
+    }
+
+    public static boolean isToString(Method method) {
+        return method.getName().equals("toString") && method.getParameterCount() == 0 && method.getReturnType() == String.class;
+    }
+
+    public static boolean isEqualsHashCodeToString(Method method) {
+        return isEquals(method) || isHashCode(method) || isToString(method);
+    }
+
     public static boolean hasAnyInterfaces(Class<?> clazz) {
         return getInterfaces(clazz).length > 0;
     }
@@ -215,12 +229,6 @@ public abstract class ReflectUtil {
             clazz = clazz.getSuperclass();
         }
         return interfaces.toArray(CommonUtil.EMPTY_CLASS_ARRAY);
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) {
-        Map memberValues = (Map) ReflectUtil.getFieldValue(Proxy.getInvocationHandler(annotation), "memberValues");
-        memberValues.put(annotationField, value);
     }
 
     public static void makeAccessible(Field field) {
@@ -423,6 +431,31 @@ public abstract class ReflectUtil {
         return field == null || !containPrivate && Modifier.isPrivate(field.getModifiers()) ? null : field;
     }
 
+    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
+        return getConstructor(clazz, false, parameterTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
+        try {
+            return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return getSuperConstructor(clazz, containPrivate, parameterTypes);
+        }
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
+        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
+    }
+
+    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
+        if (clazz == Object.class || (clazz = clazz.getSuperclass()) == null) {
+            return null;
+        }
+        Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
+        return constructor == null || !containPrivate && Modifier.isPrivate(constructor.getModifiers()) ? null : constructor;
+    }
+
     public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         return getMethod(clazz, methodName, false, parameterTypes);
     }
@@ -439,13 +472,17 @@ public abstract class ReflectUtil {
         return method;
     }
 
+    public static Method getSuperMethod(Method method) {
+        return getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
+    }
+
     public static Method getSuperMethod(Class<?> clazz, String methodName, boolean containPrivate, Class<?>... parameterTypes) {
         if (clazz == null || clazz == Object.class) {
             return null;
         }
         final Predicate<Method> methodPredicate = m -> containPrivate || !Modifier.isPrivate(m.getModifiers());
         return ofNullable(clazz.getSuperclass())
-                .map(e -> getMethod(clazz.getSuperclass(), methodName, containPrivate, parameterTypes))
+                .map(e -> getMethod(e, methodName, containPrivate, parameterTypes))
                 .filter(methodPredicate)
                 .orElseGet(() -> Arrays.stream(clazz.getInterfaces())
                         .map(clazzInterface -> getMethod(clazzInterface, methodName, containPrivate, parameterTypes))
@@ -454,37 +491,8 @@ public abstract class ReflectUtil {
                         .orElse(null));
     }
 
-    public static Method getSuperMethod(Method method) {
-        return getSuperMethod(method.getDeclaringClass(), method.getName(), false, method.getParameterTypes());
-    }
-
     public static boolean isSuperMethod(Method superMethod, Method method) {
         return !Modifier.isPrivate(superMethod.getModifiers()) && superMethod.getName().equals(method.getName()) && Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
-    }
-
-    public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
-        return getConstructor(clazz, false, parameterTypes);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> Constructor<T> getConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
-        try {
-            return (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
-        } catch (NoSuchMethodException e) {
-            return getSuperConstructor(clazz, containPrivate, parameterTypes);
-        }
-    }
-
-    public static <T> Constructor<T> getSuperConstructor(Class<?> clazz, boolean containPrivate, Class<?>... parameterTypes) {
-        if (clazz == Object.class || (clazz = clazz.getSuperclass()) == null) {
-            return null;
-        }
-        Constructor<T> constructor = getConstructor(clazz, containPrivate, parameterTypes);
-        return constructor == null || !containPrivate && Modifier.isPrivate(constructor.getModifiers()) ? null : constructor;
-    }
-
-    public static <T> Constructor<T> getSuperConstructor(Constructor<T> constructor) {
-        return getSuperConstructor(constructor.getDeclaringClass(), false, constructor.getParameterTypes());
     }
 
     public static Parameter getSuperParameters(Parameter parameter) {

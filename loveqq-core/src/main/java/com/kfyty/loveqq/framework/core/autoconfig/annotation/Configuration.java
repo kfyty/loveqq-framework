@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
+import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -18,5 +20,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Configuration {
+    /**
+     * bean name
+     *
+     * @return bean name
+     */
+    @AliasFor(annotation = Component.class)
     String value() default "";
 }

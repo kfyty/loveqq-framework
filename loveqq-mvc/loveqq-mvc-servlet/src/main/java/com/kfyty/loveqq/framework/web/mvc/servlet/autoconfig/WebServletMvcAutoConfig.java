@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 @Configuration
 @ConditionalOnBean(ServletWebServer.class)
-@ComponentFilter(annotations = {WebFilter.class, WebListener.class})
+@ComponentScan(includeFilter = @ComponentFilter(annotations = {WebFilter.class, WebListener.class}))
 public class WebServletMvcAutoConfig {
     @Autowired(required = false)
     private List<HandlerInterceptor> interceptorChain;

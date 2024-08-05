@@ -24,10 +24,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import lombok.RequiredArgsConstructor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -96,9 +94,12 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
         DataBinder dataBinder = this.getDataBinder();
         Map<String, Field> fieldMap = ReflectUtil.getFieldMap(AopUtil.getTargetClass(this));
         for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-            Annotation[] annotations = Arrays.stream(flatRepeatableAnnotation(findAnnotations(entry.getValue()))).filter(e -> e.annotationType().equals(FView.class)).toArray(Annotation[]::new);
-            for (Annotation view : annotations) {
-                this.initViewBind(entry.getValue(), (FView) view, dataBinder);
+            if (entry.getValue().getDeclaringClass() == Object.class || ReflectUtil.isStaticFinal(entry.getValue().getModifiers())) {
+                continue;
+            }
+            FView[] annotations = flatRepeatableAnnotation(findAnnotations(entry.getValue()), e -> e.annotationType() == FView.class, FView[]::new);
+            for (FView view : annotations) {
+                this.initViewBind(entry.getValue(), view, dataBinder);
             }
         }
     }
@@ -157,7 +158,9 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
     @RequiredArgsConstructor
     public static class ViewBindEventHandler implements ChangeListener<Object> {
         private final String bindPath;
+
         private final DataBinder dataBinder;
+
         private final AbstractViewModelBindCapableController controller;
 
         /**
@@ -168,7 +171,7 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
 
         @Override
         public void changed(ObservableValue<?> observable, Object oldValue, Object newValue) {
-            if (newValue instanceof Collection<?> || newValue instanceof Map<?,?>) {
+            if (newValue instanceof Collection<?> || newValue instanceof Map<?, ?>) {
                 if (!this.isInit) {
                     ReflectUtil.setNestedFieldValue(this.bindPath, this.controller, newValue);
                     this.isInit = true;

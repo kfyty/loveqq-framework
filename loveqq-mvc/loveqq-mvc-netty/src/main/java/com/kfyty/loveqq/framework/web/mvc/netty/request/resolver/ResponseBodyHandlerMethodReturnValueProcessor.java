@@ -41,6 +41,6 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements ServerHand
         if (responseBody == null) {
             responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource(), ResponseBody.class);
         }
-        return responseBody.value();
+        return responseBody.contentType();
     }
 }

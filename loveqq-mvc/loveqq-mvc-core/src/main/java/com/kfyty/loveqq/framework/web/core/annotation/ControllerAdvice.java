@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.core.annotation;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -28,6 +29,7 @@ public @interface ControllerAdvice {
      *
      * @return bean name
      */
+    @AliasFor(annotation = Component.class)
     String value() default "";
 
     /**

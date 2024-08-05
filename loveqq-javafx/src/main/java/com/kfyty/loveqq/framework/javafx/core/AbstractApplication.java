@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.javafx.core;
 
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import javafx.application.Application;
 
 /**
@@ -17,7 +18,7 @@ public abstract class AbstractApplication extends Application implements LifeCyc
     @Override
     public void init() throws Exception {
         super.init();
-        AbstractApplication iocManaged = BootstrapApplication.getBean(this.getClass());
+        AbstractApplication iocManaged = IOC.getBean(this.getClass());
         BeanUtil.copyProperties(iocManaged, this);
     }
 }

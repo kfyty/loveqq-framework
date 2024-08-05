@@ -6,10 +6,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
-import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +35,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         String superUrl = CommonUtil.EMPTY_STRING;
         List<MethodMapping> retValue = new ArrayList<>();
         Class<?> controllerClass = AopUtil.getTargetClass(controller);
-        RequestMapping annotation = findRequestMapping(controllerClass);
+        RequestMapping annotation = AnnotationUtil.findAnnotation(controllerClass, RequestMapping.class);
         if (annotation != null) {
             superUrl = formatURI(annotation.value());
         }
@@ -48,7 +46,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
     protected void processMethodAnnotation(String superUrl, Class<?> controllerClass, Object controller, List<MethodMapping> methodMappings) {
         List<Method> methods = ReflectUtil.getMethods(controllerClass);
         for (Method method : methods) {
-            RequestMapping annotation = findRequestMapping(method);
+            RequestMapping annotation = AnnotationUtil.findAnnotation(method, RequestMapping.class);
             if (annotation != null) {
                 String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? method.getName() : annotation.value());
                 MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.requestMethod(), controller, method);
@@ -61,44 +59,5 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         methodMapping.setProduces(annotation.produces());
         log.info("Resolved request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
         return methodMapping;
-    }
-
-    public static RequestMapping findRequestMapping(Object target) {
-        RequestMapping annotation = AnnotationUtil.findAnnotation(target, RequestMapping.class);
-        if (annotation != null) {
-            return annotation;
-        }
-        for (Annotation nestedAnnotation : AnnotationUtil.findAnnotations(target)) {
-            if (AnnotationUtil.hasAnnotationElement(nestedAnnotation.annotationType(), RequestMapping.class)) {
-                return new RequestMapping() {
-
-                    @Override
-                    public String value() {
-                        return ReflectUtil.invokeMethod(nestedAnnotation, "value");
-                    }
-
-                    @Override
-                    public RequestMethod requestMethod() {
-                        return AnnotationUtil.findAnnotation(nestedAnnotation.annotationType(), RequestMapping.class).requestMethod();
-                    }
-
-                    @Override
-                    public String produces() {
-                        return ReflectUtil.invokeMethod(nestedAnnotation, "produces");
-                    }
-
-                    @Override
-                    public DefaultMapping defaultMapping() {
-                        return ReflectUtil.invokeMethod(nestedAnnotation, "defaultMapping");
-                    }
-
-                    @Override
-                    public Class<? extends Annotation> annotationType() {
-                        return RequestMapping.class;
-                    }
-                };
-            }
-        }
-        return null;
     }
 }
