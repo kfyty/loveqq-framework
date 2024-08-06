@@ -255,6 +255,9 @@ public abstract class AnnotationUtil {
                     Annotation aliasAnnotation = aliasFor.annotation() == Annotation.class ? annotation : nestedAnnotationMap.get(aliasFor.annotation());
 
                     // 非自身注解需要深克隆，因为非自身注解是公用的元数据
+                    if (aliasAnnotation == null) {
+                        throw new IllegalArgumentException("The annotation of " + annotation.annotationType() + " must be annotated with " + aliasFor.annotation() + ", when AliasFor exists.");
+                    }
                     if (aliasAnnotation != annotation) {
                         nestedAnnotationMap.put(aliasFor.annotation(), aliasAnnotation = clone(aliasAnnotation));
                     }
