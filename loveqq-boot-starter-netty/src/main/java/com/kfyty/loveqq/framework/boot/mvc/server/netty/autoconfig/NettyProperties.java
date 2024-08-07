@@ -7,7 +7,9 @@ import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.server.HttpServer;
+import reactor.netty.tcp.SslProvider;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -60,6 +62,21 @@ public class NettyProperties extends WebServerProperties {
      * 请求超时时间
      */
     private Duration requestTimeout;
+
+    /**
+     * {@link this#sslProvider} 是否允许转发到 https
+     */
+    private Boolean redirectHttpToHttps = false;
+
+    /**
+     * {@link HttpProtocol}
+     */
+    private HttpProtocol protocol;
+
+    /**
+     * {@link reactor.netty.tcp.SslProvider}
+     */
+    private SslProvider sslProvider;
 
     /**
      * 资源解析器

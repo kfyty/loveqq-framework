@@ -20,7 +20,7 @@ public class FControllerBeanPostProcessor extends AbstractProxyCreatorProcessor 
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return hasAnnotation(beanType, FController.class) && AopUtil.isProxy(bean);
+        return AopUtil.isProxy(bean) && hasAnnotation(beanType, FController.class);
     }
 
     @Override

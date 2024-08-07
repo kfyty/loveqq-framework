@@ -9,11 +9,13 @@ import com.kfyty.loveqq.framework.aop.aspectj.AspectJFactory;
 import com.kfyty.loveqq.framework.aop.aspectj.adapter.AdviceInterceptorPointAdapter;
 import com.kfyty.loveqq.framework.aop.aspectj.creator.AdvisorCreator;
 import com.kfyty.loveqq.framework.aop.proxy.AspectMethodInterceptorProxy;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.AspectResolve;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
+import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,8 @@ import java.util.List;
 
 /**
  * 描述: 切面处理器
+ * <p>
+ * 只要被注解了 {@link AspectResolve} 的组件，才会被解析，目的是避免解析过多的无用组件
  *
  * @author kfyty725
  * @date 2021/7/29 13:07
@@ -59,10 +63,11 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
 
     @Override
     public Object postProcessAfterInstantiation(Object bean, String beanName, BeanDefinition beanDefinition) {
-        if (!beanDefinition.isAutowireCandidate()) {
+        Class<?> beanClass = beanDefinition.getBeanType();
+        AspectResolve aspectResolve = AnnotationUtil.findAnnotation(beanClass, AspectResolve.class);
+        if (!beanDefinition.isAutowireCandidate() || aspectResolve == null || !aspectResolve.value()) {
             return null;
         }
-        Class<?> beanClass = beanDefinition.getBeanType();
         List<Advisor> advisors = this.findAvailableAdvisor(beanClass);
         if (CommonUtil.empty(advisors)) {
             return null;

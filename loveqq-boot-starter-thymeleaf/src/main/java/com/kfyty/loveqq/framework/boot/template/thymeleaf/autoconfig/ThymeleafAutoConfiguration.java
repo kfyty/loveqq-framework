@@ -39,8 +39,8 @@ public class ThymeleafAutoConfiguration {
     @Autowired(required = false)
     private IStandardVariableExpressionEvaluator standardVariableExpressionEvaluator;
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ITemplateResolver templateResolver() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setCacheable(this.thymeleafProperties.isCacheable());
@@ -51,8 +51,8 @@ public class ThymeleafAutoConfiguration {
         return templateResolver;
     }
 
-    @Bean
     @ConditionalOnWebApplication
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ITemplateResolver webApplicationTemplateResolver(ThymeleafProperties thymeleafProperties, IWebApplication webApplication) {
         WebApplicationTemplateResolver templateResolver = new WebApplicationTemplateResolver(webApplication);
         templateResolver.setCacheable(thymeleafProperties.isCacheable());
@@ -63,7 +63,7 @@ public class ThymeleafAutoConfiguration {
         return templateResolver;
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public TemplateEngine templateEngine(ITemplateResolver templateResolver) {
         LoveqqStandardDialect standardDialect = new LoveqqStandardDialect(this.processors);
         standardDialect.setVariableExpressionEvaluator(new DefaultVariableExpressionEvaluator(this.standardVariableExpressionEvaluator));

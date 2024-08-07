@@ -8,6 +8,9 @@ import java.lang.annotation.Target;
 
 /**
  * 描述: 用以支持异步任务
+ * <b>
+ * 仅在类上同时注释时，方法注释才有效
+ * </b>
  *
  * @author kfyty725
  * @date 2021/6/26 11:03

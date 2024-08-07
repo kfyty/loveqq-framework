@@ -1,7 +1,5 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
-import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,21 +7,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 事件监听器注解
- * <b>
- * 仅在类上同时注释时，方法注释才有效
- * </b>
+ * 描述: 表示该 bean 没有切面配置，无需解析
  *
  * @author kfyty725
- * @date 2021/6/21 16:45
+ * @date 2024/8/7 18:35
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EventListener {
+public @interface AspectResolve {
     /**
-     * 要监听的事件
+     * 是否要解析切面
+     *
+     * @return 默认 true
+     * @see com.kfyty.loveqq.framework.aop.processor.AspectJBeanPostProcessor
      */
-    Class<? extends ApplicationEvent<?>>[] value() default {};
+    boolean value() default true;
 }

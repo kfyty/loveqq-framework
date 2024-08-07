@@ -56,7 +56,7 @@ public class NettyServerAutoConfig {
         return config;
     }
 
-    @Bean(destroyMethod = "stop")
+    @Bean(destroyMethod = "stop", resolveNested = false, ignoredAutowired = true)
     public NettyWebServer nettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler, @Autowired(required = false) List<WebSocketHandler> webSocketHandlers) {
         Map<String, WebSocketHandler> webSocketHandlerMap = webSocketHandlers.stream().collect(Collectors.toMap(WebSocketHandler::getEndPoint, v -> v));
         return new NettyWebServer(config, dispatcherHandler, webSocketHandlerMap);

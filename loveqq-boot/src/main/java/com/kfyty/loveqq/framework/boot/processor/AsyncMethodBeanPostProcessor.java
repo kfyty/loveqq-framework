@@ -8,7 +8,6 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getMethods;
 
 /**
  * 描述:
@@ -23,7 +22,7 @@ public class AsyncMethodBeanPostProcessor extends AbstractProxyCreatorProcessor 
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return hasAnnotationElement(beanType, Async.class) || getMethods(beanType).stream().anyMatch(e -> hasAnnotationElement(e, Async.class));
+        return hasAnnotationElement(beanType, Async.class);
     }
 
     @Override

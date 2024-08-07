@@ -44,7 +44,7 @@ public class WebServletMvcAutoConfig {
     @Autowired(required = false)
     private List<ExceptionHandler> exceptionHandlers;
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public MultipartConfigElement multipartConfig(@Value("${k.mvc.multipart.location:}") String location,
                                                   @Value("${k.mvc.multipart.maxFileSize:-1}") int maxFileSize,
                                                   @Value("${k.mvc.multipart.maxRequestSize:-1}") int maxRequestSize,
@@ -52,7 +52,7 @@ public class WebServletMvcAutoConfig {
         return new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold);
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ServletContext servletContext(ServletWebServer webServer) {
         return webServer.getServletContext();
     }

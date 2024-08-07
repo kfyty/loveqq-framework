@@ -24,6 +24,9 @@ public @interface RestController {
     @AliasFor(annotation = Controller.class)
     String value() default "";
 
+    @AliasFor(annotation = Controller.class)
+    boolean resolve() default true;
+
     @AliasFor(annotation = ResponseBody.class)
     String contentType() default "application/json; charset=utf-8";
 }

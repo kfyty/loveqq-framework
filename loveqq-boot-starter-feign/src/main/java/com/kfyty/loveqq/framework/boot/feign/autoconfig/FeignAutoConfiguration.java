@@ -41,8 +41,8 @@ public class FeignAutoConfiguration {
     @Autowired
     private FeignProperties feignProperties;
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Encoder feignEncoder() {
         if (this.objectMapper == null) {
             return new JacksonEncoder();
@@ -50,8 +50,8 @@ public class FeignAutoConfiguration {
         return new JacksonEncoder(this.objectMapper);
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Decoder feignDecoder() {
         if (this.objectMapper == null) {
             return new JacksonDecoder();
@@ -59,25 +59,25 @@ public class FeignAutoConfiguration {
         return new JacksonDecoder(this.objectMapper);
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Client defaultClient() {
         return new Client.Default(null, null);
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public ServerListener serverListener() {
         return new ServerListener();
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public LBClientFactory loadBalancerClientFactory() {
         return new LoadBalancerClientFactory();
     }
 
-    @Bean(destroyMethod = "shutdown")
+    @Bean(destroyMethod = "shutdown", resolveNested = false, ignoredAutowired = true)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public ZoneAwareLoadBalancer<Server> zoneAwareLoadBalancer() {
         ZoneAwareLoadBalancer<Server> loadBalancer = new ZoneAwareLoadBalancer<>();
@@ -95,7 +95,7 @@ public class FeignAutoConfiguration {
         @Autowired(required = false)
         private okhttp3.OkHttpClient.Builder okHttpBuilder;
 
-        @Bean
+        @Bean(resolveNested = false, ignoredAutowired = true)
         public okhttp3.OkHttpClient okHttpClient() {
             if (this.okHttpBuilder == null) {
                 return new okhttp3.OkHttpClient();
@@ -103,7 +103,7 @@ public class FeignAutoConfiguration {
             return new okhttp3.OkHttpClient(this.okHttpBuilder);
         }
 
-        @Bean
+        @Bean(resolveNested = false, ignoredAutowired = true)
         public Client okHttpFeignClient(okhttp3.OkHttpClient okHttpClient) {
             return new OkHttpClient(okHttpClient);
         }
@@ -114,12 +114,12 @@ public class FeignAutoConfiguration {
     @ConditionalOnClass({"org.apache.http.client.HttpClient", "feign.httpclient.ApacheHttpClient"})
     static class HttpClientAutoConfig {
 
-        @Bean
+        @Bean(resolveNested = false, ignoredAutowired = true)
         public HttpClient httpClient() {
             return HttpClientBuilder.create().build();
         }
 
-        @Bean
+        @Bean(resolveNested = false, ignoredAutowired = true)
         public Client httpClientFeignClient(HttpClient httpClient) {
             return new ApacheHttpClient(httpClient);
         }

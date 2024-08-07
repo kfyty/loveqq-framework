@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition.isIgnoredAutowired;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
@@ -105,6 +106,9 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
     }
 
     protected void processAutowired(String beanName, Object target, Object exposedBean) {
+        if (beanName != null && isIgnoredAutowired(this.applicationContext.getBeanDefinition(beanName))) {
+            return;
+        }
         Class<?> targetClass = target.getClass();
         this.autowiredField(targetClass, target, exposedBean);
         this.autowiredMethod(targetClass, target, exposedBean);

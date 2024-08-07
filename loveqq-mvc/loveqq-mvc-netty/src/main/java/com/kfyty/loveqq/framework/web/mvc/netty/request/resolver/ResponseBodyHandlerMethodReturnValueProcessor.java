@@ -32,15 +32,6 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements ServerHand
 
     @Override
     public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        container.getResponse().setContentType(this.contentType(returnType));
         return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
-    }
-
-    protected String contentType(MethodParameter returnType) {
-        ResponseBody responseBody = AnnotationUtil.findAnnotationElement((Object) returnType.getMethod(), ResponseBody.class);
-        if (responseBody == null) {
-            responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource(), ResponseBody.class);
-        }
-        return responseBody.contentType();
     }
 }

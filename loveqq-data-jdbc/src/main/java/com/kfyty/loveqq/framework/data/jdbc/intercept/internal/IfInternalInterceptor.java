@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.data.jdbc.intercept.internal;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -30,6 +31,7 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.invokeMethod;
  * @date 2021/10/5 12:27
  * @email kfyty725@hotmail.com
  */
+@Inherited
 @Order(Integer.MIN_VALUE)
 public class IfInternalInterceptor implements Interceptor {
 

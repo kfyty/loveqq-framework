@@ -24,14 +24,14 @@ public class QuartzAutoConfig {
     public static final String TASK_BEAN_KEY = "__TASK_BEAN_KEY__";
     public static final String TASK_METHOD_KEY = "__TASK_METHOD_KEY__";
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SchedulerFactory schedulerFactory() {
         return new StdSchedulerFactory();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Scheduler scheduler(SchedulerFactory schedulerFactory) {
         try {
             return schedulerFactory.getScheduler();

@@ -24,7 +24,7 @@ import java.util.Properties;
 @ConditionalOnBean(NacosConfigProperties.class)
 public class NacosConfigAutoConfiguration {
 
-    @Bean(destroyMethod = "shutDown")
+    @Bean(destroyMethod = "shutDown", resolveNested = false, ignoredAutowired = true)
     public ConfigService nacosConfigService(NacosConfigProperties configProperties) throws NacosException {
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, configProperties.getServerAddr());

@@ -38,9 +38,9 @@ public class DataSourceAutoConfiguration {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.hikari")
+        @Bean(destroyMethod = "close", resolveNested = false, ignoredAutowired = true)
         public DataSource hikariDataSource() {
             HikariDataSource hikariDataSource = new HikariDataSource();
             hikariDataSource.setUsername(this.dataSourceProperties.getUsername());
@@ -58,9 +58,9 @@ public class DataSourceAutoConfiguration {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.druid")
+        @Bean(destroyMethod = "close", resolveNested = false, ignoredAutowired = true)
         public DataSource druidDataSource() {
             DruidDataSource druidDataSource = new DruidDataSource();
             druidDataSource.setUsername(this.dataSourceProperties.getUsername());
@@ -74,8 +74,8 @@ public class DataSourceAutoConfiguration {
         @ConditionalOnClass({"jakarta.servlet.ServletContext", "com.alibaba.druid.pool.DruidDataSource"})
         static class DruidServletAutoConfig {
 
-            @Bean
             @ConditionalOnBean(ServletContext.class)
+            @Bean(resolveNested = false, ignoredAutowired = true)
             @ConditionalOnProperty(prefix = "k.datasource.druid.statViewServlet", value = "enabled", havingValue = "true")
             public ServletRegistrationBean statViewServletBean(@Value("${k.datasource.druid.statViewServlet.allow:}") String allow,
                                                            @Value("${k.datasource.druid.statViewServlet.deny:}") String deny,
@@ -101,9 +101,9 @@ public class DataSourceAutoConfiguration {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @Bean(destroyMethod = "close")
         @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.tomcat")
+        @Bean(destroyMethod = "close", resolveNested = false, ignoredAutowired = true)
         public DataSource tomcatJdbcPoolDataSource() {
             org.apache.tomcat.jdbc.pool.DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
             dataSource.setUsername(this.dataSourceProperties.getUsername());

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnWebApplication;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
@@ -16,12 +16,12 @@ import com.kfyty.loveqq.framework.core.utils.JsonUtil;
  * @date 2022/7/17 18:46
  * @email kfyty725@hotmail.com
  */
-@Configuration
+@Component
 @ConditionalOnWebApplication
 public class JacksonAutoConfig implements ContextAfterRefreshed {
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ObjectMapper objectMapper() {
         return JsonUtil.configure();
     }

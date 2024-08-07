@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2021/6/26 12:07
  * @email kfyty725@hotmail.com
  */
+@EventListener
 @BootApplication
 public class AsyncTest implements ContextAfterRefreshed {
     int[] async = new int[2];
@@ -73,7 +74,9 @@ class AsyncEvent extends ApplicationEvent<Integer> {
     }
 }
 
+@Async
 @Component
+@EventListener
 class AsyncTaskImpl implements AsyncTask, SerialInitialize {
     @Autowired
     private AsyncTest asyncTest;
