@@ -24,8 +24,8 @@ public class MailAutoConfiguration {
         return new MailService();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Session mailSession(MailProperties mailProperties) {
         return Session.getDefaultInstance(mailProperties.getProperties(), new Authenticator() {
 

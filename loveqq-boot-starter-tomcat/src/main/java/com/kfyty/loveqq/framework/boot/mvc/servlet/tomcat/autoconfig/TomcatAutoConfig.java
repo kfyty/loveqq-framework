@@ -54,7 +54,7 @@ public class TomcatAutoConfig {
         return config;
     }
 
-    @Bean(destroyMethod = "stop")
+    @Bean(destroyMethod = "stop", resolveNested = false, ignoredAutowired = true)
     public TomcatWebServer tomcatWebServer(TomcatProperties config, DispatcherServlet dispatcherServlet) {
         return new TomcatWebServer(config, dispatcherServlet);
     }

@@ -21,10 +21,19 @@ public class OnClassCondition implements Condition {
                 return false;
             }
         }
-        return true;
+        return this.conditionClasses(metadata);
     }
 
     protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         return ((ConditionalOnClass) metadata.get()).value();
+    }
+
+    protected boolean conditionClasses(AnnotationMetadata<?> metadata) {
+        try {
+            ((ConditionalOnClass) metadata.get()).classes();
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
     }
 }

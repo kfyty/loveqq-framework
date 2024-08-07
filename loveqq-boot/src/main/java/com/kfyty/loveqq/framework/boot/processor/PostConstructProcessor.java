@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import jakarta.annotation.PostConstruct;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 /**
  * 描述:
@@ -27,7 +28,10 @@ public class PostConstructProcessor implements BeanPostProcessor {
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
         Class<?> sourceClass = AopUtil.getTargetClass(bean);
         for (Method method : ReflectUtil.getMethods(sourceClass)) {
-            if(AnnotationUtil.hasAnnotation(method, PostConstruct.class)) {
+            if (Modifier.isStatic(method.getModifiers()) || Modifier.isFinal(method.getModifiers()) || method.getReturnType() != void.class || method.getParameterCount() != 0) {
+                continue;
+            }
+            if (AnnotationUtil.hasAnnotation(method, PostConstruct.class)) {
                 if (method.getDeclaringClass() != bean.getClass() && AopUtil.isJdkProxy(bean)) {
                     bean = AopUtil.getTarget(bean);
                 }

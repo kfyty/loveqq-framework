@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.beans;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
@@ -105,5 +106,22 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
             return (MethodBeanDefinition) beanDefinition;
         }
         return null;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isResolveNested(BeanDefinition beanDefinition) {
+        Method method = beanDefinition.getBeanMethod();
+        if (method == null) {
+            return true;
+        }
+        return AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Bean.class).resolveNested();
+    }
+
+    public static boolean isIgnoredAutowired(BeanDefinition beanDefinition) {
+        Method method = beanDefinition.getBeanMethod();
+        if (method == null) {
+            return false;
+        }
+        return AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Bean.class).ignoredAutowired();
     }
 }

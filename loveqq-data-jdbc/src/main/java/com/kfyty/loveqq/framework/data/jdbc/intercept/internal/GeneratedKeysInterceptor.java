@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.jdbc.TransactionHolder;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.JdbcUtil;
@@ -39,6 +40,7 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
  * @email kfyty725@hotmail.com
  */
 @Order(0)
+@Inherited
 public class GeneratedKeysInterceptor implements Interceptor {
     private static final Method INSERT = getMethod(BaseMapper.class, "insert", Object.class);
     private static final Method INSERT_BATCH = getMethod(BaseMapper.class, "insertBatch", List.class);
@@ -71,7 +73,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
         return retValue;
     }
 
-    private Field resolvePrimaryKeyField(Object[] methodArgs) {
+    protected Field resolvePrimaryKeyField(Object[] methodArgs) {
         if (CommonUtil.empty(methodArgs)) {
             return null;
         }
@@ -82,7 +84,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
                 .orElse(null);
     }
 
-    private void processGeneratedKeys(PreparedStatement ps, Field pkField, Object[] params) {
+    protected void processGeneratedKeys(PreparedStatement ps, Field pkField, Object[] params) {
         try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
             int index = 0;
             List<?> list = ResultSetUtil.processListBaseType(generatedKeys, pkField.getType());

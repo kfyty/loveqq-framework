@@ -36,19 +36,10 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
 
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        container.getResponse().setContentType(this.contentType(returnType));
         try (OutputStream out = container.getResponse().getOutputStream()) {
             String body = returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
             out.write(body.getBytes(StandardCharsets.UTF_8));
             out.flush();
         }
-    }
-
-    protected String contentType(MethodParameter returnType) {
-        ResponseBody responseBody = AnnotationUtil.findAnnotationElement((Object) returnType.getMethod(), ResponseBody.class);
-        if (responseBody == null) {
-            responseBody = AnnotationUtil.findAnnotationElement(returnType.getSource(), ResponseBody.class);
-        }
-        return responseBody.contentType();
     }
 }

@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 import com.kfyty.loveqq.framework.core.lang.annotation.AnnotationInvocationHandler;
+import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 
 import java.lang.annotation.Annotation;
@@ -164,20 +165,19 @@ public abstract class AnnotationUtil {
         } else {
             // class
             if (element instanceof Class<?>) {
-                List<Annotation> annotationData = new ArrayList<>();
-                Class<?> superclass = ((Class<?>) element).getSuperclass();
-                if (superclass != null && superclass != Object.class) {
-                    annotationData.addAll(Arrays.asList(findAnnotations(superclass)));
+                if (AopUtil.isJdkProxy(element)) {
+                    resolvedAnnotations = Arrays.stream(((Class<?>) element).getInterfaces()).flatMap(e -> Arrays.stream(findAnnotations(e))).toArray(Annotation[]::new);
+                } else if (AopUtil.isCglibProxy(element)) {
+                    resolvedAnnotations = findAnnotations(((Class<?>) element).getSuperclass());
+                } else {
+                    resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
                 }
-                for (Class<?> interfaces : ((Class<?>) element).getInterfaces()) {
-                    annotationData.addAll(Arrays.asList(findAnnotations(interfaces)));
-                }
-                resolvedAnnotations = annotationData.toArray(CommonUtil.EMPTY_ANNOTATIONS);
             }
             // 构造器
             else if (element instanceof Constructor<?>) {
                 Constructor<?> constructor = (Constructor<?>) element;
-                if (constructor.getDeclaringClass() != Object.class) {
+                Class<?> declaringClass = constructor.getDeclaringClass();
+                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperConstructor(constructor));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
@@ -186,7 +186,8 @@ public abstract class AnnotationUtil {
             // 方法
             else if (element instanceof Method) {
                 Method method = (Method) element;
-                if (method.getDeclaringClass() != Object.class) {
+                Class<?> declaringClass = method.getDeclaringClass();
+                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperMethod((Method) element));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
@@ -195,7 +196,8 @@ public abstract class AnnotationUtil {
             // 参数
             else if (element instanceof Parameter) {
                 Parameter parameter = (Parameter) element;
-                if (parameter.getDeclaringExecutable().getDeclaringClass() != Object.class) {
+                Class<?> declaringClass = parameter.getDeclaringExecutable().getDeclaringClass();
+                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperParameters((Parameter) element));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
@@ -258,7 +260,7 @@ public abstract class AnnotationUtil {
                     if (aliasAnnotation == null) {
                         throw new IllegalArgumentException("The annotation of " + annotation.annotationType() + " must be annotated with " + aliasFor.annotation() + ", when AliasFor exists.");
                     }
-                    if (aliasAnnotation != annotation) {
+                    if (aliasAnnotation != annotation && !(Proxy.getInvocationHandler(aliasAnnotation) instanceof AnnotationInvocationHandler)) {
                         nestedAnnotationMap.put(aliasFor.annotation(), aliasAnnotation = clone(aliasAnnotation));
                     }
 

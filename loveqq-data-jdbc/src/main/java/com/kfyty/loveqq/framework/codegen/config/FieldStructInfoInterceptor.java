@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.codegen.config;
 
 import com.kfyty.loveqq.framework.codegen.info.AbstractFieldStructInfo;
+import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.JdbcTypeUtil;
 import com.kfyty.loveqq.framework.data.jdbc.intercept.InterceptorChain;
@@ -18,6 +19,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.mapping;
  * @date 2021/9/17 18:47
  * @email kfyty725@hotmail.com
  */
+@Inherited
 public class FieldStructInfoInterceptor implements QueryInterceptor {
 
     @Override

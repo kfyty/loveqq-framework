@@ -259,8 +259,12 @@ public abstract class CommonUtil {
 
     /* ------------------------------------------ URI 字符串操作 ------------------------------------------ */
 
+    @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static String formatURI(String uri) {
         uri = uri.trim();
+        if (uri.length() < 1) {
+            return uri;
+        }
         uri = uri.charAt(0) == '/' ? uri : '/' + uri;
         return uri.length() == 1 ? uri : uri.charAt(uri.length() - 1) == '/' ? uri.substring(0, uri.length() - 1) : uri;
     }

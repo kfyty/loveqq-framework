@@ -189,6 +189,12 @@ public class NettyWebServer implements ServerWebServer {
         if (this.config.getRequestTimeout() != null) {
             this.server = this.server.requestTimeout(this.config.getRequestTimeout());
         }
+        if (this.config.getProtocol() != null) {
+            this.server = this.server.protocol(this.config.getProtocol());
+        }
+        if (this.config.getSslProvider() != null) {
+            this.server = this.server.secure(this.config.getSslProvider(), this.config.getRedirectHttpToHttps());
+        }
         if (this.config.getServerConfigure() != null) {
             this.config.getServerConfigure().accept(this.server);
         }

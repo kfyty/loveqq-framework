@@ -32,7 +32,7 @@ public class NettyServerApplicationThymeleafAutoConfiguration {
         return new ThymeleafViewHandlerMethodReturnValueProcessor();
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public IWebApplication servletWebApplication() {
         return new NettyServerWebApplication();
     }

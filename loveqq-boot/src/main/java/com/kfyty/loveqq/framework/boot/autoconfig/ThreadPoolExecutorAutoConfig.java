@@ -32,7 +32,7 @@ public class ThreadPoolExecutorAutoConfig {
      *
      * @return 线程池
      */
-    @Bean(DEFAULT_THREAD_POOL_EXECUTOR)
+    @Bean(value = DEFAULT_THREAD_POOL_EXECUTOR, resolveNested = false, ignoredAutowired = true)
     public ExecutorService defaultThreadPoolExecutor() {
         if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("thread-handler-", 0).factory());
@@ -45,7 +45,7 @@ public class ThreadPoolExecutorAutoConfig {
      *
      * @return 配置
      */
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public BeanCustomizer<ThreadPoolExecutor> threadPoolExecutorBeanCustomizer() {
         return new BeanCustomizer<ThreadPoolExecutor>() {
 

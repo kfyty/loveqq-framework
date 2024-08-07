@@ -40,7 +40,7 @@ public class CacheAutoConfiguration {
         return new DefaultReactiveCache();
     }
 
-    @Bean(destroyMethod = "shutdown")
+    @Bean(destroyMethod = "shutdown", resolveNested = false, ignoredAutowired = true)
     public ScheduledExecutorService delayCacheClearScheduledService(@Value("${cache.scheduled.core:2}") int scheduledCore) {
         return new ScheduledThreadPoolExecutor(scheduledCore, new NamedThreadFactory("pre-cache-clear"));
     }

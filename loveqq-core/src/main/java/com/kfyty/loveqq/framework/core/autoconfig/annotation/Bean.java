@@ -37,4 +37,20 @@ public @interface Bean {
      * @return 销毁方法
      */
     String destroyMethod() default "";
+
+    /**
+     * 返回是否需要解析嵌套的 {@link com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition}
+     * 返回 false 时，将不再解析返回组件中可能的嵌套的 {@link Bean}
+     *
+     * @return true/false
+     */
+    boolean resolveNested() default true;
+
+    /**
+     * 返回是否忽略自动注入
+     * 返回 true 时，将不再进行自动注入
+     *
+     * @return true/false
+     */
+    boolean ignoredAutowired() default false;
 }

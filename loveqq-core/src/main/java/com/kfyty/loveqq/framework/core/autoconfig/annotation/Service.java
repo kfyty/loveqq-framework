@@ -17,6 +17,7 @@ import java.lang.annotation.Target;
  */
 @Component
 @Documented
+@AspectResolve
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Service {
@@ -27,4 +28,10 @@ public @interface Service {
      */
     @AliasFor(annotation = Component.class)
     String value() default "";
+
+    /**
+     * @see AspectResolve#value()
+     */
+    @AliasFor(value = "value", annotation = AspectResolve.class)
+    boolean resolve() default true;
 }

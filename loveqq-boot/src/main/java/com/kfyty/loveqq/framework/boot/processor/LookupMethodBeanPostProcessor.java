@@ -7,7 +7,6 @@ import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getMethods;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.isAbstract;
 
 /**
@@ -22,7 +21,7 @@ public class LookupMethodBeanPostProcessor extends AbstractProxyCreatorProcessor
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return !isAbstract(beanType) && getMethods(beanType).stream().anyMatch(e -> hasAnnotationElement(e, Lookup.class));
+        return !isAbstract(beanType) && hasAnnotationElement(beanType, Lookup.class);
     }
 
     @Override

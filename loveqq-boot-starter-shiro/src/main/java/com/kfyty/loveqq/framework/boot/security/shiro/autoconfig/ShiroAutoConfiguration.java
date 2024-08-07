@@ -64,63 +64,63 @@ public class ShiroAutoConfiguration {
     @Autowired(required = false)
     protected PermissionResolver permissionResolver;
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public EventBus eventBus() {
         return new DefaultEventBus();
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SessionStorageEvaluator sessionStorageEvaluator() {
         return new DefaultSessionStorageEvaluator();
     }
 
-    @Bean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     protected RememberMeManager defaultRememberMeManager() {
         CookieRememberMeManager cookieRememberMeManager = new CookieRememberMeManager();
         cookieRememberMeManager.setCookie(this.shiroProperties.rememberMeCookieTemplate());
         return cookieRememberMeManager;
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ShiroFilterConfiguration defaultFilterConfiguration() {
         return new ShiroFilterConfiguration();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SubjectDAO defaultSubjectDAO(SessionStorageEvaluator sessionStorageEvaluator) {
         DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
         subjectDAO.setSessionStorageEvaluator(sessionStorageEvaluator);
         return subjectDAO;
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SubjectFactory defaultSubjectFactory() {
         return new DefaultSubjectFactory();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SessionDAO defaultSessionDAO() {
         return new MemorySessionDAO();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SessionFactory defaultSessionFactory() {
         return new SimpleSessionFactory();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public AuthenticationStrategy defaultAuthenticationStrategy() {
         return new AtLeastOneSuccessfulStrategy();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SessionManager defaultSessionManager(SessionDAO sessionDAO, SessionFactory sessionFactory) {
         DefaultSessionManager sessionManager = new DefaultSessionManager();
         sessionManager.setSessionDAO(sessionDAO);
@@ -129,16 +129,16 @@ public class ShiroAutoConfiguration {
         return sessionManager;
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Authenticator defaultAuthenticator(AuthenticationStrategy authenticationStrategy) {
         ModularRealmAuthenticator authenticator = new ModularRealmAuthenticator();
         authenticator.setAuthenticationStrategy(authenticationStrategy);
         return authenticator;
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Authorizer defaultAuthorizer() {
         ModularRealmAuthorizer authorizer = new ModularRealmAuthorizer();
         if (this.permissionResolver != null) {
@@ -150,14 +150,14 @@ public class ShiroAutoConfiguration {
         return authorizer;
     }
 
-    @Bean("isWebApplication")
     @ConditionalOnWebApplication
+    @Bean(value = "isWebApplication", resolveNested = false, ignoredAutowired = true)
     public Boolean isWebApplication() {
         return true;
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public SecurityManager defaultSecurityManager(SubjectDAO subjectDAO,
                                            SubjectFactory subjectFactory,
                                            Authenticator authenticator,

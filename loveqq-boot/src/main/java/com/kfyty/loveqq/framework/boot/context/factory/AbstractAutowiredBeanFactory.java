@@ -85,6 +85,9 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void resolveNestedBeanDefinitionReference(BeanDefinition beanDefinition) {
+        if (!MethodBeanDefinition.isResolveNested(beanDefinition)) {
+            return;
+        }
         try {
             for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
                 Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
@@ -100,10 +103,13 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void resolveRegisterNestedBeanDefinition(BeanDefinition beanDefinition) {
+        if (!MethodBeanDefinition.isResolveNested(beanDefinition)) {
+            return;
+        }
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
-                this.registerBeanDefinition(genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition());
+                this.registerBeanDefinition(genericBeanDefinition(beanDefinition, method, beanAnnotation).getBeanDefinition(), beanAnnotation.resolveNested());
             }
         }
     }

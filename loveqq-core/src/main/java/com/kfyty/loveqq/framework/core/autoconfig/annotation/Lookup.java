@@ -8,13 +8,16 @@ import java.lang.annotation.Target;
 
 /**
  * 描述: 单例中注入原型实例可使用
+ * <b>
+ * 仅在类上同时注释时，方法注释才有效
+ * </b>
  *
  * @author kfyty725
  * @date 2021/7/11 12:29
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target(ElementType.METHOD)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Lookup {
     /**

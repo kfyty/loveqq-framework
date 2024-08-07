@@ -21,4 +21,14 @@ public class OnMissingClassCondition extends OnClassCondition {
     protected String[] conditionNames(AnnotationMetadata<?> metadata) {
         return ((ConditionalOnMissingClass) metadata.get()).value();
     }
+
+    @Override
+    protected boolean conditionClasses(AnnotationMetadata<?> metadata) {
+        try {
+            ((ConditionalOnMissingClass) metadata.get()).classes();
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
 }

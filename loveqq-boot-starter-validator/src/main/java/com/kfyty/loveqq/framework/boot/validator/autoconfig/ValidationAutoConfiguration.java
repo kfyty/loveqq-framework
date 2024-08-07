@@ -30,22 +30,22 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
     @Value("${k.validator.proxy:true}")
     private boolean isProxyValidator;
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public jakarta.validation.Configuration<?> validatorConfiguration() {
         return Validation.byDefaultProvider().configure();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public ValidatorFactory validatorFactory() {
         jakarta.validation.Configuration<?> configure = this.validatorConfiguration();
         configure.addProperty(BaseHibernateValidatorConfiguration.FAIL_FAST, Boolean.TRUE.toString());
         return configure.buildValidatorFactory();
     }
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public Validator validator() {
         Validator validator = this.validatorFactory().getValidator();
         return this.isProxyValidator ? this.createValidatorProxy(validator) : validator;

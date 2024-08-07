@@ -18,9 +18,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 @ConditionalOnProperty(value = "k.xxl.job.adminAddresses", matchIfNonNull = true)
 public class XxlJobAutoConfig {
 
-    @Bean
     @ConditionalOnMissingBean
     @ConfigurationProperties("k.xxl.job")
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public XxlJobBootExecutor xxlJobBootExecutor() {
         return new XxlJobBootExecutor();
     }

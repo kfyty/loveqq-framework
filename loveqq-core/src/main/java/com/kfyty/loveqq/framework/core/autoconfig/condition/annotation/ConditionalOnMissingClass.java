@@ -26,4 +26,11 @@ public @interface ConditionalOnMissingClass {
      * @return class 的全限定名
      */
     String[] value() default {};
+
+    /**
+     * 类路径上不应该存在的 class
+     *
+     * @return class
+     */
+    Class<?>[] classes() default {};
 }

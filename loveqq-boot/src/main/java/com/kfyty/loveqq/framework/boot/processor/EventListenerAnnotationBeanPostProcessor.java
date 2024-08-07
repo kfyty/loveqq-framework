@@ -47,15 +47,15 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
     /**
      * 已经解析的非单例 bean name
      */
-    private final Set<String> resolvePrototypeEvent = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<String> resolvedPrototypeEvent = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
         BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName);
-        if (this.resolvePrototypeEvent.contains(beanName) || !beanDefinition.isAutowireCandidate()) {
+        Class<?> beanClass = beanDefinition.getBeanType();
+        if (this.resolvedPrototypeEvent.contains(beanName) || !beanDefinition.isAutowireCandidate() || !AnnotationUtil.hasAnnotation(beanClass, EventListener.class)) {
             return null;
         }
-        Class<?> beanClass = beanDefinition.getBeanType();
         for (Method method : ReflectUtil.getMethods(beanClass)) {
             if (AnnotationUtil.hasAnnotation(method, EventListener.class)) {
                 Method listenerMethod = AopUtil.getInterfaceMethod(bean, method);
@@ -63,7 +63,7 @@ public class EventListenerAnnotationBeanPostProcessor implements BeanPostProcess
             }
         }
         if (!beanDefinition.isSingleton()) {
-            this.resolvePrototypeEvent.add(beanName);
+            this.resolvedPrototypeEvent.add(beanName);
         }
         return null;
     }

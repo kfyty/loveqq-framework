@@ -2,8 +2,8 @@ package com.kfyty.loveqq.framework.data.jdbc.intercept;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
-import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.method.MethodParameter;
 
 import java.sql.PreparedStatement;
 import java.util.Arrays;

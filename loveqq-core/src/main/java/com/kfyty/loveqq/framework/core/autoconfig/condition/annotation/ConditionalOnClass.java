@@ -26,4 +26,14 @@ public @interface ConditionalOnClass {
      * @return class 的全限定名
      */
     String[] value() default {};
+
+    /**
+     * 类路径上应该存在的 class
+     * <p>
+     * jdk 高版本可用，因为高版本当 class 不存在时，获取注解元数据不在抛出异常
+     * jdk 低版本建议使用 {@link this#value()}
+     *
+     * @return class
+     */
+    Class<?>[] classes() default {};
 }
