@@ -177,7 +177,7 @@ public abstract class AnnotationUtil {
             else if (element instanceof Constructor<?>) {
                 Constructor<?> constructor = (Constructor<?>) element;
                 Class<?> declaringClass = constructor.getDeclaringClass();
-                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
+                if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperConstructor(constructor));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
@@ -187,7 +187,7 @@ public abstract class AnnotationUtil {
             else if (element instanceof Method) {
                 Method method = (Method) element;
                 Class<?> declaringClass = method.getDeclaringClass();
-                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
+                if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperMethod((Method) element));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
@@ -197,7 +197,7 @@ public abstract class AnnotationUtil {
             else if (element instanceof Parameter) {
                 Parameter parameter = (Parameter) element;
                 Class<?> declaringClass = parameter.getDeclaringExecutable().getDeclaringClass();
-                if (hasAnnotation(declaringClass, Inherited.class) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
+                if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperParameters((Parameter) element));
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
