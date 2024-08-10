@@ -1,5 +1,6 @@
 package com.kfyty.core;
 
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
@@ -55,6 +56,18 @@ public class AnnotationTest {
         Anno anno = AnnotationUtil.findAnnotation(User.class, Anno.class);
         Assertions.assertEquals(selfAlias.value(), "path");
         Assertions.assertEquals(anno.anno(), "alias");
+    }
+
+    interface AnnoInter {
+        @Autowired
+        void test();
+    }
+
+    @Test
+    public void annotationTest1() throws Exception {
+        AnnoInter ai = DynamicProxyFactory.create().createProxy(AnnoInter.class);
+        Autowired autowired = AnnotationUtil.findAnnotation(ai.getClass().getMethod("test"), Autowired.class);
+        Assertions.assertNotNull(autowired);
     }
 
     @Test

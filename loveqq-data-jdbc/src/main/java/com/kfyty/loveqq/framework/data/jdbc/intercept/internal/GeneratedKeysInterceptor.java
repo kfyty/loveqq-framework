@@ -5,7 +5,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.jdbc.TransactionHolder;
 import com.kfyty.loveqq.framework.core.lang.Value;
-import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.JdbcUtil;
@@ -40,7 +39,6 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
  * @email kfyty725@hotmail.com
  */
 @Order(0)
-@Inherited
 public class GeneratedKeysInterceptor implements Interceptor {
     private static final Method INSERT = getMethod(BaseMapper.class, "insert", Object.class);
     private static final Method INSERT_BATCH = getMethod(BaseMapper.class, "insertBatch", List.class);

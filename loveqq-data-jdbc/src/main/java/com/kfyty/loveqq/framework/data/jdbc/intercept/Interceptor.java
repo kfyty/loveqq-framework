@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.data.jdbc.intercept;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 
 import java.sql.PreparedStatement;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
  * @date 2021/8/8 10:40
  * @email kfyty725@hotmail.com
  */
-public interface Interceptor {
+public interface Interceptor extends Inherited {
 
     @Order(10)
     default Object intercept(Value<String> sql, SimpleGeneric returnType, List<MethodParameter> parameters, InterceptorChain chain) {
