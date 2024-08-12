@@ -10,8 +10,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.netflix.loadbalancer.IRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
@@ -65,13 +63,13 @@ public class FeignAutoConfiguration {
         return new Client.Default(null, null);
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public ServerListener serverListener() {
         return new ServerListener();
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public LBClientFactory loadBalancerClientFactory() {
         return new LoadBalancerClientFactory();
@@ -80,10 +78,11 @@ public class FeignAutoConfiguration {
     @Bean(destroyMethod = "shutdown", resolveNested = false, ignoredAutowired = true)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
     public ZoneAwareLoadBalancer<Server> zoneAwareLoadBalancer() {
+        IRule rule = this.feignProperties.getRule();
         ZoneAwareLoadBalancer<Server> loadBalancer = new ZoneAwareLoadBalancer<>();
-        if (CommonUtil.notEmpty(this.feignProperties.getRule())) {
-            IRule rule = (IRule) ReflectUtil.newInstance(ReflectUtil.load(this.feignProperties.getRule()));
+        if (rule != null) {
             rule.setLoadBalancer(loadBalancer);
+            loadBalancer.setRule(rule);
         }
         return loadBalancer;
     }

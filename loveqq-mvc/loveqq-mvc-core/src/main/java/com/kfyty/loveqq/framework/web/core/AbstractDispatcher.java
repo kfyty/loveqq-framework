@@ -82,6 +82,10 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      */
     protected List<ExceptionHandler> exceptionHandlers = new ArrayList<>(4);
 
+    public boolean isEventStream(String contentType) {
+        return contentType != null && contentType.contains("text/event-stream");
+    }
+
     @SuppressWarnings("unchecked")
     public T addInterceptor(HandlerInterceptor interceptor) {
         this.interceptorChains.add(interceptor);

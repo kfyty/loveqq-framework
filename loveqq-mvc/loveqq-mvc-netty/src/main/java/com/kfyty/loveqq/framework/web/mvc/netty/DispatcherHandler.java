@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
@@ -52,6 +53,10 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
 
     protected void preparedRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
         response.setHeader(HttpHeaderNames.CONTENT_TYPE.toString(), mapping.getProduces());
+        if (mapping.isEventStream()) {
+            response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
+            response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
+        }
     }
 
     protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
@@ -86,8 +91,8 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             }
         };
         return Mono.fromSupplier(supplier)
-                .flatMap(this::adapterReturnValue)
-                .onErrorResume(e -> this.handleException(request, response, mapping, returnType.getMethodArgs(), e));
+                .flatMap(e -> this.adapterReturnValue(request, response, returnType, mapping, e))
+                .onErrorResume(e -> this.handleException(request, response, returnType, mapping, e));
     }
 
     @Override
@@ -111,10 +116,10 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     @SuppressWarnings("rawtypes")
-    protected Mono handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Object params, Throwable throwable) {
+    protected Mono handleException(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Throwable throwable) {
         try {
             Object handled = super.handleException(request, response, mapping, throwable);
-            return this.adapterReturnValue(handled);
+            return this.adapterReturnValue(request, response, returnType, mapping, handled);
         } catch (Throwable e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }
@@ -123,9 +128,13 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     @Override
     protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response) {
         try {
+            boolean isSse = this.isEventStream(response.getContentType());
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
             Object processedReturnValue = super.handleReturnValue(retValue, methodParameter, request, response);
-            return writeReturnValue(processedReturnValue, serverResponse);
+            if (!isSse) {
+                return writeReturnValue(processedReturnValue, serverResponse, false);
+            }
+            return writeReturnValue(IOUtil.formatSseData(processedReturnValue), serverResponse, true);
         } catch (Exception e) {
             throw new NettyServerException(e);
         }
@@ -139,7 +148,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         return super.doProcessReturnValue(retValue, returnType, container, returnValueProcessor);
     }
 
-    protected Mono<?> adapterReturnValue(Object invoked) {
+    protected Mono<?> adapterReturnValue(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Object invoked) {
         if (invoked instanceof NettyOutbound) {
             return Mono.from((NettyOutbound) invoked);
         }
@@ -147,6 +156,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             return (Mono<?>) invoked;
         }
         if (invoked instanceof Flux<?>) {
+            if (mapping.isEventStream()) {
+                return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
+            }
             return ((Flux<?>) invoked).collectList();
         }
         return invoked == null ? Mono.empty() : Mono.just(invoked);

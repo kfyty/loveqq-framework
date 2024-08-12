@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -22,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -178,6 +180,45 @@ public abstract class IOUtil {
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
+    }
+
+    /**
+     * 创建一个 {@link ByteBuf}
+     *
+     * @return {@link ByteBuf}
+     */
+    public static ByteBuf newByteBuf() {
+        return Unpooled.buffer();
+    }
+
+    /**
+     * 创建一个 {@link ByteBuf}
+     *
+     * @param bytes 字节数据
+     * @return {@link ByteBuf}
+     */
+    public static ByteBuf newByteBuf(byte[] bytes) {
+        return Unpooled.wrappedBuffer(bytes);
+    }
+
+    /**
+     * 格式化 sse 数据
+     *
+     * @param data 实际数据
+     * @return 符合 sse 标准的数据
+     */
+    public static ByteBuf formatSseData(Object data) {
+        if (data instanceof CharSequence) {
+            return newByteBuf(("data:" + data + "\n\n").getBytes(StandardCharsets.UTF_8));
+        }
+        if (data instanceof byte[]) {
+            ByteBuf buffer = Unpooled.buffer();
+            buffer.writeBytes("data:".getBytes(StandardCharsets.UTF_8));
+            buffer.writeBytes((byte[]) data);
+            buffer.writeBytes("\n\n".getBytes(StandardCharsets.UTF_8));
+            return buffer;
+        }
+        throw new IllegalArgumentException("The sse value must be String/byte[]");
     }
 
     /**

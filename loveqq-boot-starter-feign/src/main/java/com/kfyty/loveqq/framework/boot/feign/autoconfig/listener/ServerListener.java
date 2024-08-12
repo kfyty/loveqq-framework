@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  * @date 2024/3/08 18:55
  * @email kfyty725@hotmail.com
  */
+@EventListener
 public class ServerListener {
     @Autowired
     private ZoneAwareLoadBalancer<Server> loadBalancer;

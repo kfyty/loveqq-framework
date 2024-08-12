@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.feign.autoconfig;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
+import com.netflix.loadbalancer.IRule;
 import lombok.Data;
 
 /**
@@ -18,5 +19,5 @@ public class FeignProperties {
     /**
      * ribbon 轮训规则
      */
-    private String rule;
+    private IRule rule;
 }

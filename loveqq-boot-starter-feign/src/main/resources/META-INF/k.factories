@@ -1,4 +1,5 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.feign.autoconfig.converter.StringToRuleConverter,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProperties,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignAutoConfiguration,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProxyBeanDefinitionImport,\

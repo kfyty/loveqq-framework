@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 描述: 添加缓存注解
+ * <b>
+ * 注意：sse 事件流禁止添加缓存注解
+ * </b>
  *
  * @author kfyty725
  * @date 2024/7/4 9:52
