@@ -61,12 +61,14 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
 
     protected MethodMapping resolveRequestMappingProduces(RequestMapping annotation, MethodMapping methodMapping) {
         methodMapping.setProduces(annotation.produces());
-        ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
-        if (responseBody == null) {
-            responseBody = AnnotationUtil.findAnnotation(methodMapping.getController(), ResponseBody.class);
-        }
-        if (responseBody != null) {
-            methodMapping.setProduces(responseBody.contentType());
+        if (!methodMapping.isEventStream()) {
+            ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
+            if (responseBody == null) {
+                responseBody = AnnotationUtil.findAnnotation(methodMapping.getController(), ResponseBody.class);
+            }
+            if (responseBody != null) {
+                methodMapping.setProduces(responseBody.contentType());
+            }
         }
         log.info("Resolved request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
         return methodMapping;

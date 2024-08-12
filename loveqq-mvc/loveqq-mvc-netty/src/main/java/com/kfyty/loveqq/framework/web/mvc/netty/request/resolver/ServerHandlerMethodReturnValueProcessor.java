@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.mvc.netty.request.resolver;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
+import io.netty.buffer.ByteBuf;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
@@ -30,7 +31,7 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
         Object processedReturnValue = this.processReturnValue(returnValue, returnType, container);
         if (processedReturnValue != null) {
             HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
-            Mono.from(writeReturnValue(processedReturnValue, serverResponse)).subscribe();
+            Mono.from(writeReturnValue(processedReturnValue, serverResponse, false)).subscribe();
         }
     }
 
@@ -49,14 +50,18 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
      *
      * @param retValue 返回值
      * @param response 响应
+     * @param isSse    是否是 sse
      * @return 响应值
      */
-    static Publisher<Void> writeReturnValue(Object retValue, HttpServerResponse response) {
+    static Publisher<Void> writeReturnValue(Object retValue, HttpServerResponse response, boolean isSse) {
         if (retValue == null) {
             return Mono.empty();
         }
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
+        }
+        if (retValue instanceof ByteBuf) {
+            return response.send(Mono.just((ByteBuf) retValue), e -> isSse);
         }
         if (retValue instanceof CharSequence) {
             return response.sendString(Mono.just(retValue.toString()));

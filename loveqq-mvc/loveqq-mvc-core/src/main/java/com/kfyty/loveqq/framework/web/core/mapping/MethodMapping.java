@@ -82,6 +82,10 @@ public class MethodMapping {
         return this.paths.length;
     }
 
+    public boolean isEventStream() {
+        return this.produces.contains("text/event-stream");
+    }
+
     public Integer getRestfulMappingIndex(String path) {
         if (this.restfulMappingIndex == null) {
             throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
