@@ -14,6 +14,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -33,7 +34,7 @@ public class AspectJAdvisorCreator implements AdvisorCreator {
 
     protected List<Advisor> createAdvisorByAnnotation(AspectJFactory aspectJFactory, AspectClass aspectClass) {
         List<Advisor> advisors = new ArrayList<>();
-        List<Method> methods = ReflectUtil.getMethods(aspectClass.getClazz());
+        Collection<Method> methods = ReflectUtil.getMethods(aspectClass.getClazz());
         for (Class<? extends Annotation> aspectAnnotationType : AspectJAnnotationUtil.ASPECT_ANNOTATION_TYPES) {
             for (Method aspectMethod : methods) {
                 if (AnnotationUtil.hasAnnotation(aspectMethod, aspectAnnotationType)) {

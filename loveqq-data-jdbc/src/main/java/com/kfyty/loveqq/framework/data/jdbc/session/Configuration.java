@@ -20,6 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -286,7 +287,7 @@ public class Configuration {
         );
         for (Interceptor interceptor : this.interceptors) {
             Predicate<Method> interceptorTest = method -> !method.isDefault() && INTERCEPTOR_METHOD_NAME.equals(method.getName()) && hasAnnotation(method, Order.class);
-            List<Method> methods = ReflectUtil.getMethods(interceptor.getClass()).stream().filter(interceptorTest).distinct().collect(Collectors.toList());
+            Collection<Method> methods = ReflectUtil.getMethods(interceptor.getClass()).stream().filter(interceptorTest).distinct().collect(Collectors.toList());
             for (Method method : methods) {
                 this.interceptorMethodChain.put(method, interceptor);
             }
