@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -116,7 +117,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
 
     protected void autowiredField(Class<?> clazz, Object bean, Object exposedBean) {
         List<Pair<Field, AutowiredDescription>> laziedFields = new LinkedList<>();
-        List<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
+        Collection<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(field);
             if (description == null) {

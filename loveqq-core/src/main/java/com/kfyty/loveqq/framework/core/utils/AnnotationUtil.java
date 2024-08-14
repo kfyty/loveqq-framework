@@ -15,6 +15,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public abstract class AnnotationUtil {
      * key: 注解声明对象
      * value: 对应存在的注解，包括解析别名后的注解，以及注解的注解
      */
-    private static final Map<AnnotatedElement, Annotation[]> ANNOTATION_CACHE = new WeakConcurrentHashMap<>();
+    private static final Map<AnnotatedElement, Annotation[]> ANNOTATION_CACHE = new WeakConcurrentHashMap<>(256);
 
     /* ------------------------------------------ 基础方法 ------------------------------------------ */
 
@@ -247,7 +248,7 @@ public abstract class AnnotationUtil {
             }
 
             // 处理别名注解
-            List<Method> methods = ReflectUtil.getMethods(annotation.annotationType());
+            Collection<Method> methods = ReflectUtil.getMethods(annotation.annotationType());
             Map<Annotation, Map<String, Object>> annotationValuesMap = new HashMap<>(8);
             Map<Class<? extends Annotation>, Annotation> nestedAnnotationMap = Arrays.stream(annotation.annotationType().getAnnotations()).collect(Collectors.toMap(Annotation::annotationType, Function.identity()));
             for (Method method : methods) {

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -45,7 +46,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
     }
 
     protected void resolveMethodAnnotation(String superUrl, Class<?> controllerClass, Object controller, List<MethodMapping> methodMappings) {
-        List<Method> methods = ReflectUtil.getMethods(controllerClass);
+        Collection<Method> methods = ReflectUtil.getMethods(controllerClass);
         for (Method method : methods) {
             if (method.getDeclaringClass() == Object.class) {
                 continue;
