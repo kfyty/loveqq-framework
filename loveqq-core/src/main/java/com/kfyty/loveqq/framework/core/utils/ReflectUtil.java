@@ -214,7 +214,7 @@ public abstract class ReflectUtil {
             return new Class<?>[]{clazz};
         }
         Set<Class<?>> interfaces = new HashSet<>();
-        while (clazz != null) {
+        while (clazz != null && clazz != Object.class) {
             Class<?>[] classInterfaces = clazz.getInterfaces();
             Collections.addAll(interfaces, classInterfaces);
             clazz = clazz.getSuperclass();
@@ -317,7 +317,7 @@ public abstract class ReflectUtil {
         if (noParameterConstructor != null) {
             return (Constructor<T>) noParameterConstructor;
         }
-        throw new ResolvableException("can't find a suitable constructor !");
+        throw new ResolvableException("Can't find a suitable constructor: " + clazz);
     }
 
     /*----------------------------------------- 构造器/属性/方法相关方法 -----------------------------------------*/
