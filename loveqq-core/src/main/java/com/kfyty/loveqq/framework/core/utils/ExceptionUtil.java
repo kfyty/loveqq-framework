@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 描述: 异常工具类
@@ -21,14 +22,20 @@ public abstract class ExceptionUtil {
         if (throwable == null) {
             return CommonUtil.EMPTY_STRING;
         }
-        StringWriter stringWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(stringWriter, true));
-        return stringWriter.toString();
+        StringWriter writer = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(writer, true));
+        return writer.toString();
     }
 
     public static ResolvableException wrap(Throwable throwable) {
         if (throwable instanceof ResolvableException) {
             return (ResolvableException) throwable;
+        }
+        if (throwable instanceof CompletionException && throwable.getCause() != null) {
+            return wrap(throwable.getCause());
+        }
+        if (throwable instanceof ExecutionException && throwable.getCause() != null) {
+            return wrap(throwable.getCause());
         }
         if (throwable instanceof UndeclaredThrowableException) {
             Throwable undeclaredThrowable = ((UndeclaredThrowableException) throwable).getUndeclaredThrowable();
@@ -41,9 +48,6 @@ public abstract class ExceptionUtil {
             if (targetException != null) {
                 return wrap(targetException);
             }
-        }
-        if (throwable instanceof CompletionException && throwable.getCause() != null) {
-            return wrap(throwable.getCause());
         }
         return new ResolvableException(throwable);
     }

@@ -18,6 +18,7 @@ import sun.reflect.ReflectionFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -66,10 +67,14 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
     @SuppressWarnings("unchecked")
     public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues, CallbackFilter callbackFilter, Callback... callbacks) {
         Enhancer enhancer = new Enhancer();
+        Class<?>[] interfaces = ReflectUtil.getInterfaces(targetClass);
         enhancer.setSuperclass(targetClass);
-        enhancer.setInterfaces(ReflectUtil.getInterfaces(targetClass));
+        enhancer.setInterfaces(interfaces);
         enhancer.setCallbackFilter(callbackFilter);
         enhancer.setNamingPolicy(new NamingPolicy());
+        if (Modifier.isFinal(targetClass.getModifiers()) && interfaces.length > 0) {
+            enhancer.setSuperclass(null);
+        }
         if (!this.isReflectionInstance(source, targetClass)) {
             enhancer.setCallbacks(callbacks);
             return (T) enhancer.create(argTypes, argValues);
