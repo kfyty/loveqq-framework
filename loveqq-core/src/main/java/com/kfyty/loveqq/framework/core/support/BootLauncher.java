@@ -68,7 +68,7 @@ public class BootLauncher {
         InputStream jarIndexStream = this.openJarIndexInputStream(manifest.getJar());
         String mainJarPath = this.resolveMainJarPath(manifest);
 
-        JarIndex jarIndex = new JarIndex(mainJarPath, manifest, jarIndexStream);
+        JarIndex jarIndex = new JarIndex(mainJarPath, jarIndexStream);
         JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, Thread.currentThread().getContextClassLoader());
 
         this.setContextClassLoader(jarIndexClassLoader);

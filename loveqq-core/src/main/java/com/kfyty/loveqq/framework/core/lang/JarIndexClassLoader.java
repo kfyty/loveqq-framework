@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.SneakyThrows;
 
 import java.io.ByteArrayOutputStream;
@@ -9,11 +10,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -21,6 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
+
+import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
 
 /**
  * 描述: 支持 jar 索引的类加载器
@@ -71,43 +76,60 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
+     * @param jarFiles jar 文件集合
+     */
+    public void addJarIndex(List<JarFile> jarFiles) {
+        this.jarIndex.addJarIndex(jarFiles);
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
      * @param packageName 包名
-     * @param jar         jar 路径
      * @param jarFile     jar 文件
      */
-    public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
-        this.jarIndex.addJarIndexMapping(packageName, jar, jarFile);
+    public void addJarIndexMapping(String packageName, JarFile jarFile) {
+        this.jarIndex.addJarIndex(packageName, jarFile);
+    }
+
+    /**
+     * 获取 jar index
+     *
+     * @return {@link JarIndex}
+     */
+    public JarIndex getJarIndex() {
+        return this.jarIndex;
     }
 
     @Override
-    @SneakyThrows(MalformedURLException.class)
     public URL getResource(String name) {
-        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
-        if (jarFiles.isEmpty() && this.isExploded()) {
-            return super.getResource(name);
+        if (this.isExploded()) {
+            List<URL> resources = this.findExplodedResources(name);
+            if (!resources.isEmpty()) {
+                return IOUtil.newURL(resources.get(0).toString() + name);
+            }
         }
-        return jarFiles.isEmpty() ? null : new URL("jar:file:/" + jarFiles.get(0).getName() + "!/" + name);
+        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name, true, false);
+        return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
     }
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
-        if (jarFiles.isEmpty() && this.isExploded()) {
-            return super.getResources(name);
+        List<URL> resources = this.jarIndex.getJarFiles(name, true, false).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
+        if (this.isExploded()) {
+            resources.addAll(this.findExplodedResources(name).stream().map(e -> IOUtil.newURL(e.toString() + name)).collect(Collectors.toList()));
         }
         AtomicInteger index = new AtomicInteger(0);
         return new Enumeration<URL>() {
 
             @Override
             public boolean hasMoreElements() {
-                return !jarFiles.isEmpty() && index.get() < jarFiles.size();
+                return index.get() < resources.size();
             }
 
             @Override
-            @SneakyThrows(MalformedURLException.class)
             public URL nextElement() {
-                JarFile jarFile = jarFiles.get(index.getAndIncrement());
-                return new URL("jar:file:/" + jarFile.getName() + "!/" + name);
+                return resources.get(index.getAndIncrement());
             }
         };
     }
@@ -120,7 +142,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
-                List<JarFile> jars = this.jarIndex.getJarFiles(name);
+                List<JarFile> jars = this.jarIndex.getJarFiles(name, true, true);
                 if (!jars.isEmpty()) {
                     loadedClass = this.findJarClass(name, jars);
                 } else {
@@ -175,17 +197,39 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> findExplodedClass(String name) throws ClassNotFoundException {
         if (this.isExploded()) {
             String jarClassPath = name.replace('.', '/') + ".class";
-            File classFile = new File(this.jarIndex.getMainJarPath(), jarClassPath);
-            if (classFile.exists()) {
-                try (InputStream inputStream = new FileInputStream(classFile)) {
-                    URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
-                    byte[] classBytes = this.transform(name, this.read(inputStream));
-                    this.definePackageIfNecessary(name, classURL, new Manifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
+            List<URL> resources = this.findExplodedResources(jarClassPath);
+            if (!resources.isEmpty()) {
+                File classFile = new File(PathUtil.getPath(resources.get(0)).toString(), jarClassPath);
+                if (classFile.exists()) {
+                    try (InputStream inputStream = new FileInputStream(classFile)) {
+                        URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
+                        byte[] classBytes = this.transform(name, this.read(inputStream));
+                        this.definePackageIfNecessary(name, classURL, new Manifest());
+                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
+                    }
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * ide 集成支持
+     *
+     * @param resources 资源名称
+     * @return 资源所在的 url
+     */
+    protected List<URL> findExplodedResources(String resources) {
+        List<URL> urls = new ArrayList<>();
+        for (URL url : this.getURLs()) {
+            Path path = PathUtil.getPath(url);
+            if (!path.toString().endsWith(".jar")) {
+                if (new File(path.toString(), resources).exists()) {
+                    urls.add(url);
+                }
+            }
+        }
+        return urls;
     }
 
     /**

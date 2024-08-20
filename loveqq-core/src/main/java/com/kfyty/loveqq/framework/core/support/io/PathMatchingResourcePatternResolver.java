@@ -19,7 +19,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
-import static com.kfyty.loveqq.framework.core.utils.IOUtil.resolveAllClassPath;
+import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.resolveAllClassPath;
 
 /**
  * 描述: 支持 ant 路径匹配的资源解析器
@@ -68,7 +68,7 @@ public class PathMatchingResourcePatternResolver {
         while (entries.hasMoreElements()) {
             JarEntry jarEntry = entries.nextElement();
             if (this.patternMatcher.matches(pattern, jarEntry.getName())) {
-                resources.add(IOUtil.buildFileURLInJar(jarFile, jarEntry));
+                resources.add(IOUtil.newNestedJarURL(jarFile, jarEntry.getName()));
             }
         }
         return resources;

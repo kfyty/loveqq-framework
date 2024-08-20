@@ -88,9 +88,9 @@ public class Mapping<T> {
      * @param test 断言逻辑
      * @return this
      */
-    public Mapping<T> when(Predicate<T> test) {
+    public Mapping<T> when(Predicate<T> test, Consumer<T> consumer) {
         if (test.test(this.value)) {
-            return this;
+            return to(consumer);
         }
         return from(null);
     }
@@ -154,7 +154,7 @@ public class Mapping<T> {
      * @return this
      */
     public Mapping<T> whenNotNull(Consumer<T> consumer) {
-        return when(Objects::nonNull).to(consumer);
+        return when(Objects::nonNull, consumer);
     }
 
     /**
@@ -164,7 +164,7 @@ public class Mapping<T> {
      * @return this
      */
     public Mapping<T> whenNotEmpty(Consumer<T> consumer) {
-        return when(CommonUtil::notEmpty).to(consumer);
+        return when(CommonUtil::notEmpty, consumer);
     }
 
     /**
