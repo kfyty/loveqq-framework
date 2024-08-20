@@ -107,18 +107,18 @@
         <junit.version>5.10.3</junit.version>
         <lombok.version>1.18.30</lombok.version>
 
-        <source.plugin.version>3.2.1</source.plugin.version>
+        <source.plugin.version>3.3.1</source.plugin.version>
         <javadoc.plugin.version>3.5.0</javadoc.plugin.version>
-        <compiler.plugin.version>3.10.1</compiler.plugin.version>
-        <jar.plugin.version>3.2.2</jar.plugin.version>
+        <compiler.plugin.version>3.13.0</compiler.plugin.version>
+        <jar.plugin.version>3.4.2</jar.plugin.version>
         <gpg.plugin.version>3.2.2</gpg.plugin.version>
         <central.publishing.plugin.version>0.4.0</central.publishing.plugin.version>
         <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <os.maven.version>1.5.0.Final</os.maven.version>
         <smart.doc.maven.version>3.0.5</smart.doc.maven.version>
         <protobuf.maven.version>0.5.1</protobuf.maven.version>
-        <dependency.plugin.version>3.3.0</dependency.plugin.version>
-        <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
+        <dependency.plugin.version>3.7.1</dependency.plugin.version>
+        <surefire.plugin.version>3.3.1</surefire.plugin.version>
 
         <maven.source.version>21</maven.source.version>
         <maven.target.version>21</maven.target.version>
@@ -485,6 +485,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.plugin.version}</version>
                 <configuration>
+                    <!-- 复用 forks，会导致类加载器错误，从而导致单元测试失败 -->
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                     <argLine>
                         --enable-preview
                         --add-opens=java.base/java.lang=ALL-UNNAMED

@@ -1,24 +1,27 @@
 package com.kfyty.loveqq.framework.core.lang;
 
+import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
 import lombok.SneakyThrows;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 /**
@@ -40,20 +43,13 @@ public class JarIndex {
     private final String mainJarPath;
 
     /**
-     * jar 文件 map
-     */
-    private final Map<String, JarFile> jarMap;
-
-    /**
      * jar index of package mapping to jars
      */
-    private final Map<String, List<String>> jarIndex;
+    private final Map<String, List<JarFile>> jarIndex;
 
-    public JarIndex(String mainJarPath, Manifest manifest, InputStream jarIndex) {
+    public JarIndex(String mainJarPath, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
-        this.jarMap = new HashMap<>(256);
-        this.jarIndex = new HashMap<>(256);
-        this.loadJarFile(mainJarPath, manifest);
+        this.jarIndex = new ConcurrentHashMap<>(256);
         this.loadJarIndex(mainJarPath, jarIndex);
     }
 
@@ -63,7 +59,7 @@ public class JarIndex {
      * @return jar urls
      */
     public List<URL> getJarURLs() {
-        return this.jarMap.values().stream().map(this::getJarURL).collect(Collectors.toList());
+        return this.jarIndex.values().stream().flatMap(Collection::stream).map(this::getJarURL).collect(Collectors.toList());
     }
 
     /**
@@ -71,8 +67,18 @@ public class JarIndex {
      *
      * @return main class jar path
      */
+    @SuppressWarnings("LombokGetterMayBeUsed")
     public String getMainJarPath() {
         return this.mainJarPath;
+    }
+
+    /**
+     * 获取 jar index
+     *
+     * @return jar index
+     */
+    public Map<String, List<JarFile>> getJarIndex() {
+        return Collections.unmodifiableMap(this.jarIndex);
     }
 
     /**
@@ -81,6 +87,7 @@ public class JarIndex {
      * @param jarFile Jar file
      * @return jar file url
      */
+    @SuppressWarnings("deprecation")
     @SneakyThrows(MalformedURLException.class)
     public URL getJarURL(JarFile jarFile) {
         return new URL("file", "", -1, '/' + jarFile.getName());                                   // 必须使用 file 协议，否则读取不到 resources
@@ -89,16 +96,35 @@ public class JarIndex {
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
-     * @param packageName 包名
-     * @param jar         jar 路径
-     * @param jarFile     jar 文件
+     * @param jarFiles jar 文件集合
      */
-    public void addJarIndexMapping(String packageName, String jar, JarFile jarFile) {
-        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jar);
-        this.jarMap.put(jar, jarFile);
+    @SneakyThrows(Exception.class)
+    public void addJarIndex(List<JarFile> jarFiles) {
+        Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
+        for (JarFile jarFile : jarFiles) {
+            BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
+        }
+        String index = BuildJarIndexAntTask.buildJarIndex(indexContainer);
+        this.loadJarIndex(this.mainJarPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public List<String> getJars(String name) {
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
+     * @param packageName 包名
+     * @param jarFile     jar 文件
+     */
+    public void addJarIndex(String packageName, JarFile jarFile) {
+        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFile);
+    }
+
+    /**
+     * 根据资源获取所在 jar 包集合
+     *
+     * @param name 资源名称
+     * @return jars
+     */
+    public List<JarFile> getJarFiles(String name) {
         int lastDot = name.lastIndexOf('.');
         if (lastDot < 0) {
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
@@ -107,44 +133,55 @@ public class JarIndex {
         return this.jarIndex.getOrDefault(path, this.jarIndex.getOrDefault(name, Collections.emptyList()));
     }
 
-    public List<JarFile> getJarFiles(String name) {
-        List<String> jars = this.getJars(name);
-        return jars.stream().map(this.jarMap::get).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    @SneakyThrows(IOException.class)
-    protected void loadJarFile(String mainJarPath, Manifest manifest) {
-        String parentPath = Paths.get(mainJarPath).getParent().toString();
-        String classpath = manifest.getMainAttributes().getValue("Class-Path");
-        List<String> jarPaths = Arrays.stream(classpath.split(" ")).map(String::trim).collect(Collectors.toList());
-        for (String jarPath : jarPaths) {
-            this.jarMap.put(jarPath, new JarFile(new File(parentPath, jarPath)));
+    /**
+     * 根据资源获取所在 jar 包集合
+     *
+     * @param name    资源名称
+     * @param valid   是否验证资源存在
+     * @param isClass 是否是 class 资源，true 时自动添加 .class 后缀
+     * @return jars
+     */
+    public List<JarFile> getJarFiles(String name, boolean valid, boolean isClass) {
+        List<JarFile> jarFiles = this.getJarFiles(name);
+        if (!valid) {
+            return jarFiles;
         }
+        String resource = isClass ? name.replace('.', '/') + ".class" : name;
+        return jarFiles.stream().filter(e -> e.getJarEntry(resource) != null).collect(Collectors.toList());
     }
 
+    /**
+     * 读取 jar index
+     *
+     * @param mainJarPath 启动类所在路径
+     * @param jarIndex    jar index
+     */
     @SneakyThrows(IOException.class)
     protected void loadJarIndex(String mainJarPath, InputStream jarIndex) {
         String line = null;
+        String parentPath = Paths.get(mainJarPath).getParent().toString();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(jarIndex))) {
             while ((line = reader.readLine()) != null) {
-                this.loadJarIndex(mainJarPath, line, reader);
+                this.loadJarIndex(parentPath, line, reader);
             }
         }
     }
 
-    protected void loadJarIndex(String mainJarPath, String currentLine, BufferedReader reader) throws IOException {
+    protected void loadJarIndex(String parentPath, String currentLine, BufferedReader reader) throws IOException {
         if (!currentLine.endsWith(".jar")) {
             return;
         }
 
-        String jar = currentLine;
+        final String jar = currentLine.replace("%20", " ");                                            // 第一行是 jar 文件相对路径
         while ((currentLine = reader.readLine()) != null) {
             if (currentLine.isEmpty() || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕
             }
-            this.jarIndex.computeIfAbsent(currentLine, k -> new LinkedList<>()).add(jar);
-            if (mainJarPath.contains(jar)) {
-                this.jarMap.put(jar, new JarFile(mainJarPath));
+            File file = new File(jar);
+            if (file.exists()) {
+                this.addJarIndex(currentLine, new JarFile(file.getAbsoluteFile()));
+            } else {
+                this.addJarIndex(currentLine, new JarFile(new File(parentPath, jar)));
             }
         }
     }

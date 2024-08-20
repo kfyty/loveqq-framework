@@ -3,10 +3,25 @@ package com.kfyty.loveqq.framework.boot;
 import com.kfyty.loveqq.framework.boot.context.factory.ApplicationContextFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
+import com.kfyty.loveqq.framework.core.lang.JarIndex;
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
+import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
+import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
+import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.SneakyThrows;
+
+import java.io.ByteArrayInputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 功能描述: 启动类
@@ -16,31 +31,134 @@ import lombok.extern.slf4j.Slf4j;
  * @since JDK 1.8
  */
 @Data
-@Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
 public class K {
+    /**
+     * 启动类
+     */
     private Class<?> primarySource;
+
+    /**
+     * 命令行参数
+     */
     private String[] commandLineArgs;
+
+    /**
+     * {@link ApplicationContextFactory}
+     */
     private ApplicationContextFactory applicationContextFactory;
 
+    /**
+     * 构造器
+     *
+     * @param clazz 启动类
+     * @param args  命令行参数
+     */
     public K(Class<?> clazz, String... args) {
         this(clazz, args, new ApplicationContextFactory());
     }
 
+    /**
+     * 启动应用
+     *
+     * @return {@link ApplicationContext}
+     */
     public ApplicationContext run() {
-        log.info("Boot loading...");
-        long start = System.currentTimeMillis();
         ApplicationContext applicationContext = this.applicationContextFactory.create(this).refresh();
-        log.info("Started {} in {} seconds", applicationContext.getPrimarySource().getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
         this.invokeRunner(applicationContext);
         return applicationContext;
     }
 
-    public static ApplicationContext run(Class<?> clazz, String... args) {
+    /**
+     * 直接启动应用
+     * 运行该方法时，如果类加载不是 {@link JarIndexClassLoader}，
+     * 则 {@link java.lang.instrument.ClassFileTransformer} 不会直接应用，仍需配置到 javaagent 以及 Pre-Main 才能生效
+     * <p>
+     * 但是，当打包后运行时，将由 {@link com.kfyty.loveqq.framework.core.support.BootLauncher} 引导启动，一定会是 {@link JarIndexClassLoader}
+     * 因此，打包后仍无需 javaagent 配置即可令 {@link java.lang.instrument.ClassFileTransformer} 生效
+     *
+     * @return {@link ApplicationContext}
+     */
+    public static ApplicationContext start(Class<?> clazz, String... args) {
         return new K(clazz, args).run();
     }
 
+    /**
+     * 启动应用，自动构建 {@link JarIndexClassLoader} 启动
+     * {@link java.lang.instrument.ClassFileTransformer} 会直接应用，无需配置到 javaagent 以及 Pre-Main
+     * 没有返回值是因为会出现 {@link ClassCastException}，原因是切换了类加载器
+     *
+     * @param clazz 启动类
+     * @param args  命令行参数
+     */
+    public static void run(Class<?> clazz, String... args) {
+        if (isIndexedClassLoader()) {
+            start(clazz, args);
+        } else {
+            runOnClassLoad(getIndexedClassloader(clazz), clazz, args);
+        }
+    }
+
+    /**
+     * 使用指定的类加载器启动应用
+     *
+     * @param classLoader 类加载器
+     * @param clazz       启动类
+     * @param args        命令行参数
+     */
+    @SneakyThrows(Exception.class)
+    public static void runOnClassLoad(ClassLoader classLoader, Class<?> clazz, String... args) {
+        Class<?> bootClass = Class.forName(K.class.getName(), true, classLoader);
+        Class<?> primaryClass = Class.forName(clazz.getName(), true, classLoader);
+        Thread.currentThread().setContextClassLoader(classLoader);
+        bootClass.getMethod("start", Class.class, String[].class).invoke(null, primaryClass, args);
+    }
+
+    /**
+     * 是否是 jar index 支持的类加载器
+     *
+     * @return true if jar index supported
+     */
+    public static boolean isIndexedClassLoader() {
+        return isIndexedClassLoader(Thread.currentThread().getContextClassLoader());
+    }
+
+    /**
+     * 是否是 jar index 支持的类加载器
+     *
+     * @param classLoader 类加载器
+     * @return true if jar index supported
+     */
+    public static boolean isIndexedClassLoader(ClassLoader classLoader) {
+        return classLoader.getClass().getName().equals(JarIndexClassLoader.class.getName());
+    }
+
+    /**
+     * 获取类加载器
+     *
+     * @param clazz 启动类
+     * @return 类加载器
+     */
+    @SneakyThrows(Exception.class)
+    public static JarIndexClassLoader getIndexedClassloader(Class<?> clazz) {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if (isIndexedClassLoader(contextClassLoader)) {
+            return (JarIndexClassLoader) contextClassLoader;
+        }
+        Set<URL> urls = ClassLoaderUtil.resolveAllClassPath(contextClassLoader);
+        List<String> classPath = urls.stream().map(PathUtil::getPath).map(Path::toString).collect(Collectors.toList());
+        String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
+        Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
+        JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
+        return new JarIndexClassLoader(jarIndex, urls.toArray(new URL[0]), contextClassLoader);
+    }
+
+    /**
+     * 应用启动完成后执行命令行运行器
+     *
+     * @param applicationContext 应用上下文
+     */
     protected void invokeRunner(ApplicationContext applicationContext) {
         for (CommandLineRunner commandLineRunner : applicationContext.getBeanOfType(CommandLineRunner.class).values()) {
             try {

@@ -89,23 +89,59 @@ public class BuildJarIndexAntTask {
      * 扫描依赖并生成 jar index 数据结构
      * 要求 jar 文件中包含 Class-Path 描述
      *
-     * @param targetJar 已生成的 jar 文件
+     * @param mainJar 启动类所在 jar 文件
      * @return jar index  key: jar class path, value: package
      */
-    public static Map<String, Set<String>> scanJarIndex(JarFile targetJar) throws Exception {
+    public static Map<String, Set<String>> scanJarIndex(JarFile mainJar) throws Exception {
         Map<String, Set<String>> index = new HashMap<>();
-        String parentPath = Paths.get(targetJar.getName()).getParent().toString();
-        List<String> classPath = CommonUtil.split(targetJar.getManifest().getMainAttributes().getValue("Class-Path"), " ");
-        for (String jarPath : classPath) {
-            try (JarFile jarFile = new JarFile(new File(parentPath, jarPath))) {
-                scanJarIndex(jarPath, jarFile, index);
-            }
-        }
-        scanJarIndex(new File(targetJar.getName()).getName(), targetJar, index);
-        return index;
+        String parentPath = Paths.get(mainJar.getName()).getParent().toString();
+        List<String> classPath = CommonUtil.split(mainJar.getManifest().getMainAttributes().getValue("Class-Path"), " ");
+        return scanJarIndex(mainJar, parentPath, classPath, index);
     }
 
-    public static void scanJarIndex(String jarPath, JarFile jarFile, Map<String, Set<String>> indexContainer) {
+    /**
+     * 扫描依赖并生成 jar index 数据结构
+     *
+     * @param absoluteClassPath 绝对路径的 jars
+     * @param indexContainer    jar index 容器
+     * @return jar index  key: jar class path, value: package
+     */
+    public static Map<String, Set<String>> scanJarIndex(List<String> absoluteClassPath, Map<String, Set<String>> indexContainer) throws Exception {
+        return scanJarIndex(null, "", absoluteClassPath, indexContainer);
+    }
+
+    /**
+     * 扫描依赖并生成 jar index 数据结构
+     *
+     * @param mainJar           启动类所在 jar 文件
+     * @param parentPath        jars 父路径
+     * @param classRelativePath jar 相对路径
+     * @param indexContainer    jar index 容器
+     * @return jar index  key: jar class path, value: package
+     */
+    public static Map<String, Set<String>> scanJarIndex(JarFile mainJar, String parentPath, List<String> classRelativePath, Map<String, Set<String>> indexContainer) throws Exception {
+        for (String relativePath : classRelativePath) {
+            if (relativePath.endsWith(".jar")) {
+                try (JarFile jarFile = new JarFile(new File(parentPath, relativePath.replace("%20", " ")))) {
+                    scanJarIndex(relativePath, jarFile, indexContainer);
+                }
+            }
+        }
+        if (mainJar == null) {
+            return indexContainer;
+        }
+        return scanJarIndex(new File(mainJar.getName()).getName(), mainJar, indexContainer);
+    }
+
+    /**
+     * 扫描依赖并生成 jar index 数据结构
+     *
+     * @param relativePath   jar 相对路径
+     * @param jarFile        jar 物理文件
+     * @param indexContainer jar index 容器
+     * @return jar index  key: jar class path, value: package
+     */
+    public static Map<String, Set<String>> scanJarIndex(final String relativePath, JarFile jarFile, Map<String, Set<String>> indexContainer) {
         for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
             String entryName = entry.getName();
 
@@ -115,7 +151,7 @@ public class BuildJarIndexAntTask {
                     if (entryName.charAt(entryName.length() - 1) == '/') {
                         entryName = entryName.substring(0, entryName.length() - 1);
                     }
-                    indexContainer.computeIfAbsent(jarPath, k -> new HashSet<>()).add(entryName);
+                    indexContainer.computeIfAbsent(relativePath, k -> new HashSet<>()).add(entryName);
                 }
                 continue;
             }
@@ -124,9 +160,10 @@ public class BuildJarIndexAntTask {
             int packageIndex = entryName.lastIndexOf('/');
             if (packageIndex > 0) {
                 String packageName = entryName.substring(0, packageIndex);
-                indexContainer.computeIfAbsent(jarPath, k -> new HashSet<>()).add(packageName);
+                indexContainer.computeIfAbsent(relativePath, k -> new HashSet<>()).add(packageName);
             }
         }
+        return indexContainer;
     }
 
     /**

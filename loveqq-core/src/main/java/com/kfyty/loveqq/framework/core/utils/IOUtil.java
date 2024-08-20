@@ -21,21 +21,16 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import static java.util.Objects.requireNonNull;
@@ -60,18 +55,28 @@ public abstract class IOUtil {
     public static final String TEMP_PATH = System.getProperty("java.io.tmpdir");
 
     /**
-     * 获取路径
+     * 从 url 创建一个资源 url
      *
-     * @param path 路径
-     * @return 路径
+     * @param url url
+     * @return url
      */
-    public static Path getPath(String path) {
+    public static URL newURL(String url) {
         try {
-            return Paths.get(path);
-        } catch (Exception e) {
-            log.error("get path failed: {}, error message: {}", path, e.getMessage());
-            return null;
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw ExceptionUtil.wrap(e);
         }
+    }
+
+    /**
+     * 从 jar file 创建一个资源 url
+     *
+     * @param jarFile  jar
+     * @param resource 内嵌的 resource
+     * @return url
+     */
+    public static URL newNestedJarURL(JarFile jarFile, String resource) {
+        return newURL("jar:file:/" + jarFile.getName() + "!/" + resource);
     }
 
     /**
@@ -91,7 +96,7 @@ public abstract class IOUtil {
      * @return 输入流
      */
     public static InputStream load(String path, ClassLoader classLoader) {
-        Path resolvedPath = getPath(path);
+        Path resolvedPath = PathUtil.getPath(path);
         if (resolvedPath != null && resolvedPath.isAbsolute()) {
             return newInputStream(resolvedPath.toFile());
         }
@@ -326,28 +331,13 @@ public abstract class IOUtil {
     }
 
     /**
-     * 构建 jar 中的文件 url
-     *
-     * @param jarFile  jar
-     * @param jarEntry jar 中的文件
-     * @return url
-     */
-    public static URL buildFileURLInJar(JarFile jarFile, JarEntry jarEntry) {
-        try {
-            return new URL("jar:file:/" + jarFile.getName() + "!/" + jarEntry.getName());
-        } catch (IOException e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
-    /**
      * 扫描路径下的文件
      *
      * @param pattern 匹配路径
      * @return 文件列表
      */
     public static Set<URL> scanFiles(String pattern, ClassLoader classLoader) {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(resolveAllClassPath(classLoader));
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(ClassLoaderUtil.resolveAllClassPath(classLoader));
         return resolver.findResources(pattern);
     }
 
@@ -361,47 +351,6 @@ public abstract class IOUtil {
         if (!file.exists() && !file.mkdirs()) {
             throw new ResolvableException("ensure folder exists failed !");
         }
-    }
-
-    /**
-     * 获取类路径下所有 jar URL
-     *
-     * @param classLoader class loader
-     * @return jar urls
-     */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader) {
-        return resolveAllClassPath(classLoader, new HashSet<>());
-    }
-
-    /**
-     * 获取类路径下所有 jar URL
-     *
-     * @param classLoader class loader
-     * @param result      结果集合
-     * @return jar urls
-     */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader, Set<URL> result) {
-        if (classLoader instanceof URLClassLoader) {
-            result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
-        }
-
-        if (classLoader == ClassLoader.getSystemClassLoader()) {
-            try {
-                String javaClassPath = System.getProperty("java.class.path");
-                String pathSeparator = System.getProperty("path.separator");
-                for (String path : CommonUtil.split(javaClassPath, pathSeparator)) {
-                    result.add(new File(path).toURI().toURL());
-                }
-            } catch (MalformedURLException e) {
-                throw ExceptionUtil.wrap(e);
-            }
-        }
-
-        if (classLoader != null) {
-            resolveAllClassPath(classLoader.getParent(), result);
-        }
-
-        return result;
     }
 
     /**

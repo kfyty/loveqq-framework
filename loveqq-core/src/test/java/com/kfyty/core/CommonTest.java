@@ -3,8 +3,8 @@ package com.kfyty.core;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
+import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +58,7 @@ public class CommonTest {
 
     @Test
     public void resolveAllClassPathTest() {
-        Set<URL> urls = IOUtil.resolveAllClassPath(this.getClass().getClassLoader(), new HashSet<>());
+        Set<URL> urls = ClassLoaderUtil.resolveAllClassPath(this.getClass().getClassLoader(), new HashSet<>());
         Set<URL> resources = new PathMatchingResourcePatternResolver(urls).findResources("*.properties");
         System.out.println(resources);
     }

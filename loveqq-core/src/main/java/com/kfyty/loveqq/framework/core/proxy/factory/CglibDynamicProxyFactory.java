@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.proxy.factory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
+import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -72,6 +73,7 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
         enhancer.setInterfaces(interfaces);
         enhancer.setCallbackFilter(callbackFilter);
         enhancer.setNamingPolicy(new NamingPolicy());
+        enhancer.setClassLoader(ClassLoaderUtil.classLoader(this.getClass()));
         if (Modifier.isFinal(targetClass.getModifiers()) && interfaces.length > 0) {
             enhancer.setSuperclass(null);
         }
