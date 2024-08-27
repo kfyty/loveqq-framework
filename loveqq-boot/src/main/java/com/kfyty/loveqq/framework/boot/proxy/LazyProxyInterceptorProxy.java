@@ -24,13 +24,7 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
         if (!this.beanFactory.contains(beanName) && ReflectUtil.isEqualsHashCodeToString(methodProxy.getTargetMethod())) {
             return chain.proceed(methodProxy);
         }
-        String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
-        try {
-            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(this.beanName);
-            methodProxy.setTarget(this.beanFactory.getBean(this.beanName));
-            return chain.proceed(methodProxy);
-        } finally {
-            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
-        }
+        methodProxy.setTarget(this.beanFactory.getBean(this.beanName));
+        return chain.proceed(methodProxy);
     }
 }

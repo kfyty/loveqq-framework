@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -43,6 +44,12 @@ import static java.util.Optional.ofNullable;
  */
 public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanFactory {
     /**
+     * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
+     * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
+     */
+    protected static final ThreadLocal<String> CURRENT_CREATING_BEAN = new ThreadLocal<>();
+
+    /**
      * bean 定义
      */
     protected final Map<String, BeanDefinition> beanDefinitions;
@@ -71,6 +78,24 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      * 应用上下文
      */
     protected ApplicationContext applicationContext;
+
+    /**
+     * 获取当前创建中的 bean
+     *
+     * @return bean name
+     */
+    public static String getCreatingBean() {
+        return CURRENT_CREATING_BEAN.get();
+    }
+
+    /**
+     * 设置当前创建中的 bean
+     *
+     * @param beanName bean name
+     */
+    public static void setCreatingBean(String beanName) {
+        CURRENT_CREATING_BEAN.set(beanName);
+    }
 
     public AbstractBeanFactory() {
         this.beanDefinitions = new ConcurrentHashMap<>();
@@ -402,10 +427,14 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 this.registerBeanDefinition(name, beanDefinition, false);
             }
 
+            if (!beanDefinition.getBeanType().isInstance(bean)) {
+                throw new BeansException("The bean doesn't instance of " + beanDefinition.getBeanType());
+            }
+
             if (beanDefinition.isSingleton()) {
                 Object exists = this.beanInstances.putIfAbsent(name, bean);
                 if (exists != null) {
-                    throw new BeansException("Conflicting bean: " + name + " -> " + bean);
+                    throw new BeansException("Conflicting bean: " + name + " -> " + exists);
                 }
             }
             this.removeBeanReference(name);

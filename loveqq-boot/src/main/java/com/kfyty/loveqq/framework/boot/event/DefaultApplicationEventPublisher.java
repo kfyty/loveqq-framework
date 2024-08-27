@@ -68,7 +68,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
      */
     @Override
     public void publishEvent(ApplicationEvent<?> event) {
-        if (!isRefreshed) {
+        if (!this.isRefreshed) {
             this.earlyPublishedEvent.add(event);
             return;
         }

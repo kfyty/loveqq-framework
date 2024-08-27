@@ -74,6 +74,16 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 返回是否是 java 内部资源
+     *
+     * @param name 类型
+     * @return true if java resources
+     */
+    public boolean isJavaResource(String name) {
+        return name.startsWith("java/");
+    }
+
+    /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
      * @param jarFiles jar 文件集合
@@ -103,6 +113,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     public URL getResource(String name) {
+        if (this.isJavaResource(name)) {
+            return super.getResource(name);
+        }
         if (this.isExploded()) {
             List<URL> resources = this.findExplodedResources(name);
             if (!resources.isEmpty()) {
@@ -115,6 +128,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
+        if (this.isJavaResource(name)) {
+            return super.getResources(name);
+        }
         List<URL> resources = this.jarIndex.getJarFiles(name, true, false).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
         if (this.isExploded()) {
             resources.addAll(this.findExplodedResources(name).stream().map(e -> IOUtil.newURL(e.toString() + name)).collect(Collectors.toList()));

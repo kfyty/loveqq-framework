@@ -125,7 +125,7 @@ public class JarIndex {
      * @return jars
      */
     public List<JarFile> getJarFiles(String name) {
-        int lastDot = name.lastIndexOf('.');
+        int lastDot = name.lastIndexOf(name.endsWith(".class") ? '/' : '.');                                            // 为 com/kfyty/demo/Demo.class 提供支持
         if (lastDot < 0) {
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }

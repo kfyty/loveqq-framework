@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,6 +26,25 @@ public abstract class ClassLoaderUtil {
      */
     public static ClassLoader classLoader(Class<?> clazz) {
         return Thread.currentThread().getContextClassLoader();
+    }
+
+    /**
+     * 是否是 jar index 支持的类加载器
+     *
+     * @return true if jar index supported
+     */
+    public static boolean isIndexedClassLoader() {
+        return isIndexedClassLoader(Thread.currentThread().getContextClassLoader());
+    }
+
+    /**
+     * 是否是 jar index 支持的类加载器
+     *
+     * @param classLoader 类加载器
+     * @return true if jar index supported
+     */
+    public static boolean isIndexedClassLoader(ClassLoader classLoader) {
+        return classLoader.getClass().getName().equals(JarIndexClassLoader.class.getName());
     }
 
     /**

@@ -1,5 +1,3 @@
-com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=com.kfyty.loveqq.framework.core.utils.IOC
-
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver,\
     com.kfyty.loveqq.framework.core.support.json.JacksonAutoConfig

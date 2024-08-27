@@ -24,7 +24,7 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
     /**
      * 是否读取 {@link ClassFileTransformer}
      */
-    private static final boolean LOAD_TRANSFORMER = Boolean.parseBoolean(System.getProperty("k.transformer.load", "false"));
+    public static final boolean LOAD_TRANSFORMER = Boolean.parseBoolean(System.getProperty("k.transformer.load", "true"));
 
     /**
      * @see this#obtainClassFileTransformer()

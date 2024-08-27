@@ -26,7 +26,7 @@ import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoC
  * 原则上代理顺序应如下：
  * <p>
  * {@link AsyncMethodInterceptorProxy}
- * {@link com.kfyty.aop.proxy.AspectMethodInterceptorProxy}
+ * {@link com.kfyty.loveqq.framework.aop.proxy.AspectMethodInterceptorProxy}
  * {@link ScopeProxyInterceptorProxy}
  * <p>
  * ... 其他代理

@@ -5,8 +5,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeProxyFactory;
-import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
+import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import lombok.RequiredArgsConstructor;
 
@@ -27,14 +27,11 @@ public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint, 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Object bean = null;
-        String requiredBeanName = ConfigurationBeanInterceptorProxy.getCurrentRequiredBeanName();
         try {
-            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(this.beanDefinition.getBeanName());
             methodProxy.setTarget((bean = this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory)));
             return chain.proceed(methodProxy);
         } finally {
-            ConfigurationBeanInterceptorProxy.setCurrentRequiredBeanName(requiredBeanName);
-            if (bean != null) {
+            if (bean != null && !this.beanDefinition.isSingleton()) {
                 this.beanFactory.destroyBean(this.beanDefinition.getBeanName(), bean);
             }
         }

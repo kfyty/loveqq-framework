@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.isAbstract;
@@ -29,6 +30,7 @@ public class ScanBeanDefinitionBeanFactoryPreProcessor implements BeanFactoryPre
 
     @Override
     public void preProcessBeanFactory(BeanFactory beanFactory) {
+        IOC.setBeanFactory(beanFactory);
         if (beanFactory instanceof ConfigurableApplicationContext) {
             this.preProcessBeanFactory((ConfigurableApplicationContext) beanFactory);
         }

@@ -234,7 +234,6 @@ interface HelloInter {
 
     String hello(String name);
 
-    @Bean
     Bean5 bean5();
 }
 
