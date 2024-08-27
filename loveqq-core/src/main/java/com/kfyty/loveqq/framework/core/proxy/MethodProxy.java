@@ -1,13 +1,15 @@
 package com.kfyty.loveqq.framework.core.proxy;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Data;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
+
+import static com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader.LOAD_TRANSFORMER;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述: 方法代理包装
@@ -100,7 +102,7 @@ public class MethodProxy {
      * @return 方法执行结果
      */
     public Object invoke(Object[] args) throws Throwable {
-        if (this.target == null || AnnotationUtil.hasAnnotationElement(this.target, Configuration.class)) {
+        if (this.target == null || !LOAD_TRANSFORMER && hasAnnotation(this.target, Configuration.class)) {
             return this.methodProxy.invokeSuper(this.proxy, args);
         }
         if (this.methodProxy != null) {

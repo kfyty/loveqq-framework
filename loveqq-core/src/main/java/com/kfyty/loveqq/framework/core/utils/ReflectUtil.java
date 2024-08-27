@@ -72,7 +72,6 @@ public abstract class ReflectUtil {
     private static final BiPredicate<Boolean, Member> REFLECT_DATA_FILTER = (containPrivate, field) -> field != null &&
             ((field.getModifiers() & 0x00001000) == 0) &&
             ((field.getModifiers() & 0x00000040) == 0) &&
-            ((field.getModifiers() & 0x00000008) == 0) &&
             (containPrivate || !Modifier.isPrivate(field.getModifiers()));
 
     /**

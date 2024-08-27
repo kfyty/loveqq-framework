@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.isIndexedClassLoader;
+
 /**
  * 功能描述: 启动类
  *
@@ -113,25 +115,6 @@ public class K {
         Class<?> primaryClass = Class.forName(clazz.getName(), true, classLoader);
         Thread.currentThread().setContextClassLoader(classLoader);
         bootClass.getMethod("start", Class.class, String[].class).invoke(null, primaryClass, args);
-    }
-
-    /**
-     * 是否是 jar index 支持的类加载器
-     *
-     * @return true if jar index supported
-     */
-    public static boolean isIndexedClassLoader() {
-        return isIndexedClassLoader(Thread.currentThread().getContextClassLoader());
-    }
-
-    /**
-     * 是否是 jar index 支持的类加载器
-     *
-     * @param classLoader 类加载器
-     * @return true if jar index supported
-     */
-    public static boolean isIndexedClassLoader(ClassLoader classLoader) {
-        return classLoader.getClass().getName().equals(JarIndexClassLoader.class.getName());
     }
 
     /**

@@ -1,3 +1,6 @@
+java.lang.instrument.ClassFileTransformer=\
+    com.kfyty.loveqq.framework.boot.instrument.ConfigurationClassInstrument
+
 com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=\
     com.kfyty.loveqq.framework.boot.processor.factory.ConfigureBeanFactoryPreProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.ScanBeanDefinitionBeanFactoryPreProcessor
@@ -12,7 +15,7 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.context.env.DefaultDataBinder,\
     com.kfyty.loveqq.framework.boot.context.env.DefaultGenericPropertiesContext,\
     com.kfyty.loveqq.framework.boot.context.env.DefaultPropertyPlaceholdersResolver,\
-    com.kfyty.loveqq.framework.boot.processor.ConfigurationBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.ConfigurationClassPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.ValueAnnotationBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.ConfigurationPropertiesBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.AutowiredCapableBeanPostProcessor,\

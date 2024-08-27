@@ -170,7 +170,13 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public Object doCreateBean(BeanDefinition beanDefinition) {
-        return beanDefinition.createInstance(this.applicationContext);
+        String creatingBean = getCreatingBean();
+        try {
+            setCreatingBean(beanDefinition.getBeanName());
+            return beanDefinition.createInstance(this.applicationContext);
+        } finally {
+            setCreatingBean(creatingBean);
+        }
     }
 
     @Override

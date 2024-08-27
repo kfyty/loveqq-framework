@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -27,12 +28,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2021/6/26 12:07
  * @email kfyty725@hotmail.com
  */
+@Getter
 @EventListener
 @BootApplication
 public class AsyncTest implements ContextAfterRefreshed {
     int[] async = new int[2];
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger index = new AtomicInteger(0);
+
+    @Autowired
+    private AsyncTaskImpl asyncTask;
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
@@ -45,6 +50,7 @@ public class AsyncTest implements ContextAfterRefreshed {
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         applicationEventPublisher.publishEvent(new AsyncEvent(2));
+        Assertions.assertSame(this.asyncTask.getAsyncTest().getLatch(), latch);
         this.async[index.getAndIncrement()] = 1;
     }
 
@@ -75,6 +81,7 @@ class AsyncEvent extends ApplicationEvent<Integer> {
 }
 
 @Async
+@Getter
 @Component
 @EventListener
 class AsyncTaskImpl implements AsyncTask, SerialInitialize {
@@ -86,7 +93,7 @@ class AsyncTaskImpl implements AsyncTask, SerialInitialize {
     @EventListener(AsyncEvent.class)
     public void onAsyncEvent(AsyncEvent event) {
         CommonUtil.sleep(1000);
-        asyncTest.async[asyncTest.index.getAndIncrement()] = event.getSource();
-        asyncTest.latch.countDown();
+        asyncTest.getAsync()[asyncTest.getIndex().getAndIncrement()] = event.getSource();                               // 代理类，需要通过方法获取
+        asyncTest.getLatch().countDown();
     }
 }

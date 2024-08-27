@@ -17,15 +17,33 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public class MethodInterceptorChain extends MethodInvocationInterceptor {
+    /**
+     * 代理链排序规则
+     */
     public static final Comparator<MethodInterceptorChainPoint> METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR = Comparator
             .comparing((MethodInterceptorChainPoint e) -> e instanceof InternalPriority ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
             .thenComparing(BeanUtil::getBeanOrder)
             .thenComparing(e -> e.getClass().getName());
 
+    /**
+     * 当前正在拦截中的代理链
+     * 主要为 {@link com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration} 的自调用，且代理模式实现提供支持
+     */
     private static final ThreadLocal<MethodInterceptorChain> CURRENT_INTERCEPTOR_CHAIN = new ThreadLocal<>();
 
+    /**
+     * 当前代理链索引
+     */
     private int currentChainIndex;
+
+    /**
+     * 当前拦截链拦截的方法代理
+     */
     private MethodProxy intercepting;
+
+    /**
+     * 代理链
+     */
     private final List<MethodInterceptorChainPoint> chainPoints;
 
     public MethodInterceptorChain(Object source) {
@@ -74,7 +92,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         }
         final MethodInterceptorChain currentChain = currentChain();
         if (currentChain != null && currentChain.intercepting.equals(methodProxy)) {
-            return currentChain.proceed(methodProxy);
+            return currentChain.proceed(methodProxy);                                                                   // 该处逻辑只有 @Configuration 以代理模式实现自调用时才会调用
         }
         try {
             MethodInterceptorChain newCurrentChain = new MethodInterceptorChain(this.getTarget(), this.chainPoints);

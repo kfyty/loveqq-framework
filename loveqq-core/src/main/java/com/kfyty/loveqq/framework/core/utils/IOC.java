@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
@@ -16,12 +15,11 @@ import lombok.Getter;
  * @date 2023/4/17 14:27
  * @email kfyty725@hotmail.com
  */
-public class IOC implements BeanFactoryPreProcessor {
+public abstract class IOC {
     @Getter
     private static BeanFactory beanFactory;
 
-    @Override
-    public void preProcessBeanFactory(BeanFactory beanFactory) {
+    public static void setBeanFactory(BeanFactory beanFactory) {
         IOC.beanFactory = beanFactory;
     }
 
