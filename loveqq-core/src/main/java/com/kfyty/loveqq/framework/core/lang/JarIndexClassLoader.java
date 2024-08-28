@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.lang;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.ByteArrayOutputStream;
@@ -34,11 +35,17 @@ import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
  * @date 2023/3/15 19:59
  * @email kfyty725@hotmail.com
  */
+@Getter
 public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
      * 是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开
      */
     private static final boolean DEPENDENCY_CHECK = Boolean.parseBoolean(System.getProperty("k.dependency.check", "false"));
+
+    /**
+     * java 内部资源不在 jar index 内，{@link #getResource(String)} 可能获取不到，可通过该参数设置
+     */
+    private static final String[] JAVA_SYSTEM_RESOURCES = System.getProperty("k.java.system.resources", "").split(";");
 
     /**
      * jar index
@@ -55,32 +62,46 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 返回是否是 IDE 从文件夹启动
+     * 返回是否是从开发集成环境启动
      *
      * @return true if from IDE started
      */
     public boolean isExploded() {
-        return !this.jarIndex.getMainJarPath().endsWith(".jar");
+        return this.jarIndex.isExploded();
+    }
+
+    /**
+     * 返回是否是自身的 class name
+     *
+     * @param name class name
+     * @return true or false
+     */
+    public boolean isThisClass(String name) {
+        return "com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader".equals(name) || "com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader".equals(name);
     }
 
     /**
      * 返回是否是 java 内部类
      *
-     * @param name 类型
+     * @param name 类型，支持 java.lang.Object 以及 java/lang/Object.class
      * @return true if java class
      */
-    public boolean isJavaClass(String name) {
-        return name.startsWith("java.");
-    }
-
-    /**
-     * 返回是否是 java 内部资源
-     *
-     * @param name 类型
-     * @return true if java resources
-     */
-    public boolean isJavaResource(String name) {
-        return name.startsWith("java/");
+    public boolean isJavaSystemResource(String name) {
+        if (!name.endsWith(".class")) {
+            for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+                if (name.startsWith(javaSystemResource)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        try {
+            name = name.substring(0, name.length() - 6).replace('/', '.');
+            Class<?> loaded = this.loadClass(name, false);
+            return loaded == null || loaded.getClassLoader() == null || !this.isThisClass(loaded.getClassLoader().getClass().getName());
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     /**
@@ -102,18 +123,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         this.jarIndex.addJarIndex(packageName, jarFile);
     }
 
-    /**
-     * 获取 jar index
-     *
-     * @return {@link JarIndex}
-     */
-    public JarIndex getJarIndex() {
-        return this.jarIndex;
-    }
-
     @Override
     public URL getResource(String name) {
-        if (this.isJavaResource(name)) {
+        if (this.isJavaSystemResource(name)) {
             return super.getResource(name);
         }
         if (this.isExploded()) {
@@ -128,7 +140,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        if (this.isJavaResource(name)) {
+        if (this.isJavaSystemResource(name)) {
             return super.getResources(name);
         }
         List<URL> resources = this.jarIndex.getJarFiles(name, true, false).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
@@ -152,8 +164,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (this.isJavaClass(name)) {
-            return super.loadClass(name, resolve);
+        if (name.startsWith("java.") || this.isThisClass(name)) {
+            return super.loadClass(name, resolve);                                                                      // 自身需要走父类，否则会出现强转异常
         }
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);

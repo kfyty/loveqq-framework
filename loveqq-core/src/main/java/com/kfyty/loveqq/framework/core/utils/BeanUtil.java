@@ -102,17 +102,17 @@ public abstract class BeanUtil {
      * 获取给定 bean 的优先级
      *
      * @param bean bean
-     * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
+     * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(Object bean) {
-        return ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE);
+        return ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.DEFAULT_PRECEDENCE);
     }
 
     /**
      * 获取给定 BeanDefinition 的优先级
      *
      * @param beanDefinition bean 定义
-     * @return order，默认 {@link Order#LOWEST_PRECEDENCE}
+     * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(BeanDefinition beanDefinition) {
         if (beanDefinition instanceof ConditionalBeanDefinition) {
@@ -123,13 +123,13 @@ public abstract class BeanUtil {
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
             Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Order.class);
-            return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
+            return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
         if (beanDefinition instanceof GenericBeanDefinition) {
             Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Order.class);
-            return order != null ? order.value() : Order.LOWEST_PRECEDENCE;
+            return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
-        return Order.LOWEST_PRECEDENCE;
+        return Order.DEFAULT_PRECEDENCE;
     }
 
     /**

@@ -282,7 +282,7 @@ public class Configuration {
             this.addInterceptor(DEFAULT_INTERCEPTOR);
         }
         this.interceptorMethodChain = new TreeMap<>(
-                Comparator.comparing((Method e) -> ofNullable(findAnnotation(e.getDeclaringClass(), Order.class)).map(Order::value).orElse(Order.LOWEST_PRECEDENCE))
+                Comparator.comparing((Method e) -> ofNullable(findAnnotation(e.getDeclaringClass(), Order.class)).map(Order::value).orElse(Order.DEFAULT_PRECEDENCE))
                         .thenComparing((Method e) -> findAnnotation(e, Order.class).value())
         );
         for (Interceptor interceptor : this.interceptors) {

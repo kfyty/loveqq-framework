@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +36,11 @@ public abstract class PathUtil {
      */
     public static Path getPath(URL url) {
         try {
-            return Paths.get(url.toURI());
+            if (url.getHost() != null && url.getHost().length() > 0) {
+                return Paths.get(url.toURI());
+            }
+            // 有时 toURI 会出现非法字符错误，此时可直接使用构造方法
+            return Paths.get(new URI(url.getProtocol(), url.getAuthority(), url.getPath(), url.getQuery(), null));
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
