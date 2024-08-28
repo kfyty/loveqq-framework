@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.BufferedReader;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  * @date 2023/3/15 19:10
  * @email kfyty725@hotmail.com
  */
+@Getter
 public class JarIndex {
     /**
      * jar index 文件索引名称
@@ -47,10 +49,25 @@ public class JarIndex {
      */
     private final Map<String, List<JarFile>> jarIndex;
 
+    /**
+     * 构造器
+     *
+     * @param mainJarPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
+     * @param jarIndex    jar index 数据流
+     */
     public JarIndex(String mainJarPath, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
         this.jarIndex = new ConcurrentHashMap<>(256);
         this.loadJarIndex(mainJarPath, jarIndex);
+    }
+
+    /**
+     * 返回是否是从开发集成环境启动
+     *
+     * @return true if from IDE started
+     */
+    public boolean isExploded() {
+        return !this.mainJarPath.equals(".jar");
     }
 
     /**
@@ -60,16 +77,6 @@ public class JarIndex {
      */
     public List<URL> getJarURLs() {
         return this.jarIndex.values().stream().flatMap(Collection::stream).map(this::getJarURL).collect(Collectors.toList());
-    }
-
-    /**
-     * 获取启动类所在的 jar 路径
-     *
-     * @return main class jar path
-     */
-    @SuppressWarnings("LombokGetterMayBeUsed")
-    public String getMainJarPath() {
-        return this.mainJarPath;
     }
 
     /**
