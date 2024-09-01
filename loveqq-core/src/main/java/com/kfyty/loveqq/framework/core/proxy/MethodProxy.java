@@ -8,7 +8,7 @@ import lombok.Data;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-import static com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader.LOAD_TRANSFORMER;
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.LOAD_TRANSFORMER;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 
 /**

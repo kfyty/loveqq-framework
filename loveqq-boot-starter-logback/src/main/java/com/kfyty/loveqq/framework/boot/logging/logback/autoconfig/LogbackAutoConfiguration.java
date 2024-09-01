@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.slf4j.ILoggerFactory;
@@ -37,7 +38,7 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
     static {
         ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
         if (loggerFactory instanceof LoggerContext) {
-            String level = System.getProperty("logging.root", "INFO");
+            String level = ConstantConfig.LOGGING_ROOT_LEVEL;
             ((LoggerContext) loggerFactory).getLogger(Logger.ROOT_LOGGER_NAME).setLevel(Level.toLevel(level));
         }
     }

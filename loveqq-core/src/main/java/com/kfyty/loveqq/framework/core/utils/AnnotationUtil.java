@@ -25,6 +25,7 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.ANNOTATION_RESOLVE_DEPTH;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -35,11 +36,6 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AnnotationUtil {
-    /**
-     * 嵌套注解解析深度
-     */
-    private static final int ANNOTATION_RESOLVE_DEPTH = Integer.parseInt(System.getProperty("k.annotation.depth", "99"));
-
     /**
      * 注解缓存
      * key: 注解声明对象

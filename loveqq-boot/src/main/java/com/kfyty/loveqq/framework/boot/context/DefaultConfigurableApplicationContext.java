@@ -39,6 +39,8 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  */
 @Slf4j
 public class DefaultConfigurableApplicationContext extends AbstractApplicationContext implements ConfigurableApplicationContext {
+    protected static final String BOOTSTRAP_APPLICATION_CLASS = "com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BeanFactoryBootstrapApplication";
+
     protected String[] commanderArgs;
 
     protected Class<?> primarySource;
@@ -154,6 +156,9 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
 
     @Override
     public ApplicationContext refresh() {
+        if (BOOTSTRAP_APPLICATION_CLASS.equals(this.primarySource.getName())) {
+            return super.refresh();
+        }
         log.info("Boot loading...");
         long start = System.currentTimeMillis();
         ApplicationContext applicationContext = super.refresh();

@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.boot.proxy.ConfigurationClassInterceptorProxy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
-import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -24,7 +24,7 @@ public class ConfigurationClassPostProcessor extends AbstractProxyCreatorProcess
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        if (ClassLoaderUtil.isIndexedClassLoader() && ClassFileTransformerClassLoader.LOAD_TRANSFORMER) {
+        if (ClassLoaderUtil.isIndexedClassLoader() && ConstantConfig.LOAD_TRANSFORMER) {
             return false;
         }
         return AnnotationUtil.hasAnnotationElement(beanType, Configuration.class);

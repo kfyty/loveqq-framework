@@ -51,4 +51,17 @@ public class MappingTest {
         Mapping<String> back2 = map2.back(String.class);
         Assertions.assertEquals("789", back2.get());
     }
+
+    @Test
+    public void test2() {
+        User non = null;
+        Mapping.from(null).whenNotNull(e -> non.setId(1));
+        Mapping.from(null).whenNotEmpty(e -> non.setId(1));
+
+        Mapping.from(null).notNullMap(e -> non.getId());
+        Mapping.from(null).notNullFlatMap(e -> Mapping.from(non.getId()));
+
+        Mapping.from(null).notEmptyMap(e -> non.getId());
+        Mapping.from(null).notEmptyFlatMap(e -> Mapping.from(non.getId()));
+    }
 }

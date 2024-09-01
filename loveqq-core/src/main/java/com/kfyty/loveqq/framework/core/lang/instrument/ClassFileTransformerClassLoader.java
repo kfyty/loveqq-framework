@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang.instrument;
 
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -21,11 +22,6 @@ import java.util.Set;
  * @email kfyty725@hotmail.com
  */
 public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
-    /**
-     * 是否读取 {@link ClassFileTransformer}
-     */
-    public static final boolean LOAD_TRANSFORMER = Boolean.parseBoolean(System.getProperty("k.transformer.load", "true"));
-
     /**
      * @see this#obtainClassFileTransformer()
      */
@@ -55,7 +51,7 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
      * 执行自定义字节码逻辑
      */
     protected byte[] transform(String className, byte[] classBytes) throws ClassNotFoundException {
-        if (!LOAD_TRANSFORMER) {
+        if (!ConstantConfig.LOAD_TRANSFORMER) {
             return classBytes;
         }
         try {

@@ -19,6 +19,7 @@ import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -182,7 +183,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
     protected void finishBeanFactoryInitialization() {
         // 读取全局配置
-        boolean concurrentInitialize = Boolean.parseBoolean(System.getProperty("k.concurrent-initialize", "false"));
+        boolean concurrentInitialize = ConstantConfig.CONCURRENT_INITIALIZE;
 
         // 先实例化串行 bean
         Map<String, BeanDefinition> sortedBeanDefinition = this.getSortedBeanDefinition();
