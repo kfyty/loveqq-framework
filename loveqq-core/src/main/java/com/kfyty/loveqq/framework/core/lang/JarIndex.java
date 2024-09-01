@@ -67,7 +67,7 @@ public class JarIndex {
      * @return true if from IDE started
      */
     public boolean isExploded() {
-        return !this.mainJarPath.equals(".jar");
+        return !this.mainJarPath.endsWith(".jar");
     }
 
     /**
@@ -137,24 +137,8 @@ public class JarIndex {
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
         String path = name.substring(0, lastDot).replace('.', '/');
-        return this.jarIndex.getOrDefault(path, this.jarIndex.getOrDefault(name, Collections.emptyList()));
-    }
-
-    /**
-     * 根据资源获取所在 jar 包集合
-     *
-     * @param name    资源名称
-     * @param valid   是否验证资源存在
-     * @param isClass 是否是 class 资源，true 时自动添加 .class 后缀
-     * @return jars
-     */
-    public List<JarFile> getJarFiles(String name, boolean valid, boolean isClass) {
-        List<JarFile> jarFiles = this.getJarFiles(name);
-        if (!valid) {
-            return jarFiles;
-        }
-        String resource = isClass ? name.replace('.', '/') + ".class" : name;
-        return jarFiles.stream().filter(e -> e.getJarEntry(resource) != null).collect(Collectors.toList());
+        List<JarFile> jarFiles = this.jarIndex.get(path);
+        return jarFiles != null ? jarFiles : this.jarIndex.getOrDefault(name, Collections.emptyList());
     }
 
     /**

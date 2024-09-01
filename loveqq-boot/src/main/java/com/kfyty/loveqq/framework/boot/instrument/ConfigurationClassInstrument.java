@@ -20,13 +20,13 @@ import java.util.List;
 /**
  * 描述: {@link com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration} 提供自调用支持
  * 仅当前类加载器是 {@link com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader}
- * 且 {@link com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader#LOAD_TRANSFORMER} == true 时有效
+ * 且 {@link com.kfyty.loveqq.framework.core.lang.ConstantConfig#LOAD_TRANSFORMER} == true 时有效
  *
  * @author kfyty725
  * @date 2024/8/26 13:40
  * @email kfyty725@hotmail.com
  * @see com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader
- * @see com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader#LOAD_TRANSFORMER
+ * @see com.kfyty.loveqq.framework.core.lang.ConstantConfig#LOAD_TRANSFORMER
  */
 public class ConfigurationClassInstrument implements ClassFileTransformer {
     /**
@@ -76,6 +76,7 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
 
     protected byte[] enhanceConfigurationClass(byte[] classfileBuffer, CtClass ctClass) {
         try {
+            boolean hasBean = false;
             List<CtMethod> methods = JavassistUtil.getMethods(ctClass);
             for (CtMethod method : methods) {
                 if (method.isEmpty() || method.getDeclaringClass().getName().equals("java.lang.Object")) {
@@ -87,11 +88,12 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
                         String value = (String) annotation.getClass().getMethod("value").invoke(annotation);
                         method.insertBefore(this.getBeforeEnhanceCode(method.getName(), value));
                         method.insertAfter(this.getAfterEnhanceCode(method.getName(), value));
+                        hasBean = true;
                         break;
                     }
                 }
             }
-            return ctClass.toBytecode();
+            return hasBean ? ctClass.toBytecode() : classfileBuffer;
         } catch (Exception e) {
             if (e.getCause() instanceof NotFoundException) {
                 return classfileBuffer;

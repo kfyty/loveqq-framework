@@ -58,7 +58,7 @@ public class CommonTest {
 
     @Test
     public void resolveAllClassPathTest() {
-        Set<URL> urls = ClassLoaderUtil.resolveAllClassPath(this.getClass().getClassLoader(), new HashSet<>());
+        Set<URL> urls = ClassLoaderUtil.resolveClassPath(this.getClass().getClassLoader(), new HashSet<>());
         Set<URL> resources = new PathMatchingResourcePatternResolver(urls).findResources("*.properties");
         System.out.println(resources);
     }

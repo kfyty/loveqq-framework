@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.support.io;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
+import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import lombok.Getter;
@@ -19,7 +20,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
-import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.resolveAllClassPath;
 
 /**
  * 描述: 支持 ant 路径匹配的资源解析器
@@ -104,7 +104,7 @@ public class PathMatchingResourcePatternResolver {
         if (!this.loaded) {
             synchronized (this) {
                 if (!this.loaded) {
-                    this.urls.addAll(resolveAllClassPath(classLoader(this.getClass())));
+                    this.urls.addAll(ClassLoaderUtil.resolveClassPath(classLoader(this.getClass())));
                     this.loaded = true;
                 }
             }

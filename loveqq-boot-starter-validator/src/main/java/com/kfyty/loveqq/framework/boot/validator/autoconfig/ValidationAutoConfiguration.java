@@ -10,7 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
-import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -62,7 +62,7 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
      * 为了方便无感使用，为 {@link Validator} 创建代理
      */
     protected Validator createValidatorProxy(Validator validator) {
-        if (ClassLoaderUtil.isIndexedClassLoader() && ClassFileTransformerClassLoader.LOAD_TRANSFORMER) {
+        if (ClassLoaderUtil.isIndexedClassLoader() && ConstantConfig.LOAD_TRANSFORMER) {
             return validator;
         }
         return (Validator) Proxy.newProxyInstance(ClassLoaderUtil.classLoader(this.getClass()), new Class[]{Validator.class}, new ValidatorProxy(new ValidatorAccess(validator)));

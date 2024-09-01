@@ -1,14 +1,17 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.jar.JarFile;
 
 /**
  * 描述: 类加载器工具
@@ -53,8 +56,8 @@ public abstract class ClassLoaderUtil {
      * @param classLoader class loader
      * @return jar urls
      */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader) {
-        return resolveAllClassPath(classLoader, new HashSet<>());
+    public static Set<URL> resolveClassPath(ClassLoader classLoader) {
+        return resolveClassPath(classLoader, new HashSet<>());
     }
 
     /**
@@ -64,25 +67,51 @@ public abstract class ClassLoaderUtil {
      * @param result      结果集合
      * @return jar urls
      */
-    public static Set<URL> resolveAllClassPath(ClassLoader classLoader, Set<URL> result) {
+    @SuppressWarnings({"UrlHashCode", "SizeReplaceableByIsEmpty"})
+    public static Set<URL> resolveClassPath(ClassLoader classLoader, Set<URL> result) {
         if (classLoader instanceof URLClassLoader) {
             result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
+
+            // JarIndexClassLoader 已加载全部的，可以直接返回
+            if (classLoader instanceof JarIndexClassLoader) {
+                return result;
+            }
         }
 
         if (classLoader == ClassLoader.getSystemClassLoader()) {
+            String javaClassPath = System.getProperty("java.class.path");
+            String[] classPathArr = javaClassPath.split(File.pathSeparator);
             try {
-                String javaClassPath = System.getProperty("java.class.path");
-                String pathSeparator = System.getProperty("path.separator");
-                for (String path : CommonUtil.split(javaClassPath, pathSeparator)) {
-                    result.add(new File(path).toURI().toURL());
+                for (String path : classPathArr) {
+                    // 添加当前 path
+                    File file = new File(path);
+                    result.add(file.toURI().toURL());
+
+                    // 解析 jar 内的 class-path，主要是 ide short commandline 支持
+                    if (classPathArr.length == 1 || ConstantConfig.LOAD_JAR_CLASS_PATH) {
+                        if (file.isFile()) {
+                            try (JarFile jarFile = new JarFile(file)) {
+                                String classPath = jarFile.getManifest().getMainAttributes().getValue("Class-Path");
+                                if (classPath != null && classPath.length() > 0) {
+                                    String[] nestedClassPath = classPath.split(" ");
+                                    for (String url : nestedClassPath) {
+                                        URI uri = URI.create(url);
+                                        if (uri.isAbsolute()) {
+                                            result.add(uri.toURL());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-            } catch (MalformedURLException e) {
+            } catch (IOException e) {
                 throw ExceptionUtil.wrap(e);
             }
         }
 
         if (classLoader != null) {
-            resolveAllClassPath(classLoader.getParent(), result);
+            resolveClassPath(classLoader.getParent(), result);
         }
 
         return result;

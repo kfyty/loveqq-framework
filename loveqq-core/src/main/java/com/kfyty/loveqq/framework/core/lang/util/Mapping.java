@@ -88,6 +88,19 @@ public class Mapping<T> {
      * @param test 断言逻辑
      * @return this
      */
+    public Mapping<T> filter(Predicate<T> test) {
+        if (test.test(this.value)) {
+            return this;
+        }
+        return from(null);
+    }
+
+    /**
+     * 测试当前值，符合时执行回调
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
     public Mapping<T> when(Predicate<T> test, Consumer<T> consumer) {
         if (test.test(this.value)) {
             return to(consumer);
@@ -114,8 +127,34 @@ public class Mapping<T> {
      * @param mapping 映射关系
      * @return {@link this}
      */
+    public <R> Mapping<R> notEmptyMap(Function<T, R> mapping) {
+        if (CommonUtil.empty(this.value)) {
+            return from(null);
+        }
+        return map(mapping);
+    }
+
+    /**
+     * 非空时当前值扁平化映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
     public <R> Mapping<R> notNullFlatMap(Function<T, Mapping<R>> mapping) {
         if (this.value == null) {
+            return from(null);
+        }
+        return flatMap(mapping);
+    }
+
+    /**
+     * 非空时当前值扁平化映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
+    public <R> Mapping<R> notEmptyFlatMap(Function<T, Mapping<R>> mapping) {
+        if (CommonUtil.empty(this.value)) {
             return from(null);
         }
         return flatMap(mapping);

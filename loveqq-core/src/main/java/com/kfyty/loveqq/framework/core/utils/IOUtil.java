@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.jar.JarFile;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.TEMP_PATH;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -48,11 +49,6 @@ public abstract class IOUtil {
      * 默认的缓冲区大小
      */
     public static final int DEFAULT_BUFFER_SIZE = 4096;
-
-    /**
-     * 临时文件夹位置
-     */
-    public static final String TEMP_PATH = System.getProperty("java.io.tmpdir");
 
     /**
      * 从 url 创建一个资源 url
@@ -337,7 +333,7 @@ public abstract class IOUtil {
      * @return 文件列表
      */
     public static Set<URL> scanFiles(String pattern, ClassLoader classLoader) {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(ClassLoaderUtil.resolveAllClassPath(classLoader));
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(ClassLoaderUtil.resolveClassPath(classLoader));
         return resolver.findResources(pattern);
     }
 

@@ -151,6 +151,9 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
         }
 
         public static Unsafe getUnSafe() {
+            if (unsafe != null) {
+                return unsafe;
+            }
             Field field = ReflectUtil.getField(Unsafe.class, "theUnsafe");
             return (Unsafe) ReflectUtil.getFieldValue(null, field);
         }
@@ -170,11 +173,17 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
         }
 
         public static ReflectionFactory createReflectionFactory() {
+            if (reflectionFactory != null) {
+                return reflectionFactory;
+            }
             Class<?> reflectionFactoryClass = load(System.getProperty("sun.reflect.ReflectionFactory", "sun.reflect.ReflectionFactory"));
             return createReflectionFactory(reflectionFactoryClass);
         }
 
         public static ReflectionFactory createReflectionFactory(Class<?> reflectionFactoryClass) {
+            if (reflectionFactory != null && reflectionFactory.getClass() == reflectionFactoryClass) {
+                return reflectionFactory;
+            }
             Method method = ReflectUtil.getMethod(reflectionFactoryClass, "getReflectionFactory");
             return (ReflectionFactory) ReflectUtil.invokeMethod(null, method);
         }

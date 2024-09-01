@@ -129,7 +129,7 @@ public class K {
         if (isIndexedClassLoader(contextClassLoader)) {
             return (JarIndexClassLoader) contextClassLoader;
         }
-        Set<URL> urls = ClassLoaderUtil.resolveAllClassPath(contextClassLoader);
+        Set<URL> urls = ClassLoaderUtil.resolveClassPath(contextClassLoader);
         List<String> classPath = urls.stream().map(PathUtil::getPath).map(Path::toString).collect(Collectors.toList());
         String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
         Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());

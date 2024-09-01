@@ -26,6 +26,8 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEPENDENCY_CHECK;
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.JAVA_SYSTEM_RESOURCES;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
 
 /**
@@ -37,16 +39,6 @@ import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
  */
 @Getter
 public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
-    /**
-     * 是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开
-     */
-    private static final boolean DEPENDENCY_CHECK = Boolean.parseBoolean(System.getProperty("k.dependency.check", "false"));
-
-    /**
-     * java 内部资源不在 jar index 内，{@link #getResource(String)} 可能获取不到，可通过该参数设置
-     */
-    private static final String[] JAVA_SYSTEM_RESOURCES = System.getProperty("k.java.system.resources", "").split(";");
-
     /**
      * jar index
      */
@@ -81,27 +73,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 返回是否是 java 内部类
+     * 返回是否是 java 内部资源
      *
-     * @param name 类型，支持 java.lang.Object 以及 java/lang/Object.class
-     * @return true if java class
+     * @param name 资源名称，eg: java/lang/Object.class
+     * @return true if java resources
      */
     public boolean isJavaSystemResource(String name) {
-        if (!name.endsWith(".class")) {
-            for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-                if (name.startsWith(javaSystemResource)) {
-                    return true;
-                }
+        if (name.startsWith("java/")) {
+            return true;
+        }
+        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+            if (name.startsWith(javaSystemResource)) {
+                return true;
             }
-            return false;
         }
-        try {
-            name = name.substring(0, name.length() - 6).replace('/', '.');
-            Class<?> loaded = this.loadClass(name, false);
-            return loaded == null || loaded.getClassLoader() == null || !this.isThisClass(loaded.getClassLoader().getClass().getName());
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -125,16 +111,26 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     @Override
     public URL getResource(String name) {
+        // java 内部资源
         if (this.isJavaSystemResource(name)) {
             return super.getResource(name);
         }
+
+        // 按规范，类名首字母应大写，不符合规范时，默认是某些三方包(eg:javassist)将包名作为 class 尝试读取，此时直接返回即可
+        if (name.endsWith(".class") && !Character.isUpperCase(name.charAt(name.lastIndexOf('/') + 1))) {
+            return null;
+        }
+
+        // ide 集成环境支持
         if (this.isExploded()) {
             List<URL> resources = this.findExplodedResources(name);
             if (!resources.isEmpty()) {
                 return IOUtil.newURL(resources.get(0).toString() + name);
             }
         }
-        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name, true, false);
+
+        // jar 包支持
+        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
         return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
     }
 
@@ -143,7 +139,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         if (this.isJavaSystemResource(name)) {
             return super.getResources(name);
         }
-        List<URL> resources = this.jarIndex.getJarFiles(name, true, false).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
+        List<URL> resources = this.jarIndex.getJarFiles(name).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
         if (this.isExploded()) {
             resources.addAll(this.findExplodedResources(name).stream().map(e -> IOUtil.newURL(e.toString() + name)).collect(Collectors.toList()));
         }
@@ -170,7 +166,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
-                List<JarFile> jars = this.jarIndex.getJarFiles(name, true, true);
+                List<JarFile> jars = this.jarIndex.getJarFiles(name);
                 if (!jars.isEmpty()) {
                     loadedClass = this.findJarClass(name, jars);
                 } else {
