@@ -30,6 +30,8 @@ public abstract class PropertiesUtil {
 
     public static final String LOCATION_KEY = "k.config.location";
 
+    public static final String LOAD_SYSTEM_PROPERTY_KEY = "k.config.load-system-property";
+
     public static Properties load(String path) {
         return load(path, ClassLoaderUtil.classLoader(PropertiesUtil.class));
     }

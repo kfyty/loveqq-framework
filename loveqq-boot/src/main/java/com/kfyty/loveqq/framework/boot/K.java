@@ -111,8 +111,8 @@ public class K {
      */
     @SneakyThrows(Exception.class)
     public static void runOnClassLoad(ClassLoader classLoader, Class<?> clazz, String... args) {
-        Class<?> bootClass = Class.forName(K.class.getName(), true, classLoader);
-        Class<?> primaryClass = Class.forName(clazz.getName(), true, classLoader);
+        Class<?> bootClass = Class.forName(K.class.getName(), false, classLoader);
+        Class<?> primaryClass = Class.forName(clazz.getName(), false, classLoader);
         Thread.currentThread().setContextClassLoader(classLoader);
         bootClass.getMethod("start", Class.class, String[].class).invoke(null, primaryClass, args);
     }
