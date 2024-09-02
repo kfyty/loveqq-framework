@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
@@ -109,6 +108,12 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         this.jarIndex.addJarIndex(packageName, jarFile);
     }
 
+    /**
+     * 从 jar index 获取资源
+     *
+     * @param name The resource name
+     * @return resource
+     */
     @Override
     public URL getResource(String name) {
         // java 内部资源
@@ -134,6 +139,12 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
     }
 
+    /**
+     * 从 jar index 获取资源
+     *
+     * @param name The resource name
+     * @return resources
+     */
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
         if (this.isJavaSystemResource(name)) {
@@ -158,6 +169,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         };
     }
 
+    /**
+     * 加载 class，这里不遵循双亲委派机制，因为父类加载器也会搜索类路径，此时 jar index 将失效
+     *
+     * @param name    The <a href="#binary-name">binary name</a> of the class
+     * @param resolve If {@code true} then resolve the class
+     * @return class
+     */
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         if (name.startsWith("java.") || this.isThisClass(name)) {
@@ -166,11 +184,11 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
-                List<JarFile> jars = this.jarIndex.getJarFiles(name);
-                if (!jars.isEmpty()) {
-                    loadedClass = this.findJarClass(name, jars);
-                } else {
+                if (this.isExploded()) {
                     loadedClass = this.findExplodedClass(name);
+                }
+                if (loadedClass == null) {
+                    loadedClass = this.findJarClass(name, this.jarIndex.getJarFiles(name));
                 }
             }
             if (loadedClass != null) {
@@ -181,6 +199,17 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             }
             return super.loadClass(name, resolve);
         }
+    }
+
+    /**
+     * 查找 class，由于 {@link #loadClass(String, boolean)} 已经优先从 jar index 加载，因此这里无需再查找，直接返回即可
+     *
+     * @param name the name of the class
+     * @return null
+     */
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        return null;
     }
 
     /**
@@ -219,18 +248,16 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @SneakyThrows(IOException.class)
     protected Class<?> findExplodedClass(String name) throws ClassNotFoundException {
-        if (this.isExploded()) {
-            String jarClassPath = name.replace('.', '/') + ".class";
-            List<URL> resources = this.findExplodedResources(jarClassPath);
-            if (!resources.isEmpty()) {
-                File classFile = new File(PathUtil.getPath(resources.get(0)).toString(), jarClassPath);
-                if (classFile.exists()) {
-                    try (InputStream inputStream = new FileInputStream(classFile)) {
-                        URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
-                        byte[] classBytes = this.transform(name, this.read(inputStream));
-                        this.definePackageIfNecessary(name, classURL, new Manifest());
-                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
-                    }
+        String jarClassPath = name.replace('.', '/') + ".class";
+        List<URL> resources = this.findExplodedResources(jarClassPath);
+        if (!resources.isEmpty()) {
+            File classFile = new File(PathUtil.getPath(resources.get(0)).toString(), jarClassPath);
+            if (classFile.exists()) {
+                try (InputStream inputStream = new FileInputStream(classFile)) {
+                    URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
+                    byte[] classBytes = this.transform(name, this.read(inputStream));
+                    this.definePackageIfNecessary(name, classURL, new Manifest());
+                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
                 }
             }
         }
@@ -246,9 +273,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected List<URL> findExplodedResources(String resources) {
         List<URL> urls = new ArrayList<>();
         for (URL url : this.getURLs()) {
-            Path path = PathUtil.getPath(url);
-            if (!path.toString().endsWith(".jar")) {
-                if (new File(path.toString(), resources).exists()) {
+            if (!url.getFile().endsWith(".jar")) {
+                if (new File(PathUtil.getPath(url).toString(), resources).exists()) {
                     urls.add(url);
                 }
             }

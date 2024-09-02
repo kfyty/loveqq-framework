@@ -106,7 +106,7 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
 
     @Override
     public void setPrimarySource(Class<?> primarySource) {
-        this.primarySource = Objects.requireNonNull(primarySource, "primary source can't null");
+        this.primarySource = Objects.requireNonNull(primarySource, "Primary source can't null");
     }
 
     @Override

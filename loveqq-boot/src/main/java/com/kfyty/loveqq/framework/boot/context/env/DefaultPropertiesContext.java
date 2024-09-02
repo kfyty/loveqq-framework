@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
+import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.LOAD_SYSTEM_PROPERTY_KEY;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.LOCATION_KEY;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.include;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.load;
@@ -84,6 +86,11 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void loadProperties() {
         this.getConfigs().forEach(this::loadProperties);
+        Boolean property = this.getProperty(LOAD_SYSTEM_PROPERTY_KEY, Boolean.class);
+        if (property != null && property) {
+            System.getenv().forEach((k, v) -> this.setProperty(k, v, false));
+            System.getProperties().forEach((k, v) -> this.setProperty(k.toString(), v.toString(), false));
+        }
     }
 
     @Override
@@ -146,7 +153,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void afterPropertiesSet() {
-        this.propertySources.putAll(CommonUtil.loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
+        this.propertySources.putAll(loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
         if (this.contains(LOCATION_KEY)) {
             this.addConfig(this.getProperty(LOCATION_KEY));
         }
