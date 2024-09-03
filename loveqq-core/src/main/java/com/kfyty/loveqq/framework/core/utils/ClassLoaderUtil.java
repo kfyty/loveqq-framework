@@ -67,7 +67,7 @@ public abstract class ClassLoaderUtil {
      * @param result      结果集合
      * @return jar urls
      */
-    @SuppressWarnings({"UrlHashCode", "SizeReplaceableByIsEmpty"})
+    @SuppressWarnings("UrlHashCode")
     public static Set<URL> resolveClassPath(ClassLoader classLoader, Set<URL> result) {
         if (classLoader instanceof URLClassLoader) {
             result.addAll(Arrays.asList(((URLClassLoader) classLoader).getURLs()));
@@ -92,7 +92,7 @@ public abstract class ClassLoaderUtil {
                         if (file.isFile()) {
                             try (JarFile jarFile = new JarFile(file)) {
                                 String classPath = jarFile.getManifest().getMainAttributes().getValue("Class-Path");
-                                if (classPath != null && classPath.length() > 0) {
+                                if (classPath != null && !classPath.isEmpty()) {
                                     String[] nestedClassPath = classPath.split(" ");
                                     for (String url : nestedClassPath) {
                                         URI uri = URI.create(url);

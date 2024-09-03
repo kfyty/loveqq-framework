@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface ConstantConfig {
     /**
      * 是否读取 {@link ClassFileTransformer}
+     * 开启此配置，会使用 javassist 修改字节码，会少量内存使用量
      */
     boolean LOAD_TRANSFORMER = Boolean.parseBoolean(System.getProperty("k.transformer.load", "true"));
 

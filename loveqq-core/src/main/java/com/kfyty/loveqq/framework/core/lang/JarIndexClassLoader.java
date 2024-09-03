@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLStreamHandlerFactory;
 import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
@@ -44,11 +45,16 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected final JarIndex jarIndex;
 
     public JarIndexClassLoader(JarIndex jarIndex, ClassLoader parent) {
-        this(jarIndex, jarIndex.getJarURLs().toArray(new URL[0]), parent);
+        this(jarIndex, new URL[0], parent);
     }
 
     public JarIndexClassLoader(JarIndex jarIndex, URL[] urls, ClassLoader parent) {
         super(urls, parent);
+        this.jarIndex = jarIndex;
+    }
+
+    public JarIndexClassLoader(JarIndex jarIndex, URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
+        super(urls, parent, factory);
         this.jarIndex = jarIndex;
     }
 
@@ -105,7 +111,28 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param jarFile     jar 文件
      */
     public void addJarIndexMapping(String packageName, JarFile jarFile) {
-        this.jarIndex.addJarIndex(packageName, jarFile);
+        this.addJarIndexMapping(packageName, jarFile.getName());
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
+     * @param packageName 包名
+     * @param jarFilePath jar 文件绝对路径
+     */
+    public void addJarIndexMapping(String packageName, String jarFilePath) {
+        this.jarIndex.addJarIndex(packageName, jarFilePath);
+    }
+
+    /**
+     * 返回所有的 urls
+     *
+     * @return urls
+     */
+    @Override
+    public URL[] getURLs() {
+        URL[] urLs = super.getURLs();
+        return urLs.length > 0 ? urLs : this.jarIndex.getJarURLs().toArray(URL[]::new);
     }
 
     /**
@@ -135,7 +162,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         }
 
         // jar 包支持
-        List<JarFile> jarFiles = this.jarIndex.getJarFiles(name);
+        List<String> jarFiles = this.jarIndex.getJarFiles(name);
         return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
     }
 
@@ -220,10 +247,10 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @return class
      */
     @SneakyThrows(IOException.class)
-    protected Class<?> findJarClass(String name, List<JarFile> jarFiles) throws ClassNotFoundException {
+    protected Class<?> findJarClass(String name, List<String> jarFiles) throws ClassNotFoundException {
         String jarClassPath = name.replace('.', '/') + ".class";
-        for (Iterator<JarFile> i = jarFiles.iterator(); i.hasNext(); ) {
-            JarFile jarFile = i.next();
+        for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
+            JarFile jarFile = new JarFile(i.next());
             try (InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
                 if (inputStream != null) {
                     if (DEPENDENCY_CHECK && i.hasNext()) {
@@ -290,16 +317,20 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param usedJarFile 使用的 jar file
      * @param jarFiles    匹配的 jar files
      */
-    protected void logMatchedMoreJarFiles(String name, JarFile usedJarFile, List<JarFile> jarFiles) {
+    @SneakyThrows(IOException.class)
+    protected void logMatchedMoreJarFiles(String name, JarFile usedJarFile, List<String> jarFiles) {
         boolean matchedMore = false;
         StringBuilder builder = new StringBuilder("More than one jar file found of class: " + name);
-        for (JarFile jarFile : jarFiles) {
-            if (jarFile.getJarEntry(name) != null) {
-                builder.append("\r\n    at: [")
-                        .append(jarFile.getName())
-                        .append(jarFile != usedJarFile ? "]" : "] was used.");
-                if (jarFile != usedJarFile) {
-                    matchedMore = true;
+        for (String jarPath : jarFiles) {
+            try (JarFile jarFile = new JarFile(jarPath)) {
+                if (jarFile.getJarEntry(name) != null) {
+                    boolean same = jarFile.getName().equals(usedJarFile.getName());
+                    builder.append("\r\n    at: [")
+                            .append(jarFile.getName())
+                            .append(same ? "]" : "] was used.");
+                    if (!same) {
+                        matchedMore = true;
+                    }
                 }
             }
         }

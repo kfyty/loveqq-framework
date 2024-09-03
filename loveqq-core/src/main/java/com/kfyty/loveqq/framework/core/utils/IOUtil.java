@@ -51,6 +51,20 @@ public abstract class IOUtil {
     public static final int DEFAULT_BUFFER_SIZE = 4096;
 
     /**
+     * 创建一个 {@link JarFile}
+     *
+     * @param jarFile jar file path
+     * @return {@link JarFile}
+     */
+    public static JarFile newJarFile(String jarFile) {
+        try {
+            return new JarFile(jarFile);
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
      * 从 url 创建一个资源 url
      *
      * @param url url
@@ -72,7 +86,18 @@ public abstract class IOUtil {
      * @return url
      */
     public static URL newNestedJarURL(JarFile jarFile, String resource) {
-        return newURL("jar:file:/" + jarFile.getName() + "!/" + resource);
+        return newNestedJarURL(jarFile.getName(), resource);
+    }
+
+    /**
+     * 从 jar file 创建一个资源 url
+     *
+     * @param jarFilePath jar 绝对路径
+     * @param resource    内嵌的 resource
+     * @return url
+     */
+    public static URL newNestedJarURL(String jarFilePath, String resource) {
+        return newURL("jar:file:/" + jarFilePath + "!/" + resource);
     }
 
     /**

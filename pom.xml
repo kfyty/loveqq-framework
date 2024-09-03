@@ -120,8 +120,8 @@
         <dependency.plugin.version>3.7.1</dependency.plugin.version>
         <surefire.plugin.version>3.3.1</surefire.plugin.version>
 
-        <maven.source.version>21</maven.source.version>
-        <maven.target.version>21</maven.target.version>
+        <maven.source.version>17</maven.source.version>
+        <maven.target.version>17</maven.target.version>
         <smart-doc-config>./src/main/resources/smart-doc.json</smart-doc-config>
 
         <boot-lib-output>boot-lib</boot-lib-output>
@@ -428,7 +428,6 @@
                     <source>${maven.source.version}</source>
                     <target>${maven.target.version}</target>
                     <parameters>true</parameters>
-                    <enablePreview>true</enablePreview>
                 </configuration>
             </plugin>
 
@@ -489,7 +488,6 @@
                     <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>
                     <argLine>
-                        --enable-preview
                         --add-opens=java.base/java.lang=ALL-UNNAMED
                         --add-opens=java.base/java.io=ALL-UNNAMED
                         --add-opens=java.base/java.nio=ALL-UNNAMED

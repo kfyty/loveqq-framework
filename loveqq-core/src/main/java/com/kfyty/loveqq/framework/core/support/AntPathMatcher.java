@@ -413,7 +413,7 @@ public class AntPathMatcher implements PatternMatcher {
             if (trimTokens) {
                 token = token.trim();
             }
-            if (!ignoreEmptyTokens || token.length() > 0) {
+            if (!ignoreEmptyTokens || !token.isEmpty()) {
                 tokens.add(token);
             }
         }

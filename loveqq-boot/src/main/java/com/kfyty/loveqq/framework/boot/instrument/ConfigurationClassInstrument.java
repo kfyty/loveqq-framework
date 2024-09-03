@@ -140,7 +140,7 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
      * @return java source code
      */
     protected String getCommonEnhanceCode(String methodName, String annotationValue) {
-        String beanName = annotationValue != null && annotationValue.length() > 0 ? annotationValue : methodName;
+        String beanName = annotationValue != null && !annotationValue.isEmpty() ? annotationValue : methodName;
         return "String required = com.kfyty.loveqq.framework.boot.context.factory.AbstractBeanFactory.getCreatingBean();" +
                 "String beanName = (com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean.class.isAssignableFrom($type) ? \"&\" : \"\") + \"" + beanName + "\";" +
                 "com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory bf = com.kfyty.loveqq.framework.core.utils.IOC.getBeanFactory();" +
