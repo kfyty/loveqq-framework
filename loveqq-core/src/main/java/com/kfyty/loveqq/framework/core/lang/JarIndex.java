@@ -47,7 +47,7 @@ public class JarIndex {
     /**
      * jar index of package mapping to jars
      */
-    private final Map<String, List<JarFile>> jarIndex;
+    private final Map<String, List<String>> jarIndex;
 
     /**
      * 构造器
@@ -57,7 +57,7 @@ public class JarIndex {
      */
     public JarIndex(String mainJarPath, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
-        this.jarIndex = new ConcurrentHashMap<>(256);
+        this.jarIndex = new ConcurrentHashMap<>(256, 0.95F);
         this.loadJarIndex(mainJarPath, jarIndex);
     }
 
@@ -84,7 +84,7 @@ public class JarIndex {
      *
      * @return jar index
      */
-    public Map<String, List<JarFile>> getJarIndex() {
+    public Map<String, List<String>> getJarIndex() {
         return Collections.unmodifiableMap(this.jarIndex);
     }
 
@@ -94,10 +94,20 @@ public class JarIndex {
      * @param jarFile Jar file
      * @return jar file url
      */
+    public URL getJarURL(JarFile jarFile) {
+        return this.getJarURL(jarFile.getName());
+    }
+
+    /**
+     * 根据 JarFile 构建一个 URL
+     *
+     * @param jarFilePath Jar file path
+     * @return jar file url
+     */
     @SuppressWarnings("deprecation")
     @SneakyThrows(MalformedURLException.class)
-    public URL getJarURL(JarFile jarFile) {
-        return new URL("file", "", -1, '/' + jarFile.getName());                                   // 必须使用 file 协议，否则读取不到 resources
+    public URL getJarURL(String jarFilePath) {
+        return new URL("file", "", -1, '/' + jarFilePath);                                         // 必须使用 file 协议，否则读取不到 resources
     }
 
     /**
@@ -122,7 +132,17 @@ public class JarIndex {
      * @param jarFile     jar 文件
      */
     public void addJarIndex(String packageName, JarFile jarFile) {
-        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFile);
+        this.addJarIndex(packageName, jarFile.getName());
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     *
+     * @param packageName 包名
+     * @param jarFilePath jar 文件绝对路径
+     */
+    public void addJarIndex(String packageName, String jarFilePath) {
+        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFilePath);
     }
 
     /**
@@ -131,13 +151,13 @@ public class JarIndex {
      * @param name 资源名称
      * @return jars
      */
-    public List<JarFile> getJarFiles(String name) {
+    public List<String> getJarFiles(String name) {
         int lastDot = name.lastIndexOf(name.endsWith(".class") ? '/' : '.');                                            // 为 com/kfyty/demo/Demo.class 提供支持
         if (lastDot < 0) {
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
         String path = name.substring(0, lastDot).replace('.', '/');
-        List<JarFile> jarFiles = this.jarIndex.get(path);
+        List<String> jarFiles = this.jarIndex.get(path);
         return jarFiles != null ? jarFiles : this.jarIndex.getOrDefault(name, Collections.emptyList());
     }
 
@@ -164,16 +184,13 @@ public class JarIndex {
         }
 
         final String jar = currentLine.replace("%20", " ");                                            // 第一行是 jar 文件相对路径
+        final File file = new File(jar);
+        final String jarFile = file.exists() ? file.getAbsoluteFile().getAbsolutePath() : new File(parentPath, jar).getAbsolutePath();
         while ((currentLine = reader.readLine()) != null) {
             if (currentLine.isEmpty() || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕
             }
-            File file = new File(jar);
-            if (file.exists()) {
-                this.addJarIndex(currentLine, new JarFile(file.getAbsoluteFile()));
-            } else {
-                this.addJarIndex(currentLine, new JarFile(new File(parentPath, jar)));
-            }
+            this.addJarIndex(currentLine.intern(), jarFile.intern());
         }
     }
 }

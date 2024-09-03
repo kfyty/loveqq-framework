@@ -36,7 +36,7 @@ public abstract class PathUtil {
      */
     public static Path getPath(URL url) {
         try {
-            if (url.getHost() != null && url.getHost().length() > 0) {
+            if (url.getHost() != null && !url.getHost().isEmpty()) {
                 return Paths.get(url.toURI());
             }
             // 有时 toURI 会出现非法字符错误，此时可直接使用构造方法

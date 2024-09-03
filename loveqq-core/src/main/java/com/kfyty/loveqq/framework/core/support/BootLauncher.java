@@ -112,7 +112,7 @@ public class BootLauncher {
         for (URL url : FactoriesLoader.loadURLResource(JAR_MANIFEST_LOCATION)) {
             Manifest manifest = new Manifest(url.openStream());
             String startClass = manifest.getMainAttributes().getValue(START_CLASS_KEY);
-            if (startClass != null && startClass.length() > 0) {
+            if (startClass != null && !startClass.isEmpty()) {
                 if (url.getProtocol().equals("file")) {
                     return new JarManifest(manifest, Paths.get(url.toURI()).getParent().getParent().toUri().toURL());
                 }

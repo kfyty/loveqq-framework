@@ -259,10 +259,9 @@ public abstract class CommonUtil {
 
     /* ------------------------------------------ URI 字符串操作 ------------------------------------------ */
 
-    @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static String formatURI(String uri) {
         uri = uri.trim();
-        if (uri.length() < 1) {
+        if (uri.isEmpty()) {
             return uri;
         }
         uri = uri.charAt(0) == '/' ? uri : '/' + uri;
