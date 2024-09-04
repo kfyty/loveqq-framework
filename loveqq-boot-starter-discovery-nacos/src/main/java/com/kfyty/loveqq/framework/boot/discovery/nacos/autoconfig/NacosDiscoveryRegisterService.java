@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.utils.NetUtils;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
@@ -37,14 +38,28 @@ public class NacosDiscoveryRegisterService implements ApplicationListener<Contex
     @Autowired(required = false)
     private NacosNamingEventListener nacosNamingEventListener;
 
+    protected Instance buildInstance(String serverIp, int serverPort, String clusterName) {
+        Instance instance = new Instance();
+        instance.setIp(serverIp);
+        instance.setPort(serverPort);
+        instance.setClusterName(clusterName);
+        instance.setWeight(this.discoveryProperties.getWeight());
+        instance.setHealthy(this.discoveryProperties.getHealthy());
+        instance.setEnabled(this.discoveryProperties.getEnabled());
+        instance.setEphemeral(this.discoveryProperties.getEphemeral());
+        instance.setMetadata(this.discoveryProperties.getMetadata());
+        return instance;
+    }
+
     public void registerService() {
         try {
             String groupName = this.discoveryProperties.getGroupName();
             String clusterName = this.discoveryProperties.getClusterName();
             String application = this.propertyContext.getProperty(APPLICATION_NAME_KEY);
-            String serverPort = this.propertyContext.getProperty(SERVER_PORT_KEY);
             String serverIp = CommonUtil.empty(this.discoveryProperties.getIp()) ? NetUtils.localIP() : this.discoveryProperties.getIp();
-            this.namingService.registerInstance(application, groupName, serverIp, Integer.parseInt(serverPort), clusterName);
+            String serverPort = this.propertyContext.getProperty(SERVER_PORT_KEY);
+            Instance instance = this.buildInstance(serverIp, Integer.parseInt(serverPort), clusterName);
+            this.namingService.registerInstance(application, groupName, instance);
             if (this.nacosNamingEventListener != null) {
                 this.namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
             }

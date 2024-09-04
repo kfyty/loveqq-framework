@@ -5,6 +5,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProper
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 描述: nacos 属性
  *
@@ -24,4 +27,9 @@ public class NacosDiscoveryProperties {
     private String ip;
     private String clusterName = "DEFAULT";
     private String groupName = "DEFAULT_GROUP";
+    private Double weight = 1.0D;
+    private Boolean healthy = true;
+    private Boolean enabled = true;
+    private Boolean ephemeral = true;
+    private Map<String, String> metadata = new HashMap<>();
 }
