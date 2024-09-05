@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
@@ -15,6 +16,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Predicate;
@@ -53,14 +55,25 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         this.isRefreshed = true;
-        for (ApplicationListener applicationListener : applicationContext.getBeanOfType(ApplicationListener.class).values()) {
-            this.registerEventListener(applicationListener);
+        Map<String, BeanDefinition> beanDefinitions = applicationContext.getBeanDefinitions(ApplicationListener.class, true);
+        for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
+            if (entry.getValue().isSingleton()) {
+                this.registerEventListener(applicationContext.getBean(entry.getKey()));
+            } else {
+                Class<?> listenerType = ReflectUtil.getSuperGeneric(entry.getValue().getBeanType(), SUPER_GENERIC_FILTER);
+                this.registerEventListener(new NoneSingletonApplicationListener(entry.getKey(), listenerType, applicationContext));
+            }
         }
         if (CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();
             this.earlyPublishedEvent = null;
         }
+    }
+
+    @Override
+    public void registerEventListener(ApplicationListener<?> applicationListener) {
+        this.applicationListeners.add(applicationListener);
     }
 
     /**
@@ -90,8 +103,16 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
         }
     }
 
-    @Override
-    public void registerEventListener(ApplicationListener<?> applicationListener) {
-        this.applicationListeners.add(applicationListener);
+    protected static class NoneSingletonApplicationListener extends EventListenerAnnotationListener {
+
+        public NoneSingletonApplicationListener(String beanName, Class<?> listenerType, ApplicationContext context) {
+            super(beanName, null, listenerType, context);
+        }
+
+        @Override
+        public void onApplicationEvent(ApplicationEvent<Object> event) {
+            ApplicationListener bean = this.context.getBean(this.beanName);
+            bean.onApplicationEvent(event);
+        }
     }
 }

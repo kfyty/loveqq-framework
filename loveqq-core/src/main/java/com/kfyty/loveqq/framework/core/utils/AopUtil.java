@@ -89,7 +89,11 @@ public abstract class AopUtil {
      * @return 原 bean 的类型
      */
     public static Class<?> getTargetClass(Object bean) {
-        return getTarget(bean).getClass();
+        Object target = getTarget(bean);
+        if (bean == target && isCglibProxy(bean)) {
+            return bean.getClass().getSuperclass();
+        }
+        return target.getClass();
     }
 
     /**
@@ -100,7 +104,8 @@ public abstract class AopUtil {
      * @return 获取原目标中声明的方法
      */
     public static Method getTargetMethod(Class<?> targetClass, Method method) {
-        if (isJdkProxy(targetClass) || method.getDeclaringClass().equals(targetClass) || method.getDeclaringClass() == Object.class) {
+        Class<?> declaringClass = method.getDeclaringClass();
+        if (isJdkProxy(targetClass) || declaringClass.equals(targetClass) || declaringClass == Object.class) {
             return method;
         }
         return ofNullable(ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);

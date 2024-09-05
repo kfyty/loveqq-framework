@@ -10,5 +10,10 @@ import java.util.EventListener;
  * @email kfyty725@hotmail.com
  */
 public interface ApplicationListener<E extends ApplicationEvent<?>> extends EventListener {
+    /**
+     * 事件监听器
+     *
+     * @param event 事件
+     */
     void onApplicationEvent(E event);
 }
