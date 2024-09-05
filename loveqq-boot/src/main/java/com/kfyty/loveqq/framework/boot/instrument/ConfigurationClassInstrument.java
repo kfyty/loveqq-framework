@@ -1,20 +1,23 @@
 package com.kfyty.loveqq.framework.boot.instrument;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.AsmUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.JavassistUtil;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
-import javassist.bytecode.annotation.NoSuchClassError;
+import lombok.SneakyThrows;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,6 +32,11 @@ import java.util.List;
  * @see com.kfyty.loveqq.framework.core.lang.ConstantConfig#LOAD_TRANSFORMER
  */
 public class ConfigurationClassInstrument implements ClassFileTransformer {
+    /**
+     * {@link com.kfyty.loveqq.framework.core.autoconfig.annotation.Component} class name
+     */
+    private static final String COMPONENT_CLASS = "com.kfyty.loveqq.framework.core.autoconfig.annotation.Component";
+
     /**
      * {@link com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration} class name
      */
@@ -48,30 +56,16 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
         return null;
     }
 
+    @SneakyThrows(IOException.class)
     protected Pair<Boolean, CtClass> isConfigurationClass(byte[] classfile) {
-        try {
-            ClassPool classPool = ClassPool.getDefault();
-            CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfile), false);
-            if (ctClass.isFrozen()) {
-                return new Pair<>(false, null);
+        Collection<String> annotationNames = AsmUtil.getAnnotationNames(new ByteArrayInputStream(classfile), new HashSet<>(4), e -> e.equals(CONFIGURATION_CLASS) || e.equals(COMPONENT_CLASS));
+        for (String annotationName : annotationNames) {
+            if (annotationName.equals(CONFIGURATION_CLASS)) {
+                CtClass ctClass = ClassPool.getDefault().makeClass(new ByteArrayInputStream(classfile), false);
+                return ctClass.isFrozen() ? new Pair<>(false, null) : new Pair<>(true, ctClass);
             }
-            for (Object annotation : ctClass.getAnnotations()) {
-                Annotation anno = (Annotation) annotation;
-                if (CONFIGURATION_CLASS.equals(anno.annotationType().getName())) {
-                    return new Pair<>(true, ctClass);
-                }
-                for (Annotation nested : AnnotationUtil.findAnnotations(anno.annotationType())) {
-                    if (CONFIGURATION_CLASS.equals(nested.annotationType().getName())) {
-                        return new Pair<>(true, ctClass);
-                    }
-                }
-            }
-            return new Pair<>(false, null);
-        } catch (NoSuchClassError | ClassNotFoundException error) {
-            return new Pair<>(false, null);                         // 某些非运行时注解会出现，忽略
-        } catch (Throwable e) {
-            throw ExceptionUtil.wrap(e);
         }
+        return new Pair<>(false, null);
     }
 
     protected byte[] enhanceConfigurationClass(byte[] classfileBuffer, CtClass ctClass) {
@@ -82,7 +76,7 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
                 if (method.isEmpty() || method.getDeclaringClass().getName().equals("java.lang.Object")) {
                     continue;
                 }
-                Object[] annotations = method.getAnnotations();
+                Object[] annotations = method.getAvailableAnnotations();
                 for (Object annotation : annotations) {
                     if (((Annotation) annotation).annotationType().getName().equals(BEAN_CLASS)) {
                         String value = (String) annotation.getClass().getMethod("value").invoke(annotation);

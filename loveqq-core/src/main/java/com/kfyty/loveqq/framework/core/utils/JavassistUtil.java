@@ -16,7 +16,12 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public abstract class JavassistUtil {
-
+    /**
+     * 基于 javassist 获取 {@link CtClass} 的所有 {@link CtMethod}
+     *
+     * @param ctClass {@link CtClass}
+     * @return {@link CtMethod}
+     */
     public static List<CtMethod> getMethods(CtClass ctClass) {
         try {
             if (ctClass == null) {

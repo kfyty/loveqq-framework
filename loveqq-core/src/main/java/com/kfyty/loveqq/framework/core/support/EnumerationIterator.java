@@ -2,8 +2,11 @@ package com.kfyty.loveqq.framework.core.support;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * 描述: {@link java.util.Enumeration} 迭代支持
@@ -30,5 +33,17 @@ public class EnumerationIterator<T> implements Iterable<T> {
                 return enumeration.nextElement();
             }
         };
+    }
+
+    public List<T> toList() {
+        List<T> retValue = new ArrayList<>();
+        for (T o : this) {
+            retValue.add(o);
+        }
+        return retValue;
+    }
+
+    public Stream<T> stream() {
+        return this.toList().stream();
     }
 }

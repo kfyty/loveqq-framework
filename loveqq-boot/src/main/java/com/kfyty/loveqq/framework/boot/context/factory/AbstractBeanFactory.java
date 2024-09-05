@@ -363,7 +363,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public void registerBeanReference(BeanDefinition beanDefinition) {
         if (!this.containsReference(beanDefinition.getBeanName())) {
             Object earlyBean = this.doCreateBean(beanDefinition);
-            this.beanReference.putIfAbsent(beanDefinition.getBeanName(), earlyBean);
+            if (!this.contains(beanDefinition.getBeanName())) {                                                         // 配置类可能已放入
+                this.beanReference.putIfAbsent(beanDefinition.getBeanName(), earlyBean);
+            }
         }
     }
 
