@@ -4,24 +4,28 @@ import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatPrope
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.servlet.DefaultStaticServlet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathDirResourceSet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathJarResourceSet;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
+import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
-import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRequestListener;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
+import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
@@ -29,6 +33,8 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
+import org.apache.coyote.AbstractProtocol;
+import org.apache.coyote.ProtocolHandler;
 import org.apache.jasper.servlet.JasperInitializer;
 import org.apache.naming.ContextBindings;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
@@ -87,6 +93,7 @@ public class TomcatWebServer implements ServletWebServer {
 
     public TomcatWebServer(TomcatProperties config, DispatcherServlet dispatcherServlet) {
         this.tomcat = new Tomcat();
+        this.host = this.tomcat.getHost();
         this.config = config;
         this.dispatcherServlet = dispatcherServlet;
         this.configTomcat();
@@ -121,11 +128,11 @@ public class TomcatWebServer implements ServletWebServer {
         return this.config.getPort();
     }
 
-    private void configTomcat() {
+    protected void configTomcat() {
         try {
-            tomcat.setPort(this.getPort());
-            tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
-            tomcat.getHost().setAutoDeploy(true);
+            this.host.setAutoDeploy(true);
+            this.tomcat.setPort(this.getPort());
+            this.tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
             this.prepareContext();
             this.prepareResourceContext();
             this.tomcat.start();                                                                                        // 提前启动 tomcat 以触发一些必要的监听器
@@ -139,8 +146,17 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setPort(getPort());
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
+        ProtocolHandler protocolHandler = connector.getProtocolHandler();
+        if (protocolHandler instanceof AbstractProtocol<?> protocol) {
+            Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
+            Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
+            Mapping.from(this.config.getMaxConnections()).whenNotNull(protocol::setMaxConnections);
+            Mapping.from(this.config.getConnectionTimeout()).whenNotNull(protocol::setConnectionTimeout);
+            Mapping.from(this.config.getKeepAliveTimeout()).whenNotNull(protocol::setKeepAliveTimeout);
+            Mapping.from(this.config.getTcpNoDelay()).whenNotNull(protocol::setTcpNoDelay);
+        }
         if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            connector.getProtocolHandler().setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
+            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
         }
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
@@ -155,6 +171,7 @@ public class TomcatWebServer implements ServletWebServer {
         context.addServletContainerInitializer(new DispatcherServletConfigInitializer(this.config, this.dispatcherServlet), Collections.emptySet());
         context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
+        this.prepareContainerListener(context);
         this.bindContextClassLoader(context);
         this.skipTldScanning(context);
         this.prepareResources(context);
@@ -162,9 +179,31 @@ public class TomcatWebServer implements ServletWebServer {
         this.prepareJspServlet(context);
         this.prepareWebFilter(context);
         this.prepareWebListener(context);
-        this.tomcat.getHost().addChild(context);
-        this.host = this.tomcat.getHost();
+        this.host.addChild(context);
         this.servletContext = context.getServletContext();
+    }
+
+    private void prepareContainerListener(StandardContext context) {
+        if (this.config.getLifecycleListeners() != null) {
+            for (LifecycleListener lifecycleListener : this.config.getLifecycleListeners()) {
+                context.addLifecycleListener(lifecycleListener);
+            }
+        }
+        if (this.config.getServletContainerInitializers() != null) {
+            for (ServletContainerInitializer containerInitializer : this.config.getServletContainerInitializers()) {
+                context.addServletContainerInitializer(containerInitializer, Collections.emptySet());
+            }
+        }
+        if (this.config.getServletContextListeners() != null) {
+            for (ServletContextListener contextListener : this.config.getServletContextListeners()) {
+                context.addApplicationLifecycleListener(contextListener);
+            }
+        }
+        if (this.config.getServletRequestListeners() != null) {
+            for (ServletRequestListener requestListener : this.config.getServletRequestListeners()) {
+                context.addApplicationEventListener(requestListener);
+            }
+        }
     }
 
     private void prepareResourceContext() {
