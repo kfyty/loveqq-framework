@@ -4,16 +4,20 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
-import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletRequestListener;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebServlet;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.catalina.LifecycleListener;
 
 import java.util.Arrays;
 import java.util.EventListener;
@@ -41,6 +45,36 @@ public class TomcatProperties extends WebServerProperties {
     private String protocol;
 
     /**
+     * 最大线程数
+     */
+    private Integer maxThreads;
+
+    /**
+     * 最小空闲线程数
+     */
+    private Integer minSpareThreads;
+
+    /**
+     * 最大连接数
+     */
+    private Integer maxConnections;
+
+    /**
+     * 连接超时时间
+     */
+    private Integer connectionTimeout;
+
+    /**
+     * 连接存活超时时间
+     */
+    private Integer keepAliveTimeout;
+
+    /**
+     * tcpNoDelay
+     */
+    private Boolean tcpNoDelay;
+
+    /**
      * 上下文路径
      */
     private String contextPath;
@@ -54,6 +88,26 @@ public class TomcatProperties extends WebServerProperties {
      * 上传文件配置
      */
     private MultipartConfigElement multipartConfig;
+
+    /**
+     * 生命周期监听器
+     */
+    private List<LifecycleListener> lifecycleListeners;
+
+    /**
+     * 初始化监听器
+     */
+    private List<ServletContainerInitializer> servletContainerInitializers;
+
+    /**
+     * 初始化监听器
+     */
+    private List<ServletContextListener> servletContextListeners;
+
+    /**
+     * 请求监听器
+     */
+    private List<ServletRequestListener> servletRequestListeners;
 
     /**
      * servlet

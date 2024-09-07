@@ -16,9 +16,13 @@ import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletRequestListener;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebListener;
 import jakarta.servlet.annotation.WebServlet;
+import org.apache.catalina.LifecycleListener;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -44,10 +48,26 @@ public class TomcatAutoConfig {
     @Autowired
     private WebServerProperties webServerProperties;
 
-    @Bean
+    @Autowired(required = false)
+    private List<LifecycleListener> lifecycleListeners;
+
+    @Autowired(required = false)
+    private List<ServletContainerInitializer> servletContainerInitializers;
+
+    @Autowired(required = false)
+    private List<ServletContextListener> servletContextListeners;
+
+    @Autowired(required = false)
+    private List<ServletRequestListener> servletRequestListeners;
+
     @ConfigurationProperties("k.mvc.tomcat")
+    @Bean(resolveNested = false, ignoredAutowired = true)
     public TomcatProperties tomcatProperties(MultipartConfigElement multipartConfig) {
         TomcatProperties config = this.webServerProperties.copy(new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig));
+        config.setLifecycleListeners(this.lifecycleListeners);
+        config.setServletContainerInitializers(this.servletContainerInitializers);
+        config.setServletContextListeners(this.servletContextListeners);
+        config.setServletRequestListeners(this.servletRequestListeners);
         this.collectAndConfigListener(config);
         this.collectAndConfigFilter(config);
         this.collectAndConfigServlet(config);
