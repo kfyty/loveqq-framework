@@ -37,7 +37,7 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMet
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         try (OutputStream out = container.getResponse().getOutputStream()) {
-            String body = returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
+            String body = returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJSONString(returnValue);
             out.write(body.getBytes(StandardCharsets.UTF_8));
             out.flush();
         }

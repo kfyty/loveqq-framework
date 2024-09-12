@@ -89,7 +89,7 @@ public abstract class JsonUtil {
         return configure().writer();
     }
 
-    public static String toJson(Object o) {
+    public static String toJSONString(Object o) {
         try {
             return DEFAULT_OBJECT_MAPPER.writeValueAsString(o);
         } catch (JsonProcessingException e) {
@@ -103,7 +103,7 @@ public abstract class JsonUtil {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Array toJSONArray(CharSequence o) {
-        return new Array((List) toArray(o));
+        return new Array((List) toList(o));
     }
 
     public static <T> T toObject(Map<?, ?> map, Class<T> clazz) {
@@ -112,6 +112,7 @@ public abstract class JsonUtil {
 
     public static <T> T toObject(Map<?, ?> map, Type type) {
         return toObject(map, new TypeReference<>() {
+
             @Override
             public Type getType() {
                 return type;
@@ -133,6 +134,7 @@ public abstract class JsonUtil {
 
     public static <T> T toObject(String json, Type type) {
         return toObject(json, new TypeReference<>() {
+
             @Override
             public Type getType() {
                 return type;
@@ -149,7 +151,7 @@ public abstract class JsonUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static List<Map<String, Object>> toArray(CharSequence o) {
+    public static List<Map<String, Object>> toList(CharSequence o) {
         return (List<Map<String, Object>>) toObject(o.toString(), ArrayList.class);
     }
 

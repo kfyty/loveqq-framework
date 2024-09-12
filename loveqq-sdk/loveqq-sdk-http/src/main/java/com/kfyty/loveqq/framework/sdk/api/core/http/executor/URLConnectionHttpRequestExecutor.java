@@ -65,7 +65,7 @@ public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
         }
         request.form(this.processFormData(api.formData()));
         if (Objects.equals(api.contentType(), ApiConstants.CONTENT_TYPE_JSON)) {
-            request.body(JsonUtil.toJson(api.formData()));
+            request.body(JsonUtil.toJSONString(api.formData()));
         }
         return request;
     }

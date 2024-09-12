@@ -6,8 +6,6 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperGeneric;
-
 /**
  * 描述:
  *
@@ -16,8 +14,14 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperGeneric;
  * @email kfyty725@hotmail.com
  */
 public abstract class ConverterUtil {
+    /**
+     * 数据转换器
+     */
     private static final Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> TYPE_CONVERTER = new ConcurrentHashMap<>();
 
+    /**
+     * 初始化默认的转换器
+     */
     static {
         PackageUtil.scanInstance(Converter.class)
                 .forEach(e -> {
@@ -31,13 +35,18 @@ public abstract class ConverterUtil {
         return TYPE_CONVERTER;
     }
 
-    @SuppressWarnings("SuspiciousMethodCalls")
-    public static Converter<?, ?> getTypeConverter(Class<?> source, Class<?> target) {
-        return TYPE_CONVERTER.get(new Pair<>(source, target));
+    @SuppressWarnings({"unchecked", "SuspiciousMethodCalls"})
+    public static <S, T> Converter<S, T> getTypeConverter(Class<S> source, Class<T> target) {
+        if (target != null && target.isEnum()) {
+            return (Converter<S, T>) TYPE_CONVERTER.get(new Pair<>(source, Enum.class));
+        }
+        return (Converter<S, T>) TYPE_CONVERTER.get(new Pair<>(source, target));
     }
 
+    @SuppressWarnings("rawtypes")
     public static void registerConverter(Converter<?, ?> converter) {
-        registerConverter(ReflectUtil.getSuperGeneric(converter.getClass()), ReflectUtil.getSuperGeneric(converter.getClass(), 1), converter);
+        Class<? extends Converter> converterClass = converter.getClass();
+        registerConverter(ReflectUtil.getSuperGeneric(converterClass), ReflectUtil.getSuperGeneric(converterClass, 1), converter);
     }
 
     public static void registerConverter(Class<?> source, Class<?> target, Converter<?, ?> converter) {
@@ -46,10 +55,10 @@ public abstract class ConverterUtil {
 
     @SuppressWarnings("unchecked")
     public static <S, T> T convert(S source, Class<T> clazz) {
-        Converter<?, ?> converter = getTypeConverter(source.getClass(), clazz);
+        Converter<S, T> converter = getTypeConverter((Class<S>) source.getClass(), clazz);
         if (converter != null) {
-            return ((Converter<S, T>) converter).apply(source);
+            return converter.apply(source);
         }
-        throw new IllegalArgumentException("no suitable converter is available");
+        throw new IllegalArgumentException("No suitable converter is available of type: " + source.getClass() + ", " + clazz);
     }
 }

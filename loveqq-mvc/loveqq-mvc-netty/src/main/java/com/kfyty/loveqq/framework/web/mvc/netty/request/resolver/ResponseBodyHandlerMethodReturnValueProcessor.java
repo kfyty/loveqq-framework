@@ -32,6 +32,6 @@ public class ResponseBodyHandlerMethodReturnValueProcessor implements ServerHand
 
     @Override
     public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJson(returnValue);
+        return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJSONString(returnValue);
     }
 }

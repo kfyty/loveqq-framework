@@ -1,5 +1,8 @@
 package com.kfyty.loveqq.framework.core.support.json;
 
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -28,8 +31,8 @@ public interface JSONAware {
         if (o == null || o instanceof Array) {
             return (Array) o;
         }
-        if (o instanceof List<?>) {
-            return new Array((List<Object>) o);
+        if (o instanceof Collection<?> || o.getClass().isArray()) {
+            return new Array((List<Object>) CommonUtil.toList(o));
         }
         throw new IllegalStateException(msg);
     }
