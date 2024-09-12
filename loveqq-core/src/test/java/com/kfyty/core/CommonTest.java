@@ -5,9 +5,11 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMa
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.annotation.RetentionPolicy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +26,12 @@ import java.util.Set;
  * @email kfyty725@hotmail.com
  */
 public class CommonTest {
+
+    @Test
+    public void enumConvertTest() {
+        RetentionPolicy convert = ConverterUtil.convert("java.lang.annotation.RetentionPolicy.SOURCE", RetentionPolicy.class);
+        Assertions.assertEquals(convert, RetentionPolicy.SOURCE);
+    }
 
     @Test
     public void removePrefixTest() {

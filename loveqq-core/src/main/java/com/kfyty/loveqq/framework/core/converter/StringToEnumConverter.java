@@ -10,15 +10,18 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
  * @date 2022/3/12 12:49
  * @email kfyty725@hotmail.com
  */
-public class StringToClassConverter implements Converter<String, Class<?>> {
+public class StringToEnumConverter implements Converter<String, Enum<?>> {
 
     @Override
-    public Class<?> apply(String source) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Enum<?> apply(String source) {
         if (CommonUtil.empty(source)) {
             return null;
         }
         try {
-            return Class.forName(source, false, StringToEnumConverter.class.getClassLoader());
+            int index = source.lastIndexOf('.');
+            Class<? extends Enum> enumClass = (Class<? extends Enum>) Class.forName(source.substring(0, index), false, StringToEnumConverter.class.getClassLoader());
+            return Enum.valueOf(enumClass, source.substring(index + 1));
         } catch (ClassNotFoundException e) {
             throw new ResolvableException(e);
         }

@@ -167,6 +167,6 @@ public class Array extends AbstractList<Object> implements JSONAware {
 
     @Override
     public String toString() {
-        return JsonUtil.toJson(this.decorate);
+        return JsonUtil.toJSONString(this.decorate);
     }
 }

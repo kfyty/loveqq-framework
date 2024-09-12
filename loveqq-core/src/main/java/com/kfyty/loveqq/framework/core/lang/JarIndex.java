@@ -185,7 +185,7 @@ public class JarIndex {
 
         final String jar = currentLine.replace("%20", " ");                                            // 第一行是 jar 文件相对路径
         final File file = new File(jar);
-        final String jarFile = file.exists() ? file.getAbsoluteFile().getAbsolutePath() : new File(parentPath, jar).getAbsolutePath();
+        final String jarFile = file.exists() ? file.getAbsolutePath() : new File(parentPath, jar).getAbsolutePath();
         while ((currentLine = reader.readLine()) != null) {
             if (currentLine.isEmpty() || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕

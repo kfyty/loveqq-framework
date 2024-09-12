@@ -36,32 +36,32 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     public Integer getInteger(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Integer ? (Integer) o : Integer.parseInt(getString(key));
+        return o == null || o instanceof Integer ? (Integer) o : Integer.parseInt(o.toString());
     }
 
     public Long getLong(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Long ? (Long) o : Long.parseLong(getString(key));
+        return o == null || o instanceof Long ? (Long) o : Long.parseLong(o.toString());
     }
 
     public Float getFloat(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Float ? (Float) o : Float.parseFloat(getString(key));
+        return o == null || o instanceof Float ? (Float) o : Float.parseFloat(o.toString());
     }
 
     public Double getDouble(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Double ? (Double) o : Double.parseDouble(getString(key));
+        return o == null || o instanceof Double ? (Double) o : Double.parseDouble(o.toString());
     }
 
     public BigInteger getBigInteger(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof BigInteger ? (BigInteger) o : new BigInteger(getString(key));
+        return o == null || o instanceof BigInteger ? (BigInteger) o : new BigInteger(o.toString());
     }
 
     public BigDecimal getBigDecimal(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof BigDecimal ? (BigDecimal) o : new BigDecimal(getString(key));
+        return o == null || o instanceof BigDecimal ? (BigDecimal) o : new BigDecimal(o.toString());
     }
 
     public JSON getJSON(String key) {
@@ -189,6 +189,6 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     @Override
     public String toString() {
-        return JsonUtil.toJson(this.decorate);
+        return JsonUtil.toJSONString(this.decorate);
     }
 }

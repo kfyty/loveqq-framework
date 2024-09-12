@@ -103,7 +103,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
                 if (api.payload() != null && api.payload().length > 0) {
                     builder.method(api.method(), java.net.http.HttpRequest.BodyPublishers.ofByteArray(api.payload()));
                 } else if (Objects.equals(api.contentType(), ApiConstants.CONTENT_TYPE_JSON)) {
-                    builder.method(api.method(), java.net.http.HttpRequest.BodyPublishers.ofString(JsonUtil.toJson(api.formData())));
+                    builder.method(api.method(), java.net.http.HttpRequest.BodyPublishers.ofString(JsonUtil.toJSONString(api.formData())));
                 } else {
                     String formData = api.formData().entrySet().stream().map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue().toString(), UTF_8)).collect(Collectors.joining("&"));
                     builder.method(api.method(), java.net.http.HttpRequest.BodyPublishers.ofString(formData));
