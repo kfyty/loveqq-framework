@@ -45,11 +45,6 @@ public class TomcatProperties extends WebServerProperties {
     private String protocol;
 
     /**
-     * 最大线程数
-     */
-    private Integer maxThreads;
-
-    /**
      * 最小空闲线程数
      */
     private Integer minSpareThreads;

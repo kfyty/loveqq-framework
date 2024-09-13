@@ -29,6 +29,11 @@ import java.util.function.Consumer;
 @EqualsAndHashCode(callSuper = true)
 public class NettyProperties extends WebServerProperties {
     /**
+     * select 线程数
+     */
+    private Integer selectThreads = 1;
+
+    /**
      * 是否启用压缩
      */
     private Boolean compress;

@@ -29,6 +29,11 @@ public class WebServerProperties {
     protected boolean virtualThread;
 
     /**
+     * 最大线程数
+     */
+    private Integer maxThreads;
+
+    /**
      * 端口
      */
     protected int port;
