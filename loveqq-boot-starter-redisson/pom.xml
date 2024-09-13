@@ -31,4 +31,17 @@
             </exclusions>
         </dependency>
     </dependencies>
+
+    <!-- 和 loveqq-boot-starter-netty 保持一致 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.1.110.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

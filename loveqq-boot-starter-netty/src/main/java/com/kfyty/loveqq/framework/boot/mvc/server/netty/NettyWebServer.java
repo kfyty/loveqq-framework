@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty;
 
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyProperties;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.socket.OioBasedLoopResources;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -39,6 +40,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.DisposableServer;
+import reactor.netty.ReactorNetty;
 import reactor.netty.http.HttpOperations;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
@@ -172,11 +174,21 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     protected void configNettyServer() {
+        // 先设置属性值，否则会因为静态加载而无效
+        System.setProperty(ReactorNetty.IO_SELECT_COUNT, this.config.getSelectThreads().toString());
+        if (this.config.getMaxThreads() != null) {
+            System.setProperty(ReactorNetty.IO_WORKER_COUNT, this.config.getMaxThreads().toString());
+        }
+
+        // 再配置服务器
         this.server = HttpServer.create()
                 .port(this.getPort())
                 .compress(this.config.getCompress())
                 .forwarded(this.config.getForwarded())
                 .accessLog(this.config.getAccessLog());
+        if (this.config.isVirtualThread()) {
+            this.server = this.server.runOn(new OioBasedLoopResources());
+        }
         if (this.config.getIdleTimeout() != null) {
             this.server = this.server.idleTimeout(this.config.getIdleTimeout());
         }
