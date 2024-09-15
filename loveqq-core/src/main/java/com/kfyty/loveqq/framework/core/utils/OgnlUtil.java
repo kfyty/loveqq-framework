@@ -4,6 +4,8 @@ import com.kfyty.loveqq.framework.core.support.ognl.DefaultMemberAccess;
 import ognl.Ognl;
 import ognl.OgnlContext;
 
+import java.util.function.Supplier;
+
 /**
  * 描述: ognl 工具
  *
@@ -12,7 +14,7 @@ import ognl.OgnlContext;
  * @email kfyty725@hotmail.com
  */
 public abstract class OgnlUtil {
-    private static final OgnlContext CONTEXT = new OgnlContext(null, null, new DefaultMemberAccess());
+    private static final Supplier<OgnlContext> CONTEXT = () -> new OgnlContext(null, null, new DefaultMemberAccess());
 
     /**
      * 获取 {@link OgnlContext}
@@ -20,7 +22,7 @@ public abstract class OgnlUtil {
      * @return OgnlContext
      */
     public static OgnlContext getContext() {
-        return CONTEXT;
+        return CONTEXT.get();
     }
 
     /**
@@ -57,7 +59,7 @@ public abstract class OgnlUtil {
     @SuppressWarnings("unchecked")
     public static <T> T compute(String express, Object root, Class<T> clazz) {
         try {
-            return (T) Ognl.getValue(express, CONTEXT, root, clazz);
+            return (T) Ognl.getValue(express, getContext(), root, clazz);
         } catch (Exception e) {
             throw new RuntimeException("表达式计算失败: " + e.getMessage(), e);
         }
