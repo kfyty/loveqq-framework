@@ -9,6 +9,7 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
+import com.kfyty.loveqq.framework.web.core.AbstractDispatcher;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
@@ -72,6 +73,7 @@ public class TomcatWebServer implements ServletWebServer {
     private volatile boolean started;
 
     @Setter
+    @Getter
     private TomcatProperties config;
 
     @Getter
@@ -81,6 +83,7 @@ public class TomcatWebServer implements ServletWebServer {
     private ServletContext servletContext;
 
     @Setter
+    @Getter
     private DispatcherServlet dispatcherServlet;
 
     public TomcatWebServer() {
@@ -88,7 +91,7 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     public TomcatWebServer(TomcatProperties config) {
-        this(config, null);
+        this(config, new DispatcherServlet());
     }
 
     public TomcatWebServer(TomcatProperties config, DispatcherServlet dispatcherServlet) {
@@ -126,6 +129,11 @@ public class TomcatWebServer implements ServletWebServer {
     @Override
     public int getPort() {
         return this.config.getPort();
+    }
+
+    @Override
+    public AbstractDispatcher<?> getDispatcher() {
+        return this.dispatcherServlet;
     }
 
     protected void configTomcat() {

@@ -93,8 +93,7 @@ public class NettyServerResponse implements ServerResponse {
 
     @Override
     public void flush() throws IOException {
-        this.response.sendByteArray(Mono.just(this.outputStream.toByteArray())).then().subscribe();
-        this.outputStream.reset();
+        // nothing，on OutputStream.close will flush all buffer
     }
 
     @Override
@@ -106,8 +105,10 @@ public class NettyServerResponse implements ServerResponse {
     private class ReactorNettyByteArrayOutputStream extends ByteArrayOutputStream {
 
         @Override
-        public void flush() throws IOException {
-            NettyServerResponse.this.flush();
+        public void close() throws IOException {
+            ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
+            NettyServerResponse.this.response.sendByteArray(Mono.just(outputStream.toByteArray())).then().subscribe();
+            outputStream.reset();
         }
     }
 }

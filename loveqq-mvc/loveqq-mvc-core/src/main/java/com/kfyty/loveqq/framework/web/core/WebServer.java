@@ -31,4 +31,11 @@ public interface WebServer {
      * @return port
      */
     int getPort();
+
+    /**
+     * 返回请求分发器
+     *
+     * @return {@link AbstractDispatcher}
+     */
+    AbstractDispatcher<?> getDispatcher();
 }

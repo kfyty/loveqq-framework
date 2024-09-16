@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.web.core.AbstractDispatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.multipart.DefaultMultipartFile;
@@ -29,6 +30,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpData;
 import io.netty.util.ReferenceCounted;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -106,19 +108,21 @@ public class NettyWebServer implements ServerWebServer {
      * 服务器配置属性
      */
     @Setter
+    @Getter
     private NettyProperties config;
+
+    /**
+     * 分发处理器
+     */
+    @Setter
+    @Getter
+    private DispatcherHandler dispatcherHandler;
 
     /**
      * 过滤器
      */
     @Setter
     private List<Filter> filters;
-
-    /**
-     * 分发处理器
-     */
-    @Setter
-    private DispatcherHandler dispatcherHandler;
 
     /**
      * websocket 处理器
@@ -131,7 +135,7 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     public NettyWebServer(NettyProperties config) {
-        this(config, null, new ConcurrentHashMap<>(4));
+        this(config, new DispatcherHandler(), new ConcurrentHashMap<>(4));
     }
 
     public NettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler, Map<String, WebSocketHandler> webSocketHandlerMap) {
@@ -171,6 +175,11 @@ public class NettyWebServer implements ServerWebServer {
     @Override
     public int getPort() {
         return this.config.getPort();
+    }
+
+    @Override
+    public AbstractDispatcher<?> getDispatcher() {
+        return this.dispatcherHandler;
     }
 
     protected void configNettyServer() {
