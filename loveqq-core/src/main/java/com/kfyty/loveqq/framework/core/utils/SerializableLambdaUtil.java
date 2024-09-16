@@ -1,8 +1,9 @@
 package com.kfyty.loveqq.framework.core.utils;
 
-import com.kfyty.loveqq.framework.core.lang.function.SerializableFunction;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.loveqq.framework.core.support.Pair;
 
+import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -22,7 +23,13 @@ public abstract class SerializableLambdaUtil {
      */
     private static final Map<Class<?>, SerializedLambda> SERIALIZED_LAMBDA_CACHE = new WeakConcurrentHashMap<>();
 
-    public static <T> String resolveFieldName(SerializableFunction<T, ?> serializableFunction) {
+    /**
+     * 从 lambda 表达式获取字段名称
+     *
+     * @param serializableFunction 实现了 {@link Serializable} 接口的 lambda 表达式
+     * @return 字段名称
+     */
+    public static String resolveFieldName(Serializable serializableFunction) {
         String implMethodName = serializeLambda(serializableFunction).getImplMethodName();
         if (implMethodName.length() < 4) {
             return implMethodName.replace("get", "");
@@ -30,11 +37,30 @@ public abstract class SerializableLambdaUtil {
         return Character.toLowerCase(implMethodName.charAt(3)) + implMethodName.substring(4);
     }
 
-    public static <T> SerializedLambda serializeLambda(SerializableFunction<T, ?> serializableFunction) {
+    /**
+     * 从 lambda 表达式获取方法
+     *
+     * @param serializableFunction 实现了 {@link Serializable} 接口的 lambda 表达式
+     * @return 实例及方法对象，仅包含非私有方法
+     */
+    public static Pair<Object, Method> resolveMethod(Serializable serializableFunction, Class<?>... paramTypes) {
+        SerializedLambda serializedLambda = serializeLambda(serializableFunction);
+        Class<?> clazz = ReflectUtil.load(serializedLambda.getImplClass().replace('/', '.'));
+        String methodName = serializedLambda.getImplMethodName();
+        return new Pair<>(serializedLambda.getCapturedArg(0), ReflectUtil.getMethod(clazz, methodName, paramTypes));
+    }
+
+    /**
+     * 序列化 lambda
+     *
+     * @param serializableFunction 实现了 {@link Serializable} 接口的 lambda 表达式
+     * @return 序列化的 lambda
+     */
+    public static SerializedLambda serializeLambda(Serializable serializableFunction) {
         final Class<?> clazz = serializableFunction.getClass();
         return ofNullable(SERIALIZED_LAMBDA_CACHE.get(clazz))
                 .orElseGet(() -> {
-                    Method method = ReflectUtil.getMethod(clazz, "writeReplace");
+                    Method method = ReflectUtil.getMethod(clazz, "writeReplace", true);
                     SerializedLambda serializedLambda = (SerializedLambda) ReflectUtil.invokeMethod(serializableFunction, method);
                     SERIALIZED_LAMBDA_CACHE.put(clazz, serializedLambda);
                     return serializedLambda;

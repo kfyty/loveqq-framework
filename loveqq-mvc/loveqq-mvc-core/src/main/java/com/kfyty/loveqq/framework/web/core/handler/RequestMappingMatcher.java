@@ -1,5 +1,9 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
+import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
@@ -15,6 +19,26 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public interface RequestMappingMatcher {
+    /**
+     * 注册路由
+     *
+     * @param url           url
+     * @param requestMethod 请求方法
+     * @param route         处理器，必须是方法引用，否则无法解析
+     * @return 路由，可进一步定制
+     */
+    MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route);
+
+    /**
+     * 注册路由
+     *
+     * @param url           url
+     * @param requestMethod 请求方法
+     * @param route         处理器，必须是方法引用，否则无法解析
+     * @return 路由，可进一步定制
+     */
+    MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route);
+
     /**
      * 注册路由
      *

@@ -52,7 +52,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     protected void preparedRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE.toString(), mapping.getProduces());
+        if (mapping.getProduces() != null) {
+            response.setContentType(mapping.getProduces());
+        }
         if (mapping.isEventStream()) {
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");

@@ -1,8 +1,14 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
+import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.SerializableLambdaUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
@@ -37,6 +43,24 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     public DefaultRequestMappingMatcher() {
         this.patternMatcher = new AntPathMatcher();
         this.routesMap = new ConcurrentHashMap<>((int) (RequestMethod.values().length / .075 + 1));
+    }
+
+    @Override
+    public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route) {
+        Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
+        if (pair.getValue() == null) {
+            throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
+        }
+        return this.registryMethodMapping(url, requestMethod, pair.getKey(), pair.getValue());
+    }
+
+    @Override
+    public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route) {
+        Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
+        if (pair.getValue() == null) {
+            throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
+        }
+        return this.registryMethodMapping(url, requestMethod, pair.getKey(), pair.getValue());
     }
 
     @Override

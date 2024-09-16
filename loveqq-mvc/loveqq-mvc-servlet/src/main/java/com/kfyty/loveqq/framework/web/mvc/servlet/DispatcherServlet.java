@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -21,7 +22,6 @@ import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 
 import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
-import static java.util.Optional.ofNullable;
 
 /**
  * 功能描述: 前端控制器
@@ -53,25 +53,27 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
     @Override
     public void init() throws ServletException {
         // 非嵌入式 tomcat 环境下，servlet 示实例非 ioc 容器管理的，需复制属性
-        DispatcherServlet bean = this.getBeanFactory().getBean(DispatcherServlet.class);
-        if (this != bean) {
-            this.setPrefix(bean.getPrefix());
-            this.setSuffix(bean.getSuffix());
-            this.setArgumentResolvers(bean.getArgumentResolvers());
-            this.setReturnValueProcessors(bean.getReturnValueProcessors());
-            this.setInterceptorChains(bean.getInterceptorChains());
-            this.setExceptionHandlers(bean.getExceptionHandlers());
-            this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
+        BeanFactory beanFactory = this.getBeanFactory();
+        if (beanFactory != null) {
+            DispatcherServlet bean = beanFactory.getBean(DispatcherServlet.class);
+            if (this != bean) {
+                this.setPrefix(bean.getPrefix());
+                this.setSuffix(bean.getSuffix());
+                this.setArgumentResolvers(bean.getArgumentResolvers());
+                this.setReturnValueProcessors(bean.getReturnValueProcessors());
+                this.setInterceptorChains(bean.getInterceptorChains());
+                this.setExceptionHandlers(bean.getExceptionHandlers());
+                this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
+            }
         }
     }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        log.info("initialize DispatcherServlet...");
         super.init(config);
-        this.setPrefix(ofNullable(config.getInitParameter(PREFIX_PARAM_NAME)).orElse(this.prefix));
-        this.setSuffix(ofNullable(config.getInitParameter(SUFFIX_PARAM_NAME)).orElse(this.suffix));
-        log.info("initialize DispatcherServlet succeed !");
+        Mapping.from(config.getInitParameter(PREFIX_PARAM_NAME)).whenNotNull(this::setPrefix);
+        Mapping.from(config.getInitParameter(SUFFIX_PARAM_NAME)).whenNotNull(this::setSuffix);
+        log.info("Initialize loveqq DispatcherServlet succeed.");
     }
 
     @Override
@@ -82,7 +84,9 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
     protected void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType(mapping.getProduces());
+        if (mapping.getProduces() != null) {
+            response.setContentType(mapping.getProduces());
+        }
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {

@@ -83,7 +83,7 @@ public class MethodMapping {
     }
 
     public boolean isEventStream() {
-        return this.produces.contains("text/event-stream");
+        return this.produces != null && this.produces.contains("text/event-stream");
     }
 
     public Integer getRestfulMappingIndex(String path) {
