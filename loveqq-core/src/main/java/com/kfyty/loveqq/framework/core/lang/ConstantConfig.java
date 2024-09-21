@@ -33,6 +33,11 @@ public interface ConstantConfig {
     boolean LOAD_JAR_CLASS_PATH = Boolean.parseBoolean(System.getProperty("k.dependency.load-jar-class-path", "false"));
 
     /**
+     * 嵌套注解解析深度
+     */
+    int ANNOTATION_RESOLVE_DEPTH = Integer.parseInt(System.getProperty("k.annotation.depth", "99"));
+
+    /**
      * 临时文件夹位置
      */
     String TEMP_PATH = System.getProperty("java.io.tmpdir");
@@ -43,12 +48,37 @@ public interface ConstantConfig {
     String LOGGING_ROOT_LEVEL = System.getProperty("logging.root", "INFO");
 
     /**
-     * ioc 容器是否并行初始化 bean
+     * 应用名称的配置 key
      */
-    boolean CONCURRENT_INITIALIZE = Boolean.parseBoolean(System.getProperty("k.concurrent-initialize", "false"));
+    String APPLICATION_NAME_KEY = "k.application.name";
 
     /**
-     * 嵌套注解解析深度
+     * 应用是否整体懒加载，true 时，仅加载 bean 定义，所有 bean 都不会进行初始化
      */
-    int ANNOTATION_RESOLVE_DEPTH = Integer.parseInt(System.getProperty("k.annotation.depth", "99"));
+    String LAZY_INIT_KEY = "k.application.lazy-init";
+
+    /**
+     * 应用是否并行初始化，true 时将使用线程池初始化所有的单例 bean
+     */
+    String CONCURRENT_INIT_KEY = "k.application.concurrent-init";
+
+    /**
+     * web 服务器端口的配置 key
+     */
+    String SERVER_PORT_KEY = "k.server.port";
+
+    /**
+     * 配置文件中包含其他配置的配置 key
+     */
+    String IMPORT_KEY = "k.config.include";
+
+    /**
+     * 配置文件中包含本地磁盘的配置 key
+     */
+    String LOCATION_KEY = "k.config.location";
+
+    /**
+     * 是否加载系统属性到属性配置的配置 key
+     */
+    String LOAD_SYSTEM_PROPERTY_KEY = "k.config.load-system-property";
 }

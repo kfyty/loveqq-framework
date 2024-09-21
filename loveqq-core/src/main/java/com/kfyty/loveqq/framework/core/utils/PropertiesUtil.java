@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,11 +27,6 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public abstract class PropertiesUtil {
-    public static final String IMPORT_KEY = "k.config.include";
-
-    public static final String LOCATION_KEY = "k.config.location";
-
-    public static final String LOAD_SYSTEM_PROPERTY_KEY = "k.config.load-system-property";
 
     public static Properties load(String path) {
         return load(path, ClassLoaderUtil.classLoader(PropertiesUtil.class));
@@ -70,7 +66,7 @@ public abstract class PropertiesUtil {
      * @param classLoader 类加载器
      */
     public static void include(Properties properties, ClassLoader classLoader) {
-        String imports = (String) properties.get(IMPORT_KEY);
+        String imports = (String) properties.get(ConstantConfig.IMPORT_KEY);
         if (CommonUtil.notEmpty(imports)) {
             CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
             log.info("included properties config: {}", imports);

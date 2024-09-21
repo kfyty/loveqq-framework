@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 
@@ -16,7 +17,6 @@ import java.util.Collections;
 import java.util.Properties;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
-import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.IMPORT_KEY;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.isYaml;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -108,7 +108,7 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
      * 加载导入的嵌套的配置
      */
     protected void loadIncludePropertyConfig(Properties config, String group, boolean isRefresh) {
-        Collection<String> imports = config.containsKey(IMPORT_KEY) ? CommonUtil.split(config.getProperty(IMPORT_KEY), ",", true) : Collections.emptyList();
+        Collection<String> imports = config.containsKey(ConstantConfig.IMPORT_KEY) ? CommonUtil.split(config.getProperty(ConstantConfig.IMPORT_KEY), ",", true) : Collections.emptyList();
         for (String importDataId : imports) {
             this.loadNacosPropertyConfig(importDataId, group, 10_000, isRefresh);
         }

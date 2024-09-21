@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
 import java.util.Collections;
@@ -22,10 +23,6 @@ import java.util.Collections;
  * @email kfyty725@hotmail.com
  */
 public class NacosDiscoveryRegisterService implements ApplicationListener<ContextRefreshedEvent> {
-    private static final String APPLICATION_NAME_KEY = "k.application.name";
-
-    private static final String SERVER_PORT_KEY = "k.server.port";
-
     @Autowired
     private NacosDiscoveryProperties discoveryProperties;
 
@@ -55,9 +52,9 @@ public class NacosDiscoveryRegisterService implements ApplicationListener<Contex
         try {
             String groupName = this.discoveryProperties.getGroupName();
             String clusterName = this.discoveryProperties.getClusterName();
-            String application = this.propertyContext.getProperty(APPLICATION_NAME_KEY);
+            String application = this.propertyContext.getProperty(ConstantConfig.APPLICATION_NAME_KEY);
             String serverIp = CommonUtil.empty(this.discoveryProperties.getIp()) ? NetUtils.localIP() : this.discoveryProperties.getIp();
-            String serverPort = this.propertyContext.getProperty(SERVER_PORT_KEY);
+            String serverPort = this.propertyContext.getProperty(ConstantConfig.SERVER_PORT_KEY);
             Instance instance = this.buildInstance(serverIp, Integer.parseInt(serverPort), clusterName);
             this.namingService.registerInstance(application, groupName, instance);
             if (this.nacosNamingEventListener != null) {

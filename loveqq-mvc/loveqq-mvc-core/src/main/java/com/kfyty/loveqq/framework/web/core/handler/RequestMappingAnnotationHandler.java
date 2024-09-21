@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
@@ -33,10 +33,9 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
      */
     public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
 
-    public List<MethodMapping> resolveRequestMapping(Object controller) {
+    public List<MethodMapping> resolveRequestMapping(Class<?> controllerClass, Lazy<Object> controller) {
         String superUrl = CommonUtil.EMPTY_STRING;
         List<MethodMapping> retValue = new ArrayList<>();
-        Class<?> controllerClass = AopUtil.getTargetClass(controller);
         RequestMapping annotation = AnnotationUtil.findAnnotation(controllerClass, RequestMapping.class);
         if (annotation != null) {
             superUrl = formatURI(annotation.value());
@@ -45,7 +44,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         return retValue;
     }
 
-    protected void resolveMethodAnnotation(String superUrl, Class<?> controllerClass, Object controller, List<MethodMapping> methodMappings) {
+    protected void resolveMethodAnnotation(String superUrl, Class<?> controllerClass, Lazy<Object> controller, List<MethodMapping> methodMappings) {
         Collection<Method> methods = ReflectUtil.getMethods(controllerClass);
         for (Method method : methods) {
             if (method.getDeclaringClass() == Object.class) {
@@ -55,17 +54,17 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
             if (annotation != null) {
                 String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? method.getName() : annotation.value());
                 MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.requestMethod(), controller, method);
-                methodMappings.add(this.resolveRequestMappingProduces(annotation, methodMapping));
+                methodMappings.add(this.resolveRequestMappingProduces(controllerClass, annotation, methodMapping));
             }
         }
     }
 
-    protected MethodMapping resolveRequestMappingProduces(RequestMapping annotation, MethodMapping methodMapping) {
+    protected MethodMapping resolveRequestMappingProduces(Class<?> controllerClass, RequestMapping annotation, MethodMapping methodMapping) {
         methodMapping.setProduces(annotation.produces());
         if (!methodMapping.isEventStream()) {
             ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
             if (responseBody == null) {
-                responseBody = AnnotationUtil.findAnnotation(methodMapping.getController(), ResponseBody.class);
+                responseBody = AnnotationUtil.findAnnotation(controllerClass, ResponseBody.class);
             }
             if (responseBody != null) {
                 methodMapping.setProduces(responseBody.contentType());
