@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.mapping;
 
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -65,9 +66,9 @@ public class MethodMapping {
     /**
      * 映射方法所在的控制器实例
      */
-    private Object controller;
+    private Lazy<Object> controller;
 
-    public static MethodMapping create(String url, RequestMethod requestMethod, Object controller, Method mappingMethod) {
+    public static MethodMapping create(String url, RequestMethod requestMethod, Lazy<Object> controller, Method mappingMethod) {
         MethodMapping methodMapping = new MethodMapping();
         methodMapping.setController(controller);
         methodMapping.setMappingMethod(mappingMethod);
@@ -98,8 +99,12 @@ public class MethodMapping {
         throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
     }
 
+    public Object getController() {
+        return this.controller.get();
+    }
+
     public MethodParameter buildMethodParameter(Object[] parameters) {
-        return new MethodParameter(this.controller, this.mappingMethod, parameters);
+        return new MethodParameter(this.getController(), this.mappingMethod, parameters);
     }
 
     @SuppressWarnings("unchecked")

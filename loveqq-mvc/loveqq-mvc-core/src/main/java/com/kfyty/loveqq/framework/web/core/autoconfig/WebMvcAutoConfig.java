@@ -5,7 +5,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.annotation.Controller;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
@@ -43,11 +45,9 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
         RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
-        for (Map.Entry<String, Object> entry : applicationContext.getBeanWithAnnotation(Controller.class).entrySet()) {
-            if (applicationContext.getBeanDefinition(entry.getKey()).isAutowireCandidate()) {
-                List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue());
-                requestMappingMatcher.registryMethodMapping(methodMappings);
-            }
+        for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
+            List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
+            requestMappingMatcher.registryMethodMapping(methodMappings);
         }
         this.startWebServer(applicationContext);
     }

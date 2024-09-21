@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
@@ -65,7 +66,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
 
     @Override
     public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, Object controller, Method mappingMethod) {
-        MethodMapping methodMapping = MethodMapping.create(url, requestMethod, controller, mappingMethod);
+        MethodMapping methodMapping = MethodMapping.create(url, requestMethod, new Lazy<>(() -> controller), mappingMethod);
         this.registryMethodMapping(methodMapping);
         return methodMapping;
     }

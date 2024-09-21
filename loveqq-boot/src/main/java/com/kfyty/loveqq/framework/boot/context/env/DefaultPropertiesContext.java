@@ -7,6 +7,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.converter.Converter;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
-import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.LOAD_SYSTEM_PROPERTY_KEY;
-import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.LOCATION_KEY;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.include;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.load;
 import static java.util.Collections.unmodifiableList;
@@ -36,7 +36,9 @@ import static java.util.Collections.unmodifiableMap;
 @Slf4j
 public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
     protected static final String DEFAULT_YML_LOCATION = "application.yml";
+
     protected static final String DEFAULT_YAML_LOCATION = "application.yaml";
+
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
@@ -86,11 +88,13 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void loadProperties() {
         this.getConfigs().forEach(this::loadProperties);
-        Boolean property = this.getProperty(LOAD_SYSTEM_PROPERTY_KEY, Boolean.class);
-        if (property != null && property) {
-            System.getenv().forEach((k, v) -> this.setProperty(k, v, false));
-            System.getProperties().forEach((k, v) -> this.setProperty(k.toString(), v.toString(), false));
-        }
+        Mapping.from(this.getProperty(ConstantConfig.LAZY_INIT_KEY)).whenNotNull(e -> System.setProperty(ConstantConfig.LAZY_INIT_KEY, e));
+        Mapping.from(this.getProperty(ConstantConfig.CONCURRENT_INIT_KEY)).whenNotNull(e -> System.setProperty(ConstantConfig.CONCURRENT_INIT_KEY, e));
+        Mapping.from(this.getProperty(ConstantConfig.LOAD_SYSTEM_PROPERTY_KEY, Boolean.class))
+                .when(load -> load != null && load, e -> {
+                    System.getenv().forEach((k, v) -> this.setProperty(k, v, false));
+                    System.getProperties().forEach((k, v) -> this.setProperty(k.toString(), v.toString(), false));
+                });
     }
 
     @Override
@@ -154,8 +158,8 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void afterPropertiesSet() {
         this.propertySources.putAll(loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
-        if (this.contains(LOCATION_KEY)) {
-            this.addConfig(this.getProperty(LOCATION_KEY));
+        if (this.contains(ConstantConfig.LOCATION_KEY)) {
+            this.addConfig(this.getProperty(ConstantConfig.LOCATION_KEY));
         }
         this.addConfig(DEFAULT_YML_LOCATION);
         this.addConfig(DEFAULT_YAML_LOCATION);

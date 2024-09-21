@@ -114,12 +114,12 @@ public abstract class AopUtil {
     /**
      * 获取接口中声明的方法
      *
-     * @param bean   bean 可能是代理
+     * @param beanClass   bean class
      * @param method 方法
      * @return 接口中声明的方法
      */
-    public static Method getInterfaceMethod(Object bean, Method method) {
-        if (!isJdkProxy(bean)) {
+    public static Method getInterfaceMethod(Class<?> beanClass, Method method) {
+        if (beanClass.getInterfaces().length < 1) {
             return method;
         }
         while (!method.getDeclaringClass().isInterface()) {

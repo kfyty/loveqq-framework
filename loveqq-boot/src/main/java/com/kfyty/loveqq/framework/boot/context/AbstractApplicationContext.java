@@ -182,12 +182,16 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void finishBeanFactoryInitialization() {
+        // 是否全局懒加载
+        if (Boolean.parseBoolean(System.getProperty(ConstantConfig.LAZY_INIT_KEY, Boolean.FALSE.toString()))) {
+            return;
+        }
+
         // 读取全局配置
-        boolean concurrentInitialize = ConstantConfig.CONCURRENT_INITIALIZE;
+        boolean concurrentInitialize = Boolean.parseBoolean(System.getProperty(ConstantConfig.CONCURRENT_INIT_KEY, Boolean.FALSE.toString()));
 
         // 先实例化串行 bean
-        Map<String, BeanDefinition> sortedBeanDefinition = this.getSortedBeanDefinition();
-        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : sortedBeanDefinition;
+        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : this.getSortedBeanDefinition();
         for (BeanDefinition value : beanDefinitions.values()) {
             if (value.isSingleton() && value.isAutowireCandidate() && !value.isLazyInit()) {
                 this.registerBean(value);
@@ -196,7 +200,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
         // 并发实例化剩余的单例 bean
         if (concurrentInitialize) {
-            CompletableFutureUtil.consumer(this.executorService, sortedBeanDefinition.values(), bd -> {
+            CompletableFutureUtil.consumer(this.executorService, this.getSortedBeanDefinition().values(), bd -> {
                 if (bd.isSingleton() && bd.isAutowireCandidate() && !bd.isLazyInit()) {
                     this.registerBean(bd);
                 }

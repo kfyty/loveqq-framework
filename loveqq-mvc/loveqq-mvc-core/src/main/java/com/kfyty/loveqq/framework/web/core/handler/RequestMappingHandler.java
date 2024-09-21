@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
 import java.util.List;
@@ -18,5 +19,16 @@ public interface RequestMappingHandler {
      *
      * @param controller 控制器
      */
-    List<MethodMapping> resolveRequestMapping(Object controller);
+    default List<MethodMapping> resolveRequestMapping(Object controller) {
+        return this.resolveRequestMapping(controller.getClass(), new Lazy<>(() -> controller));
+    }
+
+    /**
+     * 解析控制器映射
+     * 实现必须线程安全
+     *
+     * @param controllerClass 控制器 class
+     * @param controller      控制器
+     */
+    List<MethodMapping> resolveRequestMapping(Class<?> controllerClass, Lazy<Object> controller);
 }
