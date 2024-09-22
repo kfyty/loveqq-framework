@@ -122,6 +122,6 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         if (method == null) {
             return false;
         }
-        return AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Bean.class).ignoredAutowired();
+        return AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Bean.class).independent();
     }
 }

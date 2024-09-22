@@ -61,7 +61,7 @@ public class TomcatAutoConfig {
     private List<ServletRequestListener> servletRequestListeners;
 
     @ConfigurationProperties("k.mvc.tomcat")
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public TomcatProperties tomcatProperties(MultipartConfigElement multipartConfig) {
         TomcatProperties config = this.webServerProperties.copy(new TomcatProperties(this.applicationContext.getPrimarySource(), multipartConfig));
         config.setLifecycleListeners(this.lifecycleListeners);
@@ -74,7 +74,7 @@ public class TomcatAutoConfig {
         return config;
     }
 
-    @Bean(destroyMethod = "stop", resolveNested = false, ignoredAutowired = true)
+    @Bean(destroyMethod = "stop", resolveNested = false, independent = true)
     public TomcatWebServer tomcatWebServer(TomcatProperties config, DispatcherServlet dispatcherServlet) {
         return new TomcatWebServer(config, dispatcherServlet);
     }

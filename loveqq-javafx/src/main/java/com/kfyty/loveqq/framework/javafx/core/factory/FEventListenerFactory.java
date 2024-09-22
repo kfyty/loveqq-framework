@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 描述: javafx 事件监听器工厂
- * 由于视图控制器一般为原型作用域，不会放入 bean 容器。所以放发布事件时，扔会创建新的控制器，而不是视图绑定的控制器。
+ * 由于视图控制器一般为原型作用域，不会放入 bean 容器。所以放发布事件时，仍会创建新的控制器，而不是视图绑定的控制器。
  * 因此这里缓存视图和控制器的对应关系及实例，当视图销毁时，再释放实例
  *
  * @author kfyty725
@@ -38,6 +38,13 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
     @Getter
     private final Map<String, Queue<Pair<Node, Object>>> viewController = new ConcurrentHashMap<>();
 
+    /**
+     * 添加控制器实例和视图的缓存
+     *
+     * @param beanName   bean name
+     * @param view       视图
+     * @param controller 控制器
+     */
     public void addController(String beanName, Node view, Object controller) {
         if (!this.applicationContext.getBeanDefinition(beanName).isSingleton()) {
             this.viewController.computeIfAbsent(beanName, k -> new ConcurrentLinkedQueue<>()).add(new Pair<>(view, controller));
@@ -60,9 +67,16 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
             super(beanName, listenerMethod, listenerType, context);
         }
 
+        /**
+         * 优先使用已存在的控制器示例执行监听器
+         * 当视图销毁时，控制器实例也被移除
+         *
+         * @param params 方法参数
+         * @see com.kfyty.loveqq.framework.javafx.core.event.ViewCloseEventListener
+         */
         @Override
         protected void invokeListener(Object[] params) {
-            Queue<Pair<Node, Object>> controllers = viewController.get(this.beanName);
+            Queue<Pair<Node, Object>> controllers = FEventListenerFactory.this.viewController.get(this.beanName);
             if (CommonUtil.empty(controllers)) {
                 super.invokeListener(params);
                 return;

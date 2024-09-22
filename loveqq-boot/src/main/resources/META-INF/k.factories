@@ -7,8 +7,8 @@ com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=\
 
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver,\
+    com.kfyty.loveqq.framework.boot.event.EventListenerResolver,\
     com.kfyty.loveqq.framework.boot.processor.factory.ImportBeanDefinitionBeanFactoryPostProcessor,\
-    com.kfyty.loveqq.framework.boot.processor.factory.EventListenerBeanFactoryPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.LazyProxyBeanFactoryPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor,\

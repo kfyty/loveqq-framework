@@ -25,7 +25,7 @@ import javax.sql.DataSource;
 public class DataSourceTransactionAutoConfiguration {
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public DataSourceTransactionManager dataSourceTransactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
@@ -36,7 +36,7 @@ public class DataSourceTransactionAutoConfiguration {
         return new AnnotationPointcutAdvisor(Transactional.class, new TransactionalInterceptorProxy(beanFactory));
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public TransactionTemplate transactionTemplate(DataSourceTransactionManager dataSourceTransactionManager) {
         return new TransactionTemplate(dataSourceTransactionManager);
     }

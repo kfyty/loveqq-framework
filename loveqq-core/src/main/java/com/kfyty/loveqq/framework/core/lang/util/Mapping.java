@@ -4,10 +4,13 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * 描述: 值映射工具类
@@ -18,7 +21,12 @@ import java.util.function.Predicate;
  */
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class Mapping<T> {
+public class Mapping<T> implements Cloneable, Serializable {
+    /**
+     * 空值
+     */
+    public static final Mapping<?> NULLABLE = new Mapping<>(null);
+
     /**
      * 需要映射的值
      */
@@ -30,12 +38,41 @@ public class Mapping<T> {
     private Mapping<?> prev;
 
     /**
+     * 是否存在
+     *
+     * @return true if exists
+     */
+    public boolean exists() {
+        return this.value != null;
+    }
+
+    /**
      * 获取当前值
      *
      * @return value
      */
     public T get() {
         return this.value;
+    }
+
+    /**
+     * 获取当前值
+     *
+     * @param defaultValue 默认值
+     * @return value
+     */
+    public T getOr(T defaultValue) {
+        return this.value == null ? defaultValue : this.value;
+    }
+
+    /**
+     * 获取当前值
+     *
+     * @param defaultValue 默认值
+     * @return value
+     */
+    public T getOr(Supplier<T> defaultValue) {
+        return this.value == null ? defaultValue.get() : this.value;
     }
 
     /**
@@ -207,12 +244,54 @@ public class Mapping<T> {
     }
 
     /**
+     * 转换为 {@link Optional}
+     *
+     * @return {@link Optional}
+     */
+    public Optional<T> tOptional() {
+        return Optional.ofNullable(this.value);
+    }
+
+    @Override
+    public Mapping<T> clone() {
+        if (this == NULLABLE) {
+            return this;
+        }
+        return from(this.value, this.prev == null ? null : this.prev.clone());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Mapping<?>)) {
+            return false;
+        }
+        return Objects.equals(this.value, ((Mapping<?>) obj).value);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.value == null ? 0 : this.value.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.value == null ? "null" : this.value.toString();
+    }
+
+    /**
      * 工厂方法
      *
      * @param value 值
      * @return {@link Mapping}
      */
+    @SuppressWarnings("unchecked")
     public static <T> Mapping<T> from(T value) {
+        if (value == null) {
+            return (Mapping<T>) NULLABLE;
+        }
         return new Mapping<>(value);
     }
 

@@ -2,10 +2,10 @@ package com.kfyty.loveqq.framework.data.cache.core.proxy;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
-import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.OgnlUtil;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
+import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
 import com.kfyty.loveqq.framework.data.cache.core.NullValue;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit;
  * @email kfyty725@hotmail.com
  */
 @Order(Order.HIGHEST_PRECEDENCE)
-public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy implements MethodAroundAdvice {
+public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
 
-    public CacheInterceptorProxy(Cache cache, ScheduledExecutorService executorService) {
-        super(cache, executorService);
+    public CacheInterceptorProxy(Cache cache, CacheKeyFactory cacheKeyFactory, ScheduledExecutorService executorService) {
+        super(cache, cacheKeyFactory, executorService);
     }
 
     @Override

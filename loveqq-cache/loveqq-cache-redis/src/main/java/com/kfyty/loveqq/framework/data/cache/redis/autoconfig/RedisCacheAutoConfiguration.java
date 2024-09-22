@@ -26,8 +26,8 @@ public class RedisCacheAutoConfiguration {
     @Autowired(required = false)
     private Codec codec;
 
-    @Bean
     @Primary
+    @Bean(resolveNested = false, independent = true)
     public Cache redisCache(RedissonClient redissonClient) {
         if (this.codec == null) {
             return new RedisCache(redissonClient);
@@ -35,7 +35,7 @@ public class RedisCacheAutoConfiguration {
         return new RedisCache(redissonClient, this.codec);
     }
 
-    @Bean
+    @Bean(resolveNested = false, independent = true)
     @ConditionalOnBean(RedissonReactiveClient.class)
     public ReactiveCache reactiveRedisCache(RedissonReactiveClient redissonReactiveClient) {
         if (this.codec == null) {

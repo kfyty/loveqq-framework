@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
+import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import com.kfyty.loveqq.framework.data.cache.core.reactive.ReactiveCache;
@@ -41,12 +42,18 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
     protected final Cache cache;
 
     /**
+     * 缓存 key 生成工厂
+     */
+    protected final CacheKeyFactory cacheKeyFactory;
+
+    /**
      * 通用线程池
      */
     protected final ScheduledExecutorService executorService;
 
-    public AbstractCacheInterceptorProxy(Cache cache, ScheduledExecutorService executorService) {
+    public AbstractCacheInterceptorProxy(Cache cache, CacheKeyFactory cacheKeyFactory, ScheduledExecutorService executorService) {
         this.cache = Objects.requireNonNull(cache);
+        this.cacheKeyFactory = Objects.requireNonNull(cacheKeyFactory);
         this.executorService = Objects.requireNonNull(executorService);
     }
 
@@ -73,23 +80,20 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
                                      Method method,
                                      ProceedingJoinPoint pjp) throws Throwable;
 
+    /**
+     * 构建缓存 key
+     */
     protected String buildCacheKey(Method method, Object[] args, Object target) {
-        StringBuilder key = new StringBuilder(target.getClass().getName()).append(":").append(method.getName()).append(":");
-
-        Parameter[] parameters = method.getParameters();
-        for (int i = 0; i < parameters.length; i++) {
-            key.append(parameters[i].getName()).append("=").append(args[i]);
-            if (i != parameters.length - 1) {
-                key.append(":");
-            }
-        }
-
-        return key.toString();
+        return this.cacheKeyFactory.buildKey(method, args, target);
     }
 
+    /**
+     * 构建缓存表达式计算上下文参数
+     */
     protected Map<String, Object> buildContext(Object returnValue, Method method, Object[] args, Object target) {
         Map<String, Object> context = new HashMap<>();
 
+        // ioc
         context.put("ioc", IOC.getBeanFactory());
 
         // 方法

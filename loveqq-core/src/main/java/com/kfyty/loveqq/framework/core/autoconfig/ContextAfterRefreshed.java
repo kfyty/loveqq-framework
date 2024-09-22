@@ -8,5 +8,10 @@ package com.kfyty.loveqq.framework.core.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface ContextAfterRefreshed {
+    /**
+     * 容器刷新之后，发布刷新完成事件之前调用，主要是内部使用
+     *
+     * @param applicationContext 应用上下文
+     */
     void onAfterRefreshed(ApplicationContext applicationContext);
 }

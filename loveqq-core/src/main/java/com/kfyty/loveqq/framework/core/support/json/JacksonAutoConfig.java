@@ -21,7 +21,7 @@ import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 public class JacksonAutoConfig implements ContextAfterRefreshed {
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public ObjectMapper objectMapper() {
         return JsonUtil.configure();
     }

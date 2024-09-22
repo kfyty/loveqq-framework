@@ -64,4 +64,17 @@ public class MappingTest {
         Mapping.from(null).notEmptyMap(e -> non.getId());
         Mapping.from(null).notEmptyFlatMap(e -> Mapping.from(non.getId()));
     }
+
+    @Test
+    public void test3() {
+        int[] arr = new int[2];
+        Mapping.from(1)
+                .whenNotNull(e -> arr[0] = e)
+                .whenNull(() -> arr[1] = 2);
+        Mapping.from(null)
+                .whenNotNull(e -> arr[0] = 3)
+                .whenNull(() -> arr[1] = 5);
+        Assertions.assertEquals(arr[0], 1);
+        Assertions.assertEquals(arr[1], 5);
+    }
 }

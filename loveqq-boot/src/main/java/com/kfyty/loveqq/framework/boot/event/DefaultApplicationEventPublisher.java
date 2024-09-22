@@ -56,8 +56,8 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
         if (CommonUtil.notEmpty(this.earlyPublishedEvent)) {
             this.earlyPublishedEvent.forEach(this::publishEvent);
             this.earlyPublishedEvent.clear();
-            this.earlyPublishedEvent = null;
         }
+        this.earlyPublishedEvent = null;
     }
 
     @Override

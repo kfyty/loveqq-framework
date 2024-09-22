@@ -23,7 +23,7 @@ import java.util.Properties;
 @ConditionalOnBean(NacosDiscoveryProperties.class)
 public class NacosDiscoveryAutoConfiguration {
 
-    @Bean(destroyMethod = "shutDown", resolveNested = false, ignoredAutowired = true)
+    @Bean(destroyMethod = "shutDown", resolveNested = false, independent = true)
     public NamingService nacosDiscoveryService(NacosDiscoveryProperties discoveryProperties) throws NacosException {
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, discoveryProperties.getServerAddr());
