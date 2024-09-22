@@ -27,7 +27,7 @@ import org.redisson.codec.JsonJacksonCodec;
 public class RedissonAutoConfiguration {
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public Codec jsonJacksonCodec(@Autowired(required = false) ObjectMapper objectMapper) {
         if (objectMapper == null) {
             return new JsonJacksonCodec();
@@ -36,7 +36,7 @@ public class RedissonAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(destroyMethod = "shutdown", resolveNested = false, ignoredAutowired = true)
+    @Bean(destroyMethod = "shutdown", resolveNested = false, independent = true)
     public RedissonClient redissonClient(RedissonProperties redissonProperties, @Autowired(required = false) Codec codec) {
         if (redissonProperties.getCodec() == null) {
             redissonProperties.setCodec(codec);
@@ -45,7 +45,7 @@ public class RedissonAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(destroyMethod = "shutdown", resolveNested = false, ignoredAutowired = true)
+    @Bean(destroyMethod = "shutdown", resolveNested = false, independent = true)
     @ConditionalOnProperty(prefix = "k.redis.redisson", value = "reactive", havingValue = "true")
     public RedissonReactiveClient reactiveRedissonClient(RedissonClient redissonClient) {
         return redissonClient.reactive();

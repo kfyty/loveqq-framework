@@ -1,17 +1,15 @@
-package com.kfyty.loveqq.framework.boot.processor.factory;
+package com.kfyty.loveqq.framework.boot.event;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
-import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListener;
 import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListenerFactory;
 import com.kfyty.loveqq.framework.core.event.GenericApplicationEvent;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -35,7 +33,7 @@ import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPubli
  */
 @Slf4j
 @Component
-public class EventListenerBeanFactoryPostProcessor implements BeanFactoryPostProcessor, ContextAfterRefreshed {
+public class EventListenerResolver implements ContextAfterRefreshed, InternalPriority {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
@@ -43,13 +41,9 @@ public class EventListenerBeanFactoryPostProcessor implements BeanFactoryPostPro
     private EventListenerAnnotationListenerFactory eventListenerAnnotationListenerFactory;
 
     @Override
-    public void postProcessBeanFactory(BeanFactory beanFactory) {
-        this.registerEventListenerAnnotation((ApplicationContext) beanFactory);
-    }
-
-    @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
         this.registerApplicationListener(applicationContext);
+        this.registerEventListenerAnnotation(applicationContext);
     }
 
     protected void registerApplicationListener(ApplicationContext applicationContext) {
@@ -59,7 +53,8 @@ public class EventListenerBeanFactoryPostProcessor implements BeanFactoryPostPro
                 this.applicationEventPublisher.registerEventListener(applicationContext.getBean(entry.getKey()));
             } else {
                 Class<?> listenerType = ReflectUtil.getSuperGeneric(entry.getValue().getBeanType(), SUPER_GENERIC_FILTER);
-                this.applicationEventPublisher.registerEventListener(new NoneSingletonApplicationListener(entry.getKey(), listenerType,  applicationContext));
+                ApplicationListener<?> eventListener = this.eventListenerAnnotationListenerFactory.createEventListener(entry.getKey(), null, listenerType);
+                this.applicationEventPublisher.registerEventListener(eventListener);
             }
         }
     }
@@ -93,20 +88,6 @@ public class EventListenerBeanFactoryPostProcessor implements BeanFactoryPostPro
             ApplicationListener<?> annotationListener = this.eventListenerAnnotationListenerFactory.createEventListener(beanName, listenerMethod, eventType);
             this.applicationEventPublisher.registerEventListener(annotationListener);
             log.info("Register annotation event listener: {}", annotationListener);
-        }
-    }
-
-    protected static class NoneSingletonApplicationListener extends EventListenerAnnotationListener {
-
-        public NoneSingletonApplicationListener(String beanName, Class<?> listenerType, ApplicationContext context) {
-            super(beanName, null, listenerType, context);
-        }
-
-        @Override
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        public void onApplicationEvent(ApplicationEvent<Object> event) {
-            ApplicationListener bean = this.context.getBean(this.beanName);
-            bean.onApplicationEvent(event);
         }
     }
 }

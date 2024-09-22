@@ -48,10 +48,10 @@ public @interface Bean {
     boolean resolveNested() default true;
 
     /**
-     * 返回是否忽略自动注入
-     * 返回 true 时，将不再进行自动注入
+     * 返回是否是一个完全独立的 bean，即不依赖其他 bean 的 bean；
+     * 此时不会进行依赖注入
      *
      * @return true/false
      */
-    boolean ignoredAutowired() default false;
+    boolean independent() default false;
 }

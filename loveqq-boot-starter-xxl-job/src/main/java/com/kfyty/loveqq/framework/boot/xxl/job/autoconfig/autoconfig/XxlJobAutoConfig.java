@@ -20,7 +20,7 @@ public class XxlJobAutoConfig {
 
     @ConditionalOnMissingBean
     @ConfigurationProperties("k.xxl.job")
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public XxlJobBootExecutor xxlJobBootExecutor() {
         return new XxlJobBootExecutor();
     }

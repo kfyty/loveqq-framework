@@ -36,7 +36,13 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      * 执行监听方法时应使用代理对象，否则代理失效
      */
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void onApplicationEvent(ApplicationEvent<Object> event) {
+        if (this.listenerMethod == null) {
+            ApplicationListener bean = this.context.getBean(this.beanName);
+            bean.onApplicationEvent(event);
+            return;
+        }
         int index = -1;
         Object[] params = new Object[this.listenerMethod.getParameterCount()];
         for (Parameter parameter : this.listenerMethod.getParameters()) {

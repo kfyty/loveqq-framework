@@ -31,7 +31,7 @@ public class WebServletSocketAutoConfig implements ContextAfterRefreshed, BeanFa
         this.beanFactory = beanFactory;
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public ServerEndpointExporter serverEndpointExporter(ServletContext servletContext) {
         return new ServerEndpointExporter(servletContext);
     }

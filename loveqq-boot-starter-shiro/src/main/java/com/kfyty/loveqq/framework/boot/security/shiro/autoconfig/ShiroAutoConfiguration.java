@@ -64,17 +64,17 @@ public class ShiroAutoConfiguration {
     @Autowired(required = false)
     protected PermissionResolver permissionResolver;
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public EventBus eventBus() {
         return new DefaultEventBus();
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SessionStorageEvaluator sessionStorageEvaluator() {
         return new DefaultSessionStorageEvaluator();
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     protected RememberMeManager defaultRememberMeManager() {
         CookieRememberMeManager cookieRememberMeManager = new CookieRememberMeManager();
         cookieRememberMeManager.setCookie(this.shiroProperties.rememberMeCookieTemplate());
@@ -82,13 +82,13 @@ public class ShiroAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public ShiroFilterConfiguration defaultFilterConfiguration() {
         return new ShiroFilterConfiguration();
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SubjectDAO defaultSubjectDAO(SessionStorageEvaluator sessionStorageEvaluator) {
         DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
         subjectDAO.setSessionStorageEvaluator(sessionStorageEvaluator);
@@ -96,31 +96,31 @@ public class ShiroAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SubjectFactory defaultSubjectFactory() {
         return new DefaultSubjectFactory();
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SessionDAO defaultSessionDAO() {
         return new MemorySessionDAO();
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SessionFactory defaultSessionFactory() {
         return new SimpleSessionFactory();
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public AuthenticationStrategy defaultAuthenticationStrategy() {
         return new AtLeastOneSuccessfulStrategy();
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SessionManager defaultSessionManager(SessionDAO sessionDAO, SessionFactory sessionFactory) {
         DefaultSessionManager sessionManager = new DefaultSessionManager();
         sessionManager.setSessionDAO(sessionDAO);
@@ -130,7 +130,7 @@ public class ShiroAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public Authenticator defaultAuthenticator(AuthenticationStrategy authenticationStrategy) {
         ModularRealmAuthenticator authenticator = new ModularRealmAuthenticator();
         authenticator.setAuthenticationStrategy(authenticationStrategy);
@@ -138,7 +138,7 @@ public class ShiroAutoConfiguration {
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public Authorizer defaultAuthorizer() {
         ModularRealmAuthorizer authorizer = new ModularRealmAuthorizer();
         if (this.permissionResolver != null) {
@@ -151,13 +151,13 @@ public class ShiroAutoConfiguration {
     }
 
     @ConditionalOnWebApplication
-    @Bean(value = "isWebApplication", resolveNested = false, ignoredAutowired = true)
+    @Bean(value = "isWebApplication", resolveNested = false, independent = true)
     public Boolean isWebApplication() {
         return true;
     }
 
     @ConditionalOnMissingBean
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public SecurityManager defaultSecurityManager(SubjectDAO subjectDAO,
                                            SubjectFactory subjectFactory,
                                            Authenticator authenticator,

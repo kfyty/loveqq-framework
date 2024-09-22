@@ -15,7 +15,6 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.data.jdbc.intercept.QueryInterceptor;
 import com.kfyty.loveqq.framework.data.jdbc.session.SqlSessionProxyFactory;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -30,6 +29,7 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
+@EventListener
 @Configuration
 public class AutoGenerateAutoConfig {
     @Autowired(required = false)
@@ -50,9 +50,8 @@ public class AutoGenerateAutoConfig {
         return new FieldStructInfoInterceptor();
     }
 
-    @SneakyThrows
     @EventListener
-    public void onContextRefreshed(ContextRefreshedEvent event) {
+    public void onContextRefreshed(ContextRefreshedEvent event) throws Exception {
         if (this.configurationSupport == null) {
             log.warn("generator configuration does not exist !");
             return;

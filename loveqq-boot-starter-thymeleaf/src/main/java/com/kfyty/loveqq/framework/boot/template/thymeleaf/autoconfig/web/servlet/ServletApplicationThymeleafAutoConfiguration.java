@@ -35,7 +35,7 @@ public class ServletApplicationThymeleafAutoConfiguration {
         return new ThymeleafViewHandlerMethodReturnValueProcessor();
     }
 
-    @Bean(resolveNested = false, ignoredAutowired = true)
+    @Bean(resolveNested = false, independent = true)
     public IWebApplication servletWebApplication(ServletContext servletContext) {
         return JakartaServletWebApplication.buildApplication(servletContext);
     }
