@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
 import com.kfyty.loveqq.framework.core.generic.Generic;
+import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
@@ -151,16 +152,16 @@ public class AutowiredProcessor {
         Object resolveBean = null;
         Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleGeneric(), autowired);
         if (List.class.isAssignableFrom(returnType.getSourceType())) {
-            resolveBean = new ArrayList<>(beans.values());
+            resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
         if (Set.class.isAssignableFrom(returnType.getSourceType())) {
-            resolveBean = new HashSet<>(beans.values());
+            resolveBean = new HashSet<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
         if (returnType.isMapGeneric()) {
-            resolveBean = beans;
+            resolveBean = this.filterMapBeanIfNecessary(beans, returnType);
         }
         if (returnType.isSimpleArray()) {
-            resolveBean = CommonUtil.copyToArray(returnType.getSimpleActualType(), beans.values());
+            resolveBean = CommonUtil.copyToArray(returnType.getSimpleActualType(), this.filterMapBeanIfNecessary(beans, returnType).values());
         }
         if (beans.isEmpty()) {
             return resolveBean;
@@ -173,7 +174,7 @@ public class AutowiredProcessor {
 
     private synchronized void checkResolving(String targetBeanName) {
         if (this.resolving.contains(targetBeanName)) {
-            throw new BeansException("bean circular dependency: \r\n" + this.buildCircularDependency());
+            throw new BeansException("Bean circular dependency: \r\n" + this.buildCircularDependency());
         }
     }
 
@@ -263,6 +264,36 @@ public class AutowiredProcessor {
             return primaryBeanOfType;
         }
         return beanOfType;
+    }
+
+    private Map<String, Object> filterMapBeanIfNecessary(Map<String, Object> beans, ActualGeneric actualGeneric) {
+        if (!actualGeneric.hasGeneric()) {
+            return beans;
+        }
+        Generic nestedGeneric = actualGeneric.size() == 1 ? actualGeneric.getFirst() : actualGeneric.getSecond();
+        QualifierGeneric valueGeneric = actualGeneric.getNested(nestedGeneric);
+        if (valueGeneric == null || !valueGeneric.hasGeneric()) {
+            return beans;
+        }
+        List<Generic> targetGenerics = new ArrayList<>(valueGeneric.getGenericInfo().keySet());
+        loop:
+        for (Iterator<Map.Entry<String, Object>> i = beans.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, Object> entry = i.next();
+            SimpleGeneric generic = buildGeneric(this.context.getBeanDefinition(entry.getKey()));
+            if (generic.size() != targetGenerics.size()) {
+                i.remove();
+                continue;
+            }
+            List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
+            for (int j = 0; j < generics.size(); j++) {
+                Class<?> targetClass = targetGenerics.get(j).get();
+                if (targetClass != Object.class && !Objects.equals(targetClass, generics.get(j).get())) {
+                    i.remove();
+                    continue loop;
+                }
+            }
+        }
+        return beans;
     }
 
     private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, ActualGeneric actualGeneric) {

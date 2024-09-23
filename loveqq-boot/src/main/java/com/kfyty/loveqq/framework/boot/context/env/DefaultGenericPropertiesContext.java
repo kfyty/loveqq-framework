@@ -61,7 +61,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
 
     @Override
     public <T> T getProperty(String key, Type targetType, T defaultValue) {
-        return this.getProperty(key, (SimpleGeneric) new SimpleGeneric(targetType).doResolve(), defaultValue);
+        return this.getProperty(key, (SimpleGeneric) new SimpleGeneric(targetType).resolve(), defaultValue);
     }
 
     @Override

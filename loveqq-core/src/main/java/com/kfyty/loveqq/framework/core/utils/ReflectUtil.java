@@ -655,7 +655,7 @@ public abstract class ReflectUtil {
 
     public static Class<?> getActualGenericType(String typeVariable, Type genericSuperclass) {
         if (!(genericSuperclass instanceof ParameterizedType)) {
-            throw new ResolvableException("unable to get the parent generic type !");
+            throw new ResolvableException("Unable to get the parent generic type: " + genericSuperclass);
         }
         ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
         TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
@@ -668,7 +668,7 @@ public abstract class ReflectUtil {
         if (parent instanceof Class) {
             return getActualGenericType(typeVariable, (Class<?>) parent);
         }
-        throw new ResolvableException("can't find actual generic type !");
+        throw new ResolvableException("Can't find actual generic type: " + genericSuperclass);
     }
 
     /*--------------------------------------------- 其他方法 ---------------------------------------------*/
@@ -757,13 +757,13 @@ public abstract class ReflectUtil {
             WildcardType wildcardType = (WildcardType) type;
             return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
         }
-        throw new ResolvableException("unable to get the raw type: " + type);
+        throw new ResolvableException("Unable to get the raw type: " + type);
     }
 
     public static String getTypeVariableName(Type type) {
         if (type instanceof TypeVariable) {
             return ((TypeVariable<?>) type).getName();
         }
-        throw new ResolvableException("unable to get the type variable: " + type);
+        throw new ResolvableException("Unable to get the type variable: " + type);
     }
 }

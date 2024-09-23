@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.Value;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -30,7 +32,12 @@ import java.util.concurrent.ConcurrentMap;
  * @date 2021/6/24 17:34
  * @email kfyty725@hotmail.com
  */
+@Getter
+@Setter
 public class SimpleGeneric extends QualifierGeneric {
+    /**
+     * 具有简单嵌套泛型的 class
+     */
     public static final List<Class<?>> SIMPLE_NESTED_GENERIC_CLASSES = new LinkedList<>();
 
     static {
@@ -46,10 +53,22 @@ public class SimpleGeneric extends QualifierGeneric {
         SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentMap.class);
         SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentHashMap.class);
         SIMPLE_NESTED_GENERIC_CLASSES.add(Value.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(LaziedObject.class);
+        SIMPLE_NESTED_GENERIC_CLASSES.add(Lazy.class);
     }
 
-    @Getter
-    @Setter
+    /**
+     * 注册具有简单嵌套泛型的 class
+     *
+     * @param classes class
+     */
+    public static void registryNestedClass(Class<?>... classes) {
+        SIMPLE_NESTED_GENERIC_CLASSES.addAll(Arrays.asList(classes));
+    }
+
+    /**
+     * map key
+     */
     private String mapKey;
 
     public SimpleGeneric(Class<?> sourceType) {
@@ -126,12 +145,15 @@ public class SimpleGeneric extends QualifierGeneric {
      */
     public Class<?> getSimpleActualType() {
         if (isMapGeneric()) {
-            return this.getMapValueType().get();
+            return getMapValueType().get();
         }
-        if (!isSimpleGeneric() || !this.isGeneric(Collection.class) && !this.isGeneric(Class.class) && !this.isGeneric(LaziedObject.class) && !this.isGeneric(Value.class) && !this.isSimpleArray()) {
+        if (!isSimpleGeneric()) {
             return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
         }
-        return this.getFirst().get();
+        if (!isGeneric(Class.class) && !isSimpleArray() && SIMPLE_NESTED_GENERIC_CLASSES.stream().noneMatch(this::isGeneric)) {
+            return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
+        }
+        return getFirst().get();
     }
 
     /**
@@ -150,28 +172,25 @@ public class SimpleGeneric extends QualifierGeneric {
     }
 
     @Override
-    protected QualifierGeneric create(Class<?> sourceType) {
-        return new SimpleGeneric(sourceType);
-    }
-
-    @Override
-    protected QualifierGeneric create(Class<?> sourceType, Type resolveType) {
+    protected SimpleGeneric create(Class<?> sourceType, Type resolveType) {
         return new SimpleGeneric(sourceType, resolveType);
     }
 
+    /*---------------------------------------------------- 静态方法 ----------------------------------------------------*/
+
     public static SimpleGeneric from(Class<?> clazz) {
-        return (SimpleGeneric) new SimpleGeneric(clazz).doResolve();
+        return (SimpleGeneric) new SimpleGeneric(clazz).resolve();
     }
 
     public static SimpleGeneric from(Field field) {
-        return (SimpleGeneric) new SimpleGeneric(field.getType(), field.getGenericType()).doResolve();
+        return (SimpleGeneric) new SimpleGeneric(field.getType(), field.getGenericType()).resolve();
     }
 
     public static SimpleGeneric from(Method method) {
-        return (SimpleGeneric) new SimpleGeneric(method.getReturnType(), method.getGenericReturnType()).doResolve();
+        return (SimpleGeneric) new SimpleGeneric(method.getReturnType(), method.getGenericReturnType()).resolve();
     }
 
     public static SimpleGeneric from(Parameter parameter) {
-        return (SimpleGeneric) new SimpleGeneric(parameter.getType(), parameter.getParameterizedType()).doResolve();
+        return (SimpleGeneric) new SimpleGeneric(parameter.getType(), parameter.getParameterizedType()).resolve();
     }
 }
