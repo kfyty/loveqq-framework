@@ -94,11 +94,14 @@ public class QualifierGeneric {
      *
      * @return this
      */
-    public QualifierGeneric doResolve() {
+    public QualifierGeneric resolve() {
+        if (!this.genericInfo.isEmpty()) {
+            return this;
+        }
         if (this.sourceType == this.resolveType && this.sourceType != null && !this.sourceType.isArray() && !Map.class.isAssignableFrom(this.sourceType)) {
             return this;
         }
-        return this.processGenericType(ofNullable(this.resolveType).orElse(this.sourceType));
+        return this.resolveGenericType(ofNullable(this.resolveType).orElse(this.sourceType));
     }
 
     /**
@@ -161,7 +164,7 @@ public class QualifierGeneric {
      */
     public Generic getFirst() {
         if (!this.hasGeneric()) {
-            throw new ResolvableException("generic not exists !");
+            throw new ResolvableException("The generic doesn't exists !");
         }
         return this.genericInfo.keySet().iterator().next();
     }
@@ -173,78 +176,75 @@ public class QualifierGeneric {
      */
     public Generic getSecond() {
         if (this.size() < 2) {
-            throw new ResolvableException("generic not exists !");
+            throw new ResolvableException("The generic doesn't exists !");
         }
         Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
         iterator.next();
         return iterator.next();
     }
 
-    protected QualifierGeneric create(Class<?> sourceType) {
-        return new QualifierGeneric(sourceType);
-    }
-
+    /**
+     * 构造子泛型，由子类实现，保证递推解析时，泛型实现都是同一类对象
+     */
     protected QualifierGeneric create(Class<?> sourceType, Type resolveType) {
         return new QualifierGeneric(sourceType, resolveType);
     }
 
-    protected QualifierGeneric processGenericType(Type genericType) {
+    /*---------------------------------------------------- 泛型解析 ----------------------------------------------------*/
+
+    protected QualifierGeneric resolveGenericType(Type genericType) {
         if (genericType == null) {
             return this;
         }
         if (genericType instanceof Class) {
-            this.processClassGenericType((Class<?>) genericType);
+            this.resolveClassGenericType((Class<?>) genericType);
             return this;
         }
         if (genericType instanceof GenericArrayType) {
-            this.processGenericArrayType((GenericArrayType) genericType);
-            return this;
-        }
-        if (genericType instanceof ParameterizedType) {
-            this.processParameterizedType((ParameterizedType) genericType);
+            this.resolveGenericArrayType((GenericArrayType) genericType);
             return this;
         }
         if (genericType instanceof WildcardType) {
-            this.processWildcardType((WildcardType) genericType);
+            this.resolveWildcardType((WildcardType) genericType);
             return this;
         }
         if (genericType instanceof TypeVariable) {
-            this.processTypeVariable((TypeVariable<?>) genericType);
+            this.resolveTypeVariable((TypeVariable<?>) genericType);
             return this;
         }
-        throw new ResolvableException("unsupported generic type !");
+        if (genericType instanceof ParameterizedType) {
+            this.resolveParameterizedType((ParameterizedType) genericType);
+            return this;
+        }
+        throw new ResolvableException("Unsupported generic type: " + genericType);
     }
 
-    protected void processClassGenericType(Class<?> clazz) {
+    protected void resolveClassGenericType(Class<?> clazz) {
         if (clazz.isArray()) {
             this.genericInfo.put(new Generic(clazz.getComponentType(), true), null);
             return;
         }
         for (Type type : ReflectUtil.getGenerics(clazz)) {
             if (type instanceof ParameterizedType) {
-                this.processParameterizedType((ParameterizedType) type, getRawType(type));
+                this.resolveParameterizedType((ParameterizedType) type, getRawType(type));
             }
         }
     }
 
-    protected void processGenericArrayType(GenericArrayType type) {
-        this.processGenericType(type.getGenericComponentType());
+    protected void resolveGenericArrayType(GenericArrayType type) {
+        this.resolveGenericType(type.getGenericComponentType());
     }
 
-    protected void processParameterizedType(ParameterizedType type) {
-        this.processParameterizedType(type, null);
-    }
-
-    protected void processWildcardType(WildcardType wildcardType) {
+    protected void resolveWildcardType(WildcardType wildcardType) {
         Type type = CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0];
-        this.processGenericType(type);
+        this.resolveGenericType(type);
     }
 
-    protected void processTypeVariable(TypeVariable<?> typeVariable) {
-        this.processTypeVariable(getTypeVariableName(typeVariable), false, null);
+    protected void resolveTypeVariable(TypeVariable<?> typeVariable) {
+        this.resolveTypeVariable(getTypeVariableName(typeVariable), false, null);
     }
 
-    protected void processTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
+    protected void resolveTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
         if (superType == null) {
             this.genericInfo.put(new Generic(typeVariableName, isArray), null);
             return;
@@ -252,15 +252,19 @@ public class QualifierGeneric {
         this.genericInfo.put(new SuperGeneric(typeVariableName, isArray, superType), null);
     }
 
-    protected void processParameterizedType(ParameterizedType type, Class<?> superType) {
+    protected void resolveParameterizedType(ParameterizedType type) {
+        this.resolveParameterizedType(type, null);
+    }
+
+    protected void resolveParameterizedType(ParameterizedType type, Class<?> superType) {
         Type[] actualTypeArguments = type.getActualTypeArguments();
         for (Type actualTypeArgument : actualTypeArguments) {
-            if (actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
-                this.processClassGenericType((Class<?>) actualTypeArgument);
+            if (actualTypeArgument instanceof TypeVariable) {
+                this.resolveTypeVariable((TypeVariable<?>) actualTypeArgument);
                 continue;
             }
-            if (actualTypeArgument instanceof TypeVariable) {
-                this.processTypeVariable((TypeVariable<?>) actualTypeArgument);
+            if (actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
+                this.resolveClassGenericType((Class<?>) actualTypeArgument);
                 continue;
             }
             if (actualTypeArgument instanceof GenericArrayType) {
@@ -269,13 +273,13 @@ public class QualifierGeneric {
                     componentType = ((GenericArrayType) componentType).getGenericComponentType();
                 }
                 if (componentType instanceof TypeVariable) {
-                    this.processTypeVariable(actualTypeArgument.getTypeName(), true, superType);
+                    this.resolveTypeVariable(actualTypeArgument.getTypeName(), true, superType);
                     continue;
                 }
             }
             Class<?> rawType = getRawType(actualTypeArgument);
             boolean isArray = actualTypeArgument instanceof GenericArrayType;
-            QualifierGeneric nested = actualTypeArgument instanceof Class ? null : create(rawType, actualTypeArgument).doResolve();
+            QualifierGeneric nested = actualTypeArgument instanceof Class ? null : this.create(rawType, actualTypeArgument).resolve();
             Generic generic = superType == null ? new Generic(rawType, isArray) : new SuperGeneric(rawType, isArray, superType);
             if (this.genericInfo.containsKey(generic)) {
                 generic.incrementIndex();
@@ -284,19 +288,21 @@ public class QualifierGeneric {
         }
     }
 
+    /*---------------------------------------------------- 静态方法 ----------------------------------------------------*/
+
     public static QualifierGeneric from(Class<?> clazz) {
-        return new QualifierGeneric(clazz).doResolve();
+        return new QualifierGeneric(clazz).resolve();
     }
 
     public static QualifierGeneric from(Field field) {
-        return new QualifierGeneric(field.getType(), field.getGenericType()).doResolve();
+        return new QualifierGeneric(field.getType(), field.getGenericType()).resolve();
     }
 
     public static QualifierGeneric from(Method method) {
-        return new QualifierGeneric(method.getReturnType(), method.getGenericReturnType()).doResolve();
+        return new QualifierGeneric(method.getReturnType(), method.getGenericReturnType()).resolve();
     }
 
     public static QualifierGeneric from(Parameter parameter) {
-        return new QualifierGeneric(parameter.getType(), parameter.getParameterizedType()).doResolve();
+        return new QualifierGeneric(parameter.getType(), parameter.getParameterizedType()).resolve();
     }
 }
