@@ -104,17 +104,21 @@ public class TomcatWebServer implements ServletWebServer {
 
     @Override
     public void start() {
-        this.prepareConnector();
-        this.started = true;
-        log.info("Tomcat started on port({})", this.getPort());
+        if (!this.started) {
+            this.started = true;
+            this.prepareConnector();
+            log.info("Tomcat started on port({})", this.getPort());
+        }
     }
 
     @Override
     public void stop() {
         try {
-            this.started = false;
-            this.stopTomcat();
-            this.tomcat.destroy();
+            if (this.started) {
+                this.started = false;
+                this.stopTomcat();
+                this.tomcat.destroy();
+            }
         } catch (Throwable throwable) {
             log.error("destroy tomcat error !");
             throw ExceptionUtil.wrap(throwable);

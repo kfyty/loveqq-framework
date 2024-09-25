@@ -60,14 +60,16 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     @SuppressWarnings("unchecked")
     public void afterPropertiesSet() {
         Object target = this.adviceBean.get();
+        Class<?> targetClass = AopUtil.getTargetClass(target);
         this.exceptionHandlerMap = new LinkedHashMap<>();
-        for (Method method : ReflectUtil.getMethods(target.getClass())) {
+        for (Method method : ReflectUtil.getMethods(targetClass)) {
             com.kfyty.loveqq.framework.web.core.annotation.ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, com.kfyty.loveqq.framework.web.core.annotation.ExceptionHandler.class);
             if (annotation != null) {
                 Class<?>[] exceptionClasses = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : method.getParameterTypes();
                 for (Class<?> exceptionClass : exceptionClasses) {
                     if (Throwable.class.isAssignableFrom(exceptionClass)) {
-                        this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, new MethodParameter(target, method));
+                        Method targetMethod = AopUtil.getInterfaceMethod(targetClass, method);
+                        this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, new MethodParameter(target, targetMethod));
                     }
                 }
             }
@@ -95,7 +97,7 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
         return ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs());
     }
 
-    protected MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
+    public MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
         Class<? extends Throwable> throwableClass = throwable.getClass();
         MethodParameter exceptionHandler = ofNullable(this.exceptionHandlerMap.get(throwableClass))
                 .orElseGet(() -> this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwableClass)).map(Map.Entry::getValue).findFirst().orElse(null));
