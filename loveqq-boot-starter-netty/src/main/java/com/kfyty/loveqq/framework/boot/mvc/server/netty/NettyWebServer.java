@@ -153,17 +153,19 @@ public class NettyWebServer implements ServerWebServer {
 
     @Override
     public void start() {
-        this.disposableServer = this.server.bindNow();
-        this.started = true;
-        new Thread(new DaemonServerTask()).start();
-        log.info("Netty started on port({})", this.getPort());
+        if (!this.started) {
+            this.started = true;
+            this.disposableServer = this.server.bindNow();
+            new Thread(new DaemonServerTask()).start();
+            log.info("Netty started on port({})", this.getPort());
+        }
     }
 
     @Override
     public void stop() {
         if (this.started) {
-            this.disposableServer.disposeNow();
             this.started = false;
+            this.disposableServer.disposeNow();
         }
     }
 
