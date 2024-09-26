@@ -21,8 +21,11 @@ import java.lang.reflect.Parameter;
 @EqualsAndHashCode(exclude = "context")
 public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
     protected final String beanName;
+
     protected final Method listenerMethod;
+
     protected final Class<?> listenerType;
+
     protected final ApplicationContext context;
 
     public EventListenerAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext context) {
@@ -60,6 +63,18 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      * @param params 方法参数
      */
     protected void invokeListener(Object[] params) {
-        ReflectUtil.invokeMethod(this.context.getBean(this.beanName), this.listenerMethod, params);
+        Object result = ReflectUtil.invokeMethod(this.context.getBean(this.beanName), this.listenerMethod, params);
+        this.processListenerResult(result);
+    }
+
+    /**
+     * 处理监听器返回值
+     *
+     * @param result 返回值
+     */
+    protected void processListenerResult(Object result) {
+        if (result instanceof ApplicationEvent<?>) {
+            this.context.publishEvent((ApplicationEvent<?>) result);
+        }
     }
 }

@@ -1,14 +1,15 @@
 package com.kfyty.loveqq.framework.boot.tx.spring.autoconfig;
 
-import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
+import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
+import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
+import com.kfyty.loveqq.framework.core.proxy.aop.AdviceMethodInterceptorChainPoint;
+import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,21 +27,30 @@ import java.util.Arrays;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-@Order(Order.HIGHEST_PRECEDENCE)
-public class TransactionalInterceptorProxy implements MethodAroundAdvice, InternalPriority {
+public class TransactionalInterceptorProxy implements AdviceMethodInterceptorChainPoint {
     private final BeanFactory beanFactory;
 
     @Override
-    public Object around(ProceedingJoinPoint pjp) throws Throwable {
-        Transactional transactional = this.obtainTransactional(((MethodSignature) pjp.getStaticPart().getSignature()).getMethod());
+    public Class<? extends MethodInterceptor> getAdviceType() {
+        return MethodAroundAdvice.class;
+    }
+
+    @Override
+    public int getOrder() {
+        return Order.LOWEST_PRECEDENCE;
+    }
+
+    @Override
+    public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+        Transactional transactional = this.obtainTransactional(methodProxy.getTargetMethod());
         TransactionAttribute transactionAttribute = this.resolveTransactionAttribute(transactional);
         if (transactionAttribute == null) {
-            return pjp.proceed();
+            return chain.proceed(methodProxy);
         }
         PlatformTransactionManager platformTransactionManager = this.obtainPlatformTransactionManager(transactional);
         TransactionStatus transaction = platformTransactionManager.getTransaction(transactionAttribute);
         try {
-            Object retValue = pjp.proceed();
+            Object retValue = chain.proceed(methodProxy);
             platformTransactionManager.commit(transaction);
             return retValue;
         } catch (Throwable e) {

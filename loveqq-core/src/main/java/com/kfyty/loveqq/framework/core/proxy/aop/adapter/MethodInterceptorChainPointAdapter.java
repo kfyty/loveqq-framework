@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.proxy.aop.AdviceMethodInterceptorChainPoint;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import lombok.RequiredArgsConstructor;
 import org.aopalliance.intercept.MethodInterceptor;
 
@@ -19,8 +20,13 @@ public class MethodInterceptorChainPointAdapter implements AdviceMethodIntercept
     private final MethodInterceptor methodInterceptor;
 
     @Override
-    public Class<?> getAdviceType() {
+    public Class<? extends MethodInterceptor> getAdviceType() {
         return this.methodInterceptor.getClass();
+    }
+
+    @Override
+    public int getOrder() {
+        return BeanUtil.getBeanOrder(this.methodInterceptor);
     }
 
     @Override
