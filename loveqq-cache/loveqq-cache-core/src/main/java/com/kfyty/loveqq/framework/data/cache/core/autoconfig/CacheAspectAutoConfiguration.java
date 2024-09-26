@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.data.cache.core.autoconfig;
 
+import com.kfyty.loveqq.framework.core.autoconfig.Ordered;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.data.cache.core.proxy.CacheInterceptorProxy;
@@ -18,7 +19,7 @@ import org.aspectj.lang.annotation.Pointcut;
  */
 @Aspect
 @Component
-public class CacheAspectAutoConfiguration {
+public class CacheAspectAutoConfiguration implements Ordered {
     @Autowired
     private CacheInterceptorProxy cacheInterceptorProxy;
 
@@ -53,5 +54,10 @@ public class CacheAspectAutoConfiguration {
     @Around("reactivePointCut()")
     public Object reactiveAround(ProceedingJoinPoint pjp) throws Throwable {
         return this.reactiveCacheInterceptorProxy.around(pjp);
+    }
+
+    @Override
+    public int getOrder() {
+        return Integer.MIN_VALUE;
     }
 }

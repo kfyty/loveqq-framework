@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.autoconfig.Ordered;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
@@ -105,6 +106,9 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(Object bean) {
+        if (bean instanceof Ordered) {
+            return ((Ordered) bean).getOrder();
+        }
         return ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.DEFAULT_PRECEDENCE);
     }
 

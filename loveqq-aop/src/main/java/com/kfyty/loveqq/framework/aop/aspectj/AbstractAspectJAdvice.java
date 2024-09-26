@@ -2,7 +2,9 @@ package com.kfyty.loveqq.framework.aop.aspectj;
 
 import com.kfyty.loveqq.framework.aop.Pointcut;
 import com.kfyty.loveqq.framework.aop.utils.AspectJAnnotationUtil;
+import com.kfyty.loveqq.framework.core.autoconfig.Ordered;
 import com.kfyty.loveqq.framework.core.proxy.aop.JoinPointHolder;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Data;
 import org.aopalliance.aop.Advice;
@@ -27,7 +29,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_OBJECT_ARRA
  * @email kfyty725@hotmail.com
  */
 @Data
-public abstract class AbstractAspectJAdvice implements Advice {
+public abstract class AbstractAspectJAdvice implements Advice, Ordered {
     /**
      * 切面名称，一般为 bean name
      */
@@ -76,6 +78,11 @@ public abstract class AbstractAspectJAdvice implements Advice {
     public void setPointcut(Pointcut pointcut) {
         this.pointcut = pointcut;
         this.onSetPointcut();
+    }
+
+    @Override
+    public int getOrder() {
+        return BeanUtil.getBeanOrder(this.getAspectInstance());
     }
 
     protected Object invokeAdviceMethod(Method method, JoinPoint joinPoint, Object returnValue, Throwable ex) {

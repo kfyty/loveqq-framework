@@ -82,7 +82,7 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
                 return;
             }
             for (Pair<Node, Object> pair : controllers) {
-                ReflectUtil.invokeMethod(pair.getValue(), this.listenerMethod, params);
+                super.processListenerResult(ReflectUtil.invokeMethod(pair.getValue(), this.listenerMethod, params));
             }
         }
     }
