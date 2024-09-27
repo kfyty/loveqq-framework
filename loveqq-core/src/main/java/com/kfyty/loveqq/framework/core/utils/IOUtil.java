@@ -23,8 +23,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +51,19 @@ public abstract class IOUtil {
      * 默认的缓冲区大小
      */
     public static final int DEFAULT_BUFFER_SIZE = 4096;
+
+    /**
+     * 返回一个新的监听服务
+     *
+     * @return {@link WatchService}
+     */
+    public static WatchService newWatchService() {
+        try {
+            return FileSystems.getDefault().newWatchService();
+        } catch (IOException e) {
+            throw new ResolvableException(e);
+        }
+    }
 
     /**
      * 创建一个 {@link JarFile}
@@ -118,8 +133,12 @@ public abstract class IOUtil {
      */
     public static InputStream load(String path, ClassLoader classLoader) {
         Path resolvedPath = PathUtil.getPath(path);
-        if (resolvedPath != null && resolvedPath.isAbsolute()) {
-            return newInputStream(resolvedPath.toFile());
+        if (resolvedPath == null) {
+            return null;
+        }
+        File file = resolvedPath.toFile();
+        if (file.exists() || resolvedPath.isAbsolute()) {
+            return newInputStream(file);
         }
         return classLoader.getResourceAsStream(path);
     }
@@ -486,20 +505,20 @@ public abstract class IOUtil {
     /**
      * 刷新并关闭一个对象
      *
-     * @param obj 对象
+     * @param closeTarget 对象
      */
-    public static void close(Object obj) {
-        if (obj == null) {
+    public static void close(Object closeTarget) {
+        if (closeTarget == null) {
             return;
         }
-        if (!(obj instanceof AutoCloseable)) {
-            throw new ResolvableException("can't close !");
+        if (!(closeTarget instanceof AutoCloseable)) {
+            throw new ResolvableException("Can't close: " + closeTarget);
         }
         try {
-            if (obj instanceof Flushable) {
-                ((Flushable) obj).flush();
+            if (closeTarget instanceof Flushable) {
+                ((Flushable) closeTarget).flush();
             }
-            ((AutoCloseable) obj).close();
+            ((AutoCloseable) closeTarget).close();
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }

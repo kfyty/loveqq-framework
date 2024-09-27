@@ -7,16 +7,23 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.converter.Converter;
+import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
+import com.kfyty.loveqq.framework.core.support.FileListener;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
+import com.kfyty.loveqq.framework.core.utils.PathUtil;
+import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.StandardWatchEventKinds;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
@@ -52,12 +59,18 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     protected final List<String> configs;
 
     /**
+     * 外部配置文件监听器
+     */
+    protected final List<FileListener> fileListeners;
+
+    /**
      * 属性配置
      */
     protected final Map<String, String> propertySources;
 
     public DefaultPropertiesContext() {
         this.configs = new LinkedList<>();
+        this.fileListeners = new LinkedList<>();
         this.propertySources = new ConcurrentHashMap<>();
     }
 
@@ -99,12 +112,21 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void loadProperties(String path) {
-        load(path, classLoader(this.getClass()), p -> p.putAll(this.propertySources), (p, c) -> {
-            include(p, c);
-            for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
-            }
-        });
+        // 这里前置将已有数据加入是为了解析占位符
+        PropertiesUtil.load(
+                path,
+                classLoader(this.getClass()),
+                p -> this.propertySources.entrySet()
+                        .stream()
+                        .filter(e -> !ConstantConfig.IMPORT_KEY.equals(e.getKey()))
+                        .forEach(e -> p.putIfAbsent(e.getKey(), e.getValue())),
+                (p, c) -> {
+                    include(p, c);
+                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                        this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
+                    }
+                }
+        );
     }
 
     @Override
@@ -158,23 +180,41 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     @Override
     public void afterPropertiesSet() {
         this.propertySources.putAll(loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
-        if (this.contains(ConstantConfig.LOCATION_KEY)) {
-            this.addConfig(this.getProperty(ConstantConfig.LOCATION_KEY));
-        }
         this.addConfig(DEFAULT_YML_LOCATION);
         this.addConfig(DEFAULT_YAML_LOCATION);
         this.addConfig(DEFAULT_PROPERTIES_LOCATION);
+        this.addLocationProperties(Mapping.from(this.getProperty(ConstantConfig.LOCATION_KEY)).notEmptyMap(e -> CommonUtil.split(e, ",", true)).get());
         this.loadProperties();
     }
 
     @Override
     public void destroy() {
+        this.fileListeners.forEach(FileListener::stop);
         this.close();
     }
 
     @Override
     public void close() {
         this.configs.clear();
+        this.fileListeners.clear();
         this.propertySources.clear();
+    }
+
+    protected void addLocationProperties(Collection<String> locationKeys) {
+        if (locationKeys == null || locationKeys.isEmpty()) {
+            return;
+        }
+        for (String locationKey : locationKeys) {
+            this.addConfig(locationKey);
+            Mapping.from(PathUtil.getPath(locationKey))
+                    .notNullMap(FileListener::new)
+                    .then(e -> e.onModify((path, event) -> {
+                        Properties loaded = load(locationKey, classLoader(this.getClass()));
+                        loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));
+                        applicationContext.publishEvent(new PropertyConfigRefreshedEvent(applicationContext));
+                    }))
+                    .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).start())
+                    .then(this.fileListeners::add);
+        }
     }
 }
