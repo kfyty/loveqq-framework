@@ -74,6 +74,8 @@ public interface ConstantConfig {
 
     /**
      * 配置文件中包含本地磁盘的配置 key
+     * 通过该配置指定的配置文件，支持热刷新
+     * 注意：只有通过该配置指定的才支持热刷新，内部通过 {@link #IMPORT_KEY} 包含的嵌套配置不支持
      */
     String LOCATION_KEY = "k.config.location";
 

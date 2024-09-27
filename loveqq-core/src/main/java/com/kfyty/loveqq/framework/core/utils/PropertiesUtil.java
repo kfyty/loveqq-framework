@@ -69,7 +69,7 @@ public abstract class PropertiesUtil {
         String imports = (String) properties.get(ConstantConfig.IMPORT_KEY);
         if (CommonUtil.notEmpty(imports)) {
             CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
-            log.info("included properties config: {}", imports);
+            log.info("loaded nested properties config: {}", imports);
         }
     }
 

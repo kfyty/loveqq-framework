@@ -114,7 +114,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param consumer 消费逻辑
      * @return this
      */
-    public Mapping<T> to(Consumer<T> consumer) {
+    public Mapping<T> then(Consumer<T> consumer) {
         consumer.accept(this.value);
         return this;
     }
@@ -140,7 +140,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      */
     public Mapping<T> when(Predicate<T> test, Consumer<T> consumer) {
         if (test.test(this.value)) {
-            return to(consumer);
+            return then(consumer);
         }
         return from(null);
     }
