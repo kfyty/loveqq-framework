@@ -6,7 +6,12 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ThreadPerChannelEventLoop;
 import io.netty.channel.oio.OioEventLoopGroup;
+import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.oio.OioDatagramChannel;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
+import io.netty.channel.socket.oio.OioSocketChannel;
 import io.netty.util.concurrent.Future;
 import reactor.core.publisher.Mono;
 import reactor.netty.FutureMono;
@@ -59,13 +64,31 @@ public class OioBasedLoopResources implements LoopResources {
     @Override
     @SuppressWarnings("unchecked")
     public <CHANNEL extends Channel> CHANNEL onChannel(Class<CHANNEL> channelType, EventLoopGroup group) {
-        return (CHANNEL) new OioServerSocketChannel();
+        if (channelType.equals(DatagramChannel.class)) {
+            return (CHANNEL) new OioDatagramChannel();
+        }
+        if (channelType.equals(SocketChannel.class)) {
+            return (CHANNEL) new OioSocketChannel();
+        }
+        if (channelType.equals(ServerSocketChannel.class)) {
+            return (CHANNEL) new OioServerSocketChannel();
+        }
+        throw new IllegalArgumentException("Unsupported channel type: " + channelType.getSimpleName());
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <CHANNEL extends Channel> Class<? extends CHANNEL> onChannelClass(Class<CHANNEL> channelType, EventLoopGroup group) {
-        return (Class<? extends CHANNEL>) OioServerSocketChannel.class;
+        if (channelType.equals(DatagramChannel.class)) {
+            return (Class<? extends CHANNEL>) OioDatagramChannel.class;
+        }
+        if (channelType.equals(SocketChannel.class)) {
+            return (Class<? extends CHANNEL>) OioSocketChannel.class;
+        }
+        if (channelType.equals(ServerSocketChannel.class)) {
+            return (Class<? extends CHANNEL>) OioServerSocketChannel.class;
+        }
+        throw new IllegalArgumentException("Unsupported channel type: " + channelType.getSimpleName());
     }
 
     @Override
@@ -106,7 +129,13 @@ public class OioBasedLoopResources implements LoopResources {
         if (this.workGroup == null) {
             synchronized (this) {
                 if (this.workGroup == null) {
-                    this.workGroup = new OioEventLoopGroup(0, Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("reactor-handler-", 0).factory()));
+                    this.workGroup = new OioEventLoopGroup(0, Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("reactor-handler-", 0).factory())) {
+
+                        @Override
+                        public EventLoop next() {
+                            return new ThreadPerChannelEventLoop(this);
+                        }
+                    };
                 }
             }
         }

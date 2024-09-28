@@ -197,7 +197,7 @@ public class NettyWebServer implements ServerWebServer {
                 .compress(this.config.getCompress())
                 .forwarded(this.config.getForwarded())
                 .accessLog(this.config.getAccessLog());
-        if (this.config.isVirtualThread()) {
+        if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             this.server = this.server.runOn(new OioBasedLoopResources());
         }
         if (this.config.getIdleTimeout() != null) {
