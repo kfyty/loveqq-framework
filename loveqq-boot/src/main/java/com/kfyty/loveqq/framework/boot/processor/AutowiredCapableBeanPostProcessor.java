@@ -14,6 +14,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.Prope
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -147,6 +148,9 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
             if (description != null) {
+                if (AnnotationUtil.hasAnnotation(method, Bean.class)) {
+                    continue;                                                                                           // Bean 方法创建实例时会注入，此时无需自动注入
+                }
                 Object[] parameters = this.autowiredProcessor.doAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
                 if (bean != exposedBean && AopUtil.isCglibProxy(exposedBean)) {
                     ReflectUtil.invokeMethod(exposedBean, method, parameters);

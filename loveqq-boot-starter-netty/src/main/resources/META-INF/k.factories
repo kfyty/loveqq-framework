@@ -1,1 +1,3 @@
-com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyServerAutoConfig
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.HttpClientAutoConfig,\
+    com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyServerAutoConfig
