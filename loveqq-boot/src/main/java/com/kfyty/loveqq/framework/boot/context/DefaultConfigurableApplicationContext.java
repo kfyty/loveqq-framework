@@ -136,7 +136,9 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
 
     @Override
     public void addComponentMatcher(ComponentMatcher componentMatcher) {
+        this.invokeAwareMethod(componentMatcher.getClass().getName(), componentMatcher);
         this.componentMatchers.add(componentMatcher);
+        this.componentMatchers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
     }
 
     @Override
@@ -144,9 +146,7 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
         if (this.componentMatchers.isEmpty()) {
             this.componentMatchers.add(new DefaultComponentMatcher());
         }
-        this.componentMatchers.sort(Comparator.comparing(BeanUtil::getBeanOrder));
         for (ComponentMatcher componentMatcher : this.componentMatchers) {
-            this.invokeAwareMethod(componentMatcher.getClass().getName(), componentMatcher);
             if (componentMatcher.isMatch(beanClass, this.includeFilters, this.excludeFilters)) {
                 return true;
             }

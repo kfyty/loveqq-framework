@@ -46,43 +46,48 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
     /**
      * 应用上下文
      */
-    private ApplicationContext applicationContext;
+    protected ApplicationContext applicationContext;
 
     /**
      * 自动注入处理器
      */
-    private AutowiredProcessor autowiredProcessor;
+    protected AutowiredProcessor autowiredProcessor;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-        this.autowiredProcessor = new AutowiredProcessor(applicationContext);
-        this.autowiredBean(null, applicationContext);
+        this.onApplicationContext(this.applicationContext = applicationContext);
     }
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
         Object target = AopUtil.getTarget(bean);
-        this.preProcessSelfAutowired(bean);
-        this.processProperty(beanName, target, bean);
-        this.processAutowired(beanName, target, bean);
+        BeanDefinition beanDefinition = beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);
+        this.resolveCycleAutowired(bean);
+        this.resolvePropertyAutowired(beanName, beanDefinition, target, bean);
+        this.resolveBeanAutowired(beanName, beanDefinition, target, bean);
     }
 
-    protected void preProcessSelfAutowired(Object bean) {
-        if (this.autowiredProcessor != null) {
-            return;
+    protected void onApplicationContext(ApplicationContext applicationContext) {
+        AutowiredDescriptionResolver resolver = Objects.requireNonNull(applicationContext.getBean(AutowiredDescriptionResolver.class), "The bean doesn't exists of type: " + AutowiredDescriptionResolver.class);
+        if (this.autowiredProcessor == null) {
+            this.autowiredProcessor = new AutowiredProcessor(applicationContext, resolver);
         }
-        if (bean instanceof AutowiredDescriptionResolver) {
-            this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
+        this.autowiredBean(null, applicationContext);
+    }
+
+    protected void resolveCycleAutowired(Object bean) {
+        if (this.autowiredProcessor == null) {
+            if (bean instanceof AutowiredDescriptionResolver) {
+                this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
+            }
         }
     }
 
-    protected void processProperty(String beanName, Object target, Object exposedBean) {
+    protected void resolvePropertyAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
         if (beanName == null) {
             return;
         }
         Class<?> targetClass = target.getClass();
-        BeanDefinition beanDefinition = this.applicationContext.getBeanDefinition(beanName);
         for (PropertyValue propertyValue : beanDefinition.getPropertyValues()) {
             Field field = ReflectUtil.getField(targetClass, Objects.requireNonNull(propertyValue.getName(), "The name field is required"));
             Objects.requireNonNull(field, CommonUtil.format("The field of name: {} doesn't exists", propertyValue.getName()));
@@ -107,16 +112,16 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         }
     }
 
-    protected void processAutowired(String beanName, Object target, Object exposedBean) {
-        if (beanName != null && isIgnoredAutowired(this.applicationContext.getBeanDefinition(beanName))) {
+    protected void resolveBeanAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
+        if (beanName != null && isIgnoredAutowired(beanDefinition)) {
             return;
         }
         Class<?> targetClass = target.getClass();
-        this.autowiredField(targetClass, target, exposedBean);
-        this.autowiredMethod(targetClass, target, exposedBean);
+        this.resolveFieldAutowired(targetClass, target, exposedBean);
+        this.resolveMethodAutowired(targetClass, target, exposedBean);
     }
 
-    protected void autowiredField(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void resolveFieldAutowired(Class<?> clazz, Object bean, Object exposedBean) {
         List<Pair<Field, AutowiredDescription>> laziedFields = new LinkedList<>();
         Collection<Method> beanMethods = ReflectUtil.getMethods(clazz).stream().filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
         for (Field field : ReflectUtil.getFieldMap(clazz).values()) {
@@ -144,7 +149,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         }
     }
 
-    protected void autowiredMethod(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void resolveMethodAutowired(Class<?> clazz, Object bean, Object exposedBean) {
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
             if (description != null) {

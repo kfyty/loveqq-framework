@@ -76,12 +76,18 @@ class ComponentS {
     }
 }
 
+enum PEnum {
+    P1, P2;
+}
+
 @Component
 @ConfigurationProperties("k.prop")
 @ConditionalOnProperty(value = "k.prop.enable", havingValue = "true")
 class PropertiesConfig implements InitializingBean {
     @Value("http://${k.prop.ip}:${port:8080}/${${index.path:index}:}")
     private String url;
+
+    private PEnum pe;
 
     private Properties opt;
 
@@ -118,6 +124,7 @@ class PropertiesConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
+        Assertions.assertEquals(this.pe, PEnum.P1);
         Assertions.assertEquals(this.url, "http://127.0.0.1:8080/");
         Assertions.assertEquals(this.pair.getKey(), Long.valueOf(1L));
         Assertions.assertEquals(this.pair.getValue(), "name_of_1");

@@ -56,9 +56,12 @@ public abstract class ConverterUtil {
     @SuppressWarnings("unchecked")
     public static <S, T> T convert(S source, Class<T> clazz) {
         Converter<S, T> converter = getTypeConverter((Class<S>) source.getClass(), clazz);
-        if (converter != null) {
-            return converter.apply(source);
+        if (converter == null) {
+            throw new IllegalArgumentException("No suitable converter is available of type: " + source.getClass() + ", " + clazz);
         }
-        throw new IllegalArgumentException("No suitable converter is available of type: " + source.getClass() + ", " + clazz);
+        if (clazz.isEnum() && String.valueOf(source).indexOf('.') < 0) {
+            return converter.apply((S) (clazz.getName() + '.' + source));
+        }
+        return converter.apply(source);
     }
 }
