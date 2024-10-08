@@ -90,14 +90,7 @@ public class DefaultDataBinder implements DataBinder {
             if (ignoreUnknownFields) {
                 return target;
             }
-            throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] not exists");
-        }
-
-        if (field.getType().isEnum()) {
-            @SuppressWarnings("unchecked")
-            T enumValue = Enum.valueOf((Class<T>) field.getType(), this.propertyContext.getProperty(key, String.class));
-            ReflectUtil.setFieldValue(target.getTarget(), field, enumValue);
-            return target;
+            throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "] doesn't exists");
         }
 
         try {

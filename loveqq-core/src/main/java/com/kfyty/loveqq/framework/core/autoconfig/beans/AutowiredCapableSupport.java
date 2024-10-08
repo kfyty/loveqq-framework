@@ -11,7 +11,7 @@ public interface AutowiredCapableSupport {
     /**
      * bean name
      */
-    String BEAN_NAME = "com.kfyty.support.autoconfig.beans.AutowiredCapableSupport";
+    String BEAN_NAME = "com.kfyty.loveqq.framework.core.autoconfig.beans.AutowiredCapableSupport";
 
     /**
      * 对 bean 执行依赖注入

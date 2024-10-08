@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.boot.context.env;
 
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
@@ -39,7 +38,6 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
 
     @Lazy
     @Override
-    @Autowired
     public void setDataBinder(DataBinder dataBinder) {
         this.dataBinder = dataBinder;
     }
