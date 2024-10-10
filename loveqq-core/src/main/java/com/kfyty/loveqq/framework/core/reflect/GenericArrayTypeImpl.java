@@ -16,7 +16,7 @@ public class GenericArrayTypeImpl implements GenericArrayType {
 
     // private constructor enforces use of static factory
     private GenericArrayTypeImpl(Type ct) {
-        genericComponentType = ct;
+        this.genericComponentType = ct;
     }
 
     /**
@@ -29,7 +29,6 @@ public class GenericArrayTypeImpl implements GenericArrayType {
     public static GenericArrayTypeImpl make(Type ct) {
         return new GenericArrayTypeImpl(ct);
     }
-
 
     /**
      * Returns a {@code Type} object representing the component type

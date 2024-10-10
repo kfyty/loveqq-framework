@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.reflect.ParameterizedTypeImpl;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
@@ -74,7 +75,7 @@ public class QualifierGeneric {
      * @param genericType 类型
      */
     public QualifierGeneric(Type genericType) {
-        this(null, genericType);
+        this(genericType instanceof ParameterizedType ? (Class<?>) ((ParameterizedType) genericType).getRawType() : null, genericType);
     }
 
     /**
@@ -292,6 +293,10 @@ public class QualifierGeneric {
 
     public static QualifierGeneric from(Class<?> clazz) {
         return new QualifierGeneric(clazz).resolve();
+    }
+
+    public static QualifierGeneric from(ParameterizedTypeImpl parameterizedType) {
+        return new QualifierGeneric(parameterizedType).resolve();
     }
 
     public static QualifierGeneric from(Field field) {

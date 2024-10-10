@@ -1,11 +1,13 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
+import com.kfyty.loveqq.framework.core.jdbc.JdbcTransaction;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.jdbc.type.TypeHandler;
 import com.kfyty.loveqq.framework.core.jdbc.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,6 +26,20 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class JdbcUtil {
 
+    @SuppressWarnings("unchecked")
+    public static <T> T query(DataSource dataSource, Class<T> returnType, String sql, Object... params) throws SQLException {
+        return (T) query(dataSource, SimpleGeneric.from(returnType), sql, params);
+    }
+
+    public static Object query(DataSource dataSource, SimpleGeneric returnType, String sql, Object... params) throws SQLException {
+        MethodParameter[] parameters = Arrays.stream(params).map(e -> new MethodParameter(e.getClass(), e)).toArray(MethodParameter[]::new);
+        return query(dataSource, returnType, sql, parameters);
+    }
+
+    public static Object query(DataSource dataSource, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
+        return query(new JdbcTransaction(dataSource), returnType, sql, params);
+    }
+
     public static Object query(Transaction transaction, SimpleGeneric returnType, String sql, MethodParameter... params) throws SQLException {
         Connection connection = transaction.getConnection();
         try (PreparedStatement preparedStatement = getPreparedStatement(connection, sql, params);
@@ -38,6 +54,15 @@ public abstract class JdbcUtil {
         } finally {
             commitTransactionIfNecessary(transaction);
         }
+    }
+
+    public static int execute(DataSource dataSource, String sql, Object... params) throws SQLException {
+        MethodParameter[] parameters = Arrays.stream(params).map(e -> new MethodParameter(e.getClass(), e)).toArray(MethodParameter[]::new);
+        return execute(dataSource, sql, parameters);
+    }
+
+    public static int execute(DataSource dataSource, String sql, MethodParameter... params) throws SQLException {
+        return execute(new JdbcTransaction(dataSource), sql, params);
     }
 
     public static int execute(Transaction transaction, String sql, MethodParameter... params) throws SQLException {
