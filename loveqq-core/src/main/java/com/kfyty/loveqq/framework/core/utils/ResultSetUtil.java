@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.exception.TooManyResultException;
+import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.jdbc.type.TypeHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperGeneric;
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.underline2CamelCase;
 
 /**
  * 功能描述: result set 工具
@@ -29,7 +30,7 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getSuperGeneric;
  */
 @Slf4j
 public abstract class ResultSetUtil {
-    static final Map<Class<?>, TypeHandler<?>> TYPE_HANDLER = new HashMap<>();
+    private static final Map<Class<?>, TypeHandler<?>> TYPE_HANDLER = new HashMap<>();
 
     static {
         PackageUtil.scanInstance(TypeHandler.class)
@@ -57,22 +58,21 @@ public abstract class ResultSetUtil {
         if (returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if (!returnType.hasGeneric()) {
-            return processSingleObject(resultSet, returnType.getSourceType());
-        }
         if (Set.class.isAssignableFrom(returnType.getSourceType())) {
-            return processSetObject(resultSet, returnType.getFirst().get());
+            Generic generic = returnType.getFirst();
+            return processSetObject(resultSet, (Class<?>) (generic.isTypeVariable() ? Map.class : generic.get()));
         }
-        if (List.class.isAssignableFrom(returnType.getSourceType()) && !Map.class.isAssignableFrom(returnType.getFirst().get())) {
-            return processListObject(resultSet, returnType.getFirst().get());
-        }
-        if (returnType.isMapGeneric() && !CommonUtil.empty(returnType.getMapKey())) {
-            return processMapObject(resultSet, returnType);
+        if (List.class.isAssignableFrom(returnType.getSourceType())) {
+            Generic generic = returnType.getFirst();
+            return processListObject(resultSet, (Class<?>) (generic.isTypeVariable() ? Map.class : generic.get()));
         }
         if (returnType.isMapGeneric()) {
-            return processSingleMapObject(resultSet);
+            if (CommonUtil.empty(returnType.getMapKey())) {
+                return processSingleMapObject(resultSet);
+            }
+            return processMapObject(resultSet, returnType);
         }
-        return processListMapObject(resultSet);
+        return processSingleObject(resultSet, returnType.getSourceType());
     }
 
     public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
@@ -105,6 +105,10 @@ public abstract class ResultSetUtil {
     }
 
     public static <T> List<T> processListObject(ResultSet resultSet, Class<T> clazz) throws SQLException {
+        if (Map.class.isAssignableFrom(clazz)) {
+            // noinspection unchecked
+            return (List<T>) processListMapObject(resultSet);
+        }
         if (ReflectUtil.isBaseDataType(clazz)) {
             return processListBaseType(resultSet, clazz);
         }
@@ -117,7 +121,7 @@ public abstract class ResultSetUtil {
             Map<String, Field> fieldMap = ReflectUtil.getFieldMap(clazz);
             ResultSetMetaData metaData = resultSet.getMetaData();
             for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                String fieldName = CommonUtil.underline2CamelCase(metaData.getColumnLabel(i));
+                String fieldName = underline2CamelCase(metaData.getColumnLabel(i));
                 Field field = fieldMap.get(fieldName);
                 if (field != null) {
                     Object value = extractObject(resultSet, metaData.getColumnLabel(i), field.getType());
@@ -138,21 +142,22 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
-        List<V> values = processListObject(resultSet, (Class<V>) returnType.getMapValueType().get());
+    public static <K, V> Map<K, V> processMapObject(ResultSet resultSet, SimpleGeneric returnType) throws SQLException {
+        Class<V> valueClass = (Class<V>) returnType.getMapValueType().get();
+        List<V> values = processListObject(resultSet, valueClass);
         if (CommonUtil.empty(values)) {
             return Collections.emptyMap();
         }
         Map<K, V> result = new HashMap<>();
         for (V value : values) {
-            Field field = ReflectUtil.getField(returnType.getMapValueType().get(), returnType.getMapKey());
+            Field field = ReflectUtil.getField(valueClass, returnType.getMapKey());
             result.put((K) ReflectUtil.getFieldValue(value, field), value);
         }
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws SQLException {
+    public static <K, V> Map<K, V> processSingleMapObject(ResultSet resultSet) throws SQLException {
         if (resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(log, log -> log.debug("process map failed: result set is empty !"), Collections.emptyMap());
         }
@@ -168,7 +173,7 @@ public abstract class ResultSetUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <K, V> Object processListMapObject(ResultSet resultSet) throws SQLException {
+    public static <K, V> List<Map<K, V>> processListMapObject(ResultSet resultSet) throws SQLException {
         if (resultSet == null || !resultSet.next()) {
             return LogUtil.logIfDebugEnabled(log, log -> log.debug("process map failed: result set is empty !"), Collections.emptyList());
         }

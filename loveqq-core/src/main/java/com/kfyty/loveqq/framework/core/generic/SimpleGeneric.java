@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.generic;
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.Value;
+import com.kfyty.loveqq.framework.core.reflect.ParameterizedTypeImpl;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -180,6 +181,10 @@ public class SimpleGeneric extends QualifierGeneric {
 
     public static SimpleGeneric from(Class<?> clazz) {
         return (SimpleGeneric) new SimpleGeneric(clazz).resolve();
+    }
+
+    public static SimpleGeneric from(ParameterizedTypeImpl parameterizedType) {
+        return (SimpleGeneric) new SimpleGeneric(parameterizedType).resolve();
     }
 
     public static SimpleGeneric from(Field field) {

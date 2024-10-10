@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.reflect.GenericArrayTypeImpl;
+import com.kfyty.loveqq.framework.core.reflect.ParameterizedTypeImpl;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -83,6 +84,10 @@ public class ActualGeneric extends SimpleGeneric {
 
     public static ActualGeneric from(Class<?> clazz) {
         return (ActualGeneric) new ActualGeneric(clazz).resolve();
+    }
+
+    public static ActualGeneric from(ParameterizedTypeImpl parameterizedType) {
+        return (ActualGeneric) new ActualGeneric(parameterizedType).resolve();
     }
 
     public static ActualGeneric from(Field field) {
