@@ -17,4 +17,9 @@ public class PrototypeScopeProxyFactory implements ScopeProxyFactory {
     public Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory) {
         return beanFactory.registerBean(beanDefinition);
     }
+
+    @Override
+    public void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean) {
+        beanFactory.destroyBean(beanDefinition.getBeanName(), bean);
+    }
 }

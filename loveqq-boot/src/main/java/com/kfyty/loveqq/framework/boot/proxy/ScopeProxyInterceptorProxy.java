@@ -31,8 +31,8 @@ public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint, 
             methodProxy.setTarget((bean = this.scopeProxyFactory.getObject(this.beanDefinition, this.beanFactory)));
             return chain.proceed(methodProxy);
         } finally {
-            if (bean != null && !this.beanDefinition.isSingleton()) {
-                this.beanFactory.destroyBean(this.beanDefinition.getBeanName(), bean);
+            if (bean != null) {
+                this.scopeProxyFactory.onInvoked(this.beanDefinition, this.beanFactory, bean);
             }
         }
     }

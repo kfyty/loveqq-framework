@@ -22,6 +22,17 @@ public interface ScopeProxyFactory {
     Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory);
 
     /**
+     * 执行目标方法回调
+     *
+     * @param beanDefinition bean 定义
+     * @param beanFactory    bean 工厂
+     * @param bean           目标 bean
+     */
+    default void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean) {
+
+    }
+
+    /**
      * 事件处理
      *
      * @param event 事件

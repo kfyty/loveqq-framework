@@ -29,6 +29,12 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
     }
 
     @Override
+    public void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean) {
+        this.ensureScopeProxyFactory(beanFactory);
+        this.obtainScopeProxyFactory(beanDefinition.getScope()).onInvoked(beanDefinition, beanFactory, bean);
+    }
+
+    @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
         if (this.scopeProxyFactoryMap != null) {
             Map<String, ScopeProxyFactory> copy = new HashMap<>(this.scopeProxyFactoryMap);

@@ -28,6 +28,14 @@ import java.util.Set;
 public class CommonTest {
 
     @Test
+    public void formatTest() {
+        String format = CommonUtil.format("{}{}{}", 1, 2, 3);
+        String format2 = CommonUtil.format("hello{} {}", ",", "world");
+        Assertions.assertEquals(format, "123");
+        Assertions.assertEquals(format2, "hello, world");
+    }
+
+    @Test
     public void enumConvertTest() {
         RetentionPolicy convert = ConverterUtil.convert("java.lang.annotation.RetentionPolicy.SOURCE", RetentionPolicy.class);
         Assertions.assertEquals(convert, RetentionPolicy.SOURCE);
