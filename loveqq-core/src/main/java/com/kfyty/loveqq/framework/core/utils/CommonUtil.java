@@ -228,10 +228,14 @@ public abstract class CommonUtil {
 
     public static String format(String s, Object... params) {
         int index = -1;
+        int preIndex = 0;
         int paramIndex = 0;
-        StringBuilder sb = new StringBuilder(s);
-        while ((index = sb.indexOf("{}", index)) != -1) {
-            sb.replace(index, index + 2, ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
+        char[] charArray = s.toCharArray();
+        StringBuilder sb = new StringBuilder();
+        while ((index = s.indexOf("{}", index + 1)) != -1) {
+            sb.append(charArray, preIndex, index - preIndex);
+            sb.append(ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
+            preIndex = index + 2;
         }
         return sb.toString();
     }

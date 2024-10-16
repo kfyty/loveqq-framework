@@ -129,18 +129,22 @@ public abstract class PropertiesUtil {
      * @return properties map
      */
     public static Map<String, Object> flatMap(Map<String, Object> source) {
-        return flatMap(null, source, new HashMap<>());
+        return flatMap(null, source, new HashMap<>(), false);
     }
 
-    private static Map<String, Object> flatMap(String path, final Map<String, Object> source, final Map<String, Object> result) {
+    private static Map<String, Object> flatMap(String path, final Map<String, Object> source, final Map<String, Object> result, boolean isCollection) {
         for (Map.Entry<String, Object> entry : source.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (CommonUtil.notEmpty(path)) {
-                if (key.startsWith("[")) {
+                if (isCollection && key.startsWith("[")) {
                     key = path + key;
                 } else {
-                    key = path + '.' + key;
+                    if (key.charAt(0) == '[' && key.charAt(key.length() - 1) == ']') {
+                        key = path + "." + key.substring(1, key.length() - 1);
+                    } else {
+                        key = path + '.' + key;
+                    }
                 }
             }
             if (value instanceof String) {
@@ -149,7 +153,7 @@ public abstract class PropertiesUtil {
                 // Need a compound key
                 @SuppressWarnings("unchecked")
                 Map<String, Object> map = (Map<String, Object>) value;
-                flatMap(key, map, result);
+                flatMap(key, map, result, false);
             } else if (value instanceof Collection) {
                 // Need a compound key
                 @SuppressWarnings("unchecked")
@@ -159,7 +163,7 @@ public abstract class PropertiesUtil {
                 } else {
                     int count = 0;
                     for (Object object : collection) {
-                        flatMap(key, Collections.singletonMap("[" + (count++) + "]", object), result);
+                        flatMap(key, Collections.singletonMap("[" + (count++) + "]", object), result, true);
                     }
                 }
             } else {
