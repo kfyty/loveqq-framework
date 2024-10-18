@@ -20,17 +20,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -234,11 +228,10 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isBaseDataType(Class<?> clazz) {
-        return clazz.isPrimitive() || Number.class.isAssignableFrom(clazz) || Boolean.class.isAssignableFrom(clazz) ||
-                Character.class.isAssignableFrom(clazz) || CharSequence.class.isAssignableFrom(clazz) ||
-                Date.class.isAssignableFrom(clazz) || LocalDate.class.isAssignableFrom(clazz) ||
-                LocalTime.class.isAssignableFrom(clazz) || LocalDateTime.class.isAssignableFrom(clazz) ||
-                Timestamp.class.isAssignableFrom(clazz) || Instant.class.isAssignableFrom(clazz);
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+        return ConverterUtil.getTypeConverters().keySet().stream().map(Pair::getValue).anyMatch(e -> e == clazz);
     }
 
     /*--------------------------------------------- 创建实例相关方法 ---------------------------------------------*/

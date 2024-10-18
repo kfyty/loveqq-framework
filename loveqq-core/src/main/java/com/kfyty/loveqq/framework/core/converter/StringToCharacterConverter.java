@@ -12,15 +12,18 @@ import java.util.List;
  * @date 2022/3/12 12:49
  * @email kfyty725@hotmail.com
  */
-public class StringToStringConverter implements Converter<String, String> {
+public class StringToCharacterConverter implements Converter<String, Character> {
 
     @Override
     public List<Class<?>> supportTypes() {
-        return Collections.singletonList(CharSequence.class);
+        return Collections.singletonList(char.class);
     }
 
     @Override
-    public String apply(String source) {
-        return CommonUtil.empty(source) ? null : source;
+    public Character apply(String source) {
+        if (CommonUtil.empty(source)) {
+            return null;
+        }
+        return source.charAt(0);
     }
 }
