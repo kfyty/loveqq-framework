@@ -2,10 +2,13 @@ package com.kfyty.loveqq.framework.web.core.request;
 
 public enum RequestMethod {
     GET,
+    HEAD,
     PUT,
     POST,
     PATCH,
-    DELETE;
+    DELETE,
+    OPTIONS,
+    TRACE;
 
     public static RequestMethod matchRequestMethod(String requestMethod) {
         String method = requestMethod.toUpperCase();

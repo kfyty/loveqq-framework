@@ -31,24 +31,24 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
 @Configuration
 public class MapperAutoConfig implements ImportBeanDefinition {
 
-    @Bean
     @ConditionalOnMissingBean
+    @Bean(resolveNested = false, independent = true)
     public DynamicProvider<?> dynamicProvider() {
         return new EnjoyDynamicProvider().setEngine(Engine.createIfAbsent("dynamicProvider", e -> {}));
     }
 
-    @Bean
+    @Bean(resolveNested = false, independent = true)
     @ConditionalOnMissingBean(name = "jdbcTransactionFactory")
     public Supplier<Transaction> jdbcTransactionFactory(DataSource dataSource) {
         return () -> new ManagedJdbcTransaction(dataSource);
     }
 
-    @Bean
+    @Bean(resolveNested = false, independent = true)
     public IfInternalInterceptor ifInternalInterceptor() {
         return new IfInternalInterceptor();
     }
 
-    @Bean
+    @Bean(resolveNested = false, independent = true)
     public SubQueryInternalInterceptor subQueryInternalInterceptor() {
         return new SubQueryInternalInterceptor();
     }
