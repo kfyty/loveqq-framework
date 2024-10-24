@@ -4,7 +4,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
-import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
 import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
@@ -95,8 +94,8 @@ public class AutowiredProcessor {
         if (ReflectUtil.getFieldValue(bean, field) != null) {
             return null;
         }
-        ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), field);
-        Object targetBean = this.doResolveBean(actualGeneric, description, field.getType());
+        SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), field);
+        Object targetBean = this.doResolveBean(simpleGeneric, description, field.getType());
         if (targetBean != null) {
             ReflectUtil.setFieldValue(bean, field, targetBean);
             LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", targetBean, bean));
@@ -112,9 +111,9 @@ public class AutowiredProcessor {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
-            ActualGeneric actualGeneric = ActualGeneric.from(bean.getClass(), parameter);
+            SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), parameter);
             AutowiredDescription paramDescription = ofNullable(parameterAutowiredDescriptionResolver.apply(parameter)).orElse(description);
-            Object targetBean = this.doResolveBean(actualGeneric, paramDescription, parameter.getType());
+            Object targetBean = this.doResolveBean(simpleGeneric, paramDescription, parameter.getType());
             parameters[index++] = targetBean;
         }
         ReflectUtil.invokeMethod(bean, method, parameters);
@@ -125,15 +124,15 @@ public class AutowiredProcessor {
      * 解析 bean 依赖
      * 仅解析自动装配的候选者
      *
-     * @param actualGeneric 实际泛型
+     * @param simpleGeneric 实际泛型
      * @param description   自动注入描述
      * @param requiredType  实际请求类型
      * @return bean
      */
-    public Object doResolveBean(ActualGeneric actualGeneric, AutowiredDescription description, Class<?> requiredType) {
-        String beanName = BeanUtil.getBeanName(actualGeneric.getSimpleActualType(), description == null ? null : description.value());
-        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, actualGeneric, description);
-        Object targetBean = LaziedObject.class.isAssignableFrom(actualGeneric.getSourceType()) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
+    public Object doResolveBean(SimpleGeneric simpleGeneric, AutowiredDescription description, Class<?> requiredType) {
+        String beanName = BeanUtil.getBeanName(simpleGeneric.getSimpleType(), description == null ? null : description.value());
+        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, simpleGeneric, description);
+        Object targetBean = simpleGeneric.isGeneric(LaziedObject.class) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
         if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {
             targetBean = AopUtil.getTarget(targetBean);
         }
@@ -148,13 +147,13 @@ public class AutowiredProcessor {
      * @param returnType     目标 bean 类型
      * @return bean
      */
-    public Object doResolveBean(String targetBeanName, ActualGeneric returnType, AutowiredDescription autowired) {
+    public Object doResolveBean(String targetBeanName, SimpleGeneric returnType, AutowiredDescription autowired) {
         Object resolveBean = null;
-        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleActualType(), returnType.isSimpleGeneric(), autowired);
-        if (List.class.isAssignableFrom(returnType.getSourceType())) {
+        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleType(), returnType.isSimpleGeneric(), autowired);
+        if (returnType.isGeneric(List.class)) {
             resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
-        if (Set.class.isAssignableFrom(returnType.getSourceType())) {
+        if (returnType.isGeneric(Set.class)) {
             resolveBean = new HashSet<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
         if (returnType.isMapGeneric()) {
@@ -261,17 +260,17 @@ public class AutowiredProcessor {
             if (primaryBeanOfType.size() > 1) {
                 throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
             }
-            return primaryBeanOfType;
+            return beanOfType;
         }
         return beanOfType;
     }
 
-    private Map<String, Object> filterMapBeanIfNecessary(Map<String, Object> beans, ActualGeneric actualGeneric) {
-        if (!actualGeneric.hasGeneric()) {
+    private Map<String, Object> filterMapBeanIfNecessary(Map<String, Object> beans, SimpleGeneric simpleGeneric) {
+        if (!simpleGeneric.hasGeneric()) {
             return beans;
         }
-        Generic nestedGeneric = actualGeneric.size() == 1 ? actualGeneric.getFirst() : actualGeneric.getSecond();
-        QualifierGeneric valueGeneric = actualGeneric.getNested(nestedGeneric);
+        Generic nestedGeneric = simpleGeneric.size() == 1 ? simpleGeneric.getFirst() : simpleGeneric.getSecond();
+        QualifierGeneric valueGeneric = simpleGeneric.getNested(nestedGeneric);
         if (valueGeneric == null || !valueGeneric.hasGeneric()) {
             return beans;
         }
@@ -296,12 +295,12 @@ public class AutowiredProcessor {
         return beans;
     }
 
-    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, ActualGeneric actualGeneric) {
+    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, SimpleGeneric simpleGeneric) {
         Object bean = beans.get(beanName);
         if (bean != null) {
             return bean;
         }
-        List<Generic> targetGenerics = new ArrayList<>(actualGeneric.getGenericInfo().keySet());
+        List<Generic> targetGenerics = new ArrayList<>(simpleGeneric.getGenericInfo().keySet());
         loop:
         for (Map.Entry<String, ?> entry : beans.entrySet()) {
             Object value = entry.getValue();

@@ -11,7 +11,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -19,7 +18,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -730,27 +728,6 @@ public abstract class ReflectUtil {
             setFieldValue(obj, field, (obj = newInstance(field.getType())));
             clazz = field.getType();
         }
-    }
-
-    /**
-     * 获取泛型的原始类型
-     */
-    public static Class<?> getRawType(Type type) {
-        if (type instanceof Class) {
-            Class<?> clazz = (Class<?>) type;
-            return clazz.isArray() ? clazz.getComponentType() : clazz;
-        }
-        if (type instanceof GenericArrayType) {
-            return getRawType(((GenericArrayType) type).getGenericComponentType());
-        }
-        if (type instanceof ParameterizedType) {
-            return (Class<?>) ((ParameterizedType) type).getRawType();
-        }
-        if (type instanceof WildcardType) {
-            WildcardType wildcardType = (WildcardType) type;
-            return getRawType(CommonUtil.empty(wildcardType.getLowerBounds()) ? wildcardType.getUpperBounds()[0] : wildcardType.getLowerBounds()[0]);
-        }
-        throw new ResolvableException("Unable to get the raw type: " + type);
     }
 
     public static String getTypeVariableName(Type type) {

@@ -12,7 +12,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescr
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
-import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
@@ -101,7 +101,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
             else {
                 Objects.requireNonNull(propertyValue.getReference(), "The reference field is required");
                 Objects.requireNonNull(propertyValue.getReferenceType(), "The referenceType field is required");
-                autowired = this.autowiredProcessor.doResolveBean(ActualGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
+                autowired = this.autowiredProcessor.doResolveBean(SimpleGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
             }
             if (autowired != null) {
                 ReflectUtil.setFieldValue(target, field, autowired);
@@ -129,8 +129,8 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
             if (description == null) {
                 continue;
             }
-            ActualGeneric actualGeneric = ActualGeneric.from(clazz, field);
-            if (beanMethods.stream().anyMatch(e -> actualGeneric.getSimpleActualType().isAssignableFrom(e.getReturnType()))) {
+            SimpleGeneric simpleGeneric = SimpleGeneric.from(clazz, field);
+            if (beanMethods.stream().anyMatch(e -> simpleGeneric.getSimpleActualType().isAssignableFrom(e.getReturnType()))) {
                 laziedFields.add(new Pair<>(field, description));
                 continue;
             }

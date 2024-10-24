@@ -1,30 +1,20 @@
 package com.kfyty.loveqq.framework.core.generic;
 
-import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
-import com.kfyty.loveqq.framework.core.lang.Lazy;
-import com.kfyty.loveqq.framework.core.lang.Value;
-import com.kfyty.loveqq.framework.core.reflect.ParameterizedTypeImpl;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
+import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /**
  * 描述: 简单的泛型，支持简单的泛型需求
@@ -37,34 +27,24 @@ import java.util.concurrent.ConcurrentMap;
 @Setter
 public class SimpleGeneric extends QualifierGeneric {
     /**
-     * 具有简单嵌套泛型的 class
+     * 忽略的嵌套泛型的 class
      */
-    public static final List<Class<?>> SIMPLE_NESTED_GENERIC_CLASSES = new LinkedList<>();
+    public static final List<Class<?>> IGNORED_NESTED_GENERIC_CLASSES = new LinkedList<>();
 
     static {
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Collection.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(List.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Set.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(SortedSet.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Queue.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Deque.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Map.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(SortedMap.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(TreeMap.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentMap.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(ConcurrentHashMap.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Value.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(LaziedObject.class);
-        SIMPLE_NESTED_GENERIC_CLASSES.add(Lazy.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(Supplier.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(Comparable.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(FactoryBean.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationListener.class);
     }
 
     /**
-     * 注册具有简单嵌套泛型的 class
+     * 注册忽略的嵌套泛型的 class
      *
      * @param classes class
      */
-    public static void registryNestedClass(Class<?>... classes) {
-        SIMPLE_NESTED_GENERIC_CLASSES.addAll(Arrays.asList(classes));
+    public static void registryIgnoredClass(Class<?>... classes) {
+        IGNORED_NESTED_GENERIC_CLASSES.addAll(Arrays.asList(classes));
     }
 
     /**
@@ -98,7 +78,7 @@ public class SimpleGeneric extends QualifierGeneric {
     }
 
     /**
-     * 返回是否是简单的参数化类型，即泛型参数只有一个的泛型，不包含类型变量的泛型(List<E>)
+     * 返回是否是简单的参数化类型，即泛型参数只有一个的泛型，或 Map 泛型
      * eg: <code>List<String><code/>
      * eg: <code>List<String[]><code/>
      * eg: <code>String[]<code/>
@@ -106,10 +86,7 @@ public class SimpleGeneric extends QualifierGeneric {
      * @return true if simple generic
      */
     public boolean isSimpleGeneric() {
-        if (this.sourceType == null) {
-            return this.size() == 1;
-        }
-        return !Objects.equals(this.sourceType, this.resolveType) || this.isSimpleArray();
+        return this.resolveType instanceof Class<?> && this.hasGeneric() || this.size() == 1 || this.isMapGeneric();
     }
 
     /**
@@ -141,35 +118,49 @@ public class SimpleGeneric extends QualifierGeneric {
 
     /**
      * 返回简单的实际泛型
+     * 忽略 {@link this#IGNORED_NESTED_GENERIC_CLASSES} 的泛型类型
+     *
+     * @return 泛型
+     */
+    public Class<?> getSimpleType() {
+        // 自定义的类实现或继承具有泛型的接口，应该返回自定义的类型
+        if (this.resolveType instanceof Class<?> && this.hasGeneric() && this.getFirst() instanceof SuperGeneric) {
+            return getRawType(this.resolveType);
+        }
+        Class<?> actualType = this.getSimpleActualType();
+        if (actualType == Object.class) {
+            return getRawType(this.resolveType);
+        }
+        for (Class<?> clazz : IGNORED_NESTED_GENERIC_CLASSES) {
+            if (this.genericInfo.containsKey(new Generic(clazz))) {
+                return getRawType(this.resolveType);
+            }
+            else if (this.genericInfo.containsKey(new SuperGeneric(actualType, clazz))) {
+                return getRawType(this.resolveType);
+            }
+            else if (this.resolveType instanceof ParameterizedType) {
+                Class<?> rawType = getRawType(this.resolveType);
+                if (rawType == clazz) {
+                    return rawType;
+                }
+            }
+        }
+        return actualType;
+    }
+
+    /**
+     * 返回简单的实际泛型
      *
      * @return 泛型
      */
     public Class<?> getSimpleActualType() {
         if (isMapGeneric()) {
-            return getMapValueType().get();
+            return this.getMapValueType().get();
         }
         if (!isSimpleGeneric()) {
-            return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
-        }
-        if (!isGeneric(Class.class) && !isSimpleArray() && SIMPLE_NESTED_GENERIC_CLASSES.stream().noneMatch(this::isGeneric)) {
-            return this.sourceType != null ? this.sourceType : (Class<?>) this.resolveType;
+            return getRawType(this.resolveType);
         }
         return getFirst().get();
-    }
-
-    /**
-     * 解析简单的嵌套的泛型
-     *
-     * @return 嵌套泛型
-     */
-    public SimpleGeneric resolveNestedGeneric() {
-        for (Class<?> collectionClass : SIMPLE_NESTED_GENERIC_CLASSES) {
-            QualifierGeneric nested = this.getNested(new Generic(collectionClass));
-            if (nested != null) {
-                return (SimpleGeneric) nested;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -183,19 +174,31 @@ public class SimpleGeneric extends QualifierGeneric {
         return (SimpleGeneric) new SimpleGeneric(clazz).resolve();
     }
 
-    public static SimpleGeneric from(ParameterizedTypeImpl parameterizedType) {
-        return (SimpleGeneric) new SimpleGeneric(parameterizedType).resolve();
-    }
-
     public static SimpleGeneric from(Field field) {
-        return (SimpleGeneric) new SimpleGeneric(field.getType(), field.getGenericType()).resolve();
+        return (SimpleGeneric) new SimpleGeneric(field.getDeclaringClass(), field.getGenericType()).resolve();
     }
 
     public static SimpleGeneric from(Method method) {
-        return (SimpleGeneric) new SimpleGeneric(method.getReturnType(), method.getGenericReturnType()).resolve();
+        return (SimpleGeneric) new SimpleGeneric(method.getDeclaringClass(), method.getGenericReturnType()).resolve();
     }
 
     public static SimpleGeneric from(Parameter parameter) {
-        return (SimpleGeneric) new SimpleGeneric(parameter.getType(), parameter.getParameterizedType()).resolve();
+        return (SimpleGeneric) new SimpleGeneric(parameter.getDeclaringExecutable().getDeclaringClass(), parameter.getParameterizedType()).resolve();
+    }
+
+    public static SimpleGeneric from(ParameterizedType parameterizedType) {
+        return (SimpleGeneric) new SimpleGeneric(parameterizedType).resolve();
+    }
+
+    public static SimpleGeneric from(Class<?> sourceType, Field field) {
+        return (SimpleGeneric) new SimpleGeneric(sourceType, field.getGenericType()).resolve();
+    }
+
+    public static SimpleGeneric from(Class<?> sourceType, Method method) {
+        return (SimpleGeneric) new SimpleGeneric(sourceType, method.getGenericReturnType()).resolve();
+    }
+
+    public static SimpleGeneric from(Class<?> sourceType, Parameter parameter) {
+        return (SimpleGeneric) new SimpleGeneric(sourceType, parameter.getParameterizedType()).resolve();
     }
 }

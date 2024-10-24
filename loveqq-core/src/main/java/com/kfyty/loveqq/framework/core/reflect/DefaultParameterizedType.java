@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class ParameterizedTypeImpl implements ParameterizedType {
+public class DefaultParameterizedType implements ParameterizedType {
     private final Class<?> rawType;
     private final Class<?>[] classes;
 

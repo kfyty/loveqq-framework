@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 描述: 泛型基本描述
@@ -15,6 +17,7 @@ public class Generic {
     /**
      * 泛型类型变量
      */
+    @Getter
     private final String typeVariable;
 
     /**
@@ -25,11 +28,14 @@ public class Generic {
     /**
      * 该泛型是否是数组
      */
-    private final boolean isArray;
+    @Getter
+    @Setter
+    private boolean isArray;
 
     /**
      * 泛型索引，泛型的顺序索引
      */
+    @Getter
     private int index;
 
     public Generic(String typeVariable) {
@@ -58,16 +64,8 @@ public class Generic {
         return this.type;
     }
 
-    public String getTypeVariable() {
-        return this.typeVariable;
-    }
-
     public boolean isTypeVariable() {
         return this.typeVariable != null;
-    }
-
-    public boolean isArray() {
-        return this.isArray;
     }
 
     public void incrementIndex() {

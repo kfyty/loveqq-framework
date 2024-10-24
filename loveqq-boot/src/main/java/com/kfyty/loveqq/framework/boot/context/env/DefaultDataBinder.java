@@ -124,6 +124,9 @@ public class DefaultDataBinder implements DataBinder {
             return new Pair<>(true, field.getType());
         }
         Type resolveType = simpleGeneric.getResolveType();
+        if (resolveType instanceof TypeVariable<?> && !simpleGeneric.getFirst().isTypeVariable() && hasAnnotation(simpleGeneric.getFirst().get(), NestedConfigurationProperty.class)) {
+            return new Pair<>(true, simpleGeneric.getFirst().get());
+        }
         if (resolveType instanceof Class<?> && hasAnnotation(resolveType, NestedConfigurationProperty.class)) {
             return new Pair<>(true, (Class<?>) simpleGeneric.getResolveType());
         }
@@ -139,7 +142,7 @@ public class DefaultDataBinder implements DataBinder {
     }
 
     public static boolean hasNestedGeneric(SimpleGeneric simpleGeneric) {
-        return simpleGeneric.hasGeneric() && !(simpleGeneric.getResolveType() instanceof TypeVariable);
+        return simpleGeneric.hasGeneric();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
