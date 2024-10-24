@@ -101,6 +101,10 @@ class PropertiesConfig implements InitializingBean {
 
     private List<List<User>> configLists;
 
+    private Map<String, User>[] configMapArr;
+
+    private Map<String, User[]> configMapNestedArr;
+
     private List<Map<String, User>> listConfigMap;
 
     private Map<String, Map<String, User>> configMapMap;
@@ -136,6 +140,8 @@ class PropertiesConfig implements InitializingBean {
         Assertions.assertEquals(this.users.get(1).getName(), "name2");
         Assertions.assertEquals(this.userMap.get("1").getChildren().get(0).getExtra().get(0), "map");
         Assertions.assertEquals(this.opt.getProperty("user.enable"), "true");
+        Assertions.assertEquals(this.configMapArr[0].get("map").getId(), "arr_list_map");
+        Assertions.assertEquals(this.configMapNestedArr.get("map")[0].getId(), "map_nested_arr");
         Assertions.assertEquals(this.configLists.get(0).get(0).getId(), "unique_list_list");
         Assertions.assertEquals(this.listConfigMap.get(0).get("map").getId(), "unique_list_map");
         Assertions.assertEquals(this.configMapMap.get("map").get("nested").getId(), "unique_map_map");

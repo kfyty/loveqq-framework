@@ -58,11 +58,11 @@ public abstract class ResultSetUtil {
         if (returnType.isSimpleArray()) {
             return processArrayObject(resultSet, returnType.getFirst().get());
         }
-        if (Set.class.isAssignableFrom(returnType.getSourceType())) {
+        if (returnType.isGeneric(Set.class)) {
             Generic generic = returnType.getFirst();
             return processSetObject(resultSet, (Class<?>) (generic.isTypeVariable() ? Map.class : generic.get()));
         }
-        if (List.class.isAssignableFrom(returnType.getSourceType())) {
+        if (returnType.isGeneric(List.class)) {
             Generic generic = returnType.getFirst();
             return processListObject(resultSet, (Class<?>) (generic.isTypeVariable() ? Map.class : generic.get()));
         }
@@ -72,7 +72,7 @@ public abstract class ResultSetUtil {
             }
             return processMapObject(resultSet, returnType);
         }
-        return processSingleObject(resultSet, returnType.getSourceType());
+        return processSingleObject(resultSet, returnType.getSimpleActualType());
     }
 
     public static <T> T processSingleObject(ResultSet resultSet, Class<T> clazz) throws SQLException {

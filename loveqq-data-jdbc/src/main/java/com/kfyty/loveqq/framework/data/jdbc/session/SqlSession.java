@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.data.jdbc.session;
 
 import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
-import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.jdbc.TransactionHolder;
 import com.kfyty.loveqq.framework.core.jdbc.transaction.Transaction;
@@ -10,7 +9,6 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.JdbcUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.data.jdbc.BaseMapper;
 import com.kfyty.loveqq.framework.data.jdbc.annotation.Execute;
 import com.kfyty.loveqq.framework.data.jdbc.annotation.Query;
@@ -30,7 +28,6 @@ import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -149,26 +146,7 @@ public class SqlSession implements InvocationHandler {
      * @return 返回值类型包装
      */
     private SimpleGeneric processReturnType(Method method) {
-        // 不是 BaseMapper 或基本类型
-        if (!method.getDeclaringClass().equals(BaseMapper.class) || method.getReturnType().isPrimitive()) {
-            return SimpleGeneric.from(method);
-        }
-
-        // 解析 BaseMapper 的泛型
-        Class<?> entityClass = ReflectUtil.getSuperGeneric(this.mapperClass, 1);
-
-        // 返回值是 Object，说明就是泛型本身
-        if (method.getReturnType().equals(Object.class)) {
-            return new SimpleGeneric(entityClass);
-        }
-
-        // 返回值是集合类型
-        if (Collection.class.isAssignableFrom(method.getReturnType())) {
-            SimpleGeneric simpleGeneric = new SimpleGeneric(method.getReturnType(), method.getGenericReturnType());
-            simpleGeneric.getGenericInfo().put(new Generic(entityClass), null);
-            return simpleGeneric;
-        }
-        throw new IllegalArgumentException("resolve return type failed !");
+        return SimpleGeneric.from(this.mapperClass, method);
     }
 
     /**

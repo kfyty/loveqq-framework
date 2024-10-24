@@ -12,7 +12,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowir
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
-import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
@@ -354,7 +354,7 @@ public class GenericBeanDefinition implements BeanDefinition {
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
-            Object resolveBean = autowiredProcessor.doResolveBean(ActualGeneric.from(this.beanType, parameter), description, parameter.getType());
+            Object resolveBean = autowiredProcessor.doResolveBean(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
             constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }
         return constructorArgs;

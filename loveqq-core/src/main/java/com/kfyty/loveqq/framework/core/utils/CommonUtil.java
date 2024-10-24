@@ -237,6 +237,7 @@ public abstract class CommonUtil {
             sb.append(ofNullable(params[paramIndex++]).map(Object::toString).orElse(EMPTY_STRING));
             preIndex = index + 2;
         }
+        sb.append(charArray, preIndex, charArray.length - preIndex);
         return sb.toString();
     }
 

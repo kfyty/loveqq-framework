@@ -1,27 +1,31 @@
 package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.reflect.ParameterizedTypeImpl;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getRawType;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getTypeVariableName;
-import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 全限定泛型描述
@@ -34,18 +38,18 @@ import static java.util.Optional.ofNullable;
 @EqualsAndHashCode
 public class QualifierGeneric {
     /**
-     * 源类型
-     * 如果是 Class，则为 Class 本身
-     * 如果是 Field，则为其属性类型
-     * 如果是 Method，则为其返回值类型
-     * 如果是 Parameter，则为其参数类型
+     * 源类型，即解析的泛型所在的，具有真实类型的类型
      */
-    protected Class<?> sourceType;
+    protected final Class<?> sourceType;
 
     /**
      * 解析的目标类型
+     *
+     * @see Field#getGenericType()
+     * @see Method#getGenericReturnType()
+     * @see Parameter#getParameterizedType()
      */
-    protected Type resolveType;
+    protected final Type resolveType;
 
     /**
      * 泛型类型，对于其 key，取值如下：
@@ -66,7 +70,7 @@ public class QualifierGeneric {
      * @param sourceType 类型
      */
     public QualifierGeneric(Class<?> sourceType) {
-        this(sourceType, null);
+        this(sourceType, sourceType);
     }
 
     /**
@@ -75,7 +79,7 @@ public class QualifierGeneric {
      * @param genericType 类型
      */
     public QualifierGeneric(Type genericType) {
-        this(genericType instanceof ParameterizedType ? (Class<?>) ((ParameterizedType) genericType).getRawType() : null, genericType);
+        this(getRawType(genericType), genericType);
     }
 
     /**
@@ -99,10 +103,7 @@ public class QualifierGeneric {
         if (!this.genericInfo.isEmpty()) {
             return this;
         }
-        if (this.sourceType == this.resolveType && this.sourceType != null && !this.sourceType.isArray() && !Map.class.isAssignableFrom(this.sourceType)) {
-            return this;
-        }
-        return this.resolveGenericType(ofNullable(this.resolveType).orElse(this.sourceType));
+        return this.resolveGenericType(this.resolveType);
     }
 
     /**
@@ -130,10 +131,7 @@ public class QualifierGeneric {
      * @return true if is generic
      */
     public boolean isGeneric(Class<?> generic) {
-        if (this.sourceType != null) {
-            return generic.isAssignableFrom(this.sourceType);
-        }
-        return generic.isAssignableFrom(ReflectUtil.getRawType(this.resolveType));
+        return generic.isAssignableFrom(this.sourceType) || generic.isAssignableFrom(getRawType(this.resolveType));
     }
 
     /**
@@ -164,7 +162,7 @@ public class QualifierGeneric {
      * @return 第一个泛型
      */
     public Generic getFirst() {
-        if (!this.hasGeneric()) {
+        if (this.size() < 1) {
             throw new ResolvableException("The generic doesn't exists !");
         }
         return this.genericInfo.keySet().iterator().next();
@@ -233,7 +231,21 @@ public class QualifierGeneric {
     }
 
     protected void resolveGenericArrayType(GenericArrayType type) {
+        Set<Generic> cache = new HashSet<>(this.genericInfo.keySet());
         this.resolveGenericType(type.getGenericComponentType());
+
+        // 必须先将修改的 key 移除，再重新放入，否则 get 取不到数据
+        List<Map.Entry<Generic, QualifierGeneric>> changed = new LinkedList<>();
+        for (Iterator<Map.Entry<Generic, QualifierGeneric>> i = this.genericInfo.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<Generic, QualifierGeneric> next = i.next();
+            if (cache.contains(next.getKey())) {
+                continue;
+            }
+            next.getKey().setArray(true);
+            changed.add(next);
+            i.remove();
+        }
+        changed.forEach(e -> this.genericInfo.put(e.getKey(), e.getValue()));
     }
 
     protected void resolveWildcardType(WildcardType wildcardType) {
@@ -242,7 +254,38 @@ public class QualifierGeneric {
     }
 
     protected void resolveTypeVariable(TypeVariable<?> typeVariable) {
+        GenericDeclaration declaration = typeVariable.getGenericDeclaration();
+        if (declaration instanceof Class<?>) {
+            Class<?> clazz = (Class<?>) declaration;
+            Type superType = this.resolveTypeVariableSuperType(this.sourceType, clazz);
+            if (superType instanceof ParameterizedType) {
+                int index = resolveTypeVariableIndex(typeVariable, clazz);
+                this.resolveParameterizedType((ParameterizedType) superType, null, index);
+                return;
+            }
+        }
         this.resolveTypeVariable(getTypeVariableName(typeVariable), false, null);
+    }
+
+    protected Type resolveTypeVariableSuperType(Class<?> sourceType, Class<?> clazz) {
+        Class<?> superClass = sourceType;
+        while (superClass != null && superClass != Object.class) {
+            Class<?> temp = superClass.getSuperclass();
+            if (temp == clazz) {
+                return superClass.getGenericSuperclass();
+            }
+            superClass = temp;
+        }
+        Class<?>[] interfaces = sourceType.getInterfaces();
+        for (int i = 0; i < interfaces.length; i++) {
+            if (interfaces[i] == clazz) {
+                return sourceType.getGenericInterfaces()[i];
+            }
+            if (clazz.isAssignableFrom(interfaces[i])) {
+                return resolveTypeVariableSuperType(interfaces[i], clazz);
+            }
+        }
+        return clazz;
     }
 
     protected void resolveTypeVariable(String typeVariableName, boolean isArray, Class<?> superType) {
@@ -258,30 +301,28 @@ public class QualifierGeneric {
     }
 
     protected void resolveParameterizedType(ParameterizedType type, Class<?> superType) {
+        resolveParameterizedType(type, superType, null);
+    }
+
+    protected void resolveParameterizedType(ParameterizedType type, Class<?> superType, Integer targetIndex) {
+        int index = -1;
         Type[] actualTypeArguments = type.getActualTypeArguments();
         for (Type actualTypeArgument : actualTypeArguments) {
+            index++;
+            if (targetIndex != null && targetIndex != index) {
+                continue;
+            }
             if (actualTypeArgument instanceof TypeVariable) {
                 this.resolveTypeVariable((TypeVariable<?>) actualTypeArgument);
                 continue;
             }
-            if (actualTypeArgument instanceof Class && ((Class<?>) actualTypeArgument).isArray()) {
-                this.resolveClassGenericType((Class<?>) actualTypeArgument);
+            if (actualTypeArgument instanceof GenericArrayType) {
+                this.resolveGenericArrayType((GenericArrayType) actualTypeArgument);
                 continue;
             }
-            if (actualTypeArgument instanceof GenericArrayType) {
-                Type componentType = ((GenericArrayType) actualTypeArgument).getGenericComponentType();
-                while (componentType instanceof GenericArrayType) {
-                    componentType = ((GenericArrayType) componentType).getGenericComponentType();
-                }
-                if (componentType instanceof TypeVariable) {
-                    this.resolveTypeVariable(actualTypeArgument.getTypeName(), true, superType);
-                    continue;
-                }
-            }
             Class<?> rawType = getRawType(actualTypeArgument);
-            boolean isArray = actualTypeArgument instanceof GenericArrayType;
-            QualifierGeneric nested = actualTypeArgument instanceof Class ? null : this.create(rawType, actualTypeArgument).resolve();
-            Generic generic = superType == null ? new Generic(rawType, isArray) : new SuperGeneric(rawType, isArray, superType);
+            Generic generic = superType == null ? new Generic(rawType) : new SuperGeneric(rawType, superType);
+            QualifierGeneric nested = actualTypeArgument instanceof Class ? null : this.create(this.sourceType, actualTypeArgument).resolve();
             if (this.genericInfo.containsKey(generic)) {
                 generic.incrementIndex();
             }
@@ -295,19 +336,61 @@ public class QualifierGeneric {
         return new QualifierGeneric(clazz).resolve();
     }
 
-    public static QualifierGeneric from(ParameterizedTypeImpl parameterizedType) {
-        return new QualifierGeneric(parameterizedType).resolve();
-    }
-
     public static QualifierGeneric from(Field field) {
-        return new QualifierGeneric(field.getType(), field.getGenericType()).resolve();
+        return new QualifierGeneric(field.getDeclaringClass(), field.getGenericType()).resolve();
     }
 
     public static QualifierGeneric from(Method method) {
-        return new QualifierGeneric(method.getReturnType(), method.getGenericReturnType()).resolve();
+        return new QualifierGeneric(method.getDeclaringClass(), method.getGenericReturnType()).resolve();
     }
 
     public static QualifierGeneric from(Parameter parameter) {
-        return new QualifierGeneric(parameter.getType(), parameter.getParameterizedType()).resolve();
+        return new QualifierGeneric(parameter.getDeclaringExecutable().getDeclaringClass(), parameter.getParameterizedType()).resolve();
+    }
+
+    public static QualifierGeneric from(ParameterizedType parameterizedType) {
+        return new QualifierGeneric(parameterizedType).resolve();
+    }
+
+    public static QualifierGeneric from(Class<?> sourceType, Field field) {
+        return new QualifierGeneric(sourceType, field.getGenericType()).resolve();
+    }
+
+    public static QualifierGeneric from(Class<?> sourceType, Method method) {
+        return new QualifierGeneric(sourceType, method.getGenericReturnType()).resolve();
+    }
+
+    public static QualifierGeneric from(Class<?> sourceType, Parameter parameter) {
+        return new QualifierGeneric(sourceType, parameter.getParameterizedType()).resolve();
+    }
+
+    public static int resolveTypeVariableIndex(TypeVariable<?> typeVariable, Class<?> declaration) {
+        TypeVariable<? extends Class<?>>[] typeParameters = declaration.getTypeParameters();
+        for (int i = 0; i < typeParameters.length; i++) {
+            if (Objects.equals(typeParameters[i], typeVariable)) {
+                return i;
+            }
+        }
+        throw new ResolvableException("Resolve type variable failed: " + typeVariable);
+    }
+
+    public static Class<?> getRawType(Type type) {
+        if (type instanceof Class<?>) {
+            return (Class<?>) type;
+        }
+        if (type instanceof ParameterizedType) {
+            return getRawType(((ParameterizedType) type).getRawType());
+        }
+        if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return Array.newInstance(getRawType(componentType), 0).getClass();
+        }
+        if (type instanceof WildcardType) {
+            return getRawType(((WildcardType) type).getUpperBounds()[0]);
+        }
+        if (type instanceof TypeVariable) {
+            return Object.class;
+        }
+        throw new ResolvableException("Resolve raw type failed: " + type);
     }
 }

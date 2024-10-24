@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lookup;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
-import com.kfyty.loveqq.framework.core.generic.ActualGeneric;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
@@ -37,6 +37,6 @@ public class LookupMethodInterceptorProxy implements MethodInterceptorChainPoint
         }
         String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.getBeanName(method.getReturnType());
         AutowiredDescription description = autowiredProcessor.getResolver().resolve(method);
-        return this.autowiredProcessor.doResolveBean(beanName, ActualGeneric.from(method), description);
+        return this.autowiredProcessor.doResolveBean(beanName, SimpleGeneric.from(method), description);
     }
 }
