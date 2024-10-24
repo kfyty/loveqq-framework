@@ -26,7 +26,7 @@ public @interface RequestMapping {
      *
      * @return 默认 GET 方法
      */
-    RequestMethod requestMethod() default RequestMethod.GET;
+    RequestMethod method() default RequestMethod.GET;
 
     /**
      * 设置响应的 content-type

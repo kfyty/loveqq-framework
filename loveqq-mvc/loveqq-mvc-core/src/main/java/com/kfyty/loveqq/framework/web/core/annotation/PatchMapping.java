@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(requestMethod = RequestMethod.PATCH)
+@RequestMapping(method = RequestMethod.PATCH)
 public @interface PatchMapping {
     @AliasFor(annotation = RequestMapping.class)
     String value() default "";

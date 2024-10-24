@@ -4,9 +4,11 @@ import com.kfyty.loveqq.framework.boot.feign.autoconfig.annotation.FeignClient;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import feign.Client;
+import feign.Contract;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.Request;
@@ -60,6 +62,12 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
     protected Decoder decoder;
 
     /**
+     * 注解解释器
+     */
+    @Autowired(required = false)
+    protected Contract contract;
+
+    /**
      * 重试配置
      */
     @Autowired(required = false)
@@ -95,15 +103,10 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
                 .encoder(this.encoder)
                 .decoder(this.decoder)
                 .retryer(this.retryer != null ? this.retryer : Retryer.NEVER_RETRY);
-        if (this.invocationHandlerFactory != null) {
-            builder.invocationHandlerFactory(invocationHandlerFactory);
-        }
-        if (CommonUtil.notEmpty(this.requestInterceptors)) {
-            builder.requestInterceptors(this.requestInterceptors);
-        }
-        if (CommonUtil.notEmpty(this.responseInterceptors)) {
-            builder.responseInterceptors(this.responseInterceptors);
-        }
+        Mapping.from(this.contract).whenNotNull(builder::contract);
+        Mapping.from(this.invocationHandlerFactory).whenNotNull(builder::invocationHandlerFactory);
+        Mapping.from(this.requestInterceptors).whenNotEmpty(builder::requestInterceptors);
+        Mapping.from(this.responseInterceptors).whenNotEmpty(builder::responseInterceptors);
 
         FeignClient annotation = AnnotationUtil.findAnnotation(this.feignInterface, FeignClient.class);
         this.afterConfig(annotation, builder);

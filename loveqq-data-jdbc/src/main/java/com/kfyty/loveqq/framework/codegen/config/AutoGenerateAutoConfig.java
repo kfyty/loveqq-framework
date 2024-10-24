@@ -45,7 +45,7 @@ public class AutoGenerateAutoConfig {
     private SqlSessionProxyFactory sqlSessionProxyFactory;
 
     @Lazy
-    @Bean
+    @Bean(resolveNested = false, independent = true)
     public QueryInterceptor fieldStructInfoInterceptor() {
         return new FieldStructInfoInterceptor();
     }

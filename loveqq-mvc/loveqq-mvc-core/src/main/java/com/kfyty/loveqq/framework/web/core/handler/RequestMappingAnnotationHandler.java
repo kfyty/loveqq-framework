@@ -53,7 +53,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
             RequestMapping annotation = AnnotationUtil.findAnnotation(method, RequestMapping.class);
             if (annotation != null) {
                 String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? method.getName() : annotation.value());
-                MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.requestMethod(), controller, method);
+                MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.method(), controller, method);
                 methodMappings.add(this.resolveRequestMappingProduces(controllerClass, annotation, methodMapping));
             }
         }
@@ -70,7 +70,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
                 methodMapping.setProduces(responseBody.contentType());
             }
         }
-        log.info("Resolved request mapping: [URL:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
+        log.info("Resolved request mapping: [URI:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
         return methodMapping;
     }
 }
