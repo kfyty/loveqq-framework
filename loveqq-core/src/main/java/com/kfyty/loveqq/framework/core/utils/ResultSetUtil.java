@@ -129,7 +129,7 @@ public abstract class ResultSetUtil {
                     continue;
                 }
                 if (fieldName.contains(".")) {
-                    Object value = extractObject(resultSet, metaData.getColumnLabel(i), ReflectUtil.parseFieldType(fieldName, o.getClass()));
+                    Object value = extractObject(resultSet, metaData.getColumnLabel(i), ReflectUtil.resolveFieldType(fieldName, o.getClass()));
                     ReflectUtil.setNestedFieldValue(fieldName, o, value);
                     continue;
                 }

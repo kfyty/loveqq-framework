@@ -149,7 +149,7 @@ public abstract class SQLParametersResolveUtil {
                     int rootIndex = param.indexOf(".");
                     String nested = param.substring(rootIndex + 1);
                     Object root = parameters.get(param.substring(0, rootIndex)).getValue();
-                    value = ReflectUtil.parseValue(nested, root);
+                    value = ReflectUtil.resolveValue(nested, root);
                     paramType = value == null ? null : value.getClass();
                 }
                 if (value == null && log.isDebugEnabled()) {

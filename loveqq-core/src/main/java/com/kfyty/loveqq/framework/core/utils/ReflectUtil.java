@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.generic.Generic;
+import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.lang.function.Function3;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -23,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -508,16 +512,19 @@ public abstract class ReflectUtil {
 
     /**
      * 获取继承的父类或父接口的泛型
-     * 将会过滤掉非参数化类型的父类或者父接口
      *
      * @param clazz 子类
      * @return 父类或父接口泛型
      */
-    public static List<Type> getGenerics(Class<?> clazz) {
-        List<Type> superGenericType = new ArrayList<>(4);
-        ofNullable(clazz.getGenericSuperclass()).filter(e -> !(e instanceof Class)).ifPresent(superGenericType::add);
-        superGenericType.addAll(Arrays.stream(clazz.getGenericInterfaces()).filter(e -> !(e instanceof Class)).collect(Collectors.toList()));
-        return superGenericType;
+    public static Type[] getSuperGenerics(Class<?> clazz) {
+        Type superclass = clazz.getGenericSuperclass();
+        Type[] interfaces = clazz.getGenericInterfaces();
+        Type[] retValue = new Type[(superclass == null ? 0 : 1) + interfaces.length];
+        System.arraycopy(interfaces, 0, retValue, 0, interfaces.length);
+        if (superclass != null) {
+            retValue[retValue.length - 1] = superclass;
+        }
+        return retValue;
     }
 
     /**
@@ -539,7 +546,7 @@ public abstract class ReflectUtil {
      * @param genericIndex 泛型索引
      */
     public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex) {
-        return getSuperGeneric(clazz, c -> true, genericIndex);
+        return getSuperGeneric(clazz, clazz, genericIndex, null);
     }
 
     /**
@@ -549,20 +556,8 @@ public abstract class ReflectUtil {
      * @param clazz              子类
      * @param superGenericFilter 父类或父接口泛型匹配过滤器
      */
-    public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Type> superGenericFilter) {
-        return getSuperGeneric(clazz, 0, superGenericFilter);
-    }
-
-    /**
-     * 根据父泛型匹配过滤器获取泛型类型
-     * 如果匹配的父类不具有泛型，则尝试获取第一个继承的父类或父接口泛型的泛型类型
-     *
-     * @param clazz               子类
-     * @param superClassPredicate 父类类型过滤器
-     * @param genericIndex        泛型索引
-     */
-    public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Class<?>> superClassPredicate, int genericIndex) {
-        return getSuperGeneric(clazz, superClassPredicate, genericIndex, 0, null);
+    public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<ParameterizedType> superGenericFilter) {
+        return getSuperGeneric(clazz, clazz, 0, superGenericFilter);
     }
 
     /**
@@ -572,94 +567,116 @@ public abstract class ReflectUtil {
      * @param genericIndex       泛型索引
      * @param superGenericFilter 父类或父接口泛型匹配过滤器
      */
-    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, Predicate<Type> superGenericFilter) {
-        return getSuperGeneric(clazz, c -> true, genericIndex, -1, superGenericFilter);
+    public static Class<?> getSuperGeneric(Class<?> clazz, int genericIndex, Predicate<ParameterizedType> superGenericFilter) {
+        return getSuperGeneric(clazz, clazz, genericIndex, superGenericFilter);
     }
 
     /**
      * 获取父类或父接口的泛型类型
      *
-     * @param clazz              子类
-     * @param superClassFilter   父类类型过滤器，将会一直测试 clazz.getSuperclass()，直到测试通过或者为空
-     * @param genericIndex       泛型索引，ParameterizedType.getActualTypeArguments() 返回值索引
-     * @param superGenericIndex  继承的父类或父接口泛型索引，由 getGenerics() 方法返回
-     * @param superGenericFilter 父类或父接口泛型匹配过滤器，将会一直测试 getGenerics()，直到测试通过。superGenericIndex < 0 且非空时有效
-     * @see ReflectUtil#getGenerics(Class)
+     * @param clazz              目标类
+     * @param type               可以解析目标类的实际类型
+     * @param index              泛型索引，ParameterizedType.getActualTypeArguments() 返回值索引
+     * @param superGenericFilter 父类或父接口泛型匹配过滤器
+     * @see ReflectUtil#getSuperGenerics(Class)
      */
-    public static Class<?> getSuperGeneric(Class<?> clazz, Predicate<Class<?>> superClassFilter, int genericIndex, int superGenericIndex, Predicate<Type> superGenericFilter) {
-        Objects.requireNonNull(clazz);
-        final Class<?> source = clazz;
-        while (clazz.getSuperclass() != null && !superClassFilter.test(clazz.getSuperclass())) {
-            clazz = clazz.getSuperclass();
+    public static Class<?> getSuperGeneric(final Class<?> clazz, Type type, int index, Predicate<ParameterizedType> superGenericFilter) {
+        final List<Deque<QualifierGeneric[]>> stacks;
+        final QualifierGeneric resolved = new QualifierGeneric(clazz, type).resolve();
+        if (type instanceof ParameterizedType && superGenericFilter.test((ParameterizedType) type)) {
+            stacks = Collections.singletonList(new ArrayDeque<>(2) {{
+                push(new QualifierGeneric[]{resolved});
+            }});
+        } else {
+            stacks = resolveSuperGeneric(clazz, superGenericFilter);
         }
-        Type genericSuperclass = getGenericSuperclass(clazz);
-        if (superGenericFilter != null || !(genericSuperclass instanceof ParameterizedType)) {
-            List<Type> generics = getGenerics(clazz);
-            if (superGenericIndex > -1) {
-                genericSuperclass = generics.get(superGenericIndex);
-            } else if (superGenericFilter != null) {
-                Optional<Type> filterInterface = Optional.empty();
-                while (CommonUtil.notEmpty(generics) && !(filterInterface = generics.stream().filter(superGenericFilter).findAny()).isPresent()) {
-                    generics = generics.stream().filter(e -> e instanceof ParameterizedType).map(e -> ((ParameterizedType) e).getRawType()).filter(e -> e instanceof Class).flatMap(e -> getGenerics((Class<?>) e).stream()).collect(Collectors.toList());
+        for (Deque<QualifierGeneric[]> stack : stacks) {
+            while (!stack.isEmpty()) {
+                QualifierGeneric[] generics = stack.pop();
+                loop:
+                for (QualifierGeneric pop : generics) {
+                    Optional<Generic> any = pop.getGenericInfo().keySet().stream().skip(index).findAny();
+                    if (!any.isPresent()) {
+                        continue;
+                    }
+                    Generic generic = any.get();
+                    if (!generic.isTypeVariable()) {
+                        return generic.get();
+                    }
+                    // 索引匹配，然后一级级的向上查询
+                    TypeVariable<? extends Class<?>>[] typeParameters = pop.getSourceType().getTypeParameters();
+                    for (int i = 0; i < typeParameters.length; i++) {
+                        if (typeParameters[i].getTypeName().equals(generic.getTypeVariable())) {
+                            index = i;
+                            break loop;
+                        }
+                    }
                 }
-                if (!filterInterface.isPresent()) {
-                    throw new ResolvableException("parent generic match failed !");
-                }
-                genericSuperclass = filterInterface.get();
+            }
+            Optional<Generic> generic = resolved.getGenericInfo().keySet().stream().skip(index).findAny();
+            if (generic.isPresent()) {
+                return generic.get().get();
             }
         }
-        if (!(genericSuperclass instanceof ParameterizedType)) {
-            throw new ResolvableException(clazz.getName() + " does not contain generic types !");
-        }
-        Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
-        if (actualTypeArguments[genericIndex] instanceof ParameterizedType) {
-            return (Class<?>) ((ParameterizedType) actualTypeArguments[genericIndex]).getRawType();
-        }
-        Type type = actualTypeArguments[genericIndex];
+        throw new ResolvableException("Unable to resolve generic of type: " + clazz);
+    }
+
+    public static String getTypeVariableName(Type type) {
         if (type instanceof TypeVariable) {
-            for (Type generic : getGenerics(source)) {
-                try {
-                    return getActualGenericType(getTypeVariableName(type), generic);
-                } catch (ResolvableException e) {
-                    log.warn(e.getMessage());
+            return ((TypeVariable<?>) type).getName();
+        }
+        throw new ResolvableException("Unable to get the type variable: " + type);
+    }
+
+    /**
+     * 构建父泛型路径
+     * 内部的每一个元素，都是从解析类型到最终类型的继承路线，由于接口可以实现多个，所以才是数组类型
+     *
+     * @param clazz              目标 class
+     * @param superGenericFilter 父类型过滤器，匹配时结束向上查询
+     * @return 父泛型路径
+     */
+    public static List<Deque<QualifierGeneric[]>> resolveSuperGeneric(Class<?> clazz, Predicate<ParameterizedType> superGenericFilter) {
+        List<QualifierGeneric[]> container = resolveSuperGeneric(clazz, superGenericFilter, new LinkedList<>());
+        return resolveSuperGenericPath(clazz, container, new ArrayDeque<>(), new LinkedList<>());
+    }
+
+    private static List<Deque<QualifierGeneric[]>> resolveSuperGenericPath(Class<?> clazz, List<QualifierGeneric[]> container, Deque<QualifierGeneric[]> stack, List<Deque<QualifierGeneric[]>> paths) {
+        QualifierGeneric[] children = container.stream().filter(e -> e[0].getSourceType() == clazz).findFirst().orElse(null);
+        if (children == null) {
+            paths.add(new ArrayDeque<>(stack));
+        } else {
+            stack.push(children);
+            for (QualifierGeneric child : children) {
+                Class<?> rawType = QualifierGeneric.getRawType(child.getResolveType());
+                if (rawType != Object.class) {
+                    resolveSuperGenericPath(rawType, container, stack, paths);
                 }
             }
-            throw new ResolvableException(source.getName() + " does not contain generic types !");
+            stack.pop();
         }
-        return (Class<?>) type;
+        return paths;
     }
 
-    public static Type getGenericSuperclass(Class<?> clazz) {
-        Class<?> superClass = clazz.getSuperclass();
-        Type genericSuperclass = clazz.getGenericSuperclass();
-        while (genericSuperclass != null && !Objects.equals(superClass, Object.class) && !(genericSuperclass instanceof ParameterizedType)) {
-            clazz = superClass;
-            superClass = clazz.getSuperclass();
-            genericSuperclass = clazz.getGenericSuperclass();
+    private static List<QualifierGeneric[]> resolveSuperGeneric(Class<?> clazz, Predicate<ParameterizedType> superGenericFilter, List<QualifierGeneric[]> stack) {
+        Type[] superGenerics = getSuperGenerics(clazz);
+        if (superGenerics.length < 1) {
+            return stack;
         }
-        return genericSuperclass;
-    }
-
-    public static Class<?> getActualGenericType(String typeVariable, Class<?> clazz) {
-        return getActualGenericType(typeVariable, getGenericSuperclass(clazz));
-    }
-
-    public static Class<?> getActualGenericType(String typeVariable, Type genericSuperclass) {
-        if (!(genericSuperclass instanceof ParameterizedType)) {
-            throw new ResolvableException("Unable to get the parent generic type: " + genericSuperclass);
+        QualifierGeneric[] parents = new QualifierGeneric[superGenerics.length];
+        for (int i = 0; i < superGenerics.length; i++) {
+            parents[i] = new QualifierGeneric(clazz, superGenerics[i]).resolve();
         }
-        ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
-        TypeVariable<?>[] typeParameters = ((Class<?>) parameterizedType.getRawType()).getTypeParameters();
-        for (int i = 0; i < typeParameters.length; i++) {
-            if (typeVariable.equals(typeParameters[i].getName())) {
-                return (Class<?>) parameterizedType.getActualTypeArguments()[i];
+        stack.add(parents);
+        if (superGenericFilter != null) {
+            if (Arrays.stream(superGenerics).anyMatch(e -> e instanceof ParameterizedType && superGenericFilter.test((ParameterizedType) e))) {
+                return stack;
             }
         }
-        Type parent = ((ParameterizedType) genericSuperclass).getRawType();
-        if (parent instanceof Class) {
-            return getActualGenericType(typeVariable, (Class<?>) parent);
+        for (Type generic : superGenerics) {
+            resolveSuperGeneric(QualifierGeneric.getRawType(generic), superGenericFilter, stack);
         }
-        throw new ResolvableException("Can't find actual generic type: " + genericSuperclass);
+        return stack;
     }
 
     /*--------------------------------------------- 其他方法 ---------------------------------------------*/
@@ -670,7 +687,7 @@ public abstract class ReflectUtil {
      * @param param 属性参数 eg: obj.field
      * @param root  包含 obj 属性的对象
      */
-    public static Class<?> parseFieldType(String param, Class<?> root) {
+    public static Class<?> resolveFieldType(String param, Class<?> root) {
         Class<?> clazz = root;
         String[] fields = param.split("\\.");
         for (int i = 0; i < fields.length; i++) {
@@ -690,7 +707,7 @@ public abstract class ReflectUtil {
      * @param obj   包含 obj 属性的对象
      * @return 属性值
      */
-    public static Object parseValue(String param, Object obj) {
+    public static Object resolveValue(String param, Object obj) {
         String[] fields = param.split("\\.");
         for (String field : fields) {
             obj = getFieldValue(obj, field);
@@ -702,7 +719,7 @@ public abstract class ReflectUtil {
     }
 
     /**
-     * 根据属性参数，将 value 设置到 obj 中，与 {@link ReflectUtil#parseValue(String, Object)} 过程相反
+     * 根据属性参数，将 value 设置到 obj 中，与 {@link ReflectUtil#resolveValue(String, Object)} 过程相反
      *
      * @param param 属性参数 eg: obj.field
      * @param obj   包含 obj 属性的对象
@@ -728,12 +745,5 @@ public abstract class ReflectUtil {
             setFieldValue(obj, field, (obj = newInstance(field.getType())));
             clazz = field.getType();
         }
-    }
-
-    public static String getTypeVariableName(Type type) {
-        if (type instanceof TypeVariable) {
-            return ((TypeVariable<?>) type).getName();
-        }
-        throw new ResolvableException("Unable to get the type variable: " + type);
     }
 }

@@ -26,7 +26,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
 
     private static final String DEFAULT_PK_FIELD = "id";
 
-    private static final Predicate<Type> BASE_MAPPER_GENERIC_FILTER = e -> e instanceof ParameterizedType && ((ParameterizedType) e).getRawType().equals(BaseMapper.class);
+    private static final Predicate<ParameterizedType> BASE_MAPPER_GENERIC_FILTER = e -> e.getRawType().equals(BaseMapper.class);
 
     private static final Map<Class<?>, Pair<String, Class<?>>> MAPPER_ENTITY_CLASS_CACHE = new WeakConcurrentHashMap<>(4);
 

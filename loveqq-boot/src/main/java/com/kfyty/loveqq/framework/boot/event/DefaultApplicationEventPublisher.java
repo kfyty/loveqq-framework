@@ -14,7 +14,6 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Predicate;
@@ -33,7 +32,7 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
     /**
      * 父类泛型过滤器
      */
-    public static final Predicate<Type> SUPER_GENERIC_FILTER = type -> type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(ApplicationListener.class);
+    public static final Predicate<ParameterizedType> SUPER_GENERIC_FILTER = type -> type.getRawType().equals(ApplicationListener.class);
 
     /**
      * 上下文是否刷新完成

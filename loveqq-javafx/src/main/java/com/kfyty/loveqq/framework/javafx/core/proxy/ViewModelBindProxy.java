@@ -70,7 +70,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
         // 更新到视图
         for (Pair<String, ObservableValue<?>> bindView : this.bindViews) {
             Object viewValue = bindView.getValue().getValue();
-            Object modelValue = ReflectUtil.parseValue(bindView.getKey(), this.controller);
+            Object modelValue = ReflectUtil.resolveValue(bindView.getKey(), this.controller);
             if (!Objects.equals(viewValue, modelValue)) {
                 try {
                     this.viewBind(bindView.getValue(), modelValue);

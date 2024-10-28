@@ -32,8 +32,14 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @see MapperAnnotationScanner
  */
 public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableApplicationContextAware {
+    /**
+     * 可配置的上下文
+     */
     private ConfigurableApplicationContext applicationContext;
 
+    /**
+     * 路径匹配器
+     */
     @Autowired
     private PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver;
 
@@ -44,11 +50,10 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
 
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {
-        for (Class<?> scannedClass : this.applicationContext.getScannedClasses()) {
-            MapperScan mapperScan = AnnotationUtil.findAnnotation(scannedClass, MapperScan.class);
-            if (mapperScan != null) {
-                this.loadMapperScan(beanFactory, mapperScan);
-            }
+        // 只取启动类注解，减少搜索次数
+        MapperScan mapperScan = AnnotationUtil.findAnnotation(this.applicationContext.getPrimarySource(), MapperScan.class);
+        if (mapperScan != null) {
+            this.loadMapperScan(beanFactory, mapperScan);
         }
     }
 
@@ -56,9 +61,7 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
         Set<Class<?>> classes = new HashSet<>();
 
         if (CommonUtil.notEmpty(mapperScan.value())) {
-            List<Class<?>> collect = Arrays.stream(mapperScan.value())
-                    .flatMap(e -> PackageUtil.scanClass(e, this.pathMatchingResourcePatternResolver).stream())
-                    .collect(Collectors.toList());
+            List<Class<?>> collect = Arrays.stream(mapperScan.value()).flatMap(e -> PackageUtil.scanClass(e, this.pathMatchingResourcePatternResolver).stream()).collect(Collectors.toList());
             classes.addAll(collect);
         }
 
