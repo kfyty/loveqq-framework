@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 表示该 bean 没有切面配置，无需解析
+ * 描述: 表示是否解析 bean 是否具有可切入的切面
  *
  * @author kfyty725
  * @date 2024/8/7 18:35

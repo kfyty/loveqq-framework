@@ -223,7 +223,7 @@ public class QualifierGeneric {
             this.genericInfo.put(new Generic(clazz.getComponentType(), true), null);
             return;
         }
-        for (Type type : ReflectUtil.getGenerics(clazz)) {
+        for (Type type : ReflectUtil.getSuperGenerics(clazz)) {
             if (type instanceof ParameterizedType) {
                 this.resolveParameterizedType((ParameterizedType) type, getRawType(type));
             }
@@ -328,6 +328,11 @@ public class QualifierGeneric {
             }
             this.genericInfo.put(generic, nested);
         }
+    }
+
+    @Override
+    public String toString() {
+        return CommonUtil.format("sourceType={}, resolveType={}, generic={}", this.sourceType, this.resolveType, this.genericInfo);
     }
 
     /*---------------------------------------------------- 静态方法 ----------------------------------------------------*/

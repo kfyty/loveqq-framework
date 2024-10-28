@@ -19,8 +19,10 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher.SUPER_GENERIC_FILTER;
 
@@ -34,6 +36,8 @@ import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPubli
 @Slf4j
 @Component
 public class EventListenerResolver implements ContextAfterRefreshed, InternalPriority {
+    private static final Predicate<ParameterizedType> GENERIC_EVENT_GENERIC_FILTER = e -> e.getRawType().equals(GenericApplicationEvent.class);
+
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
@@ -83,7 +87,7 @@ public class EventListenerResolver implements ContextAfterRefreshed, InternalPri
         for (int i = 0; i < eventTypes.length; i++) {
             Class<?> eventType = eventTypes[i];
             if (GenericApplicationEvent.class.isAssignableFrom(eventType)) {
-                eventType = ReflectUtil.getActualGenericType("T", parameterTypes[i]);
+                eventType = ReflectUtil.getSuperGeneric(eventType, parameterTypes[i], 0, GENERIC_EVENT_GENERIC_FILTER);
             }
             ApplicationListener<?> annotationListener = this.eventListenerAnnotationListenerFactory.createEventListener(beanName, listenerMethod, eventType);
             this.applicationEventPublisher.registerEventListener(annotationListener);
