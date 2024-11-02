@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,12 +32,12 @@ public class Value<T> {
 
     @Override
     public int hashCode() {
-        return this.value == null ? 0 : this.value.hashCode();
+        return CommonUtil.hashCode(this.value);
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Value && Objects.equals(this.value, ((Value<?>) obj).value);
+        return obj instanceof Value<?> && Objects.deepEquals(this.value, ((Value<?>) obj).value);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import jakarta.annotation.Resource;
@@ -22,7 +21,6 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
  * @date 2022/7/24 14:05
  * @email kfyty725@hotmail.com
  */
-@Component
 public class DefaultAutowiredDescriptionResolver implements AutowiredDescriptionResolver {
 
     @Override

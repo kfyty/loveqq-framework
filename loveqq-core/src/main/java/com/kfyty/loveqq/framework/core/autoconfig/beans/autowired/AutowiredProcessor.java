@@ -34,7 +34,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver.doResolve;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.isJdkProxy;
 import static java.util.Optional.ofNullable;
@@ -76,7 +75,7 @@ public class AutowiredProcessor {
     }
 
     public Object doAutowired(Object bean, Field field) {
-        AutowiredDescription description = doResolve(field);
+        AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(field);
         if (description != null) {
             return this.doAutowired(bean, field, description);
         }
@@ -84,7 +83,7 @@ public class AutowiredProcessor {
     }
 
     public void doAutowired(Object bean, Method method) {
-        AutowiredDescription description = doResolve(method);
+        AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(method);
         if (description != null) {
             this.doAutowired(bean, method, description);
         }

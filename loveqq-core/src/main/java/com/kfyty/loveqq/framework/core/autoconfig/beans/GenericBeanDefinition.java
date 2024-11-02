@@ -8,7 +8,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescription;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DelegatedAutowiredDescriptionResolver;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
@@ -331,7 +331,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     protected void ensureAutowiredProcessor(ApplicationContext context) {
         if (autowiredProcessor == null || autowiredProcessor.getContext() != context) {
             if (BeanFactoryPreProcessor.class.isAssignableFrom(this.beanType)) {
-                autowiredProcessor = new AutowiredProcessor(context, new DefaultAutowiredDescriptionResolver());
+                autowiredProcessor = new AutowiredProcessor(context, new DelegatedAutowiredDescriptionResolver());
             } else {
                 autowiredProcessor = new AutowiredProcessor(context);
             }

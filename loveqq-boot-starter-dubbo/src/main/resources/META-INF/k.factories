@@ -1,0 +1,6 @@
+com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescriptionResolver=com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboAutowiredDescriptionResolver
+
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboProperties,\
+    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboServiceRegistry,\
+    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboAutoConfiguration

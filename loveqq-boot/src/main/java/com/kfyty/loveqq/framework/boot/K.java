@@ -95,11 +95,7 @@ public class K {
      * @param args  命令行参数
      */
     public static void run(Class<?> clazz, String... args) {
-        if (isIndexedClassLoader()) {
-            start(clazz, args);
-        } else {
-            runOnClassLoad(getIndexedClassloader(clazz), clazz, args);
-        }
+        runOnClassLoad(getIndexedClassloader(clazz), clazz, args);
     }
 
     /**

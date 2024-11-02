@@ -52,6 +52,7 @@
         <module>loveqq-boot-starter-quartz</module>
         <module>loveqq-boot-starter-xxl-job</module>
         <module>loveqq-boot-starter-uid-generator</module>
+        <module>loveqq-boot-starter-dubbo</module>
         <module>loveqq-boot-starter-feign</module>
         <module>loveqq-boot-starter-config-nacos</module>
         <module>loveqq-boot-starter-discovery-nacos</module>
