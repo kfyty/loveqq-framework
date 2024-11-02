@@ -421,6 +421,40 @@ public abstract class CommonUtil {
         return propertySources;
     }
 
+    public static int hashCode(Object o) {
+        if (o == null) {
+            return 0;
+        }
+        if (o instanceof char[]) {
+            return Arrays.hashCode((char[]) o);
+        }
+        if (o instanceof byte[]) {
+            return Arrays.hashCode((byte[]) o);
+        }
+        if (o instanceof short[]) {
+            return Arrays.hashCode((short[]) o);
+        }
+        if (o instanceof int[]) {
+            return Arrays.hashCode((int[]) o);
+        }
+        if (o instanceof long[]) {
+            return Arrays.hashCode((long[]) o);
+        }
+        if (o instanceof boolean[]) {
+            return Arrays.hashCode((boolean[]) o);
+        }
+        if (o instanceof float[]) {
+            return Arrays.hashCode((float[]) o);
+        }
+        if (o instanceof double[]) {
+            return Arrays.hashCode((double[]) o);
+        }
+        if (o instanceof Object[]) {
+            return Arrays.deepHashCode((Object[]) o);
+        }
+        return o.hashCode();
+    }
+
     /**
      * 保存 jdk 生成的代理类
      *

@@ -1,3 +1,5 @@
+com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescriptionResolver=com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver
+
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DefaultAutowiredDescriptionResolver,\
+    com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DelegatedAutowiredDescriptionResolver,\
     com.kfyty.loveqq.framework.core.support.json.JacksonAutoConfig

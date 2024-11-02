@@ -229,14 +229,14 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 查找 class，由于 {@link #loadClass(String, boolean)} 已经优先从 jar index 加载，因此这里无需再查找，直接返回即可
+     * 查找 class，由于 {@link #loadClass(String, boolean)} 已经优先从 jar index 加载，因此这里无需再查找，直接抛出异常即可
      *
      * @param name the name of the class
      * @return null
      */
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        return null;
+        throw new ClassNotFoundException(name);
     }
 
     /**

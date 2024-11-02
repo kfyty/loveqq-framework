@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
@@ -132,7 +133,9 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void onRefresh() {
-
+        for (ContextOnRefresh contextOnRefresh : this.getBeanOfType(ContextOnRefresh.class).values()) {
+            contextOnRefresh.onRefresh(this);
+        }
     }
 
     protected void afterRefresh() {

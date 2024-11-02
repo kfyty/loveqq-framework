@@ -1,6 +1,7 @@
 package com.kfyty.core;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
+import com.kfyty.loveqq.framework.core.lang.Value;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
@@ -77,5 +78,11 @@ public class CommonTest {
         Set<URL> urls = ClassLoaderUtil.resolveClassPath(this.getClass().getClassLoader(), new HashSet<>());
         Set<URL> resources = new PathMatchingResourcePatternResolver(urls).findResources("*.properties");
         System.out.println(resources);
+    }
+
+    @Test
+    public void valueTest() {
+        Assertions.assertEquals(new Value<>(new int[]{1, 2}), new Value<>(new int[]{1, 2}));
+        Assertions.assertNotEquals(new Value<>(new int[]{1, 2}), new Value<>(new byte[]{1, 2}));
     }
 }
