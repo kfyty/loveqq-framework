@@ -95,7 +95,7 @@ public class K {
      * @param args  命令行参数
      */
     public static void run(Class<?> clazz, String... args) {
-        runOnClassLoad(getIndexedClassloader(clazz), clazz, args);
+        runOnClassLoader(getIndexedClassloader(clazz), clazz, args);
     }
 
     /**
@@ -106,7 +106,7 @@ public class K {
      * @param args        命令行参数
      */
     @SneakyThrows(Exception.class)
-    public static void runOnClassLoad(ClassLoader classLoader, Class<?> clazz, String... args) {
+    public static void runOnClassLoader(ClassLoader classLoader, Class<?> clazz, String... args) {
         Class<?> bootClass = Class.forName(K.class.getName(), false, classLoader);
         Class<?> primaryClass = Class.forName(clazz.getName(), false, classLoader);
         Thread.currentThread().setContextClassLoader(classLoader);
