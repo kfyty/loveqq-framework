@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * 描述: 读取 properties 配置文件工具，支持 import 其他配置文件，支持 ${} 进行引用
@@ -67,6 +68,10 @@ public abstract class PropertiesUtil {
      */
     public static void include(Properties properties, ClassLoader classLoader) {
         String imports = (String) properties.get(ConstantConfig.IMPORT_KEY);
+        if (imports == null) {
+            final String key = ConstantConfig.IMPORT_KEY + '[';
+            imports = properties.entrySet().stream().filter(e -> e.getKey().toString().startsWith(key)).map(e -> e.getValue().toString()).collect(Collectors.joining(","));
+        }
         if (CommonUtil.notEmpty(imports)) {
             CommonUtil.split(imports, ",", true).stream().map(e -> load(e, classLoader)).forEach(properties::putAll);
             log.info("loaded nested properties config: {}", imports);

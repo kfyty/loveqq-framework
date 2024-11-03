@@ -1,15 +1,22 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet.listener;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingClass;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import com.kfyty.loveqq.framework.web.core.WebServer;
+import com.kfyty.loveqq.framework.web.core.autoconfig.WebMvcAutoConfig;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
+import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
+import com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig.WebServletMvcAutoConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -29,7 +36,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRA
 @Component
 @EnableAutoConfiguration
 @ComponentScan(excludeFilter = @ComponentFilter("com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatAutoConfig"))
-public class WebMvcAutoConfigListener implements ServletContextListener, ApplicationContextAware {
+public class WebMvcAutoConfigListener extends WebServletMvcAutoConfig implements ServletContextListener, ApplicationContextAware {
     /**
      * ioc 容器启动类
      */
@@ -78,6 +85,25 @@ public class WebMvcAutoConfigListener implements ServletContextListener, Applica
         }
     }
 
+    /**
+     * 作为 tomcat 内嵌应用时，该自动配置需要自行启用
+     */
+    @Bean
+    @ConditionalOnMissingBean(WebServer.class)
+    public WebMvcAutoConfig tomcatWebMvcAutoConfig() {
+        return new WebMvcAutoConfig();
+    }
+
+    /**
+     * 作为 tomcat 内嵌应用时，不应该配置 {@link ServletContext} bean
+     */
+    @Bean
+    @Override
+    @ConditionalOnMissingClass(classes = Object.class)
+    public ServletContext servletContext(ServletWebServer webServer) {
+        throw new UnsupportedOperationException();
+    }
+
     protected void configScanBasePackage(ServletContext servletContext) {
         String basePackage = servletContext.getInitParameter(BASE_PACKAGE_PARAM_NAME);
         ComponentScan annotation = AnnotationUtil.findAnnotation(this, ComponentScan.class);
@@ -85,7 +111,7 @@ public class WebMvcAutoConfigListener implements ServletContextListener, Applica
     }
 
     protected ApplicationContext launch(Class<?> launchClass) {
-        Method method = ReflectUtil.getMethod(ReflectUtil.load(LAUNCH_CLASS_NAME), "run", Class.class, String[].class);
+        Method method = ReflectUtil.getMethod(ReflectUtil.load(LAUNCH_CLASS_NAME), "start", Class.class, String[].class);
         return (ApplicationContext) ReflectUtil.invokeMethod(null, method, launchClass, EMPTY_STRING_ARRAY);
     }
 }

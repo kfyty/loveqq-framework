@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <spring.tx.version>5.2.22.RELEASE</spring.tx.version>
+        <spring.tx.version>5.3.39</spring.tx.version>
     </properties>
 
     <dependencies>
@@ -46,9 +46,19 @@
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework</groupId>
+                    <artifactId>spring-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
                     <artifactId>spring-beans</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jcl</artifactId>
+            <version>${spring.tx.version}</version>
         </dependency>
     </dependencies>
 </project>

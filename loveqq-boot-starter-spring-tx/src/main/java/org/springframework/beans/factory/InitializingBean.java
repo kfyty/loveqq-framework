@@ -7,6 +7,7 @@ package org.springframework.beans.factory;
  * @date 2021/7/29 13:07
  * @email kfyty725@hotmail.com
  */
+@Deprecated
 public interface InitializingBean {
     void afterPropertiesSet();
 }

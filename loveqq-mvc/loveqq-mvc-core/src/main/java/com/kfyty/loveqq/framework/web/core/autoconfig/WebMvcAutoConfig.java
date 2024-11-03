@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.web.core.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
@@ -26,7 +26,7 @@ import java.util.Map;
  * @date 2021/5/22 14:25
  * @email kfyty725@hotmail.com
  */
-@Configuration
+@Component
 @ConditionalOnBean(WebServer.class)
 @Import(config = WebServerProperties.class)
 public class WebMvcAutoConfig implements ContextAfterRefreshed {
@@ -43,8 +43,8 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
-        RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
-        RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
+        RequestMappingHandler requestMappingHandler = applicationContext.getBean(RequestMappingHandler.class);
+        RequestMappingMatcher requestMappingMatcher = applicationContext.getBean(RequestMappingMatcher.class);
         for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
             List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
             requestMappingMatcher.registryMethodMapping(methodMappings);

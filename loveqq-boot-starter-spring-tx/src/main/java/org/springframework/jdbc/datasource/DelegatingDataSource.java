@@ -1,3 +1,19 @@
+/*
+ * Copyright 2002-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.jdbc.datasource;
 
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
@@ -19,18 +35,17 @@ import java.util.logging.Logger;
  * delegate to the target DataSource.
  *
  * @author Juergen Hoeller
- * @since 1.1
  * @see #getConnection
+ * @since 1.1
  */
 public class DelegatingDataSource implements DataSource, InitializingBean {
-    /**
-     * 数据源
-     */
+    @Nullable
     private DataSource targetDataSource;
 
 
     /**
      * Create a new DelegatingDataSource.
+     *
      * @see #setTargetDataSource
      */
     public DelegatingDataSource() {
@@ -38,6 +53,7 @@ public class DelegatingDataSource implements DataSource, InitializingBean {
 
     /**
      * Create a new DelegatingDataSource.
+     *
      * @param targetDataSource the target DataSource
      */
     public DelegatingDataSource(DataSource targetDataSource) {
@@ -62,6 +78,7 @@ public class DelegatingDataSource implements DataSource, InitializingBean {
 
     /**
      * Obtain the target {@code DataSource} for actual use (never {@code null}).
+     *
      * @since 5.0
      */
     protected DataSource obtainTargetDataSource() {
@@ -89,6 +106,16 @@ public class DelegatingDataSource implements DataSource, InitializingBean {
     }
 
     @Override
+    public int getLoginTimeout() throws SQLException {
+        return obtainTargetDataSource().getLoginTimeout();
+    }
+
+    @Override
+    public void setLoginTimeout(int seconds) throws SQLException {
+        obtainTargetDataSource().setLoginTimeout(seconds);
+    }
+
+    @Override
     public PrintWriter getLogWriter() throws SQLException {
         return obtainTargetDataSource().getLogWriter();
     }
@@ -99,19 +126,9 @@ public class DelegatingDataSource implements DataSource, InitializingBean {
     }
 
     @Override
-    public int getLoginTimeout() throws SQLException {
-        return obtainTargetDataSource().getLoginTimeout();
+    public Logger getParentLogger() {
+        return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
-
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
-        obtainTargetDataSource().setLoginTimeout(seconds);
-    }
-
-
-    //---------------------------------------------------------------------
-    // Implementation of JDBC 4.0's Wrapper interface
-    //---------------------------------------------------------------------
 
     @Override
     @SuppressWarnings("unchecked")
@@ -125,15 +142,5 @@ public class DelegatingDataSource implements DataSource, InitializingBean {
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return (iface.isInstance(this) || obtainTargetDataSource().isWrapperFor(iface));
-    }
-
-
-    //---------------------------------------------------------------------
-    // Implementation of JDBC 4.1's getParentLogger method
-    //---------------------------------------------------------------------
-
-    @Override
-    public Logger getParentLogger() {
-        return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
 }

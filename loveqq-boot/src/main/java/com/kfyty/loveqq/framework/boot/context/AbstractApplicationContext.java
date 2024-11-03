@@ -81,11 +81,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
                 return this;
             } catch (Throwable throwable) {
-                log.error("k-boot started failed !");
+                log.error("loveqq-boot start failed.", throwable);
                 try {
                     this.close();
                 } catch (Throwable nestedThrowable) {
-                    log.error("close application context error !", nestedThrowable);
+                    log.error("close application context error.", nestedThrowable);
                 }
                 throw throwable;
             }
