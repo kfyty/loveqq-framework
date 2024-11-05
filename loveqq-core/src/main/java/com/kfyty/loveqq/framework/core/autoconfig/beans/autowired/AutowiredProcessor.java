@@ -148,7 +148,7 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, SimpleGeneric returnType, AutowiredDescription autowired) {
         Object resolveBean = null;
-        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleType(), returnType.isSimpleGeneric(), autowired);
+        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleType(), returnType, autowired);
         if (returnType.isGeneric(List.class)) {
             resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
@@ -165,7 +165,7 @@ public class AutowiredProcessor {
             return resolveBean;
         }
         if (resolveBean == null) {
-            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType);
+            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType, true);
         }
         return resolveBean;
     }
@@ -200,7 +200,8 @@ public class AutowiredProcessor {
         }
     }
 
-    private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, boolean isGeneric, AutowiredDescription autowired) {
+    private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, SimpleGeneric returnType, AutowiredDescription autowired) {
+        boolean isGeneric = returnType.isSimpleGeneric();
         Map<String, Object> beanOfType = new LinkedHashMap<>(2);
         Map<String, BeanDefinition> targetBeanDefinitions = new LinkedHashMap<>();
         if (this.context.containsBeanDefinition(targetBeanName)) {
@@ -219,7 +220,7 @@ public class AutowiredProcessor {
             } else if (isGeneric) {
                 try {
                     this.prepareResolving(targetBeanName, targetType, true);
-                    this.context.registerBeanReference(entry.getValue());
+                    this.context.registerBeanReference(entry.getValue());                       // 泛型先注册 bean 引用，下一步再注册完整的 bean，避免循环依赖
                 } finally {
                     this.removeResolving(targetBeanName, targetType, true);
                 }
@@ -236,6 +237,10 @@ public class AutowiredProcessor {
                     }
                 } else {
                     BeanDefinition beanDefinition = targetBeanDefinitions.size() != 1 ? null : targetBeanDefinitions.values().iterator().next();
+                    if (beanDefinition == null) {
+                        this.matchBeanIfNecessary(targetBeanDefinitions, targetBeanName, returnType, false);
+                        beanDefinition = targetBeanDefinitions.size() != 1 ? null : targetBeanDefinitions.values().iterator().next();
+                    }
                     if (beanDefinition == null) {
                         beanDefinition = targetBeanDefinitions.values().stream().filter(BeanDefinition::isPrimary).findAny().orElse(targetBeanDefinitions.get(targetBeanName));
                     }
@@ -264,12 +269,19 @@ public class AutowiredProcessor {
         return beanOfType;
     }
 
-    private Map<String, Object> filterMapBeanIfNecessary(Map<String, Object> beans, SimpleGeneric simpleGeneric) {
-        if (!simpleGeneric.hasGeneric()) {
+    /**
+     * 过滤嵌套的泛型，eg: Map<String, Bean<K, V>>，将会匹配 K、V 的泛型
+     *
+     * @param beans      同一类型但泛型不同的 bean
+     * @param returnType 要注入的泛型
+     * @return 过滤后的 bean
+     */
+    private Map<String, Object> filterMapBeanIfNecessary(Map<String, Object> beans, SimpleGeneric returnType) {
+        if (!returnType.hasGeneric()) {
             return beans;
         }
-        Generic nestedGeneric = simpleGeneric.size() == 1 ? simpleGeneric.getFirst() : simpleGeneric.getSecond();
-        QualifierGeneric valueGeneric = simpleGeneric.getNested(nestedGeneric);
+        Generic nestedGeneric = returnType.size() == 1 ? returnType.getFirst() : returnType.getSecond();
+        QualifierGeneric valueGeneric = returnType.getNested(nestedGeneric);
         if (valueGeneric == null || !valueGeneric.hasGeneric()) {
             return beans;
         }
@@ -294,29 +306,41 @@ public class AutowiredProcessor {
         return beans;
     }
 
-    private Object matchBeanIfNecessary(Map<String, ?> beans, String beanName, SimpleGeneric simpleGeneric) {
-        Object bean = beans.get(beanName);
-        if (bean != null) {
+    /**
+     * 匹配最佳的 bean，eg: Bean<K1, V1>、Bean<K2, V2>，将根据泛型匹配最佳的 bean
+     *
+     * @param beans      同一类型但泛型不同的 bean
+     * @param beanName   bean 名称
+     * @param returnType 要注入的泛型
+     * @param onlyOne    是否仅匹配一个。true 时若匹配多个将抛出异常；false 时将返回最后一个匹配的，并将 beans 中不匹配的移除掉
+     * @return 匹配的最佳 bean
+     */
+    private <T> T matchBeanIfNecessary(Map<String, T> beans, String beanName, SimpleGeneric returnType, boolean onlyOne) {
+        T bean = beans.get(beanName);
+        if (bean != null || !returnType.hasGeneric()) {
             return bean;
         }
-        List<Generic> targetGenerics = new ArrayList<>(simpleGeneric.getGenericInfo().keySet());
+        List<Generic> targetGenerics = new ArrayList<>(returnType.getGenericInfo().keySet());
         loop:
-        for (Map.Entry<String, ?> entry : beans.entrySet()) {
-            Object value = entry.getValue();
+        for (Iterator<Map.Entry<String, T>> cursor = beans.entrySet().iterator(); cursor.hasNext(); ) {
+            Map.Entry<String, T> entry = cursor.next();
+            T value = entry.getValue();
             SimpleGeneric generic = buildGeneric(this.context.getBeanDefinition(entry.getKey()));
             if (generic.size() != targetGenerics.size()) {
+                cursor.remove();
                 continue;
             }
             List<Generic> generics = new ArrayList<>(generic.getGenericInfo().keySet());
             for (int i = 0; i < generics.size(); i++) {
                 if (!Objects.equals(targetGenerics.get(i).get(), generics.get(i).get())) {
+                    cursor.remove();
                     continue loop;
                 }
             }
+            if (onlyOne && bean != null) {
+                throw new BeansException("Resolve target bean failed, more than one generic bean found of name: " + beanName);
+            }
             bean = value;
-        }
-        if (bean == null) {
-            throw new BeansException("Resolve target bean failed, more than one generic bean found of name: " + beanName);
         }
         return bean;
     }

@@ -141,7 +141,7 @@ public class QualifierGeneric {
      */
     public Generic getGeneric() {
         if (this.size() > 1) {
-            throw new ResolvableException("more than one generic !");
+            throw new ResolvableException("More than one generic: " + this);
         }
         return this.getFirst();
     }

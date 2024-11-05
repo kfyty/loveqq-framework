@@ -3,6 +3,7 @@ package com.kfyty.generic;
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import org.junit.jupiter.api.Assertions;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 描述:
@@ -23,15 +25,43 @@ public class GenericTest implements CommandLineRunner {
     @Autowired
     private WxCallbackContext wxCallbackContext;
 
+    @Autowired
+    private Map<String, Function> fun0;
+
+    @Autowired
+    private Map<String, Function<?, ?>> fun1;
+
+    @Autowired
+    private Map<String, Function<?, String>> fun2;
+
     @Override
     public void run(String... args) throws Exception {
         Assertions.assertEquals(wxCallbackContext.socialEventCallbacks.size(), 2);
         Assertions.assertEquals(wxCallbackContext.socialEventCallbackMap.size(), 2);
+        Assertions.assertEquals(fun0.size(), 2);
+        Assertions.assertEquals(fun1.size(), 2);
+        Assertions.assertEquals(fun2.size(), 2);
     }
 
     @Test
     public void test() {
         K.run(GenericTest.class);
+    }
+
+    @Autowired
+    public void test0(Function<Integer, String> f1, Function<Long, String> f2) {
+        Assertions.assertEquals(f1.apply(1), "1");
+        Assertions.assertEquals(f2.apply(1L), "1L");
+    }
+
+    @Bean
+    public Function<Integer, String> test1() {
+        return String::valueOf;
+    }
+
+    @Bean
+    public Function<Long, String> test2() {
+        return i -> String.valueOf(i) + 'L';
     }
 
     interface SocialEventAware<E extends SocialEventAware<E>> {}

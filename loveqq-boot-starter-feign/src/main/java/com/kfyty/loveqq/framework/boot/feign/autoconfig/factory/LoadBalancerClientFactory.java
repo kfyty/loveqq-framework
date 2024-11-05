@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig.factory;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
-import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.Server;
@@ -21,12 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class LoadBalancerClientFactory implements LBClientFactory {
     /**
-     * 注册 {@link ZoneAwareLoadBalancer} 不要处理泛型
+     * 客户端缓存
      */
-    static {
-        SimpleGeneric.registryIgnoredClass(ZoneAwareLoadBalancer.class);
-    }
-
     private final Map<String, LBClient> clientCache = new ConcurrentHashMap<>();
 
     @Autowired
