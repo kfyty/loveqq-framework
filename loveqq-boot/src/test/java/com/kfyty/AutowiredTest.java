@@ -16,6 +16,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -55,7 +56,7 @@ public class AutowiredTest {
     private Integer id;
 
     @Autowired
-    private AutowiredTest  autowiredTest;
+    private AutowiredTest autowiredTest;
 
     @Bean
     public Supplier<Bean1> b1() {
@@ -67,6 +68,11 @@ public class AutowiredTest {
         return Bean2::new;
     }
 
+    /**
+     * {@link SimpleGeneric#getSimpleType()} 如果不忽略 {@link SimpleGeneric#IGNORED_NESTED_GENERIC_CLASSES}
+     * 那么就会解析 {@link Bean2}，此时就会将 bean2 标记为解析中，那么创建 bean2 时由于还要再次注入 bean2 就会触发循环依赖。
+     * 而如果忽略的话，就会注入正确的 b2，那么 bean2 就会在最后统一实例化的时候实例化，此时不会标记 bean2 解析中，则循环依赖可解决
+     */
     @Autowired
     public void setB1B2(Supplier<Bean1> bean1Supplier, Supplier<Bean2> bean2Supplier) {
         Assertions.assertTrue(bean1Supplier.get() instanceof Bean1);
@@ -131,17 +137,23 @@ class Config {
     }
 }
 
-class Bean1 {}
+class Bean1 {
+}
 
-class Bean2 {}
+class Bean2 {
+}
 
-class Bean3 {}
+class Bean3 {
+}
 
-class Bean4 {}
+class Bean4 {
+}
 
-class Bean5 {}
+class Bean5 {
+}
 
-interface Inter {}
+interface Inter {
+}
 
 abstract class InterImpl<T> implements Inter {
     @Autowired
@@ -190,9 +202,11 @@ class Inter2 extends InterImpl<Bean2> implements InitializingBean {
     }
 }
 
-interface Factory {}
+interface Factory {
+}
 
-class FactoryImpl implements Factory {}
+class FactoryImpl implements Factory {
+}
 
 @Component
 class FactoryImport implements ImportBeanDefinition {
@@ -310,26 +324,34 @@ class TestEvent extends ApplicationEvent<String> {
     }
 }
 
-class Entity {}
-interface Base<T, K> {}
-abstract class BaseImpl<T, K> implements Base<T, K> {}
+class Entity {
+}
+
+interface Base<T, K> {
+}
+
+abstract class BaseImpl<T, K> implements Base<T, K> {
+}
 
 @Configuration
 class DefaultBase extends BaseImpl<Entity, Integer> {
 
     @Bean
     public Base<Bean1, Long> base1() {
-        return new Base<Bean1, Long>() {};
+        return new Base<Bean1, Long>() {
+        };
     }
 
     @Bean
     public Base<Bean2, Long> base2() {
-        return new Base<Bean2, Long>() {};
+        return new Base<Bean2, Long>() {
+        };
     }
 }
 
 @Component
-class CommonBase extends BaseImpl<Bean1, Integer> {}
+class CommonBase extends BaseImpl<Bean1, Integer> {
+}
 
 class BaseController<T, K> {
     @Autowired
@@ -341,7 +363,8 @@ class BaseController<T, K> {
     }
 }
 
-class IntBaseController<T> extends BaseController<T, Integer> {}
+class IntBaseController<T> extends BaseController<T, Integer> {
+}
 
 @Component
 class DefaultController extends IntBaseController<Entity> implements InitializingBean {

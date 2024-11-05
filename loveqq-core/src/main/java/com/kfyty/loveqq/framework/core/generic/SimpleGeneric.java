@@ -1,7 +1,9 @@
 package com.kfyty.loveqq.framework.core.generic;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
+import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,6 +16,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -32,9 +38,16 @@ public class SimpleGeneric extends QualifierGeneric {
     public static final List<Class<?>> IGNORED_NESTED_GENERIC_CLASSES = new LinkedList<>();
 
     static {
+        IGNORED_NESTED_GENERIC_CLASSES.add(Lazy.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(Class.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Supplier.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(Consumer.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(Function.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(BiConsumer.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(BiFunction.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Comparable.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(FactoryBean.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationEvent.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationListener.class);
     }
 
@@ -124,25 +137,17 @@ public class SimpleGeneric extends QualifierGeneric {
      */
     public Class<?> getSimpleType() {
         // 自定义的类实现或继承具有泛型的接口，应该返回自定义的类型
+        Class<?> rawType = getRawType(this.resolveType);
         if (this.resolveType instanceof Class<?> && this.hasGeneric() && this.getFirst() instanceof SuperGeneric) {
-            return getRawType(this.resolveType);
+            return rawType;
         }
         Class<?> actualType = this.getSimpleActualType();
         if (actualType == Object.class) {
-            return getRawType(this.resolveType);
+            return rawType;
         }
         for (Class<?> clazz : IGNORED_NESTED_GENERIC_CLASSES) {
-            if (this.genericInfo.containsKey(new Generic(clazz))) {
-                return getRawType(this.resolveType);
-            }
-            else if (this.genericInfo.containsKey(new SuperGeneric(actualType, clazz))) {
-                return getRawType(this.resolveType);
-            }
-            else if (this.resolveType instanceof ParameterizedType) {
-                Class<?> rawType = getRawType(this.resolveType);
-                if (rawType == clazz) {
-                    return rawType;
-                }
+            if (clazz == rawType && this.resolveType instanceof ParameterizedType) {
+                return rawType;
             }
         }
         return actualType;
@@ -150,6 +155,7 @@ public class SimpleGeneric extends QualifierGeneric {
 
     /**
      * 返回简单的实际泛型
+     * 不忽略 {@link #IGNORED_NESTED_GENERIC_CLASSES} 的泛型类型
      *
      * @return 泛型
      */

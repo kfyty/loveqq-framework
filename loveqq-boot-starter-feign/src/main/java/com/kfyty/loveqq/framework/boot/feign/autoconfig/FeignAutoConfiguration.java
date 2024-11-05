@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.netflix.loadbalancer.IRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
@@ -33,6 +34,13 @@ import org.apache.http.impl.client.HttpClientBuilder;
  */
 @Configuration
 public class FeignAutoConfiguration {
+    /**
+     * 注册 {@link ZoneAwareLoadBalancer} 不要处理泛型
+     */
+    static {
+        SimpleGeneric.registryIgnoredClass(ZoneAwareLoadBalancer.class);
+    }
+
     @Autowired(required = false)
     private ObjectMapper objectMapper;
 
