@@ -7,6 +7,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.utils.PlaceholdersUtil;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * 描述:
  *
@@ -50,7 +52,8 @@ public class DefaultPropertyPlaceholdersResolver implements PlaceholdersResolver
     }
 
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public String resolvePlaceholders(String value) {
-        return PlaceholdersUtil.resolve(value, this.placeholder, this.left, this.right, this.propertyContext.getProperties());
+        return PlaceholdersUtil.resolve(value, this.placeholder, this.left, this.right, (Map) this.propertyContext.getProperties());
     }
 }

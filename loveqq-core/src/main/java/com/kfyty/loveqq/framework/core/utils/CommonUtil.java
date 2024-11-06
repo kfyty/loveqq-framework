@@ -241,8 +241,9 @@ public abstract class CommonUtil {
         return sb.toString();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static String processPlaceholder(String s, Map<String, String> params) {
-        return PlaceholdersUtil.resolve(s, EMPTY_STRING, "{", "}", params);
+        return PlaceholdersUtil.resolve(s, EMPTY_STRING, "{", "}", (Map) params);
     }
 
     public static String removePrefix(String prefix, String target) {

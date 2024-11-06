@@ -36,8 +36,11 @@ public abstract class ResultSetUtil {
         PackageUtil.scanInstance(TypeHandler.class)
                 .forEach(e -> {
                     TypeHandler<?> typeHandler = (TypeHandler<?>) e;
-                    typeHandler.supportTypes().forEach(type -> registerTypeHandler(type, typeHandler));
                     registerTypeHandler(typeHandler);
+                    for (Class<?> supportType : typeHandler.supportTypes()) {
+                        //noinspection unchecked,rawtypes
+                        registerTypeHandler((Class) supportType, typeHandler);
+                    }
                 });
     }
 
@@ -46,11 +49,12 @@ public abstract class ResultSetUtil {
         return (TypeHandler<T>) TYPE_HANDLER.get(clazz);
     }
 
-    public static void registerTypeHandler(TypeHandler<?> typeHandler) {
-        registerTypeHandler(ReflectUtil.getSuperGeneric(typeHandler.getClass()), typeHandler);
+    @SuppressWarnings("unchecked")
+    public static <T> void registerTypeHandler(TypeHandler<T> typeHandler) {
+        registerTypeHandler((Class<T>) ReflectUtil.getSuperGeneric(typeHandler.getClass()), typeHandler);
     }
 
-    public static void registerTypeHandler(Class<?> clazz, TypeHandler<?> typeHandler) {
+    public static <T> void registerTypeHandler(Class<T> clazz, TypeHandler<T> typeHandler) {
         TYPE_HANDLER.put(clazz, typeHandler);
     }
 
