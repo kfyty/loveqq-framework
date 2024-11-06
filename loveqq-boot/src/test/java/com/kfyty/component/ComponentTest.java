@@ -80,6 +80,39 @@ enum PEnum {
     P1, P2;
 }
 
+@Data
+@Component
+@ConfigurationProperties("k.ref")
+class PropertiesRefConfig implements InitializingBean {
+    private PropertiesConfig.User object;
+
+    private List<PropertiesConfig.User> arr;
+
+    @NestedConfigurationProperty
+    private Nested nested;
+
+    @Override
+    public void afterPropertiesSet() {
+        Assertions.assertEquals(object.getId(), "1");
+        Assertions.assertEquals(object.getName(), "test");
+        Assertions.assertEquals(arr.size(), 2);
+        Assertions.assertEquals(arr.get(0).getId(), "2");
+        Assertions.assertEquals(arr.get(0).getName(), "test2");
+
+        Assertions.assertEquals(nested.getObject(), object);
+        Assertions.assertEquals(nested.getArr().get(1), arr.get(1));
+        Assertions.assertEquals(nested.getArr().get(0).getChildren().get(0).getId(), "3");
+        Assertions.assertEquals(nested.getArr().get(0).getChildren().get(0).getName(), "test3");
+    }
+
+    @Data
+    public static class Nested {
+        private PropertiesConfig.User object;
+
+        private List<PropertiesConfig.User> arr;
+    }
+}
+
 @Component
 @ConfigurationProperties("k.prop")
 @ConditionalOnProperty(value = "k.prop.enable", havingValue = "true")

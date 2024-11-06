@@ -68,6 +68,11 @@ public interface ConstantConfig {
     String SERVER_PORT_KEY = "k.server.port";
 
     /**
+     * 配置文件中引用对象配置 key，即: ${ref:key}
+     */
+    String REF_CONFIG_KEY = "ref";
+
+    /**
      * 配置文件中包含其他配置的配置 key
      */
     String IMPORT_KEY = "k.config.include";

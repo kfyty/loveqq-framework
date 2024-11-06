@@ -26,8 +26,12 @@ public abstract class ConverterUtil {
         PackageUtil.scanInstance(Converter.class)
                 .forEach(e -> {
                     Converter<?, ?> converter = (Converter<?, ?>) e;
-                    converter.supportTypes().forEach(type -> registerConverter(ReflectUtil.getSuperGeneric(converter.getClass()), type, converter));
+                    Class<?> source = ReflectUtil.getSuperGeneric(converter.getClass());
                     registerConverter(converter);
+                    for (Class<?> supportType : converter.supportTypes()) {
+                        //noinspection unchecked,rawtypes
+                        registerConverter((Class) source, (Class) supportType, converter);
+                    }
                 });
     }
 
@@ -43,13 +47,13 @@ public abstract class ConverterUtil {
         return (Converter<S, T>) TYPE_CONVERTER.get(new Pair<>(source, target));
     }
 
-    @SuppressWarnings("rawtypes")
-    public static void registerConverter(Converter<?, ?> converter) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static <S, T> void registerConverter(Converter<S, T> converter) {
         Class<? extends Converter> converterClass = converter.getClass();
-        registerConverter(ReflectUtil.getSuperGeneric(converterClass), ReflectUtil.getSuperGeneric(converterClass, 1), converter);
+        registerConverter((Class<S>) ReflectUtil.getSuperGeneric(converterClass), (Class<T>) ReflectUtil.getSuperGeneric(converterClass, 1), converter);
     }
 
-    public static void registerConverter(Class<?> source, Class<?> target, Converter<?, ?> converter) {
+    public static <S, T> void registerConverter(Class<S> source, Class<T> target, Converter<S, T> converter) {
         TYPE_CONVERTER.put(new Pair<>(source, target), converter);
     }
 
