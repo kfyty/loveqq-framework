@@ -35,6 +35,13 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
+            <artifactId>loveqq-mvc-core</artifactId>
+            <version>${loveqq.framework.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
             <artifactId>loveqq-boot-cloud-bootstrap</artifactId>
             <version>${revision}</version>
             <scope>provided</scope>
