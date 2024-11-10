@@ -28,7 +28,7 @@ public @interface FeignClient {
 
     /**
      * 使用注册中心时，为基础路径
-     * 为使用注册中心时，为 ip+port+基础路径
+     * 未使用注册中心时，为 ip + port + 基础路径
      *
      * @return host
      */

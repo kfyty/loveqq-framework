@@ -23,8 +23,8 @@ public @interface GetMapping {
     String value() default "";
 
     @AliasFor(annotation = RequestMapping.class)
-    String produces() default "text/plain; charset=utf-8";
+    String produces() default RequestMapping.DEFAULT_PRODUCES;
 
     @AliasFor(annotation = RequestMapping.class)
-    RequestMapping.DefaultMapping defaultMapping() default RequestMapping.DefaultMapping.DEFAULT;
+    RequestMapping.Strategy strategy() default RequestMapping.Strategy.DEFAULT;
 }

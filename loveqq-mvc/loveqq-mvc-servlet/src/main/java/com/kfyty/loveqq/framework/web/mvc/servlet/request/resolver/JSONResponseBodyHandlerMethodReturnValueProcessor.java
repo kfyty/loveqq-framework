@@ -3,10 +3,8 @@ package com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
-import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
-import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 
 import java.io.OutputStream;
@@ -23,15 +21,11 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
  */
 @Component
 @Order(HIGHEST_PRECEDENCE >> 1)
-public class ResponseBodyHandlerMethodReturnValueProcessor implements HandlerMethodReturnValueProcessor {
+public class JSONResponseBodyHandlerMethodReturnValueProcessor extends AbstractResponseBodyHandlerMethodReturnValueProcessor {
 
     @Override
-    public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType == null) {
-            return false;
-        }
-        Class<?> declaringClass = returnType.getSource().getClass();
-        return AnnotationUtil.hasAnnotationElement(returnType.getMethod(), ResponseBody.class) || AnnotationUtil.hasAnnotationElement(declaringClass, ResponseBody.class);
+    protected boolean supportsContentType(String contentType) {
+        return contentType.contains("application/json");
     }
 
     @Override

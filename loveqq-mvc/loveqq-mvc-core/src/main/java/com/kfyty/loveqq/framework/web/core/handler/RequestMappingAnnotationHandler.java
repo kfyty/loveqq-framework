@@ -13,11 +13,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.formatURI;
-import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.DefaultMapping.DEFAULT;
+import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.Strategy.DEFAULT;
 
 /**
  * 功能描述: 注解处理器
@@ -52,7 +53,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
             }
             RequestMapping annotation = AnnotationUtil.findAnnotation(method, RequestMapping.class);
             if (annotation != null) {
-                String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.defaultMapping() == DEFAULT ? method.getName() : annotation.value());
+                String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.strategy() == DEFAULT ? method.getName() : annotation.value());
                 MethodMapping methodMapping = MethodMapping.create(mappingPath, annotation.method(), controller, method);
                 methodMappings.add(this.resolveRequestMappingProduces(controllerClass, annotation, methodMapping));
             }
@@ -64,7 +65,9 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         if (!methodMapping.isEventStream()) {
             ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
             if (responseBody == null) {
-                responseBody = AnnotationUtil.findAnnotation(controllerClass, ResponseBody.class);
+                if (Objects.equals(annotation.produces(), RequestMapping.DEFAULT_PRODUCES)) {
+                    responseBody = AnnotationUtil.findAnnotation(controllerClass, ResponseBody.class);
+                }
             }
             if (responseBody != null) {
                 methodMapping.setProduces(responseBody.contentType());

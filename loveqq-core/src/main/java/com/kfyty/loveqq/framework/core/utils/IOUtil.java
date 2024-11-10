@@ -187,7 +187,7 @@ public abstract class IOUtil {
     public static <T extends OutputStream> T copy(InputStream in, T out, int buffer) {
         try {
             int n = -1;
-            byte[] bytes = new byte[buffer];
+            byte[] bytes = new byte[Math.max(buffer, in.available())];
             while ((n = in.read(bytes)) != -1) {
                 write(out, bytes, 0, n);
             }

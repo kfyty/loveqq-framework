@@ -2,4 +2,5 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.mvc.netty.filter.RequestResponseContextHolderFilter,\
     com.kfyty.loveqq.framework.web.mvc.netty.autoconfig.NettyServerMvcAutoConfig,\
     com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.RedirectViewHandlerMethodReturnValueProcessor,\
-    com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ResponseBodyHandlerMethodReturnValueProcessor
+    com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.JSONResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.BinaryResponseBodyHandlerMethodReturnValueProcessor

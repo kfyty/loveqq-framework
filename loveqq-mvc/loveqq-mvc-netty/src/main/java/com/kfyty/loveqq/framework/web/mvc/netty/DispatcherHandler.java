@@ -72,7 +72,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 .doOnNext(mapping -> LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI())))
                 .filterWhen(mapping -> this.processPreInterceptorAsync(request, response, mapping))
                 .map(mapping -> this.preparedMethodParams(request, response, mapping))
-                .map(params -> new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), params))
+                .map(params -> methodMapping.buildMethodParameter(params).metadata(methodMapping))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .filterWhen(p -> this.processPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))

@@ -26,6 +26,7 @@ import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpData;
@@ -285,8 +286,8 @@ public class NettyWebServer implements ServerWebServer {
                 return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(serverRequest, null);
             }
 
-            // 接收数据后执行，否则拿不到数据
-            if (request.isFormUrlencoded() || request.isMultipart()) {
+            // 接收数据后执行，否则拿不到数据，reactor-netty 限制必须为 POST
+            if (request.method() == HttpMethod.POST && (request.isFormUrlencoded() || request.isMultipart())) {
                 return request.receiveForm()
                         .map(this::buildForm)
                         .collectList()

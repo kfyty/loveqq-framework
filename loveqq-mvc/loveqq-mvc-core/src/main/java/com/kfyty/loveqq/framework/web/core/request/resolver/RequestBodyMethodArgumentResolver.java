@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +36,13 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
-        if (String.class.isAssignableFrom(parameter.getParamType())) {
+        if (InputStream.class.isAssignableFrom(parameter.getParamType())) {
+            return request.getInputStream();
+        }
+        if (parameter.getParamType() == byte[].class) {
+            return IOUtil.read(request.getInputStream());
+        }
+        if (CharSequence.class.isAssignableFrom(parameter.getParamType())) {
             return IOUtil.toString(request.getInputStream());
         }
         String json = IOUtil.toString(request.getInputStream());

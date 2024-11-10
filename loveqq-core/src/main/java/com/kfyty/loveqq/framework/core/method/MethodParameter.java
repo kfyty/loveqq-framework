@@ -77,6 +77,11 @@ public class MethodParameter {
      */
     private Object value;
 
+    /**
+     * 拓展元数据
+     */
+    private Object metadata;
+
     public MethodParameter(Method method) {
         this.method = method;
         this.returnType = method.getReturnType();
@@ -169,5 +174,16 @@ public class MethodParameter {
     public <A extends Annotation> String getParameterName(A annotation, Function<A, String> mapping) {
         String declaringName = annotation == null ? null : mapping.apply(annotation);
         return CommonUtil.notEmpty(declaringName) ? declaringName : this.getParamName();
+    }
+
+    /**
+     * 设置元数据供后续自定义使用
+     *
+     * @param metadata 元数据
+     * @return this
+     */
+    public MethodParameter metadata(Object metadata) {
+        this.metadata = metadata;
+        return this;
     }
 }

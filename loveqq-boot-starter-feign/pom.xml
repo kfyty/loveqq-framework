@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <feign.version>13.2</feign.version>
+        <feign.version>13.5</feign.version>
     </properties>
 
     <dependencies>
@@ -21,6 +21,13 @@
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-core</artifactId>
             <version>${loveqq.framework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>loveqq-mvc-core</artifactId>
+            <version>${loveqq.framework.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -33,6 +40,12 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
+            <version>${feign.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-form</artifactId>
             <version>${feign.version}</version>
         </dependency>
 
@@ -70,6 +83,13 @@
                     <artifactId>jackson-datatype-jsr310</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- 避免编译错误 -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
