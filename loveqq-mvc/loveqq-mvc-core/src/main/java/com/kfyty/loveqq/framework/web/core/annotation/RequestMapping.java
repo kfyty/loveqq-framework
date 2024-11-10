@@ -16,6 +16,11 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface RequestMapping {
     /**
+     * 默认的 content-type
+     */
+    String DEFAULT_PRODUCES = "text/plain; charset=utf-8";
+
+    /**
      * 请求映射路径
      * 默认为方法名称
      */
@@ -33,18 +38,18 @@ public @interface RequestMapping {
      *
      * @return content-type
      */
-    String produces() default "text/plain; charset=utf-8";
+    String produces() default DEFAULT_PRODUCES;
 
     /**
      * {@link this#value()} 为空时的处理方式
      *
-     * @return DefaultMapping
-     * @see DefaultMapping#EMPTY 空字符串
-     * @see DefaultMapping#DEFAULT 方法名称
+     * @return {@link Strategy.DEFAULT}
+     * @see Strategy#EMPTY 空字符串
+     * @see Strategy#DEFAULT 方法名称
      */
-    DefaultMapping defaultMapping() default DefaultMapping.DEFAULT;
+    Strategy strategy() default Strategy.DEFAULT;
 
-    enum DefaultMapping {
+    enum Strategy {
         EMPTY,
         DEFAULT
     }

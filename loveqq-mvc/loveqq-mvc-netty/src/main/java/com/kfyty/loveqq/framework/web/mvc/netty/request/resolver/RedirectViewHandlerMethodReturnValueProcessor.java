@@ -20,7 +20,7 @@ public class RedirectViewHandlerMethodReturnValueProcessor implements ServerHand
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        return returnType == null || returnValue instanceof String && ((String) returnValue).startsWith("redirect:");
+        return returnType == null || CharSequence.class.isAssignableFrom(returnType.getReturnType()) && returnValue.toString().startsWith("redirect:");
     }
 
     @Override

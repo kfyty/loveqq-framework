@@ -23,7 +23,7 @@ public class StringValueHandlerMethodReturnValueProcessor implements HandlerMeth
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        return returnType != null && returnType.getReturnType() == String.class;
+        return returnType != null && CharSequence.class.isAssignableFrom(returnType.getReturnType());
     }
 
     @Override

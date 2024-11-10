@@ -1,6 +1,9 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqDecoder;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqEncoder;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqMvcContract;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.factory.LoadBalancerClientFactory;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.listener.ServerListener;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
@@ -10,15 +13,16 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.netflix.loadbalancer.IRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
 import feign.Client;
+import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.httpclient.ApacheHttpClient;
-import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
 import feign.ribbon.LBClientFactory;
@@ -51,18 +55,18 @@ public class FeignAutoConfiguration {
     @Bean(resolveNested = false, independent = true)
     public Encoder feignEncoder() {
         if (this.objectMapper == null) {
-            return new JacksonEncoder();
+            return new LoveqqEncoder(new JacksonEncoder());
         }
-        return new JacksonEncoder(this.objectMapper);
+        return new LoveqqEncoder(new JacksonEncoder(this.objectMapper));
     }
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
     public Decoder feignDecoder() {
         if (this.objectMapper == null) {
-            return new JacksonDecoder();
+            return new LoveqqDecoder();
         }
-        return new JacksonDecoder(this.objectMapper);
+        return new LoveqqDecoder(this.objectMapper);
     }
 
     @ConditionalOnMissingBean
@@ -93,6 +97,17 @@ public class FeignAutoConfiguration {
             loadBalancer.setRule(rule);
         }
         return loadBalancer;
+    }
+
+    @Component
+    @ConditionalOnMissingBean(Contract.class)
+    @ConditionalOnClass("com.kfyty.loveqq.framework.web.core.annotation.RequestMapping")
+    static class LoveqqMvcContractAutoConfig {
+
+        @Bean(resolveNested = false, independent = true)
+        public Contract loveqqMvcContract(PlaceholdersResolver placeholdersResolver) {
+            return new LoveqqMvcContract(new Contract.Default(), placeholdersResolver);
+        }
     }
 
     @Order

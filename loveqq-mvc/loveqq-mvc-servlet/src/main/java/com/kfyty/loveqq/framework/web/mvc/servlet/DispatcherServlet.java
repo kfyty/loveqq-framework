@@ -117,7 +117,7 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
             // 应用后置处理器并处理返回值
             this.processPostInterceptor(serverRequest, serverResponse, methodMapping, retValue);
             if (retValue != null) {
-                this.handleReturnValue(retValue, methodMapping.buildMethodParameter(parameters), serverRequest, serverResponse);
+                this.handleReturnValue(retValue, methodMapping.buildMethodParameter(parameters).metadata(methodMapping), serverRequest, serverResponse);
             }
         } catch (Throwable e) {
             exception = e;

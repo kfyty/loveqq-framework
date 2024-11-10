@@ -32,9 +32,12 @@ public class MultipartFileMethodArgumentResolver implements HandlerMethodArgumen
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        SimpleGeneric type = SimpleGeneric.from(parameter.getParameter());
-        Class<?> actualType = type.getSimpleActualType();
-        return MultipartFile.class.isAssignableFrom(parameter.getParamType()) || type.hasGeneric() && actualType != null && MultipartFile.class.isAssignableFrom(actualType);
+        if (MultipartFile.class.isAssignableFrom(parameter.getParamType())) {
+            return true;
+        }
+        SimpleGeneric generic = SimpleGeneric.from(parameter.getParameter());
+        Class<?> actualType = generic.getSimpleActualType();
+        return actualType != null && generic.hasGeneric() && MultipartFile.class.isAssignableFrom(actualType);
     }
 
     @Override

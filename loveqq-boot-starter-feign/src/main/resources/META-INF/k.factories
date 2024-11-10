@@ -3,5 +3,6 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProperties,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignAutoConfiguration,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProxyBeanDefinitionImport,\
+    com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignAutoConfiguration$LoveqqMvcContractAutoConfig,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignAutoConfiguration$OkHttpClientAutoConfig,\
     com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignAutoConfiguration$HttpClientAutoConfig
