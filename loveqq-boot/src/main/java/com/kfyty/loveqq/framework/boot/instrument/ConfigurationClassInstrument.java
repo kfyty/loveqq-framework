@@ -18,6 +18,7 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -58,7 +59,7 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
 
     @SneakyThrows(IOException.class)
     protected Pair<Boolean, CtClass> isConfigurationClass(byte[] classfile) {
-        Collection<String> annotationNames = AsmUtil.getAnnotationNames(new ByteArrayInputStream(classfile), new HashSet<>(4), e -> e.equals(CONFIGURATION_CLASS) || e.equals(COMPONENT_CLASS));
+        Collection<String> annotationNames = AsmUtil.getClassAnnotationNames(new ByteArrayInputStream(classfile), new HashSet<>(4), e -> e.equals(CONFIGURATION_CLASS) || e.equals(COMPONENT_CLASS));
         for (String annotationName : annotationNames) {
             if (annotationName.equals(CONFIGURATION_CLASS)) {
                 CtClass ctClass = ClassPool.getDefault().makeClass(new ByteArrayInputStream(classfile), false);
@@ -71,7 +72,7 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
     protected byte[] enhanceConfigurationClass(byte[] classfileBuffer, CtClass ctClass) {
         try {
             boolean hasBean = false;
-            List<CtMethod> methods = JavassistUtil.getMethods(ctClass);
+            List<CtMethod> methods = JavassistUtil.getMethods(ctClass, new LinkedList<>(), true);
             for (CtMethod method : methods) {
                 if (method.isEmpty() || method.getDeclaringClass().getName().equals("java.lang.Object")) {
                     continue;

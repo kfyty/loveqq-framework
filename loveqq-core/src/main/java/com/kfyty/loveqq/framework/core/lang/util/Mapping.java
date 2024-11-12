@@ -76,6 +76,17 @@ public class Mapping<T> implements Cloneable, Serializable {
     }
 
     /**
+     * 获取当前值
+     *
+     * @param parameter           参数
+     * @param defaultValueMapping 默认值映射
+     * @return value
+     */
+    public <P> T getOr(P parameter, Function<P, T> defaultValueMapping) {
+        return this.value != null ? this.value : (parameter == null ? null : defaultValueMapping.apply(parameter));
+    }
+
+    /**
      * 当前值映射为另一个值
      *
      * @param mapping 映射关系

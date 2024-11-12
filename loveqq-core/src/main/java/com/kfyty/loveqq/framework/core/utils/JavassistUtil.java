@@ -1,10 +1,12 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.support.Pair;
 import javassist.CtClass;
 import javassist.CtMethod;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,22 +21,45 @@ public abstract class JavassistUtil {
     /**
      * 基于 javassist 获取 {@link CtClass} 的所有 {@link CtMethod}
      *
-     * @param ctClass {@link CtClass}
+     * @param ctClass     {@link CtClass}
+     * @param container   结果容器
+     * @param ignoredRoot 是否忽略 {@link Object} 方法
      * @return {@link CtMethod}
      */
-    public static List<CtMethod> getMethods(CtClass ctClass) {
+    public static List<CtMethod> getMethods(CtClass ctClass, List<CtMethod> container, boolean ignoredRoot) {
         try {
-            if (ctClass == null) {
+            if (ctClass == null || ignoredRoot && ctClass.getName().equals("java.lang.Object")) {
                 return Collections.emptyList();
             }
             CtClass superClass = ctClass.getSuperclass();
             CtClass[] interfaces = ctClass.getInterfaces();
-            List<CtMethod> ctMethods = new ArrayList<>(Arrays.asList(ctClass.getDeclaredMethods()));
+            container.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
             if (superClass != null) {
-                ctMethods.addAll(getMethods(superClass));
+                getMethods(superClass, container, ignoredRoot);
             }
             for (CtClass anInterface : interfaces) {
-                ctMethods.addAll(getMethods(anInterface));
+                getMethods(anInterface, container, ignoredRoot);
+            }
+            return container;
+        } catch (Exception e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
+     * 基于 javassist 获取 {@link CtClass} 的指定 {@link CtMethod}
+     *
+     * @param ctClass {@link CtClass}
+     * @return {@link CtMethod}
+     */
+    public static List<CtMethod> getMethods(CtClass ctClass, Collection<Pair<String, String>> methodNames) {
+        try {
+            if (ctClass == null || CommonUtil.empty(methodNames)) {
+                return Collections.emptyList();
+            }
+            List<CtMethod> ctMethods = new ArrayList<>(methodNames.size());
+            for (Pair<String, String> method : methodNames) {
+                ctMethods.add(ctClass.getMethod(method.getKey(), method.getValue()));
             }
             return ctMethods;
         } catch (Exception e) {

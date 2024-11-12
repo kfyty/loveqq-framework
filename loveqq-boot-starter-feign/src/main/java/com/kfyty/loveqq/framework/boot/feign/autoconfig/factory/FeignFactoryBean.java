@@ -1,11 +1,13 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig.factory;
 
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProperties;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.annotation.FeignClient;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import feign.Client;
 import feign.Contract;
@@ -36,6 +38,12 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
      * feign 接口
      */
     protected final Class<T> feignInterface;
+
+    /**
+     * feign 配置属性
+     */
+    @Autowired
+    protected FeignProperties feignProperties;
 
     /**
      * 占位符解析器
@@ -107,6 +115,9 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
         Mapping.from(this.invocationHandlerFactory).whenNotNull(builder::invocationHandlerFactory);
         Mapping.from(this.requestInterceptors).whenNotEmpty(builder::requestInterceptors);
         Mapping.from(this.responseInterceptors).whenNotEmpty(builder::responseInterceptors);
+        Mapping.from(BeanUtil.getBeanName(this.feignInterface))
+                .map(e -> Mapping.from(this.feignProperties.getConfig()).notNullMap(c -> c.get(e)).getOr(this.feignProperties.getConfig(), c -> c.get("default")))
+                .whenNotNull(builder::options);
 
         FeignClient annotation = AnnotationUtil.findAnnotation(this.feignInterface, FeignClient.class);
         this.afterConfig(annotation, builder);

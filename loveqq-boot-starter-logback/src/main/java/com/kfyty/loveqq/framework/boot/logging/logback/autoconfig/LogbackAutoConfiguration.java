@@ -10,7 +10,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
+import com.kfyty.loveqq.framework.core.reflect.DefaultParameterizedType;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.slf4j.ILoggerFactory;
@@ -19,9 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
-
-import static com.kfyty.loveqq.framework.core.generic.SimpleGeneric.from;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getField;
 
 /**
  * 描述: logback 配置
@@ -48,11 +47,6 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
      */
     private LoggerContext loggerContext;
 
-    /**
-     * 帮助构建泛型
-     */
-    private Map<String, String> helperMap;
-
     @Override
     public void preProcessBeanFactory(BeanFactory beanFactory) {
         ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
@@ -65,7 +59,7 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
 
     protected void doConfigure(GenericPropertiesContext propertiesContext) {
         String config = propertiesContext.getProperty("logging.config");
-        Map<String, String> levelMap = propertiesContext.getProperty("logging.level", from(getField(this.getClass(), "helperMap")));
+        Map<String, String> levelMap = propertiesContext.getProperty("logging.level", SimpleGeneric.from(new DefaultParameterizedType(Map.class, new Class[]{String.class, String.class})));
 
         if (CommonUtil.notEmpty(config)) {
             URL url = Objects.requireNonNull(this.getClass().getResource(config), "Logback config load failed");
