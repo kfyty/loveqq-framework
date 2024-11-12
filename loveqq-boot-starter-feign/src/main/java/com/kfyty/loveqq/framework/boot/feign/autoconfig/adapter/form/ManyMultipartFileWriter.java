@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 import feign.codec.EncodeException;
 import feign.form.multipart.AbstractWriter;
 import feign.form.multipart.Output;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 描述:
@@ -12,12 +13,9 @@ import feign.form.multipart.Output;
  * @date 2024/11/7 20:14
  * @email kfyty725@hotmail.com
  */
+@RequiredArgsConstructor
 public class ManyMultipartFileWriter extends AbstractWriter {
     private final MultipartFileWriter fileWriter;
-
-    public ManyMultipartFileWriter() {
-        this.fileWriter = new MultipartFileWriter();
-    }
 
     @Override
     public boolean isApplicable(Object value) {

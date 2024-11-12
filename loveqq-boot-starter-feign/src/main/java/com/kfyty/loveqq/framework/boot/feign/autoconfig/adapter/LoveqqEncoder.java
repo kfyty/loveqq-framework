@@ -39,9 +39,10 @@ public class LoveqqEncoder extends FormEncoder {
     protected void loadContentProcessor() {
         ContentProcessor processor = this.getContentProcessor(ContentType.MULTIPART);
         if (processor instanceof MultipartFormContentProcessor) {
+            MultipartFileWriter writer = new MultipartFileWriter();
             MultipartFormContentProcessor formContentProcessor = (MultipartFormContentProcessor) processor;
-            formContentProcessor.addFirstWriter(new ManyMultipartFileWriter());
-            formContentProcessor.addFirstWriter(new MultipartFileWriter());
+            formContentProcessor.addFirstWriter(writer);
+            formContentProcessor.addFirstWriter(new ManyMultipartFileWriter(writer));
         } else {
             log.warn("MultipartFileWriter not support.");
         }

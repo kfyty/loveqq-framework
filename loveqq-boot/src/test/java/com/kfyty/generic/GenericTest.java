@@ -2,10 +2,12 @@ package com.kfyty.generic;
 
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
+import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -95,4 +97,23 @@ public class GenericTest implements CommandLineRunner {
 
     @Component
     static class FsCallbackContext extends AbstractCallbackContext<FsEvent, Integer> {}
+
+    static class AnyBean {}
+
+    static class ParentConfig {
+
+        @Bean
+        public AnyBean anyBean() {
+            return new AnyBean();
+        }
+    }
+
+    @Configuration
+    static class SubConfig extends ParentConfig implements InitializingBean {
+
+        @Override
+        public void afterPropertiesSet() {
+//            Assertions.assertSame(this.anyBean(), this.anyBean());
+        }
+    }
 }

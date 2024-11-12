@@ -1,14 +1,24 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig.factory;
 
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.netflix.client.ClientFactory;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
+import com.netflix.config.AggregatedConfiguration;
+import com.netflix.config.ConcurrentMapConfiguration;
+import com.netflix.config.ConfigurationManager;
+import com.netflix.config.util.ConfigurationUtils;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
 import feign.ribbon.LBClient;
 import feign.ribbon.LBClientFactory;
+import org.apache.commons.configuration.AbstractConfiguration;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,6 +35,9 @@ public class LoadBalancerClientFactory implements LBClientFactory {
     private final Map<String, LBClient> clientCache = new ConcurrentHashMap<>();
 
     @Autowired
+    private FeignProperties feignProperties;
+
+    @Autowired
     private ZoneAwareLoadBalancer<Server> loadBalancer;
 
     @Override
@@ -33,9 +46,39 @@ public class LoadBalancerClientFactory implements LBClientFactory {
         if (client != null) {
             return client;
         }
-        IClientConfig config = ClientFactory.getNamedConfig(clientName, DisableAutoRetriesByDefaultClientConfig.class);
+        IClientConfig config = this.buildClientConfig(clientName);
         LBClient newClient = LBClient.create(this.loadBalancer, config);
         clientCache.put(clientName, newClient);
         return newClient;
+    }
+
+    protected IClientConfig buildClientConfig(String clientName) {
+        return ClientFactory.getNamedConfig(clientName, () -> {
+            Properties properties = this.buildRibbonProperties(clientName);
+            DefaultClientConfigImpl clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
+            if (properties != null) {
+                AbstractConfiguration instance = ConfigurationManager.getConfigInstance();
+                if (!(instance instanceof AggregatedConfiguration)) {
+                    ConfigurationUtils.loadProperties(properties, instance);
+                } else {
+                    ConcurrentMapConfiguration configuration = new ConcurrentMapConfiguration();
+                    configuration.loadProperties(properties);
+                    ((AggregatedConfiguration) instance).addConfiguration(configuration, clientName);
+                }
+            }
+            return clientConfig;
+        });
+    }
+
+    protected Properties buildRibbonProperties(String clientName) {
+        Map<String, String> ribbon = Mapping.from(this.feignProperties.getRibbon()).notNullMap(e -> e.get(clientName)).getOr(this.feignProperties.getRibbon(), e -> e.get("default"));
+        if (ribbon == null || ribbon.isEmpty()) {
+            return null;
+        }
+        Properties properties = new Properties();
+        for (Map.Entry<String, String> entry : ribbon.entrySet()) {
+            properties.setProperty(clientName + '.' + CommonClientConfigKey.DEFAULT_NAME_SPACE + '.' + entry.getKey(), entry.getValue());
+        }
+        return properties;
     }
 }
