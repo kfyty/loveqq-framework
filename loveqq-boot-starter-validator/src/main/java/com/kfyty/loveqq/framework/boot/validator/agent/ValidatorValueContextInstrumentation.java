@@ -33,14 +33,13 @@ public class ValidatorValueContextInstrumentation implements ClassFileTransforme
 
     protected byte[] enhanceMethod(byte[] classFileBuffer) {
         try {
-            ClassPool classPool = ClassPool.getDefault();
-            CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classFileBuffer));
+            CtClass ctClass = ClassPool.getDefault().makeClass(new ByteArrayInputStream(classFileBuffer));
             CtMethod ctMethod = ctClass.getDeclaredMethod(ENHANCE_METHOD_NAME);
             ctMethod.insertAfter("com.kfyty.loveqq.framework.boot.validator.context.ValidatorContext.setValueContext(this);");
             return ctClass.toBytecode();
         } catch (Throwable e) {
             LOGGER.info(ExceptionUtil.buildStackTrace(e));
-            return null;
+            return classFileBuffer;
         }
     }
 }

@@ -21,30 +21,35 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation
 @Data
 public class MethodProxy {
     /**
+     * 代理对象
+     */
+    private final Object proxy;
+
+    /**
+     * 执行的目标方法
+     */
+    private final Method method;
+
+    /**
+     * 目标方法参数
+     */
+    private final Object[] arguments;
+
+    /**
+     * cglib 的代理方法对象
+     */
+    private final net.sf.cglib.proxy.MethodProxy methodProxy;
+
+    /**
      * 代理目标
      * 当为 cglib 代理，且直接代理抽象类时，为空
      */
     private Object target;
 
     /**
-     * 代理对象
+     * 是否应该执行 {@link net.sf.cglib.proxy.MethodProxy#invokeSuper(Object, Object[])}
      */
-    private Object proxy;
-
-    /**
-     * 执行的目标方法
-     */
-    private Method method;
-
-    /**
-     * 目标方法参数
-     */
-    private Object[] arguments;
-
-    /**
-     * cglib 的代理方法对象
-     */
-    private net.sf.cglib.proxy.MethodProxy methodProxy;
+    private boolean shouldInvokeSuper;
 
     public MethodProxy(Object target, Object proxy, Method method, Object[] args) {
         this(target, proxy, method, args, null);
@@ -56,6 +61,26 @@ public class MethodProxy {
         this.method = method;
         this.arguments = args;
         this.methodProxy = methodProxy;
+        this.shouldInvokeSuper = target == null || methodProxy != null && (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class) && hasAnnotation(target, Configuration.class);
+    }
+
+    /**
+     * 设置执行目标
+     *
+     * @param target 目标
+     */
+    public void setTarget(Object target) {
+        this.target = target;
+        this.shouldInvokeSuper = target == null || this.methodProxy != null && (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class) && hasAnnotation(target, Configuration.class);
+    }
+
+    /**
+     * 不支持设置
+     *
+     * @param shouldInvokeSuper 不支持设置
+     */
+    public void setShouldInvokeSuper(boolean shouldInvokeSuper) {
+        throw new UnsupportedOperationException("Set shouldInvokeSuper");
     }
 
     /**
@@ -102,7 +127,7 @@ public class MethodProxy {
      * @return 方法执行结果
      */
     public Object invoke(Object[] args) throws Throwable {
-        if (this.target == null || !LOAD_TRANSFORMER && hasAnnotation(this.target, Configuration.class)) {
+        if (this.shouldInvokeSuper) {
             return this.methodProxy.invokeSuper(this.proxy, args);
         }
         if (this.methodProxy != null) {
@@ -126,6 +151,7 @@ public class MethodProxy {
         return Objects.equals(this.target, other.target) &&
                 Objects.equals(this.method, other.method) &&
                 Objects.deepEquals(this.arguments, other.arguments) &&
-                Objects.equals(this.methodProxy, other.methodProxy);
+                Objects.equals(this.methodProxy, other.methodProxy) &&
+                Objects.equals(this.shouldInvokeSuper, other.shouldInvokeSuper);
     }
 }

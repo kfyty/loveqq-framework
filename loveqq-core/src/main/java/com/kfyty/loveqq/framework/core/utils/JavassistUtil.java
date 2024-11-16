@@ -1,8 +1,11 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
+import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.NotFoundException;
+import javassist.bytecode.BadBytecode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +21,27 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public abstract class JavassistUtil {
+    /**
+     * 获取原始异常
+     *
+     * @param throwable 异常
+     */
+    public static Throwable unwrap(Throwable throwable) {
+        if (throwable == throwable.getCause()) {
+            return throwable;
+        }
+        if (throwable instanceof NotFoundException) {
+            return throwable;
+        }
+        if (throwable instanceof CannotCompileException) {
+            return unwrap(throwable.getCause());
+        }
+        if (throwable instanceof BadBytecode) {
+            return unwrap(throwable.getCause());
+        }
+        return throwable;
+    }
+
     /**
      * 基于 javassist 获取 {@link CtClass} 的所有 {@link CtMethod}
      *

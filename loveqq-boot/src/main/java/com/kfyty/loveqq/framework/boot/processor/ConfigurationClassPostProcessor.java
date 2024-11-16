@@ -24,7 +24,7 @@ public class ConfigurationClassPostProcessor extends AbstractProxyCreatorProcess
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        if (ClassLoaderUtil.isIndexedClassLoader() && ConstantConfig.LOAD_TRANSFORMER) {
+        if (ClassLoaderUtil.isIndexedClassLoader() && ConstantConfig.LOAD_TRANSFORMER && beanType.getSuperclass() == Object.class) {
             return false;
         }
         return AnnotationUtil.hasAnnotationElement(beanType, Configuration.class);
