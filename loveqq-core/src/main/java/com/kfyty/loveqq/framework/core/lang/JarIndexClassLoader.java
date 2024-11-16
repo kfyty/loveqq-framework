@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.lang;
 
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
@@ -20,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -163,7 +163,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
         // jar 包支持
         List<String> jarFiles = this.jarIndex.getJarFiles(name);
-        return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
+        if (jarFiles.size() < 2) {
+            return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
+        }
+        try {
+            for (String jarFile : jarFiles) {
+                try (JarFile file = IOUtil.newJarFile(jarFile)) {
+                    if (file.getJarEntry(name) != null) {
+                        return newNestedJarURL(jarFile, name);
+                    }
+                }
+            }
+            return null;
+        } catch (IOException e) {
+            throw new ResolvableException(e);
+        }
     }
 
     /**
@@ -181,17 +195,17 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         if (this.isExploded()) {
             resources.addAll(this.findExplodedResources(name).stream().map(e -> IOUtil.newURL(e.toString() + name)).collect(Collectors.toList()));
         }
-        AtomicInteger index = new AtomicInteger(0);
         return new Enumeration<URL>() {
+            private int index;
 
             @Override
             public boolean hasMoreElements() {
-                return index.get() < resources.size();
+                return index < resources.size();
             }
 
             @Override
             public URL nextElement() {
-                return resources.get(index.getAndIncrement());
+                return resources.get(index++);
             }
         };
     }

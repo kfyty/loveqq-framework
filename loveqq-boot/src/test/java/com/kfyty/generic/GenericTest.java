@@ -100,20 +100,33 @@ public class GenericTest implements CommandLineRunner {
 
     static class AnyBean {}
 
-    static class ParentConfig {
+    @Configuration
+    static class ParentConfig implements InitializingBean {
 
         @Bean
         public AnyBean anyBean() {
             return new AnyBean();
         }
-    }
-
-    @Configuration
-    static class SubConfig extends ParentConfig implements InitializingBean {
 
         @Override
         public void afterPropertiesSet() {
-//            Assertions.assertSame(this.anyBean(), this.anyBean());
+            Assertions.assertSame(this.anyBean(), this.anyBean());
+        }
+    }
+
+    @Configuration
+    static class SubConfig extends ParentConfig {
+
+        @Override
+        @Bean("anyBeanOverride")
+        public AnyBean anyBean() {
+            return super.anyBean();
+        }
+
+        @Override
+        public void afterPropertiesSet() {
+            super.afterPropertiesSet();
+            Assertions.assertSame(this.anyBean(), this.anyBean());
         }
     }
 }
