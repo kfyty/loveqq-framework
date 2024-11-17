@@ -7,7 +7,6 @@ com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor=\
 
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver,\
-    com.kfyty.loveqq.framework.boot.event.EventListenerResolver,\
     com.kfyty.loveqq.framework.boot.processor.factory.ImportBeanDefinitionBeanFactoryPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.ScopeProxyBeanFactoryPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.factory.LazyProxyBeanFactoryPostProcessor,\
@@ -20,8 +19,10 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.processor.ValueAnnotationBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.ConfigurationPropertiesBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.AutowiredCapableBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.event.EventListenerResolver,\
     com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher,\
     com.kfyty.loveqq.framework.boot.autoconfig.factory.DefaultEventListenerAnnotationListenerFactory,\
+    com.kfyty.loveqq.framework.boot.i18n.I18nResourceBundleProperties,\
     com.kfyty.loveqq.framework.boot.processor.AsyncMethodBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.LookupMethodBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.BeanCustomizerBeanPostProcessor,\

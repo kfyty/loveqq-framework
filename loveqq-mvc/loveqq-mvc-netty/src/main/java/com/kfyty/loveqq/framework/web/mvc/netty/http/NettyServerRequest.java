@@ -13,6 +13,7 @@ import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -183,6 +184,12 @@ public class NettyServerRequest implements ServerRequest {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return this.request.remoteAddress();
+    }
+
+    @Override
+    public Locale getLocale() {
+        String language = this.request.requestHeaders().get("Accept-Language");
+        return language == null || language.isEmpty() ? Locale.getDefault() : Locale.of(language);
     }
 
     @Override
