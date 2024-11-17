@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -176,6 +177,13 @@ public interface ServerRequest {
      * @return 远程地址
      */
     InetSocketAddress getRemoteAddress();
+
+    /**
+     * 获取地域
+     *
+     * @return 地域
+     */
+    Locale getLocale();
 
     /**
      * 获取原始请求

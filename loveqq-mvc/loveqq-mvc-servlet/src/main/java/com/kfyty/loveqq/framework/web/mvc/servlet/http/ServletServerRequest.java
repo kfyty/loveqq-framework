@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -197,6 +198,11 @@ public class ServletServerRequest implements ServerRequest {
     @Override
     public InetSocketAddress getRemoteAddress() {
         return new InetSocketAddress(this.request.getRemoteHost(), this.request.getRemotePort());
+    }
+
+    @Override
+    public Locale getLocale() {
+        return this.request.getLocale();
     }
 
     @Override
