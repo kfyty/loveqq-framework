@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.support.json;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.AbstractMap;
@@ -31,7 +32,7 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     public String getString(String key) {
         Object o = this.decorate.get(key);
-        return o == null ? null : o.toString();
+        return o == null ? null : o instanceof CharSequence ? o.toString() : JsonUtil.toJSONString(o);
     }
 
     public Integer getInteger(String key) {
@@ -62,6 +63,14 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
     public BigDecimal getBigDecimal(String key) {
         Object o = this.decorate.get(key);
         return o == null || o instanceof BigDecimal ? (BigDecimal) o : new BigDecimal(o.toString());
+    }
+
+    public <T> T getObject(String key, Class<T> clazz) {
+        return JsonUtil.toObject(this.getString(key), clazz);
+    }
+
+    public <T> T getObject(String key, Type type) {
+        return JsonUtil.toObject(this.getString(key), type);
     }
 
     public JSON getJSON(String key) {

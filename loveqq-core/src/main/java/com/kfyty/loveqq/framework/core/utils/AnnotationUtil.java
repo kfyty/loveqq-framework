@@ -56,9 +56,14 @@ public abstract class AnnotationUtil {
 
     @SuppressWarnings("unchecked")
     public static <T extends Annotation> T clone(T annotation) {
+        return clone(annotation, (Class<? extends T>) annotation.annotationType());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Annotation, R extends Annotation> R clone(T annotation, Class<R> annotationType) {
         Map<String, Object> values = getAnnotationValues(annotation);
-        AnnotationInvocationHandler handler = new AnnotationInvocationHandler(annotation.annotationType(), new HashMap<>(values));
-        return (T) Proxy.newProxyInstance(annotation.getClass().getClassLoader(), new Class<?>[]{annotation.annotationType()}, handler);
+        AnnotationInvocationHandler handler = new AnnotationInvocationHandler(annotationType, new HashMap<>(values));
+        return (R) Proxy.newProxyInstance(annotation.getClass().getClassLoader(), new Class<?>[]{annotationType}, handler);
     }
 
     @SuppressWarnings("unchecked")

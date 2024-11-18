@@ -44,6 +44,11 @@ import static java.util.Optional.ofNullable;
  */
 public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanFactory {
     /**
+     * map 工厂
+     */
+    protected static final Supplier<Map<String, BeanDefinition>> MAP_FACTORY = () -> new LinkedHashMap<>(2);
+
+    /**
      * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
      * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
      */
@@ -200,11 +205,10 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType, boolean isAutowireCandidate) {
-        Supplier<Map<String, BeanDefinition>> mapFactory = () -> new LinkedHashMap<>(2);
         return this.getBeanDefinitions(beanType).entrySet()
                 .stream()
                 .filter(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), mapFactory));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), MAP_FACTORY));
     }
 
     @Override
@@ -223,7 +227,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 .stream()
                 .filter(beanDefinitionPredicate)
                 .sorted((b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), MAP_FACTORY));
     }
 
     @Override
@@ -285,7 +289,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
-        Map<String, Object> beans = new LinkedHashMap<>(2);
+        Map<String, Object> beans = new LinkedHashMap<>(4);
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitionWithAnnotation(annotationClass);
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
             beans.put(entry.getKey(), this.registerBean(entry.getValue()));

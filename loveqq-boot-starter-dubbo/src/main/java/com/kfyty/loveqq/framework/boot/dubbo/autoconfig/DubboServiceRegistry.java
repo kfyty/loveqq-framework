@@ -17,6 +17,8 @@ import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.dubbo.config.annotation.Reference;
+import org.apache.dubbo.config.annotation.Service;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
@@ -72,6 +74,7 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
         for (Class<?> interfaceClass : ensureDubboServiceInterfaceClass(clazz)) {
             String serviceBeanName = generateServiceBeanName(dubboService, interfaceClass);
             BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(serviceBeanName, ServiceConfig.class)
+                    .addConstructorArgs(Service.class, AnnotationUtil.clone(dubboService, Service.class))
                     .addPropertyValue("ref", ref)
                     .addPropertyValue("interfaceName", interfaceClass.getName())
                     .addPropertyValue("interfaceClass", (Object) interfaceClass)
@@ -85,6 +88,7 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
         String serviceBeanName = generateReferenceBeanName(dubboReference, interfaceClass);
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(serviceBeanName, LoveqqReferenceConfig.class)
                 .addConstructorArgs(Class.class, interfaceClass)
+                .addConstructorArgs(Reference.class, AnnotationUtil.clone(dubboReference, Reference.class))
                 .addPropertyValue("interfaceName", interfaceClass.getName())
                 .addPropertyValue("interfaceClass", (Object) interfaceClass)
                 .addPropertyValue("interfaceClassLoader", interfaceClass.getClassLoader());
