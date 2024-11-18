@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.dubbo.autoconfig.override;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import org.apache.dubbo.config.ReferenceConfig;
+import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.rpc.model.ModuleModel;
 
 /**
@@ -22,8 +23,13 @@ public class LoveqqReferenceConfig<T> extends ReferenceConfig<T> implements Fact
         this.beanType = beanType;
     }
 
-    public LoveqqReferenceConfig(Class<T> beanType, ModuleModel moduleModel) {
-        super(moduleModel);
+    public LoveqqReferenceConfig(Class<T> beanType, Reference reference) {
+        super(reference);
+        this.beanType = beanType;
+    }
+
+    public LoveqqReferenceConfig(Class<T> beanType, ModuleModel moduleModel, Reference reference) {
+        super(moduleModel, reference);
         this.beanType = beanType;
     }
 

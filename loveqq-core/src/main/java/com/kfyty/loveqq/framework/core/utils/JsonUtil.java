@@ -89,6 +89,10 @@ public abstract class JsonUtil {
         return configure().writer();
     }
 
+    public static <T> T convert(Object source, Class<T> target) {
+        return DEFAULT_OBJECT_MAPPER.convertValue(source, target);
+    }
+
     public static String toJSONString(Object o) {
         try {
             return DEFAULT_OBJECT_MAPPER.writeValueAsString(o);
@@ -192,10 +196,6 @@ public abstract class JsonUtil {
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
-    }
-
-    public static <T> T convert(String str, Class<T> rawClass) {
-        return DEFAULT_OBJECT_MAPPER.convertValue(str, rawClass);
     }
 
     /**

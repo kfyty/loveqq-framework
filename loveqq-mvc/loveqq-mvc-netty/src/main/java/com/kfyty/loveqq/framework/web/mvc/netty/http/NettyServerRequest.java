@@ -189,7 +189,7 @@ public class NettyServerRequest implements ServerRequest {
     @Override
     public Locale getLocale() {
         String language = this.request.requestHeaders().get("Accept-Language");
-        return language == null || language.isEmpty() ? Locale.getDefault() : Locale.of(language);
+        return language == null || language.isEmpty() ? Locale.getDefault() : Locale.forLanguageTag(language);
     }
 
     @Override

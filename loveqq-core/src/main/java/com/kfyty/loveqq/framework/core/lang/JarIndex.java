@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
@@ -51,13 +51,14 @@ public class JarIndex {
 
     /**
      * 构造器
+     * 这里使用 {@link ConcurrentSkipListMap} 更多是考虑空间利用率
      *
      * @param mainJarPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
      * @param jarIndex    jar index 数据流
      */
     public JarIndex(String mainJarPath, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
-        this.jarIndex = new ConcurrentHashMap<>(256, 0.95F);
+        this.jarIndex = new ConcurrentSkipListMap<>();
         this.loadJarIndex(mainJarPath, jarIndex);
     }
 

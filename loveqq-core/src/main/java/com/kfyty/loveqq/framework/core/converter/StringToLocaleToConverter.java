@@ -11,10 +11,10 @@ import java.util.Locale;
  * @date 2022/3/12 12:49
  * @email kfyty725@hotmail.com
  */
-public class LocaleToInstantConverter implements Converter<String, Locale> {
+public class StringToLocaleToConverter implements Converter<String, Locale> {
 
     @Override
     public Locale apply(String source) {
-        return CommonUtil.empty(source) ? null : Locale.of(source);
+        return CommonUtil.empty(source) ? null : Locale.forLanguageTag(source);
     }
 }

@@ -203,7 +203,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
         // 并发实例化剩余的单例 bean
         if (concurrentInitialize) {
-            CompletableFutureUtil.consumer(this.executorService, this.getSortedBeanDefinition().values(), bd -> {
+            CompletableFutureUtil.consumer(this.executorService, this.getBeanDefinitions().values(), bd -> {
                 if (bd.isSingleton() && bd.isAutowireCandidate() && !bd.isLazyInit()) {
                     this.registerBean(bd);
                 }
