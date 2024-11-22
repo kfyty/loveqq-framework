@@ -5,13 +5,9 @@ import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.support.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
-import lombok.SneakyThrows;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,7 +22,6 @@ import java.util.jar.JarOutputStream;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.newInputStream;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.load;
 
 /**
  * 描述: 构建 jar 索引 ant 任务
@@ -52,16 +47,6 @@ public class BuildJarIndexAntTask {
     public static final String OUTPUT_DEFAULT_JAR = "OUTPUT_DEFAULT_JAR";
 
     /**
-     * 源码 MANIFEST.MF 目录
-     */
-    public static final String PROJECT_SOURCE_CODE_MANIFEST_DIRECTORY = "src/main/resources/" + BootLauncher.JAR_MANIFEST_LOCATION;
-
-    /**
-     * 源码 jar.idx 目录
-     */
-    public static final String PROJECT_SOURCE_CODE_JAR_INDEX_DIRECTORY = "src/main/resources/" + BootLauncher.JAR_INDEX_LOCATION;
-
-    /**
      * 由 maven-antrun-plugin 调用
      *
      * @param args 由 maven-antrun-plugin 传参
@@ -79,9 +64,7 @@ public class BuildJarIndexAntTask {
             }
         }
         JarFile jarFile = new JarFile(file);
-        String jarIndex = buildJarIndex(scanJarIndex(jarFile));
-        JarFile sourceJarFile = writeJarIndex(jarIndex, jarFile);
-        writeJarIndexToProjectSourceCode(jarIndex, sourceJarFile);
+        writeJarIndex(buildJarIndex(scanJarIndex(jarFile)), jarFile);
         System.out.println("[INFO] Build jar index succeed");
     }
 
@@ -212,30 +195,5 @@ public class BuildJarIndexAntTask {
             jarOut.flush();
         }
         return copy;
-    }
-
-    /**
-     * 写入 jar.idx 文件到工程源码
-     * 从而支持 IDE 中从 {@link BootLauncher} 启动
-     *
-     * @param jarIndex jar.idx
-     * @param jarFile  jar 文件
-     */
-    @SneakyThrows(URISyntaxException.class)
-    public static void writeJarIndexToProjectSourceCode(String jarIndex, JarFile jarFile) throws IOException {
-        String startClass = jarFile.getManifest().getMainAttributes().getValue(BootLauncher.START_CLASS_KEY);
-        File projectSourceCodeDirectory = Paths.get(load(startClass).getProtectionDomain().getCodeSource().getLocation().toURI()).getParent().getParent().toFile();
-
-        // 写入 MANIFEST.MF
-        try (InputStream manifest = jarFile.getInputStream(jarFile.getJarEntry(BootLauncher.JAR_MANIFEST_LOCATION));
-             FileOutputStream out = new FileOutputStream(new File(projectSourceCodeDirectory, PROJECT_SOURCE_CODE_MANIFEST_DIRECTORY))) {
-            IOUtil.copy(manifest, out);
-        }
-
-        // 写入 jar.idx
-        try (FileOutputStream out = new FileOutputStream(new File(projectSourceCodeDirectory, PROJECT_SOURCE_CODE_JAR_INDEX_DIRECTORY))) {
-            out.write(jarIndex.getBytes(StandardCharsets.UTF_8));
-            out.flush();
-        }
     }
 }

@@ -78,7 +78,10 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
-        this.processRequest(req, resp);
+        // 预检请求已在过滤器处理
+        if (!req.getMethod().equals(RequestMethod.OPTIONS.name())) {
+            this.processRequest(req, resp);
+        }
     }
 
     protected void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -92,7 +95,7 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
         Object[] parameters = null;
-        ServerRequest serverRequest = new ServletServerRequest(request);
+        ServerRequest serverRequest = new ServletServerRequest(request).init();
         ServerResponse serverResponse = new ServletServerResponse(response);
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {

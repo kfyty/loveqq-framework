@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
@@ -20,10 +21,10 @@ import lombok.ToString;
 import org.apache.catalina.LifecycleListener;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EventListener;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +38,9 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class TomcatProperties extends WebServerProperties {
+    /**
+     * 默认协议
+     */
     public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
 
     /**
@@ -140,33 +144,37 @@ public class TomcatProperties extends WebServerProperties {
         if (servlet instanceof DispatcherServlet) {
             return;
         }
-        WebServlet annotation = Objects.requireNonNull(AnnotationUtil.findAnnotation(servlet, WebServlet.class), "WebServlet annotation is required");
+        WebServlet annotation = AnnotationUtil.findAnnotation(servlet, WebServlet.class);
         ServletRegistrationBean servletRegistrationBean = (ServletRegistrationBean) new ServletRegistrationBean()
                 .setServlet(servlet)
-                .setName(annotation.name())
-                .setLoadOnStartup(annotation.loadOnStartup())
-                .setDisplayName(annotation.displayName())
-                .setDescription(annotation.description())
-                .setSmallIcon(annotation.smallIcon())
-                .setLargeIcon(annotation.largeIcon())
-                .setUrlPatterns(Arrays.asList(annotation.urlPatterns()))
-                .setAsyncSupported(annotation.asyncSupported())
-                .setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
+                .setName(annotation != null ? annotation.name() : servlet.getClass().getName())
+                .setLoadOnStartup(annotation != null ? annotation.loadOnStartup() : -1)
+                .setDisplayName(annotation != null ? annotation.displayName() : servlet.getClass().getSimpleName())
+                .setDescription(annotation != null ? annotation.description() : CommonUtil.EMPTY_STRING)
+                .setSmallIcon(annotation != null ? annotation.smallIcon() : CommonUtil.EMPTY_STRING)
+                .setLargeIcon(annotation != null ? annotation.largeIcon() : CommonUtil.EMPTY_STRING)
+                .setUrlPatterns(annotation != null ? Arrays.asList(annotation.urlPatterns()) : Collections.emptyList())
+                .setAsyncSupported(annotation != null && annotation.asyncSupported());
+        if (annotation != null) {
+            servletRegistrationBean.setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
+        }
         this.addWebServlet(servletRegistrationBean);
     }
 
     public void addWebFilter(Filter filter) {
-        WebFilter annotation = Objects.requireNonNull(AnnotationUtil.findAnnotation(filter, WebFilter.class), "WebFilter annotation is required");
+        WebFilter annotation = AnnotationUtil.findAnnotation(filter, WebFilter.class);
         FilterRegistrationBean filterRegistrationBean = (FilterRegistrationBean) new FilterRegistrationBean()
                 .setFilter(filter)
-                .setFilterName(annotation.filterName())
-                .setDisplayName(annotation.displayName())
-                .setDescription(annotation.description())
-                .setSmallIcon(annotation.smallIcon())
-                .setLargeIcon(annotation.largeIcon())
-                .setUrlPatterns(Arrays.asList(annotation.urlPatterns()))
-                .setAsyncSupported(annotation.asyncSupported())
-                .setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
+                .setFilterName(annotation != null ? annotation.filterName() : filter.getClass().getName())
+                .setDisplayName(annotation != null ? annotation.displayName() : filter.getClass().getSimpleName())
+                .setDescription(annotation != null ? annotation.description() : CommonUtil.EMPTY_STRING)
+                .setSmallIcon(annotation != null ? annotation.smallIcon() : CommonUtil.EMPTY_STRING)
+                .setLargeIcon(annotation != null ? annotation.largeIcon() : CommonUtil.EMPTY_STRING)
+                .setUrlPatterns(annotation != null ? Arrays.asList(annotation.urlPatterns()) : Collections.singletonList("/*"))
+                .setAsyncSupported(annotation != null && annotation.asyncSupported());
+        if (annotation != null) {
+            filterRegistrationBean.setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
+        }
         this.addWebFilter(filterRegistrationBean);
     }
 

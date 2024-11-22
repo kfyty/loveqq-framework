@@ -5,6 +5,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
@@ -12,6 +14,8 @@ import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumen
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.mvc.netty.ServerWebServer;
+import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
+import com.kfyty.loveqq.framework.web.mvc.netty.filter.cors.CorsFilter;
 
 import java.util.List;
 
@@ -36,6 +40,13 @@ public class NettyServerMvcAutoConfig {
 
     @Autowired(required = false)
     private List<ExceptionHandler> exceptionHandlers;
+
+    @Bean
+    @ConditionalOnBean(CorsConfiguration.class)
+    @ConditionalOnMissingBean(CorsFilter.class)
+    public Filter defaultCorsFilter(CorsConfiguration configuration) {
+        return new CorsFilter(configuration);
+    }
 
     @Bean
     public DispatcherHandler dispatcherHandler(RequestMappingMatcher requestMappingMatcher,

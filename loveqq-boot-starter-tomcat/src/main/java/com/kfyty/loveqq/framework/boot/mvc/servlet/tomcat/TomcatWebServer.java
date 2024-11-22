@@ -343,8 +343,14 @@ public class TomcatWebServer implements ServletWebServer {
 
     @RequiredArgsConstructor
     private static class DispatcherServletConfigInitializer implements ServletContainerInitializer {
+        /**
+         * tomcat 配置
+         */
         private final TomcatProperties tomcatConfig;
 
+        /**
+         * {@link DispatcherServlet}
+         */
         private final DispatcherServlet dispatcherServlet;
 
         @Override
