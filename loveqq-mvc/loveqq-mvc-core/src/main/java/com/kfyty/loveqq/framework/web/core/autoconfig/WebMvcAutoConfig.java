@@ -3,13 +3,16 @@ package com.kfyty.loveqq.framework.web.core.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.annotation.Controller;
+import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
@@ -26,7 +29,7 @@ import java.util.Map;
  * @date 2021/5/22 14:25
  * @email kfyty725@hotmail.com
  */
-@Component
+@Configuration
 @ConditionalOnBean(WebServer.class)
 @Import(config = WebServerProperties.class)
 public class WebMvcAutoConfig implements ContextAfterRefreshed {
@@ -41,10 +44,17 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
         return new DefaultRequestMappingMatcher();
     }
 
+    @Bean
+    @ConfigurationProperties("k.mvc.cors")
+    @ConditionalOnProperty(prefix = "k.mvc.cors", value = "allowOrigin", matchIfNonNull = true)
+    public CorsConfiguration corsConfiguration() {
+        return new CorsConfiguration();
+    }
+
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
-        RequestMappingHandler requestMappingHandler = applicationContext.getBean(RequestMappingHandler.class);
-        RequestMappingMatcher requestMappingMatcher = applicationContext.getBean(RequestMappingMatcher.class);
+        RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
+        RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
         for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
             List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
             requestMappingMatcher.registryMethodMapping(methodMappings);

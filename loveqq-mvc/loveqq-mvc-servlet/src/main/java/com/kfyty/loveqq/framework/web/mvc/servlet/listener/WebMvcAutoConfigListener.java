@@ -35,7 +35,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRA
  */
 @Component
 @EnableAutoConfiguration
-@ComponentScan(excludeFilter = @ComponentFilter("com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatAutoConfig"))
+@ComponentScan(excludeFilter = @ComponentFilter("com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig"))
 public class WebMvcAutoConfigListener extends WebServletMvcAutoConfig implements ServletContextListener, ApplicationContextAware {
     /**
      * ioc 容器启动类
@@ -58,6 +58,13 @@ public class WebMvcAutoConfigListener extends WebServletMvcAutoConfig implements
      * ioc
      */
     private volatile ApplicationContext applicationContext;
+
+    /**
+     * 此时不使用 {@link com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader}，应设置为 false
+     */
+    static {
+        System.setProperty("k.transformer.load", "false");
+    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {

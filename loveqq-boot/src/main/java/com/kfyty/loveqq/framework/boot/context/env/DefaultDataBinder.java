@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
@@ -151,11 +152,11 @@ public class DefaultDataBinder implements DataBinder {
         Object oldValue = ReflectUtil.getFieldValue(target.getTarget(), field);
 
         // 集合
-        if (oldValue instanceof Collection<?> && bindValue instanceof Collection<?>) {
+        if (oldValue instanceof Collection<?> && bindValue instanceof Collection<?> && oldValue != Collections.emptyList() && oldValue != Collections.emptySet()) {
             ((Collection<?>) oldValue).addAll((Collection) bindValue);
         }
         // map
-        else if (oldValue instanceof Map<?, ?> && bindValue instanceof Map<?,?>) {
+        else if (oldValue instanceof Map<?, ?> && bindValue instanceof Map<?,?> && oldValue != Collections.emptyMap()) {
             ((Map<?, ?>) oldValue).putAll((Map) bindValue);
         }
         // 其他情况

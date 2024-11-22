@@ -19,12 +19,9 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.ServletRequestListener;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebListener;
-import jakarta.servlet.annotation.WebServlet;
 import org.apache.catalina.LifecycleListener;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -84,7 +81,7 @@ public class TomcatAutoConfig {
     }
 
     protected void collectAndConfigFilter(TomcatProperties config) {
-        List<Object> filters = this.collectBeans(WebFilter.class, FilterRegistrationBean.class);
+        List<Object> filters = this.collectBeans(Filter.class, FilterRegistrationBean.class);
         for (Object filter : filters) {
             if (filter instanceof FilterRegistrationBean) {
                 config.addWebFilter((FilterRegistrationBean) filter);
@@ -95,7 +92,7 @@ public class TomcatAutoConfig {
     }
 
     protected void collectAndConfigServlet(TomcatProperties config) {
-        List<Object> servlets = this.collectBeans(WebServlet.class, ServletRegistrationBean.class);
+        List<Object> servlets = this.collectBeans(Servlet.class, ServletRegistrationBean.class);
         for (Object servlet : servlets) {
             if (servlet instanceof ServletRegistrationBean) {
                 config.addWebServlet((ServletRegistrationBean) servlet);
@@ -105,9 +102,9 @@ public class TomcatAutoConfig {
         }
     }
 
-    protected List<Object> collectBeans(Class<? extends Annotation> annotation, Class<? extends RegistrationBean<?>> clazz) {
+    protected List<Object> collectBeans(Class<?> filterClass, Class<? extends RegistrationBean<?>> clazz) {
         List<Object> beans = new ArrayList<>();
-        Collection<?> beansWithAnnotation = this.applicationContext.getBeanWithAnnotation(annotation).values();
+        Collection<?> beansWithAnnotation = this.applicationContext.getBeanOfType(filterClass).values();
         Collection<?> beansWithRegistration = this.applicationContext.getBeanOfType(clazz).values();
 
         beans.addAll(beansWithAnnotation);

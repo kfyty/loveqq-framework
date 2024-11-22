@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 import com.kfyty.loveqq.framework.web.mvc.servlet.util.ServletUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  * @date 2024/7/6 18:38
  * @email kfyty725@hotmail.com
  */
+@RequiredArgsConstructor
 public class ServletServerRequest implements ServerRequest {
     /**
      * servlet request
@@ -40,16 +42,12 @@ public class ServletServerRequest implements ServerRequest {
      */
     private Map<String, MultipartFile> multipart;
 
-    public ServletServerRequest(HttpServletRequest request) {
-        this.request = request;
-        this.init();
-    }
-
-    public void init() {
+    public ServerRequest init() {
         String contentType = this.request.getContentType();
         if (contentType != null && contentType.contains("multipart/form-data")) {
             this.multipart = Collections.unmodifiableMap(ServletUtil.from(this.request).stream().collect(Collectors.toMap(MultipartFile::getName, v -> v)));
         }
+        return this;
     }
 
     @Override

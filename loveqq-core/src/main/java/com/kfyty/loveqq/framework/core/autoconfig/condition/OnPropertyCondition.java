@@ -37,6 +37,6 @@ public class OnPropertyCondition implements Condition {
         if (CommonUtil.empty(prefix)) {
             return conditional.value();
         }
-        return prefix.endsWith(".") ? prefix + conditional.value() : prefix + "." + conditional.value();
+        return prefix.charAt(prefix.length() - 1) == '.' ? prefix + conditional.value() : prefix + '.' + conditional.value();
     }
 }

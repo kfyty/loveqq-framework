@@ -286,6 +286,12 @@ public class NettyWebServer implements ServerWebServer {
                 return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(serverRequest, null);
             }
 
+            // 预检请求
+            if (request.method() == HttpMethod.OPTIONS) {
+                return Mono.from(this.processRequest(request, response, EMPTY_INPUT_STREAM, emptyList()))
+                        .onErrorResume(ex -> response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send());
+            }
+
             // 接收数据后执行，否则拿不到数据，reactor-netty 限制必须为 POST
             if (request.method() == HttpMethod.POST && (request.isFormUrlencoded() || request.isMultipart())) {
                 return request.receiveForm()
@@ -308,7 +314,12 @@ public class NettyWebServer implements ServerWebServer {
         ServerResponse response = new NettyServerResponse(serverResponse);
 
         // 构建请求处理器生产者
-        Supplier<Publisher<Void>> requestProcessorSupplier = () -> this.dispatcherHandler.service(request, response);
+        Supplier<Publisher<Void>> requestProcessorSupplier = () -> {
+            if (serverRequest.method() == HttpMethod.OPTIONS) {
+                return serverResponse.send();
+            }
+            return this.dispatcherHandler.service(request, response);
+        };
 
         return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(request, response);
     }
