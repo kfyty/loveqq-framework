@@ -50,13 +50,7 @@ javafx mvvm 框架，实现了视图和数据模型的双向绑定。代码中�
 ## Ruoyi-for-loveqq
 基于 loveqq 框架的单体版若依，去除了底层 spring 及其 spring boot starter。详情请查看仓库列表。
 
-```xml
-<dependency>
-    <groupId>com.kfyty</groupId>
-    <artifactId>loveqq-boot</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
+### 示例
 ```java
 package com.kfyty.demo;
 
@@ -69,10 +63,10 @@ import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.web.core.annotation.GetMapping;
 import com.kfyty.loveqq.framework.web.core.autoconfig.annotation.EnableWebMvc;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+@Async
 @EnableWebMvc
+@EventListener
 @BootApplication
 public class Main {
 
@@ -101,30 +95,107 @@ public class Main {
 }
 ```
 
-### 最佳实践
+## 最佳实践
+### maven
 建议项目继承 loveqq-framework 父模块
 ```xml
-    <parent>
+<parent>
+    <groupId>com.kfyty</groupId>
+    <artifactId>loveqq-framework</artifactId>
+    <version>1.0.7</version>
+</parent>
+
+<dependencies>
+    <dependency>
         <groupId>com.kfyty</groupId>
-        <artifactId>loveqq-framework</artifactId>
-        <version>1.0.0</version>
-    </parent>
+        <artifactId>loveqq-boot</artifactId>
+        <version>${loveqq.framework.version}</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>com.kfyty</groupId>
+        <artifactId>loveqq-boot-starter-logback</artifactId>
+        <version>${loveqq.framework.version}</version>
+    </dependency>
+</dependencies>
 ```
 
-打包时，需要在子模块添加以下配置，以生成 jar index
+打包时，需要在子模块添加以下配置，以设置启动类，并生成 jar index
 ```xml
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+<properties>
+    <boot-start-class>com.kfyty.demo.Main</boot-start-class>
+</properties>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
 ```
-同时添加以下配置，以设置自己的启动类，打包后即可读取 jar index 启动
-```xml
-    <properties>
-        <boot-start-class>com.kfyty.demo.Main</boot-start-class>
-    </properties>
+### gradle
+需要添加以下依赖
+```groovy
+apply plugin: 'java'
+
+group = 'com.kfyty.example'
+version = '1.0-SNAPSHOT'
+
+ext {
+    bootLibOutput = 'boot-lib'
+    bootMainClass = 'com.kfyty.loveqq.framework.core.support.BootLauncher'
+    bootStartClass = 'com.kfyty.demo.Main'
+}
+
+dependencies {
+    implementation 'com.kfyty:loveqq-framework:1.0.7@pom'
+    implementation 'com.kfyty:loveqq-boot:1.0.7'
+    implementation 'com.kfyty:loveqq-boot-starter-logback:1.0.7'
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.javassist:javassist:3.29.0-GA'
+    compileOnly "org.projectlombok:lombok:1.18.30"
+    annotationProcessor "org.projectlombok:lombok:1.18.30"
+}
+
+allprojects {
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+}
+```
+
+打包时，需要在子模块添加以下配置，以设置启动类，并生成 jar index
+```groovy
+// 复制依赖
+tasks.register('copyDependencies', Copy) {
+    from configurations.runtimeClasspath
+    into "$buildDir/libs/$rootProject.ext.bootLibOutput"
+}
+
+// 构建 jar index
+tasks.register('buildJarIndex', JavaExec) {
+    mainClass = 'com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask'
+    classpath = configurations.runtimeClasspath
+    args "-OUTPUT_DIRECTORY=$project.buildDir/libs"
+    args "-OUTPUT_JAR=$project.name-$project.version" + '.jar'
+    args "-OUTPUT_DEFAULT_JAR=$project.name-$project.version" + '.jar'
+}
+
+// jar，覆盖默认 jar
+jar {
+    dependsOn copyDependencies
+
+    manifest {
+        attributes 'Main-Class': "$rootProject.ext.bootMainClass"
+        attributes 'Start-Class': "$rootProject.ext.bootStartClass"
+        attributes 'Class-Path': configurations.runtimeClasspath.files.collect { "$rootProject.ext.bootLibOutput/$it.name" }.join(' ')
+    }
+}
+
+// build 覆盖默认 build
+build {
+    dependsOn buildJarIndex
+}
 ```
