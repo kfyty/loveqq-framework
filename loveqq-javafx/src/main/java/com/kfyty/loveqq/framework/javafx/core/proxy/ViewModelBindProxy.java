@@ -7,9 +7,9 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import com.kfyty.loveqq.framework.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.loveqq.framework.javafx.core.BootstrapApplication;
 import com.kfyty.loveqq.framework.javafx.core.LifeCycleController;
-import com.kfyty.loveqq.framework.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.loveqq.framework.javafx.core.binder.ViewPropertyBinder;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WritableValue;
@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -113,8 +112,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
      * @param controller 控制器
      */
     public static void triggerViewBind(Object controller) {
-        Map<String, Field> fieldMap = ReflectUtil.getFieldMap(controller.getClass());
-        for (Field value : fieldMap.values()) {
+        for (Field value : ReflectUtil.getFields(controller.getClass())) {
             if (value.getDeclaringClass() == Object.class) {
                 continue;
             }

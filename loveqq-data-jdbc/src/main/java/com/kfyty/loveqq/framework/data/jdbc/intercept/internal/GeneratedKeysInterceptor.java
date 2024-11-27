@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getFieldMap;
+import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getFields;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.getMethod;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
 
@@ -78,7 +78,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
         return Arrays.stream(methodArgs)
                 .filter(e -> !(e instanceof Collection))
                 .findAny()
-                .flatMap(e -> getFieldMap(e.getClass()).values().stream().filter(f -> hasAnnotation(f, TableId.class)).findAny())
+                .flatMap(e -> Arrays.stream(getFields(e.getClass())).filter(f -> hasAnnotation(f, TableId.class)).findAny())
                 .orElse(null);
     }
 

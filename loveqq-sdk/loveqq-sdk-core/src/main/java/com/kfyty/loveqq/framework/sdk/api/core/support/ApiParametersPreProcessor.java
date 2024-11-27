@@ -2,19 +2,16 @@ package com.kfyty.loveqq.framework.sdk.api.core.support;
 
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import com.kfyty.loveqq.framework.sdk.api.core.utils.ParameterUtil;
 import com.kfyty.loveqq.framework.sdk.api.core.AbstractConfigurableApi;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiPreProcessor;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterConverter;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterProvider;
 import com.kfyty.loveqq.framework.sdk.api.core.annotation.Parameter;
+import com.kfyty.loveqq.framework.sdk.api.core.utils.ParameterUtil;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import static com.kfyty.loveqq.framework.sdk.api.core.utils.ParameterUtil.resolveParameters;
 
 /**
  * 描述: {@link Parameter} 前置处理器
@@ -27,8 +24,7 @@ public class ApiParametersPreProcessor implements ApiPreProcessor {
 
     @Override
     public void preProcessor(AbstractConfigurableApi<?, ?> api) {
-        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(api.getClass()).entrySet()) {
-            Field field = entry.getValue();
+        for (Field field : ReflectUtil.getFields(api.getClass())) {
             if (!AnnotationUtil.hasAnnotation(field, Parameter.class)) {
                 continue;
             }

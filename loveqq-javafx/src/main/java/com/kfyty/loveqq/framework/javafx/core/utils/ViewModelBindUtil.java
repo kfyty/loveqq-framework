@@ -92,7 +92,7 @@ public class ViewModelBindUtil {
     }
 
     public static void bindNestedModelProxy(Object root, ViewModelBindProxy proxy) {
-        for (Field field : ReflectUtil.getFieldMap(root.getClass()).values()) {
+        for (Field field : ReflectUtil.getFields(root.getClass())) {
             if (hasAnnotation(field, NestedConfigurationProperty.class) || hasAnnotation(field.getType(), NestedConfigurationProperty.class)) {
                 Object child = ReflectUtil.getFieldValue(root, field);
                 if (child == null) {

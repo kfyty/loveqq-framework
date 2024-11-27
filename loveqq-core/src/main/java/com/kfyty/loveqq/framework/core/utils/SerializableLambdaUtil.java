@@ -60,7 +60,7 @@ public abstract class SerializableLambdaUtil {
         final Class<?> clazz = serializableFunction.getClass();
         return ofNullable(SERIALIZED_LAMBDA_CACHE.get(clazz))
                 .orElseGet(() -> {
-                    Method method = ReflectUtil.getMethod(clazz, "writeReplace", true);
+                    Method method = ReflectUtil.getMethod(clazz, "writeReplace");
                     SerializedLambda serializedLambda = (SerializedLambda) ReflectUtil.invokeMethod(serializableFunction, method);
                     SERIALIZED_LAMBDA_CACHE.put(clazz, serializedLambda);
                     return serializedLambda;

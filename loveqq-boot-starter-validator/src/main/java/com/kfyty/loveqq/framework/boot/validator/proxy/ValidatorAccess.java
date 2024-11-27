@@ -37,9 +37,9 @@ public class ValidatorAccess {
         this.validator = validator;
         this.beanMetaDataManager = (BeanMetaDataManager) ReflectUtil.getFieldValue(this.validator, "beanMetaDataManager");
         this.validatorScopedContext = (ValidatorScopedContext) ReflectUtil.getFieldValue(this.validator, "validatorScopedContext");
-        this.getValidationContextBuilderMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValidationContextBuilder", true);
-        this.getValueContextForPropertyValidationMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValueContextForPropertyValidation", true, BaseBeanValidationContext.class, PathImpl.class);
-        this.getValueContextForValueValidationMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValueContextForValueValidation", true, Class.class, PathImpl.class);
+        this.getValidationContextBuilderMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValidationContextBuilder");
+        this.getValueContextForPropertyValidationMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValueContextForPropertyValidation", BaseBeanValidationContext.class, PathImpl.class);
+        this.getValueContextForValueValidationMethod = ReflectUtil.getMethod(this.validator.getClass(), "getValueContextForValueValidation", Class.class, PathImpl.class);
     }
 
     /**

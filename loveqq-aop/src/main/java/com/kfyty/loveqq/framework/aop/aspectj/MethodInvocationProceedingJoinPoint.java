@@ -50,7 +50,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
         if (args.length != this.methodProxy.getArguments().length) {
             throw new IllegalArgumentException("inconsistent parameter lengths");
         }
-        this.methodProxy.setArguments(args);
+        System.arraycopy(args, 0, this.methodProxy.getArguments(), 0, args.length);
         return this.proceed();
     }
 

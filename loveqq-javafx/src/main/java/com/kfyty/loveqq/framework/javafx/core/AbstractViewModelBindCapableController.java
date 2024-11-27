@@ -92,14 +92,14 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
 
     protected void initViewBind() {
         DataBinder dataBinder = this.getDataBinder();
-        Map<String, Field> fieldMap = ReflectUtil.getFieldMap(AopUtil.getTargetClass(this));
-        for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-            if (entry.getValue().getDeclaringClass() == Object.class || ReflectUtil.isStaticFinal(entry.getValue().getModifiers())) {
+        Field[] fields = ReflectUtil.getFields(AopUtil.getTargetClass(this));
+        for (Field field : fields) {
+            if (field.getDeclaringClass() == Object.class || ReflectUtil.isStaticFinal(field.getModifiers())) {
                 continue;
             }
-            FView[] annotations = flatRepeatableAnnotation(findAnnotations(entry.getValue()), e -> e.annotationType() == FView.class, FView[]::new);
+            FView[] annotations = flatRepeatableAnnotation(findAnnotations(field), e -> e.annotationType() == FView.class, FView[]::new);
             for (FView view : annotations) {
-                this.initViewBind(entry.getValue(), view, dataBinder);
+                this.initViewBind(field, view, dataBinder);
             }
         }
     }
