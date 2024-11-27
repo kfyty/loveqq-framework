@@ -90,7 +90,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
     protected List<Advisor> findAvailableAdvisor(Class<?> beanClass) {
         this.prepareAspectJAnnotationAdvisor();
         List<Advisor> advisors = new ArrayList<>();
-        Collection<Method> methods = ReflectUtil.getMethods(beanClass);
+        Method[] methods = ReflectUtil.getMethods(beanClass);
         for (Advisor advisor : this.aspectAdvisor) {
             if (advisor instanceof PointcutAdvisor) {
                 MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();

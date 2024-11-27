@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * 描述: bean 注册
@@ -44,5 +45,5 @@ public interface BeanDefinitionRegistry {
 
     Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass, boolean isAutowireCandidate);
 
-    Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate);
+    Stream<BeanDefinition> stream(Predicate<BeanDefinition> beanDefinitionPredicate);
 }

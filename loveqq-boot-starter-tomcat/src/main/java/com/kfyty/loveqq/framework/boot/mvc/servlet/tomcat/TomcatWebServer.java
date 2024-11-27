@@ -177,7 +177,7 @@ public class TomcatWebServer implements ServletWebServer {
     private void prepareContext() throws Exception {
         StandardContext context = new StandardContext();
         context.setPath(this.config.getContextPath());
-        context.setDocBase(createTempDir("tomcat-docbase").getAbsolutePath());
+        context.setDocBase(this.createTempDir("tomcat-docbase").getAbsolutePath());
         context.setCreateUploadTargets(true);
         context.setFailCtxIfServletStartFails(true);
         context.addServletContainerInitializer(new DispatcherServletConfigInitializer(this.config, this.dispatcherServlet), Collections.emptySet());

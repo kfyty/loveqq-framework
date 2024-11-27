@@ -1,5 +1,8 @@
 package com.kfyty.loveqq.framework.core.lang.util.concurrent;
 
+import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -9,10 +12,11 @@ import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -41,11 +45,6 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
      */
     private final ReferenceType referenceType;
 
-    /**
-     * 是否正在清理中
-     */
-    private final AtomicBoolean purge;
-
     public ReferenceConcurrentHashMap() {
         this(ReferenceType.WEAK);
     }
@@ -58,114 +57,97 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
         this(referenceType, initialCapacity, 0.75F);
     }
 
-
     public ReferenceConcurrentHashMap(ReferenceType referenceType, int initialCapacity, float loadFactor) {
         this.target = new ConcurrentHashMap<>(initialCapacity, loadFactor);
-        this.referenceQueue = new ReferenceQueue<>();
         this.referenceType = referenceType;
-        this.purge = new AtomicBoolean(false);
-    }
-
-    @Override
-    public V putIfAbsent(K key, V value) {
-        this.purgeKeys();
-        return this.target.putIfAbsent(this.wrapKey(key, this.referenceQueue), value);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public boolean remove(Object key, Object value) {
-        this.purgeKeys();
-        return this.target.remove(this.wrapKey((K) key, null), value);
-    }
-
-    @Override
-    public boolean replace(K key, V oldValue, V newValue) {
-        this.purgeKeys();
-        return this.target.replace(this.wrapKey(key, this.referenceQueue), oldValue, newValue);
-    }
-
-    @Override
-    public V replace(K key, V value) {
-        this.purgeKeys();
-        return this.target.replace(this.wrapKey(key, this.referenceQueue), value);
+        this.referenceQueue = new ReferenceQueue<>();
+        ReferenceManager.INSTANCE.registry(this.referenceQueue, this);
+        ReferenceManager.INSTANCE.start();
     }
 
     @Override
     public int size() {
-        this.purgeKeys();
         return this.target.size();
     }
 
     @Override
     public boolean isEmpty() {
-        this.purgeKeys();
         return this.target.isEmpty();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean containsKey(Object key) {
-        this.purgeKeys();
         return this.target.containsKey(this.wrapKey((K) key, null));
     }
 
     @Override
     public boolean containsValue(Object value) {
-        this.purgeKeys();
         return this.target.containsValue(value);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public V get(Object key) {
-        this.purgeKeys();
         return this.target.get(this.wrapKey((K) key, null));
     }
 
     @Override
     public V put(K key, V value) {
-        this.purgeKeys();
         return this.target.put(this.wrapKey(key, this.referenceQueue), value);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+        return this.target.putIfAbsent(this.wrapKey(key, this.referenceQueue), value);
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+        m.forEach(this::put);
+    }
+
+    @Override
+    public V replace(K key, V value) {
+        return this.target.replace(this.wrapKey(key, this.referenceQueue), value);
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+        return this.target.replace(this.wrapKey(key, this.referenceQueue), oldValue, newValue);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public V remove(Object key) {
-        this.purgeKeys();
         return this.target.remove(this.wrapKey((K) key, null));
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        this.purgeKeys();
-        m.forEach((k, v) -> this.target.put(this.wrapKey(k, this.referenceQueue), v));
+    @SuppressWarnings("unchecked")
+    public boolean remove(Object key, Object value) {
+        return this.target.remove(this.wrapKey((K) key, null), value);
     }
 
     @Override
     public void clear() {
-        this.purgeKeys();
         this.target.clear();
     }
 
     @Override
     public Set<K> keySet() {
-        this.purgeKeys();
-        return this.target.keySet().stream().filter(Objects::nonNull).map(Reference::get).filter(Objects::nonNull).collect(Collectors.toSet());
+        return this.target.keySet().stream().map(Reference::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     @Override
     public Collection<V> values() {
-        this.purgeKeys();
         return this.target.values();
     }
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-        this.purgeKeys();
         return this.target.entrySet()
                 .stream()
-                .filter(e -> e.getKey() != null)
                 .map(entry -> new AbstractMap.SimpleImmutableEntry<>(entry.getKey().get(), entry.getValue()))
                 .filter(e -> e.getKey() != null)
                 .collect(Collectors.toSet());
@@ -174,43 +156,36 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
     @Override
     @SuppressWarnings("unchecked")
     public V getOrDefault(Object key, V defaultValue) {
-        this.purgeKeys();
         return this.target.getOrDefault(this.wrapKey((K) key, null), defaultValue);
     }
 
     @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
-        this.purgeKeys();
         this.target.forEach((k, v) -> action.accept(k.get(), v));
     }
 
     @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
-        this.purgeKeys();
         this.target.replaceAll((k, v) -> function.apply(k.get(), v));
     }
 
     @Override
     public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-        this.purgeKeys();
         return this.target.computeIfAbsent(this.wrapKey(key, this.referenceQueue), referenceKey -> mappingFunction.apply(key));
     }
 
     @Override
     public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        this.purgeKeys();
         return this.target.computeIfPresent(this.wrapKey(key, this.referenceQueue), (referenceKey, value) -> remappingFunction.apply(key, value));
     }
 
     @Override
     public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        this.purgeKeys();
         return this.target.compute(this.wrapKey(key, this.referenceQueue), (referenceKey, value) -> remappingFunction.apply(key, value));
     }
 
     @Override
     public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-        this.purgeKeys();
         return this.target.merge(this.wrapKey(key, this.referenceQueue), value, remappingFunction);
     }
 
@@ -228,24 +203,6 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
                 return new WeakKey<>(key, referenceQueue);
         }
         throw new IllegalStateException(this.referenceType.toString());
-    }
-
-    /**
-     * 清楚被回收的 key
-     */
-    protected void purgeKeys() {
-        if (!this.purge.compareAndSet(false, true)) {
-            return;
-        }
-        try {
-            Reference<? extends K> reference = null;
-            ReferenceQueue<K> referenceQueue = this.referenceQueue;
-            while ((reference = referenceQueue.poll()) != null) {
-                this.target.remove(reference);
-            }
-        } finally {
-            this.purge.set(false);
-        }
     }
 
     /**
@@ -316,6 +273,65 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
         public String toString() {
             T reference = this.get();
             return reference == null ? "weak key has been cleared, hash: " + this.hashCode() : reference.toString();
+        }
+    }
+
+    private static class ReferenceManager implements Runnable {
+        /**
+         * 单例
+         */
+        private static final ReferenceManager INSTANCE = new ReferenceManager();
+
+        /**
+         * 是否已启动
+         */
+        private volatile boolean started;
+
+        /**
+         * 监听队列
+         */
+        private final Queue<Pair<ReferenceQueue<?>, Map<?, ?>>> references;
+
+        private ReferenceManager() {
+            this.started = false;
+            this.references = new LinkedBlockingDeque<>();
+        }
+
+        public void registry(ReferenceQueue<?> referenceQueue, Map<?, ?> target) {
+            this.references.add(new Pair<>(referenceQueue, target));
+        }
+
+        public void start() {
+            if (!this.started) {
+                synchronized (ReferenceManager.class) {
+                    if (!this.started) {
+                        this.started = true;
+                        Thread thread = new Thread(this, "reference-manager-thread");
+                        thread.setDaemon(true);
+                        thread.start();
+                        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+                    }
+                }
+            }
+        }
+
+        public void stop() {
+            this.started = false;
+        }
+
+        @Override
+        public void run() {
+            while (this.started) {
+                Reference<?> reference = null;
+                for (Pair<ReferenceQueue<?>, Map<?, ?>> referencePair : this.references) {
+                    ReferenceQueue<?> referenceQueue = referencePair.getKey();
+                    Map<?, ?> target = referencePair.getValue();
+                    while ((reference = referenceQueue.poll()) != null) {
+                        target.remove(reference);
+                    }
+                }
+                CommonUtil.sleep(3000);
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
-import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
+import com.kfyty.loveqq.framework.core.autoconfig.SerializableInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -194,7 +194,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         boolean concurrentInitialize = Boolean.parseBoolean(System.getProperty(ConstantConfig.CONCURRENT_INIT_KEY, Boolean.FALSE.toString()));
 
         // 先实例化串行 bean
-        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerialInitialize.class) : this.getSortedBeanDefinition();
+        Map<String, BeanDefinition> beanDefinitions = concurrentInitialize ? this.getBeanDefinitions(SerializableInitialize.class) : this.getBeanDefinitions();
         for (BeanDefinition value : beanDefinitions.values()) {
             if (value.isSingleton() && value.isAutowireCandidate() && !value.isLazyInit()) {
                 this.registerBean(value);
@@ -209,9 +209,5 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
                 }
             });
         }
-    }
-
-    protected Map<String, BeanDefinition> getSortedBeanDefinition() {
-        return this.getBeanDefinitions(e -> true);
     }
 }

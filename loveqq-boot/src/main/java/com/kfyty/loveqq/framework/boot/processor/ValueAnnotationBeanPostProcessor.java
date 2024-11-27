@@ -14,7 +14,6 @@ import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition.resolvePlaceholderValue;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
@@ -42,8 +41,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
         }
         Object target = AopUtil.getTarget(bean);
         Class<?> targetClass = target.getClass();
-        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(targetClass).entrySet()) {
-            Field field = entry.getValue();
+        for (Field field : ReflectUtil.getFields(targetClass)) {
             Value annotation = AnnotationUtil.findAnnotation(field, Value.class);
             if (annotation == null) {
                 continue;

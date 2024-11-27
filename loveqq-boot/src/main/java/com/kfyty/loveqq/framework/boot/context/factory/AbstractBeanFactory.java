@@ -19,6 +19,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -27,13 +28,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * 描述: bean 工厂基础实现
@@ -77,7 +80,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     /**
      * 同一类型的 bean 定义缓存
      */
-    protected final Map<Class<?>, Map<String, BeanDefinition>> beanDefinitionsForType;
+    protected final Map<Class<?>, BeanDefinition[]> beanDefinitionsForType;
 
     /**
      * 应用上下文
@@ -195,39 +198,37 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(boolean isAutowireCandidate) {
-        return this.getBeanDefinitions(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate);
+        return this.stream(e -> e.isAutowireCandidate() == isAutowireCandidate).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType) {
-        return this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.getBeanDefinitions(e -> beanType.isAssignableFrom(e.getValue().getBeanType())));
+        BeanDefinition[] beanDefinitions = this.beanDefinitionsForType.computeIfAbsent(beanType, k -> this.stream(e -> beanType.isAssignableFrom(e.getBeanType())).toArray(BeanDefinition[]::new));
+        return Arrays.stream(beanDefinitions).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), MAP_FACTORY));
     }
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitions(Class<?> beanType, boolean isAutowireCandidate) {
-        return this.getBeanDefinitions(beanType).entrySet()
+        return this.getBeanDefinitions(beanType)
+                .values()
                 .stream()
-                .filter(e -> e.getValue().isAutowireCandidate() == isAutowireCandidate)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), MAP_FACTORY));
+                .filter(e -> e.isAutowireCandidate() == isAutowireCandidate)
+                .collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), MAP_FACTORY));
     }
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass) {
-        return this.getBeanDefinitions(e -> hasAnnotationElement(e.getValue().getBeanType(), annotationClass));
+        return this.stream(e -> hasAnnotation(e.getBeanType(), annotationClass)).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass, boolean isAutowireCandidate) {
-        return this.getBeanDefinitions(e -> hasAnnotationElement(e.getValue().getBeanType(), annotationClass) && e.getValue().isAutowireCandidate() == isAutowireCandidate);
+        return this.stream(e -> hasAnnotation(e.getBeanType(), annotationClass) && e.isAutowireCandidate() == isAutowireCandidate).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
-    public Map<String, BeanDefinition> getBeanDefinitions(Predicate<Map.Entry<String, BeanDefinition>> beanDefinitionPredicate) {
-        return this.getBeanDefinitions().entrySet()
-                .stream()
-                .filter(beanDefinitionPredicate)
-                .sorted((b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, throwMergeFunction(), MAP_FACTORY));
+    public Stream<BeanDefinition> stream(Predicate<BeanDefinition> beanDefinitionPredicate) {
+        return this.beanDefinitions.values().stream().filter(beanDefinitionPredicate).sorted(BEAN_DEFINITION_COMPARATOR);
     }
 
     @Override

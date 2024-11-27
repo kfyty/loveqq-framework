@@ -11,6 +11,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
@@ -36,7 +37,7 @@ public class LookupBeanDefinitionImport implements ConfigurableApplicationContex
 
     @Override
     public Predicate<Class<?>> classesFilter(ApplicationContext applicationContext) {
-        return e -> isAbstract(e) && this.applicationContext.isMatchComponent(e) && getMethods(e).stream().anyMatch(m -> hasAnnotation(m, Lookup.class));
+        return e -> isAbstract(e) && this.applicationContext.isMatchComponent(e) && Arrays.stream(getMethods(e)).anyMatch(m -> hasAnnotation(m, Lookup.class));
     }
 
     @Override

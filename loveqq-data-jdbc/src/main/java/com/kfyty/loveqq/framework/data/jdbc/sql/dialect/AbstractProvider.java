@@ -123,7 +123,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
     }
 
     protected String getPkField(Class<?> entityClass) {
-        for (Field value : ReflectUtil.getFieldMap(entityClass).values()) {
+        for (Field value : ReflectUtil.getFields(entityClass)) {
             if (AnnotationUtil.hasAnnotation(value, TableId.class)) {
                 return camelCase2Underline(value.getName());
             }
@@ -134,7 +134,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
     public Pair<String, String> buildInsertField(Class<?> entityClass) {
         StringBuilder fields = new StringBuilder();
         StringBuilder values = new StringBuilder();
-        for (Field field : ReflectUtil.getFieldMap(entityClass).values()) {
+        for (Field field : ReflectUtil.getFields(entityClass)) {
             String name = field.getName();
             if (ReflectUtil.isStaticFinal(field.getModifiers()) || AnnotationUtil.hasAnnotation(field, Transient.class)) {
                 continue;
@@ -158,7 +158,7 @@ public abstract class AbstractProvider implements InsertProvider, SelectProvider
         String value = "%s = #{" + PROVIDER_PARAM_ENTITY + ".%s},";
         List<If> ifs = new ArrayList<>();
         Pair<String, Class<?>> entityClass = this.getEntityClass(mapperClass);
-        for (Field field : ReflectUtil.getFieldMap(entityClass.getValue()).values()) {
+        for (Field field : ReflectUtil.getFields(entityClass.getValue())) {
             String name = field.getName();
             if (ReflectUtil.isStaticFinal(field.getModifiers()) || AnnotationUtil.hasAnnotation(field, Transient.class)) {
                 continue;

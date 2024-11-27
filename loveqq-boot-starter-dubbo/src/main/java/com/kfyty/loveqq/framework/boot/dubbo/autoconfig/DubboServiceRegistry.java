@@ -101,16 +101,15 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
             return Collections.singletonList(interfaces[0]);
         }
         return Arrays.stream(interfaces)
-                .filter(e -> CommonUtil.notEmpty(ReflectUtil.getMethods(clazz, false)))
+                .filter(e -> CommonUtil.notEmpty(ReflectUtil.getMethods(clazz)))
                 .collect(Collectors.toList());
     }
 
     protected void resolveDubboReference(BeanFactory beanFactory, BeanDefinition beanDefinition) {
-        Map<String, Field> fieldMap = ReflectUtil.getFieldMap(beanDefinition.getBeanType());
-        for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-            DubboReference dubboReference = AnnotationUtil.findAnnotation(entry.getValue(), DubboReference.class);
+        for (Field field : ReflectUtil.getFields(beanDefinition.getBeanType())) {
+            DubboReference dubboReference = AnnotationUtil.findAnnotation(field, DubboReference.class);
             if (dubboReference != null) {
-                beanFactory.registerBeanDefinition(this.buildDubboReference(entry.getValue().getType(), dubboReference), false);
+                beanFactory.registerBeanDefinition(this.buildDubboReference(field.getType(), dubboReference), false);
             }
         }
     }

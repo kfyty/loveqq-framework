@@ -287,7 +287,7 @@ public class Configuration {
         );
         for (Interceptor interceptor : this.interceptors) {
             Predicate<Method> interceptorTest = method -> !method.isDefault() && INTERCEPTOR_METHOD_NAME.equals(method.getName()) && hasAnnotation(method, Order.class);
-            Collection<Method> methods = ReflectUtil.getMethods(interceptor.getClass()).stream().filter(interceptorTest).distinct().collect(Collectors.toList());
+            Collection<Method> methods = Arrays.stream(ReflectUtil.getMethods(interceptor.getClass())).filter(interceptorTest).distinct().collect(Collectors.toList());
             for (Method method : methods) {
                 this.interceptorMethodChain.put(method, interceptor);
             }

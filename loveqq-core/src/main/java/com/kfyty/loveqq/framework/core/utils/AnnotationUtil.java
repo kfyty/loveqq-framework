@@ -15,7 +15,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -249,7 +248,7 @@ public abstract class AnnotationUtil {
             }
 
             // 处理别名注解
-            Collection<Method> methods = ReflectUtil.getMethods(annotation.annotationType());
+            Method[] methods = ReflectUtil.getMethods(annotation.annotationType());
             Map<Annotation, Map<String, Object>> annotationValuesMap = new HashMap<>(8);
             Map<Class<? extends Annotation>, Annotation> nestedAnnotationMap = Arrays.stream(annotation.annotationType().getAnnotations()).collect(Collectors.toMap(Annotation::annotationType, Function.identity()));
             for (Method method : methods) {

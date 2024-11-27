@@ -353,7 +353,7 @@ public abstract class CommonUtil {
     /* ------------------------------------------ 集合排序操作 ------------------------------------------ */
 
     public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
-        Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>(unsortedMap.size());
+        Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>((int) (unsortedMap.size() / .75F) + 1);
         return unsortedMap
                 .entrySet()
                 .stream()
