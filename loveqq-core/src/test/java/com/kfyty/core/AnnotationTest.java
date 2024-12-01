@@ -74,7 +74,7 @@ public class AnnotationTest {
     public void annotationTest2() {
         Annotation[] annotations = AnnotationUtil.findAnnotations(AnnotationTest.class);
         Component annotation = (Component) Arrays.stream(annotations).filter(e -> e.annotationType() == Component.class).findAny().orElse(null);
-        Assertions.assertEquals(annotations.length, 5);
+        Assertions.assertEquals(annotations.length, 6);
         Assertions.assertNotNull(annotation);
         Assertions.assertEquals(annotation.value(), "test");
     }
@@ -83,7 +83,7 @@ public class AnnotationTest {
     public void annotationTest3() {
         AnnotationTest proxy = DynamicProxyFactory.create(true).createProxy(AnnotationTest.class);
         Annotation[] annotations = AnnotationUtil.findAnnotations(proxy);
-        Assertions.assertEquals(annotations.length, 5);
+        Assertions.assertEquals(annotations.length, 6);
     }
 
     @Test

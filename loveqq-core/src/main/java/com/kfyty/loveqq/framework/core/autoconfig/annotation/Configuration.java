@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.meta.This;
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 
 import java.lang.annotation.Documented;
@@ -16,6 +17,7 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  * @see com.kfyty.loveqq.framework.boot.instrument.ConfigurationClassInstrument
  */
+@This
 @Component
 @Documented
 @Target(ElementType.TYPE)
@@ -28,4 +30,12 @@ public @interface Configuration {
      */
     @AliasFor(annotation = Component.class)
     String value() default "";
+
+    /**
+     * 是否进行了字节码级别的增强
+     *
+     * @return 默认 false
+     */
+    @AliasFor(annotation = This.class)
+    boolean instrument() default true;
 }

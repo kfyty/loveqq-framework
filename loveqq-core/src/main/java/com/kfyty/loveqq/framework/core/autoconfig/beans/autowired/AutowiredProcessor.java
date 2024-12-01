@@ -264,7 +264,7 @@ public class AutowiredProcessor {
             if (primaryBeanOfType.size() > 1) {
                 throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
             }
-            return beanOfType;
+            return primaryBeanOfType.isEmpty() ? beanOfType : primaryBeanOfType;
         }
         return beanOfType;
     }

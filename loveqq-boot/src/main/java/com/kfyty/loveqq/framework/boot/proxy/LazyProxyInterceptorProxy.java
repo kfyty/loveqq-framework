@@ -21,6 +21,7 @@ public class LazyProxyInterceptorProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+        // 未创建实例时，如果仅仅是默认方法，则不创建实例
         if (!this.beanFactory.contains(beanName) && ReflectUtil.isEqualsHashCodeToString(methodProxy.getTargetMethod())) {
             return chain.proceed(methodProxy);
         }
