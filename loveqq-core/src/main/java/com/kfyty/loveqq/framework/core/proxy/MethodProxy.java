@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.core.proxy;
 
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.meta.This;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 
 import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.LOAD_TRANSFORMER;
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 
 /**
  * 描述: 方法代理包装
@@ -61,7 +61,28 @@ public class MethodProxy {
         this.method = method;
         this.arguments = args;
         this.methodProxy = methodProxy;
-        this.shouldInvokeSuper = target == null || methodProxy != null && (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class) && hasAnnotation(target, Configuration.class);
+        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, methodProxy);
+    }
+
+    /**
+     * 初始化是否应该支持自调用
+     *
+     * @param target      代理目标
+     * @param methodProxy 代理方法
+     * @return true/false
+     */
+    protected boolean initShouldInvokeSuper(Object target, net.sf.cglib.proxy.MethodProxy methodProxy) {
+        if (target == null) {
+            return true;
+        }
+        if (methodProxy == null) {
+            return false;
+        }
+        This annotation = findAnnotation(target, This.class);
+        if (annotation == null) {
+            return false;
+        }
+        return !annotation.instrument() || (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class);
     }
 
     /**
@@ -71,7 +92,7 @@ public class MethodProxy {
      */
     public void setTarget(Object target) {
         this.target = target;
-        this.shouldInvokeSuper = target == null || this.methodProxy != null && (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class) && hasAnnotation(target, Configuration.class);
+        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, this.methodProxy);
     }
 
     /**

@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.core.proxy.factory;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.meta.This;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.aop.adapter.MethodInterceptorChainPointAdapter;
@@ -72,8 +72,8 @@ public abstract class DynamicProxyFactory {
             return create(false);
         }
 
-        // 存在 Configuration 注解，必须使用继承代理工厂
-        if (AnnotationUtil.hasAnnotationElement(clazz, Configuration.class)) {
+        // 存在 This 注解，必须使用基于继承的代理工厂
+        if (AnnotationUtil.hasAnnotation(clazz, This.class)) {
             return create(true);
         }
 
@@ -83,7 +83,7 @@ public abstract class DynamicProxyFactory {
             return create(fallbackProxyTargetClass);
         }
 
-        // 没有任何接口走继承代理工厂
+        // 没有任何接口走基于继承的代理工厂
         return create(true);
     }
 

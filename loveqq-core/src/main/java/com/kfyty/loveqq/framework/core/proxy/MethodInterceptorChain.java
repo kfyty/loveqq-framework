@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.proxy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,12 +35,20 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
     /**
      * 当前代理链索引
      */
+    @Getter
     private int currentChainIndex;
 
     /**
      * 当前拦截链拦截的方法代理
      */
+    @Getter
     private MethodProxy intercepting;
+
+    /**
+     * 前一个拦截链
+     */
+    @Getter
+    private MethodInterceptorChain prevChain;
 
     /**
      * 代理链
@@ -68,8 +77,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
 
     public MethodInterceptorChain addInterceptorPoint(MethodInterceptorChainPoint chainPoint) {
         this.chainPoints.add(chainPoint);
-        this.sortInterceptorChain();
-        return this;
+        return this.sortChain();
     }
 
     public MethodInterceptorChain addInterceptorPoint(int index, MethodInterceptorChainPoint chainPoint) {
@@ -77,12 +85,13 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         return this;
     }
 
-    public void sortInterceptorChain() {
-        this.sortInterceptorChain(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
+    public MethodInterceptorChain sortChain() {
+        return this.sortChain(METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR);
     }
 
-    public void sortInterceptorChain(Comparator<MethodInterceptorChainPoint> comparator) {
+    public MethodInterceptorChain sortChain(Comparator<MethodInterceptorChainPoint> comparator) {
         this.chainPoints.sort(comparator);
+        return this;
     }
 
     @Override
@@ -92,10 +101,11 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
         }
         final MethodInterceptorChain currentChain = currentChain();
         if (currentChain != null && currentChain.intercepting.equals(methodProxy)) {
-            return currentChain.proceed(methodProxy);                                                                   // 该处逻辑只有 @Configuration 以代理模式实现自调用时才会调用
+            return currentChain.proceed(methodProxy);                                                                   // 该处逻辑只有 @This 以代理模式实现自调用时才会调用
         }
         try {
             MethodInterceptorChain newCurrentChain = new MethodInterceptorChain(this.getTarget(), this.chainPoints);
+            newCurrentChain.prevChain = currentChain;
             newCurrentChain.intercepting = methodProxy;
             CURRENT_INTERCEPTOR_CHAIN.set(newCurrentChain);
             return newCurrentChain.proceed(methodProxy);

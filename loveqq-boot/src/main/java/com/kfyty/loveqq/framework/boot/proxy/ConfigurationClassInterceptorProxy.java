@@ -43,12 +43,14 @@ public class ConfigurationClassInterceptorProxy implements MethodInterceptorChai
             return chain.proceed(methodProxy);
         }
 
+        BeanDefinition beanDefinition;
         String required = AbstractBeanFactory.getCreatingBean();
         String beanName = (FactoryBean.class.isAssignableFrom(method.getReturnType()) ? FACTORY_BEAN_PREFIX : EMPTY_STRING) + BeanUtil.getBeanName(method, annotation);
-        BeanDefinition beanDefinition = this.context.getBeanDefinition(beanName, method.getReturnType());
 
         if (required != null && this.context.getBeanDefinition(required).getBeanType() == method.getReturnType()) {
             beanDefinition = this.context.getBeanDefinition(required);
+        } else {
+            beanDefinition = this.context.getBeanDefinition(beanName, method.getReturnType());
         }
 
         if (!beanDefinition.isSingleton()) {

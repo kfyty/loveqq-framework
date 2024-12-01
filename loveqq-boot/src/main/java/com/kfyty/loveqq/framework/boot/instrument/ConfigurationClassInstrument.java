@@ -180,12 +180,14 @@ public class ConfigurationClassInstrument implements ClassFileTransformer {
      */
     protected String getCommonEnhanceCode(String methodName, String annotationValue) {
         String beanName = annotationValue != null && !annotationValue.isEmpty() ? annotationValue : methodName;
-        return "String required = com.kfyty.loveqq.framework.boot.context.factory.AbstractBeanFactory.getCreatingBean();" +
+        return "com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition bd;" +
+                "String required = com.kfyty.loveqq.framework.boot.context.factory.AbstractBeanFactory.getCreatingBean();" +
                 "String beanName = (com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean.class.isAssignableFrom($type) ? \"&\" : \"\") + \"" + beanName + "\";" +
                 "com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory bf = com.kfyty.loveqq.framework.core.utils.IOC.getBeanFactory();" +
-                "com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition bd = bf.getBeanDefinition(beanName, $type);" +
                 "if (required != null && bf.getBeanDefinition(required).getBeanType() == $type) {" +
                 "   bd = bf.getBeanDefinition(required);" +
+                "} else {" +
+                "   bd = bf.getBeanDefinition(beanName, $type);" +
                 "}";
     }
 }
