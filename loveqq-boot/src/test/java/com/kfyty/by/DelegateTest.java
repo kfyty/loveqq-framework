@@ -5,9 +5,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.By;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.OverrideBy;
-import com.kfyty.loveqq.framework.core.autoconfig.delegate.By;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +18,7 @@ import org.junit.jupiter.api.Test;
  * @email kfyty725@hotmail.com
  */
 @BootApplication
-public class ByTest implements CommandLineRunner {
+public class DelegateTest implements CommandLineRunner {
     @Autowired
     private Sub sub;
 
@@ -34,7 +33,7 @@ public class ByTest implements CommandLineRunner {
 
     @Test
     public void test() {
-        K.run(ByTest.class);
+        K.run(DelegateTest.class);
     }
 
     @Component
@@ -45,40 +44,44 @@ public class ByTest implements CommandLineRunner {
         }
     }
 
+    @By
     @Component
-    @OverrideBy
-    static class Sub extends Parent implements By, InitializingBean {
+    static class Sub extends Parent implements com.kfyty.loveqq.framework.core.autoconfig.delegate.Delegate, InitializingBean {
 
         @Override
         public void afterPropertiesSet() {
             this.test(1);
         }
 
-        @OverrideBy
+        @By
         public Integer test(int i) {
-            Integer superValue = (Integer) invokeSuper();
-            Integer superValue2 = (Integer) invokeSuper(this, 2);
+            Integer superValue = (Integer) invoke();
+            Integer superValue2 = (Integer) invoke(2);
+            Integer superValue3 = (Integer) invoke(this, new Object[]{2});
             Assertions.assertEquals(superValue, i + 1);
             Assertions.assertEquals(superValue2, 3);
+            Assertions.assertEquals(superValue3, 3);
             return i + 2;
         }
     }
 
+    @By
     @Component
-    @OverrideBy
-    static class Delegate implements By, InitializingBean {
+    static class Delegate implements com.kfyty.loveqq.framework.core.autoconfig.delegate.Delegate, InitializingBean {
 
         @Override
         public void afterPropertiesSet() {
             this.test(1);
         }
 
-        @OverrideBy(byName = "parent")
+        @By(byName = "parent")
         public Integer test(int i) {
-            Integer superValue = (Integer) invokeSuper();
-            Integer superValue2 = (Integer) invokeSuper(new Parent(), 2);
+            Integer superValue = (Integer) invoke();
+            Integer superValue2 = (Integer) invoke(2);
+            Integer superValue3 = (Integer) invoke(new Parent(), new Object[]{2});
             Assertions.assertEquals(superValue, i + 1);
             Assertions.assertEquals(superValue2, 3);
+            Assertions.assertEquals(superValue3, 3);
             return i + 2;
         }
     }

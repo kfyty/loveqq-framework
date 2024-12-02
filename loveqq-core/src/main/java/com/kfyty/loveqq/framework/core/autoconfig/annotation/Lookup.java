@@ -17,8 +17,8 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Lookup {
     /**
      * bean 名称，默认解析返回值类型
