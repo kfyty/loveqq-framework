@@ -1,8 +1,8 @@
 package com.kfyty.loveqq.framework.boot.processor;
 
-import com.kfyty.loveqq.framework.boot.proxy.OverrideByProxyInterceptorProxy;
+import com.kfyty.loveqq.framework.boot.proxy.DelegateProxyInterceptorProxy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.core.autoconfig.delegate.By;
+import com.kfyty.loveqq.framework.core.autoconfig.delegate.Delegate;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import lombok.extern.slf4j.Slf4j;
@@ -16,15 +16,15 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class OverrideByBeanPostProcessor extends AbstractProxyCreatorProcessor {
+public class DelegateBeanPostProcessor extends AbstractProxyCreatorProcessor {
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
-        return By.class.isAssignableFrom(beanType);
+        return Delegate.class.isAssignableFrom(beanType);
     }
 
     @Override
     public MethodInterceptorChainPoint createProxyPoint() {
-        return new OverrideByProxyInterceptorProxy(this.applicationContext);
+        return new DelegateProxyInterceptorProxy(this.applicationContext);
     }
 }

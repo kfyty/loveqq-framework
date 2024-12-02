@@ -102,7 +102,7 @@ public class Main {
 <parent>
     <groupId>com.kfyty</groupId>
     <artifactId>loveqq-framework</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
 </parent>
 
 <dependencies>
@@ -132,6 +132,18 @@ public class Main {
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
         </plugin>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <addClasspath>true</addClasspath>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin>
     </plugins>
 </build>
 ```
@@ -150,9 +162,9 @@ ext {
 }
 
 dependencies {
-    implementation 'com.kfyty:loveqq-framework:1.0.7@pom'
-    implementation 'com.kfyty:loveqq-boot:1.0.7'
-    implementation 'com.kfyty:loveqq-boot-starter-logback:1.0.7'
+    implementation 'com.kfyty:loveqq-framework:1.0.8@pom'
+    implementation 'com.kfyty:loveqq-boot:1.0.8'
+    implementation 'com.kfyty:loveqq-boot-starter-logback:1.0.8'
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.javassist:javassist:3.29.0-GA'
     compileOnly "org.projectlombok:lombok:1.18.30"

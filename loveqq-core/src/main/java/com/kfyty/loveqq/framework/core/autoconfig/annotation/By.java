@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.meta.This;
+import com.kfyty.loveqq.framework.core.autoconfig.delegate.Delegate;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -14,13 +15,13 @@ import java.lang.annotation.Target;
  * @author kfyty725
  * @date 2021/6/26 11:03
  * @email kfyty725@hotmail.com
- * @see com.kfyty.loveqq.framework.core.autoconfig.delegate.By
+ * @see Delegate
  */
 @This
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface OverrideBy {
+public @interface By {
     /**
      * 被委托的 bean name，优先级高于 {@link #by()}
      *
