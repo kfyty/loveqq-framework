@@ -154,7 +154,6 @@ public abstract class AnnotationUtil {
         return null;
     }
 
-    @SuppressWarnings("IfCanBeSwitch")
     public static Annotation[] findAnnotations(AnnotatedElement element) {
         if (element == null || element instanceof Class<?> && isMetaAnnotation((Class<?>) element)) {
             return CommonUtil.EMPTY_ANNOTATIONS;
@@ -243,7 +242,7 @@ public abstract class AnnotationUtil {
             Annotation annotation = annotations.get(i);
             // 元注解不处理
             if (isMetaAnnotation(annotation.annotationType())) {
-                annotations.remove(annotation);
+                annotations.remove(i);
                 continue;
             }
 

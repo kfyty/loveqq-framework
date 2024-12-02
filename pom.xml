@@ -3,11 +3,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.kfyty</groupId>
     <artifactId>loveqq-framework</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <url>https://github.com/kfyty/kfyty-framework</url>
     <description>ioc/aop/jdbc/mvc/javafx framework</description>
 
@@ -101,7 +100,7 @@
         <mybatis.version>3.5.16</mybatis.version>
 
         <k-jte.version>1.0-SNAPSHOT</k-jte.version>
-        <loveqq.framework.version>1.0.7</loveqq.framework.version>
+        <loveqq.framework.version>1.0.8</loveqq.framework.version>
 
         <slf4j.version>2.0.13</slf4j.version>
         <ant.version>1.10.14</ant.version>
@@ -434,24 +433,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${jar.plugin.version}</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>${boot-lib-output}/</classpathPrefix>
-                            <mainClass>${boot-main-class}</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Start-Class>${boot-start-class}</Start-Class>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>${dependency.plugin.version}</version>
                 <executions>
@@ -565,6 +546,25 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${jar.plugin.version}</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <!-- 框架不需要添加，子类打包时需要添加 -->
+                                <!-- <addClasspath>true</addClasspath> -->
+                                <classpathPrefix>${boot-lib-output}/</classpathPrefix>
+                                <mainClass>${boot-main-class}</mainClass>
+                            </manifest>
+                            <manifestEntries>
+                                <Start-Class>${boot-start-class}</Start-Class>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

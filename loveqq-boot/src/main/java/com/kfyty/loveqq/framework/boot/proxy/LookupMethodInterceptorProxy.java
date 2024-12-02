@@ -36,7 +36,7 @@ public class LookupMethodInterceptorProxy implements MethodInterceptorChainPoint
             return chain.proceed(methodProxy);
         }
         String beanName = CommonUtil.notEmpty(annotation.value()) ? annotation.value() : BeanUtil.getBeanName(method.getReturnType());
-        AutowiredDescription description = autowiredProcessor.getResolver().resolve(method);
+        AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
         return this.autowiredProcessor.doResolveBean(beanName, SimpleGeneric.from(method), description);
     }
 }

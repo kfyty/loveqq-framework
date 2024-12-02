@@ -197,6 +197,7 @@ class PropertiesConfig implements InitializingBean {
     }
 }
 
+@Lookup
 @Component
 @ComponentScan(excludeFilter = @ComponentFilter(classes = B.class))
 abstract class A implements InitializingBean, CommandLineRunner {
@@ -236,6 +237,7 @@ abstract class A implements InitializingBean, CommandLineRunner {
     }
 }
 
+@Lookup
 @Component
 abstract class LookupBean {
     @Lookup
@@ -338,6 +340,7 @@ class ComplexBean implements CommandLineRunner {
         Assertions.assertNotEquals(this.aaa2.getBBB().getTime(), this.bbb2.getTime());
     }
 
+    @Lookup
     @Component
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     public static abstract class PrototypeAAA {
@@ -395,6 +398,7 @@ class ComplexBean implements CommandLineRunner {
     }
 
     @Lazy
+    @Lookup
     @Component
     @Scope(BeanDefinition.SCOPE_PROTOTYPE)
     public static class LazyAAA {

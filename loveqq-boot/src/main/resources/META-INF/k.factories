@@ -16,7 +16,7 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.context.env.DefaultGenericPropertiesContext,\
     com.kfyty.loveqq.framework.boot.context.env.DefaultPropertyPlaceholdersResolver,\
     com.kfyty.loveqq.framework.boot.processor.ConfigurationClassPostProcessor,\
-    com.kfyty.loveqq.framework.boot.processor.OverrideByBeanPostProcessor,\
+    com.kfyty.loveqq.framework.boot.processor.DelegateBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.ValueAnnotationBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.ConfigurationPropertiesBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.AutowiredCapableBeanPostProcessor,\
