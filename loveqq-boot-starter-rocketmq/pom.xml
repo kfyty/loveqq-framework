@@ -9,30 +9,31 @@
         <version>1.0.8</version>
     </parent>
 
-    <artifactId>loveqq-boot-starter-mybatis</artifactId>
+    <artifactId>loveqq-boot-starter-rocketmq</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <rocketemq.version>5.0.7</rocketemq.version>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-core</artifactId>
             <version>${loveqq.framework.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-boot-starter-datasource</artifactId>
-            <version>${loveqq.framework.version}</version>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client-java</artifactId>
+            <version>${rocketemq.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

@@ -4,8 +4,6 @@ import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -22,7 +20,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.jar.JarFile;
 
 import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.TEMP_PATH;
@@ -154,18 +150,6 @@ public abstract class IOUtil {
     }
 
     /**
-     * 读取输入流到字节数组
-     *
-     * @param byteBuf 输入缓冲
-     * @return 字节数组
-     */
-    public static byte[] read(ByteBuf byteBuf) {
-        byte[] bytes = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(bytes, 0, bytes.length);
-        return bytes;
-    }
-
-    /**
      * 将输入流复制到输出流
      *
      * @param in  输入流
@@ -225,45 +209,6 @@ public abstract class IOUtil {
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
-    }
-
-    /**
-     * 创建一个 {@link ByteBuf}
-     *
-     * @return {@link ByteBuf}
-     */
-    public static ByteBuf newByteBuf() {
-        return Unpooled.buffer();
-    }
-
-    /**
-     * 创建一个 {@link ByteBuf}
-     *
-     * @param bytes 字节数据
-     * @return {@link ByteBuf}
-     */
-    public static ByteBuf newByteBuf(byte[] bytes) {
-        return Unpooled.wrappedBuffer(bytes);
-    }
-
-    /**
-     * 格式化 sse 数据
-     *
-     * @param data 实际数据
-     * @return 符合 sse 标准的数据
-     */
-    public static ByteBuf formatSseData(Object data) {
-        if (data instanceof CharSequence) {
-            return newByteBuf(("data:" + data + "\n\n").getBytes(StandardCharsets.UTF_8));
-        }
-        if (data instanceof byte[]) {
-            ByteBuf buffer = Unpooled.buffer();
-            buffer.writeBytes("data:".getBytes(StandardCharsets.UTF_8));
-            buffer.writeBytes((byte[]) data);
-            buffer.writeBytes("\n\n".getBytes(StandardCharsets.UTF_8));
-            return buffer;
-        }
-        throw new IllegalArgumentException("The sse value must be String/byte[]");
     }
 
     /**
@@ -344,16 +289,6 @@ public abstract class IOUtil {
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
-    }
-
-    /**
-     * 返回一个输入流生产者
-     *
-     * @param byteBuf 字节缓冲区
-     * @return 输入流生产者
-     */
-    public static Supplier<InputStream> newInputStream(ByteBuf byteBuf) {
-        return () -> new ByteArrayInputStream(read(byteBuf));
     }
 
     /**

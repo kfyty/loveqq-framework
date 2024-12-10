@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.ws;
 
-import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.core.utils.NIOUtil;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -40,7 +40,7 @@ public interface WebSocketHandler {
      * @param byteBuf 消息体
      */
     default void onMessage(Session session, ByteBuf byteBuf) {
-        this.onMessage(session, IOUtil.read(byteBuf));
+        this.onMessage(session, NIOUtil.read(byteBuf));
     }
 
     /**
