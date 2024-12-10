@@ -1,8 +1,8 @@
 package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
-import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
+import com.kfyty.loveqq.framework.core.utils.NIOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -136,7 +136,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             if (!isSse) {
                 return writeReturnValue(processedReturnValue, serverResponse, false);
             }
-            return writeReturnValue(IOUtil.formatSseData(processedReturnValue), serverResponse, true);
+            return writeReturnValue(NIOUtil.formatSseData(processedReturnValue), serverResponse, true);
         } catch (Exception e) {
             throw new NettyServerException(e);
         }

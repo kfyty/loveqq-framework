@@ -1,0 +1,4 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig.RocketMQProperties,\
+    com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig.RocketMQAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig.RocketMQMessageListenerRegistry,\
