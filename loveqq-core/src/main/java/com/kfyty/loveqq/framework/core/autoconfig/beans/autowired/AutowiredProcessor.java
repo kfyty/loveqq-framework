@@ -148,7 +148,8 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, SimpleGeneric returnType, AutowiredDescription autowired) {
         Object resolveBean = null;
-        Map<String, Object> beans = this.doGetBean(targetBeanName, returnType.getSimpleType(), returnType, autowired);
+        Class<?> targetType = returnType.getSimpleType();
+        Map<String, Object> beans = this.doGetBean(targetBeanName, targetType, returnType, autowired);
         if (returnType.isGeneric(List.class)) {
             resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, returnType).values());
         }
@@ -162,10 +163,13 @@ public class AutowiredProcessor {
             resolveBean = CommonUtil.copyToArray(returnType.getSimpleActualType(), this.filterMapBeanIfNecessary(beans, returnType).values());
         }
         if (beans.isEmpty()) {
-            return resolveBean;
+            return returnType.isGeneric(Optional.class) ? Optional.empty() : resolveBean;
         }
         if (resolveBean == null) {
             resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType, true);
+        }
+        if (returnType.isGeneric(Optional.class)) {
+            return Optional.ofNullable(resolveBean);
         }
         return resolveBean;
     }
@@ -256,15 +260,17 @@ public class AutowiredProcessor {
                 this.removeResolving(targetBeanName, targetType, isGeneric);
             }
         }
-        if (AutowiredDescription.isRequired(autowired) && beanOfType.isEmpty()) {
-            throw new BeansException("Resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
-        }
-        if (AutowiredDescription.isRequired(autowired) && !isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
-            Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if (primaryBeanOfType.size() > 1) {
-                throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
+        if (AutowiredDescription.isRequired(autowired)) {
+            if (beanOfType.isEmpty() && !returnType.isGeneric(Optional.class)) {
+                throw new BeansException("Resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
             }
-            return primaryBeanOfType.isEmpty() ? beanOfType : primaryBeanOfType;
+            if (!isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
+                Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                if (primaryBeanOfType.size() > 1) {
+                    throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
+                }
+                return primaryBeanOfType.isEmpty() ? beanOfType : primaryBeanOfType;
+            }
         }
         return beanOfType;
     }

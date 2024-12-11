@@ -38,7 +38,10 @@ import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoC
  */
 @Slf4j
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
-    protected final Thread shutdownHook = new Thread(this::close);
+    /**
+     * 销毁回调
+     */
+    protected final Thread shutdownHook = new Thread(this::close, "LoveqqFrameworkShutdownHook");
 
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
     protected ExecutorService executorService;

@@ -182,7 +182,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
-        return ofNullable(this.beanDefinitions.get(beanName)).orElseThrow(() -> new BeansException("No such bean definition found of name: " + beanName));
+        BeanDefinition beanDefinition = this.beanDefinitions.get(beanName);
+        if (beanDefinition != null) {
+            return beanDefinition;
+        }
+        throw new BeansException("No such bean definition found of name: " + beanName);
     }
 
     @Override

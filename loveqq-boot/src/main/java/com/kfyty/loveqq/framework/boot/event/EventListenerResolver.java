@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.boot.event;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EventListener;
@@ -10,7 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
-import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListenerFactory;
+import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListener;
 import com.kfyty.loveqq.framework.core.event.GenericApplicationEvent;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
@@ -35,21 +35,26 @@ import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPubli
  */
 @Slf4j
 @Component
-public class EventListenerResolver implements ContextAfterRefreshed, InternalPriority {
+public class EventListenerResolver implements ContextOnRefresh, InternalPriority {
+    /**
+     * 泛型事件断言
+     */
     private static final Predicate<ParameterizedType> GENERIC_EVENT_GENERIC_FILTER = e -> e.getRawType().equals(GenericApplicationEvent.class);
 
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-
-    @Autowired
-    private EventListenerAnnotationListenerFactory eventListenerAnnotationListenerFactory;
+    protected ApplicationEventPublisher applicationEventPublisher;
 
     @Override
-    public void onAfterRefreshed(ApplicationContext applicationContext) {
+    public void onRefresh(ApplicationContext applicationContext) {
         this.registerApplicationListener(applicationContext);
-        this.registerEventListenerAnnotation(applicationContext);
+        this.registerEventAnnotationListener(applicationContext);
     }
 
+    /**
+     * 注册 {@link ApplicationListener} 实例的监听器
+     *
+     * @param applicationContext 应用上下文
+     */
     protected void registerApplicationListener(ApplicationContext applicationContext) {
         Map<String, BeanDefinition> beanDefinitions = applicationContext.getBeanDefinitions(ApplicationListener.class, true);
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
@@ -57,13 +62,19 @@ public class EventListenerResolver implements ContextAfterRefreshed, InternalPri
                 this.applicationEventPublisher.registerEventListener(applicationContext.getBean(entry.getKey()));
             } else {
                 Class<?> listenerType = ReflectUtil.getSuperGeneric(entry.getValue().getBeanType(), SUPER_GENERIC_FILTER);
-                ApplicationListener<?> eventListener = this.eventListenerAnnotationListenerFactory.createEventListener(entry.getKey(), null, listenerType);
+                ApplicationListener<?> eventListener = this.createEventListener(entry.getKey(), null, listenerType, applicationContext);
                 this.applicationEventPublisher.registerEventListener(eventListener);
             }
+            log.info("Register event listener: {}", entry.getValue().getBeanType());
         }
     }
 
-    protected void registerEventListenerAnnotation(ApplicationContext applicationContext) {
+    /**
+     * 注册 {@link EventListener} 注解的监听器
+     *
+     * @param applicationContext 应用上下文
+     */
+    protected void registerEventAnnotationListener(ApplicationContext applicationContext) {
         Map<String, BeanDefinition> beanDefinitionMap = applicationContext.getBeanDefinitionWithAnnotation(EventListener.class, true);
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
             Class<?> beanType = entry.getValue().getBeanType();
@@ -71,14 +82,14 @@ public class EventListenerResolver implements ContextAfterRefreshed, InternalPri
                 EventListener annotation = AnnotationUtil.findAnnotation(method, EventListener.class);
                 if (annotation != null) {
                     Method listenerMethod = AopUtil.getInterfaceMethod(beanType, method);
-                    this.createEventListener(entry.getKey(), listenerMethod, annotation);
+                    this.registerEventAnnotationListener(entry.getKey(), listenerMethod, annotation, applicationContext);
                 }
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    protected void createEventListener(String beanName, Method listenerMethod, EventListener eventListener) {
+    protected void registerEventAnnotationListener(String beanName, Method listenerMethod, EventListener eventListener, ApplicationContext applicationContext) {
         Class<? extends ApplicationEvent<?>>[] eventTypes = eventListener.value();
         if (CommonUtil.empty(eventTypes)) {
             eventTypes = (Class<? extends ApplicationEvent<?>>[]) listenerMethod.getParameterTypes();
@@ -89,9 +100,22 @@ public class EventListenerResolver implements ContextAfterRefreshed, InternalPri
             if (GenericApplicationEvent.class.isAssignableFrom(eventType)) {
                 eventType = ReflectUtil.getSuperGeneric(eventType, parameterTypes[i], 0, GENERIC_EVENT_GENERIC_FILTER);
             }
-            ApplicationListener<?> annotationListener = this.eventListenerAnnotationListenerFactory.createEventListener(beanName, listenerMethod, eventType);
+            ApplicationListener<?> annotationListener = this.createEventListener(beanName, listenerMethod, eventType, applicationContext);
             this.applicationEventPublisher.registerEventListener(annotationListener);
             log.info("Register annotation event listener: {}", annotationListener);
         }
+    }
+
+    /**
+     * 创建事件监听器
+     *
+     * @param beanName           bean name
+     * @param listenerMethod     监听方法
+     * @param listenerType       监听类型
+     * @param applicationContext 应用上下文
+     * @return 监听器
+     */
+    protected ApplicationListener<?> createEventListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext applicationContext) {
+        return new EventListenerAnnotationListener(beanName, listenerMethod, listenerType, applicationContext);
     }
 }

@@ -17,10 +17,12 @@ import java.lang.annotation.Target;
  * @author kfyty725
  * @date 2021/6/21 16:45
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.loveqq.framework.core.event.EventListenerAdapter
+ * @see com.kfyty.loveqq.framework.boot.event.EventListenerResolver
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface EventListener {
     /**
      * 要监听的事件
