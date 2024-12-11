@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.javafx.core.event;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.support.Pair;
-import com.kfyty.loveqq.framework.javafx.core.factory.FEventListenerFactory;
 import javafx.scene.Node;
 
 import java.util.Iterator;
@@ -18,12 +17,12 @@ import java.util.Queue;
  * @email kfyty725@hotmail.com
  */
 public class ViewCloseEventListener implements ApplicationListener<ViewCloseEvent> {
-    @Autowired("fEventListenerFactory")
-    private FEventListenerFactory eventListenerFactory;
+    @Autowired(FEventListenerAdapter.BEAN_NAME)
+    private FEventListenerAdapter eventListenerAdapter;
 
     @Override
     public synchronized void onApplicationEvent(ViewCloseEvent event) {
-        Map<String, Queue<Pair<Node, Object>>> viewController = this.eventListenerFactory.getViewController();
+        Map<String, Queue<Pair<Node, Object>>> viewController = this.eventListenerAdapter.getViewController();
         for (Iterator<Map.Entry<String, Queue<Pair<Node, Object>>>> i = viewController.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String, Queue<Pair<Node, Object>>> entry = i.next();
             entry.getValue().removeIf(e -> e.getKey() == event.getSource());

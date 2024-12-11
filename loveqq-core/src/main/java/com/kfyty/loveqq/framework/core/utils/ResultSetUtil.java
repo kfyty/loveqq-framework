@@ -198,6 +198,6 @@ public abstract class ResultSetUtil {
         if (typeHandler != null) {
             return typeHandler.getResult(resultSet, column);
         }
-        return resultSet.getObject(column, targetType);
+        return resultSet.getObject(column);
     }
 }

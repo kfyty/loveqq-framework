@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @email kfyty725@hotmail.com
  */
 public class RefreshScopeProxyFactory implements ScopeProxyFactory {
+    /**
+     * bean 缓存
+     */
     protected final Map<String, Object> cache = new ConcurrentHashMap<>();
 
     @Override
@@ -29,7 +32,7 @@ public class RefreshScopeProxyFactory implements ScopeProxyFactory {
     @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
         if (event instanceof PropertyConfigRefreshedEvent) {
-            HashMap<String, Object> removed = new HashMap<>(this.cache);
+            Map<String, Object> removed = new HashMap<>(this.cache);
             ApplicationContext context = (ApplicationContext) event.getSource();
             this.cache.clear();
             removed.forEach(context::destroyBean);

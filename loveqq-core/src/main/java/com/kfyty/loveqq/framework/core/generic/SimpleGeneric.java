@@ -1,9 +1,11 @@
 package com.kfyty.loveqq.framework.core.generic;
 
+import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
+import jakarta.inject.Provider;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,8 +49,15 @@ public class SimpleGeneric extends QualifierGeneric {
         IGNORED_NESTED_GENERIC_CLASSES.add(BiFunction.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Comparable.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(FactoryBean.class);
+        IGNORED_NESTED_GENERIC_CLASSES.add(LaziedObject.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationEvent.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationListener.class);
+
+        try {
+            IGNORED_NESTED_GENERIC_CLASSES.add(Provider.class);
+        } catch (Throwable e) {
+            // jsr doesn't exists, ignored
+        }
     }
 
     /**
@@ -145,8 +154,11 @@ public class SimpleGeneric extends QualifierGeneric {
         if (actualType == Object.class) {
             return rawType;
         }
+        if (!(this.resolveType instanceof ParameterizedType)) {
+            return actualType;
+        }
         for (Class<?> clazz : IGNORED_NESTED_GENERIC_CLASSES) {
-            if (clazz == rawType && this.resolveType instanceof ParameterizedType) {
+            if (clazz == rawType) {
                 return rawType;
             }
         }

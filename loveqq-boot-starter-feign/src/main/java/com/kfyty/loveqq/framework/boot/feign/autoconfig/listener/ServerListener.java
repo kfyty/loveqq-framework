@@ -25,8 +25,8 @@ public class ServerListener {
     @EventListener
     public void onServerEvent(ServerEvent event) {
         synchronized (this) {
-            Map<String, ServerEvent.Instance> instanceMap = event.getSource().getInstances().stream().collect(Collectors.toMap(e -> e.getIp() + ":" + e.getPort(), v -> v));
             List<Server> servers = this.loadBalancer.getAllServers();
+            Map<String, ServerEvent.Instance> instanceMap = event.getSource().getInstances().stream().collect(Collectors.toMap(e -> e.getIp() + ":" + e.getPort(), v -> v));
             for (Server server : servers) {
                 server.setAlive(instanceMap.containsKey(server.getId()));
                 instanceMap.remove(server.getId());

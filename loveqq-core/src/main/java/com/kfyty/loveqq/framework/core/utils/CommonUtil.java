@@ -123,7 +123,7 @@ public abstract class CommonUtil {
             Class.forName("java.lang.BaseVirtualThread", false, CommonUtil.class.getClassLoader());
             VIRTUAL_THREAD_SUPPORTED = true;
         } catch (Throwable e) {
-            log.warn("Virtual thread doesn't supported");
+            // ignored
         }
     }
 
@@ -161,7 +161,7 @@ public abstract class CommonUtil {
     }
 
     public static List<?> toList(Object value) {
-        return toList(value, entry -> entry);
+        return toList(value, Map.Entry::getValue);
     }
 
     public static List<?> toList(Object value, Function<Map.Entry<?, ?>, ?> entryMapping) {
@@ -177,8 +177,7 @@ public abstract class CommonUtil {
         if (value instanceof Map) {
             return ((Map<?, ?>) value).entrySet().stream().map(entryMapping).collect(Collectors.toList());
         }
-        log.error("data to list error, data is not collection, array or map !");
-        return emptyList();
+        return Collections.singletonList(value);
     }
 
     public static Object copyToArray(Class<?> elementType, Collection<?> collection) {
@@ -253,14 +252,14 @@ public abstract class CommonUtil {
         return target;
     }
 
-    public static String toString(Object obj) {
-        if (obj == null) {
+    public static String toString(Object value) {
+        if (value == null) {
             return "null";
         }
-        if (obj.getClass().isArray()) {
-            return toList(obj).toString();
+        if (value.getClass().isArray()) {
+            return toList(value).toString();
         }
-        return obj.toString();
+        return value.toString();
     }
 
     /* ------------------------------------------ URI 字符串操作 ------------------------------------------ */

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -127,6 +128,39 @@ public class GenericTest implements CommandLineRunner {
         public void afterPropertiesSet() {
             super.afterPropertiesSet();
             Assertions.assertSame(this.anyBean(), this.anyBean());
+        }
+    }
+
+    @Component
+    static class OptionalTest implements CommandLineRunner {
+        @Autowired
+        private Optional<Dept1> user1Opt;
+
+        @Autowired
+        private Optional<Dept2> user2Opt;
+
+        @Autowired
+        private Optional<Dept3> user3Opt;
+
+        @Override
+        public void run(String... args) throws Exception {
+            Assertions.assertInstanceOf(Dept1.class, user1Opt.get());
+            Assertions.assertInstanceOf(Dept2.class, user2Opt.get());
+            Assertions.assertSame(user3Opt, Optional.empty());
+        }
+
+        static class Dept1 {}
+        static class Dept2 {}
+        static class Dept3 {}
+
+        @Bean
+        public Dept1 user1x() {
+            return new Dept1();
+        }
+
+        @Bean
+        public Dept2 user2x() {
+            return new Dept2();
         }
     }
 }

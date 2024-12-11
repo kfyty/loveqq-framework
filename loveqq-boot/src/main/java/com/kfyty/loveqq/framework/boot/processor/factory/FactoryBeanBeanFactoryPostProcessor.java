@@ -5,10 +5,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.event.ApplicationListener;
-import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,7 +23,10 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @email kfyty725@hotmail.com
  */
 @Component
-public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPostProcessor implements BeanFactoryPostProcessor, ApplicationListener<ContextRefreshedEvent> {
+public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+    /**
+     * 已经处理的 bean name
+     */
     protected volatile Set<String> postProcessed;
 
     @Override
@@ -32,14 +34,6 @@ public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPost
         Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>(beanFactory.getBeanDefinitions());
         for (Map.Entry<String, BeanDefinition> beanDefinitionEntry : beanDefinitionMap.entrySet()) {
             this.postProcessBeanDefinition(beanDefinitionEntry.getValue(), beanFactory);
-        }
-    }
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        if (this.postProcessed != null) {
-            this.postProcessed.clear();
-            this.postProcessed = null;
         }
     }
 
@@ -58,7 +52,7 @@ public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPost
         if (this.postProcessed == null) {
             synchronized (this) {
                 if (this.postProcessed == null) {
-                    this.postProcessed = new HashSet<>();
+                    this.postProcessed = Collections.synchronizedSet(new HashSet<>());
                 }
             }
         }
