@@ -43,8 +43,8 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
     @Autowired
     private ControllerFactory controllerFactory;
 
-    @Autowired("fEventListenerFactory")
-    private FEventListenerFactory eventListenerFactory;
+    @Autowired(FEventListenerAdapter.BEAN_NAME)
+    private FEventListenerAdapter eventListenerAdapter;
 
     @Override
     public Class<?> getBeanType() {
@@ -68,7 +68,7 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
             }
 
             // 添加到事件监听器缓存
-            this.eventListenerFactory.addController(this.controllerBeanName, component, fxmlLoader.getController());
+            this.eventListenerAdapter.addController(this.controllerBeanName, component, fxmlLoader.getController());
 
             // 包装组件
             if (this.getBeanType() == Scene.class) {

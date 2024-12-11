@@ -2,11 +2,13 @@ package com.kfyty.loveqq.framework.boot.tx.spring.autoconfig;
 
 import com.kfyty.loveqq.framework.aop.Advisor;
 import com.kfyty.loveqq.framework.aop.support.annotated.AnnotationPointcutAdvisor;
+import com.kfyty.loveqq.framework.boot.tx.spring.autoconfig.event.TransactionEventListenerAdapter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.event.EventListenerAdapter;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -28,6 +30,11 @@ public class DataSourceTransactionAutoConfiguration {
     @Bean(resolveNested = false, independent = true)
     public DataSourceTransactionManager dataSourceTransactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
+    }
+
+    @Bean
+    public EventListenerAdapter transactionEventListenerAdapter() {
+        return new TransactionEventListenerAdapter();
     }
 
     @Bean

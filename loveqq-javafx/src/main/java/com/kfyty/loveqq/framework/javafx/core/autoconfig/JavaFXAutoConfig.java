@@ -5,12 +5,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentFilter;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
-import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListenerFactory;
 import com.kfyty.loveqq.framework.javafx.core.BootstrapApplication;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FController;
-import com.kfyty.loveqq.framework.javafx.core.event.ViewCloseEventListener;
 import com.kfyty.loveqq.framework.javafx.core.factory.ControllerFactory;
-import com.kfyty.loveqq.framework.javafx.core.factory.FEventListenerFactory;
 import com.kfyty.loveqq.framework.javafx.core.processor.FControllerBeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.javafx.core.processor.FControllerBeanPostProcessor;
 
@@ -28,16 +25,6 @@ public class JavaFXAutoConfig {
     @Bean
     public ControllerFactory controllerFactory() {
         return new ControllerFactory();
-    }
-
-    @Bean
-    public EventListenerAnnotationListenerFactory fEventListenerFactory() {
-        return new FEventListenerFactory();
-    }
-
-    @Bean
-    public ViewCloseEventListener viewCloseEventListener() {
-        return new ViewCloseEventListener();
     }
 
     @Bean

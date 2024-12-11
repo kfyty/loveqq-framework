@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.core.support.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
+import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
@@ -18,7 +18,7 @@ import com.kfyty.loveqq.framework.core.utils.JsonUtil;
  */
 @Component
 @ConditionalOnWebApplication
-public class JacksonAutoConfig implements ContextAfterRefreshed {
+public class JacksonAutoConfig implements ContextOnRefresh {
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
@@ -27,7 +27,7 @@ public class JacksonAutoConfig implements ContextAfterRefreshed {
     }
 
     @Override
-    public void onAfterRefreshed(ApplicationContext applicationContext) {
+    public void onRefresh(ApplicationContext applicationContext) {
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         JsonUtil.configure(objectMapper);
     }

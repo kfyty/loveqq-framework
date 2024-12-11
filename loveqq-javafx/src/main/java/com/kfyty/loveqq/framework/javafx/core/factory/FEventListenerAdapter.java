@@ -1,17 +1,20 @@
 package com.kfyty.loveqq.framework.javafx.core.factory;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
+import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
+import com.kfyty.loveqq.framework.core.event.EventListenerAdapter;
 import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListener;
-import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListenerFactory;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import javafx.scene.Node;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +29,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @date 2024/2/21 11:56
  * @email kfyty725@hotmail.com
  */
-public class FEventListenerFactory implements EventListenerAnnotationListenerFactory, ApplicationContextAware {
+@Order(Integer.MIN_VALUE)
+@Component(FEventListenerAdapter.BEAN_NAME)
+public class FEventListenerAdapter implements EventListenerAdapter, ApplicationContextAware, InternalPriority {
+    /**
+     * bean name
+     */
+    public static final String BEAN_NAME = "fEventListenerAdapter";
+
     /**
      * 上下文
      */
@@ -37,6 +47,16 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
      */
     @Getter
     private final Map<String, Queue<Pair<Node, Object>>> viewController = new ConcurrentHashMap<>();
+
+    /**
+     * 设置上下文
+     *
+     * @param applicationContext 应用上下文
+     */
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * 添加控制器实例和视图的缓存
@@ -52,37 +72,36 @@ public class FEventListenerFactory implements EventListenerAnnotationListenerFac
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-    @Override
-    public ApplicationListener<?> createEventListener(String beanName, Method listenerMethod, Class<?> listenerType) {
-        return new FEventAnnotationListener(beanName, listenerMethod, listenerType, this.applicationContext);
-    }
-
-    public class FEventAnnotationListener extends EventListenerAnnotationListener {
-
-        public FEventAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext context) {
-            super(beanName, listenerMethod, listenerType, context);
+    @SuppressWarnings("rawtypes")
+    public ApplicationListener<?> adapt(EventListenerAnnotationListener source, ApplicationListener<ApplicationEvent<?>> listener) {
+        if (EventListenerAnnotationListener.class.isInstance(listener)) {
+            return new FEventAnnotationListener((EventListenerAnnotationListener) (ApplicationListener) listener);
         }
+        throw new UnsupportedOperationException("JavaFx event listener adapter doesn't listener type of: " + listener.getClass());
+    }
+
+    @RequiredArgsConstructor
+    public class FEventAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
+        /**
+         * 原始监听器
+         */
+        protected final EventListenerAnnotationListener listener;
 
         /**
          * 优先使用已存在的控制器示例执行监听器
          * 当视图销毁时，控制器实例也被移除
          *
-         * @param params 方法参数
          * @see com.kfyty.loveqq.framework.javafx.core.event.ViewCloseEventListener
          */
         @Override
-        protected void invokeListener(Object[] params) {
-            Queue<Pair<Node, Object>> controllers = FEventListenerFactory.this.viewController.get(this.beanName);
-            if (CommonUtil.empty(controllers)) {
-                super.invokeListener(params);
+        public void onApplicationEvent(ApplicationEvent<Object> event) {
+            Queue<Pair<Node, Object>> controllers = FEventListenerAdapter.this.viewController.get(this.listener.getBeanName());
+            if (this.listener.getListenerMethod() == null || CommonUtil.empty(controllers)) {
+                this.listener.onApplicationEvent(event);
                 return;
             }
             for (Pair<Node, Object> pair : controllers) {
-                super.processListenerResult(ReflectUtil.invokeMethod(pair.getValue(), this.listenerMethod, params));
+                this.listener.invokeListener(pair.getValue(), event);
             }
         }
     }

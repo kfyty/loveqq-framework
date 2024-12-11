@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.event;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,12 +21,24 @@ import java.lang.reflect.Parameter;
 @ToString(exclude = "context")
 @EqualsAndHashCode(exclude = "context")
 public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
+    /**
+     * bean name
+     */
     protected final String beanName;
 
+    /**
+     * 监听方法，null 表示对应的实例是 {@link ApplicationListener} 类型，可直接调用
+     */
     protected final Method listenerMethod;
 
+    /**
+     * 监听器类型
+     */
     protected final Class<?> listenerType;
 
+    /**
+     * 应用上下文
+     */
     protected final ApplicationContext context;
 
     public EventListenerAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext context) {
@@ -41,20 +54,35 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void onApplicationEvent(ApplicationEvent<Object> event) {
-        if (this.listenerMethod == null) {
+        if (this.listenerMethod != null) {
+            this.invokeListener(this.context.getBean(this.beanName), event);
+        } else {
             ApplicationListener bean = this.context.getBean(this.beanName);
             bean.onApplicationEvent(event);
-            return;
         }
-        int index = -1;
-        Object[] params = new Object[this.listenerMethod.getParameterCount()];
-        for (Parameter parameter : this.listenerMethod.getParameters()) {
-            index++;
+    }
+
+    /**
+     * 执行监听器
+     *
+     * @param target 监听器实例
+     * @param event  监听事件
+     */
+    public void invokeListener(Object target, ApplicationEvent<Object> event) {
+        int index = 0;
+        Parameter[] parameters = this.listenerMethod.getParameters();
+        Object[] parameterArgs = new Object[parameters.length];
+        for (Parameter parameter : parameters) {
+            if (BeanFactory.class.isAssignableFrom(parameter.getType())) {
+                parameterArgs[index++] = this.context;
+                continue;
+            }
             if (event.getClass().equals(parameter.getType())) {
-                params[index] = event;
+                parameterArgs[index++] = event;
+                continue;
             }
         }
-        this.invokeListener(params);
+        this.invokeListener(target, parameterArgs);
     }
 
     /**
@@ -62,8 +90,8 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      *
      * @param params 方法参数
      */
-    protected void invokeListener(Object[] params) {
-        Object result = ReflectUtil.invokeMethod(this.context.getBean(this.beanName), this.listenerMethod, params);
+    public void invokeListener(Object target, Object[] params) {
+        Object result = ReflectUtil.invokeMethod(target, this.listenerMethod, params);
         this.processListenerResult(result);
     }
 
@@ -72,7 +100,7 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      *
      * @param result 返回值
      */
-    protected void processListenerResult(Object result) {
+    public void processListenerResult(Object result) {
         if (result instanceof ApplicationEvent<?>) {
             this.context.publishEvent((ApplicationEvent<?>) result);
         }
