@@ -133,7 +133,6 @@ public class RocketMQMessageListenerRegistry implements ContextOnRefresh, Destro
         return builder;
     }
 
-
     @RequiredArgsConstructor
     public static class ReflectiveMessageListener implements MessageListener {
         /**

@@ -35,7 +35,7 @@ import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPubli
  */
 @Slf4j
 @Component
-public class EventListenerResolver implements ContextOnRefresh, InternalPriority {
+public class EventListenerRegistry implements ContextOnRefresh, InternalPriority {
     /**
      * 泛型事件断言
      */
