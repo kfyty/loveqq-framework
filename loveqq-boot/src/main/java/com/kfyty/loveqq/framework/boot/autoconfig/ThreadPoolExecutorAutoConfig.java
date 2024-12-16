@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.boot.autoconfig;
 import com.kfyty.loveqq.framework.boot.autoconfig.support.DefaultThreadPoolExecutor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Configuration
+@Component
 public class ThreadPoolExecutorAutoConfig {
     /**
      * 默认线程池名称
@@ -37,7 +37,9 @@ public class ThreadPoolExecutorAutoConfig {
         if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             return Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("thread-handler-", 0).factory());
         }
-        return new DefaultThreadPoolExecutor();
+        DefaultThreadPoolExecutor executor = new DefaultThreadPoolExecutor();
+        executor.setThreadFactory(new NamedThreadFactory("default-task-executor"));
+        return executor;
     }
 
     /**
@@ -46,7 +48,7 @@ public class ThreadPoolExecutorAutoConfig {
      * @return 配置
      */
     @Bean(resolveNested = false, independent = true)
-    public BeanCustomizer<ThreadPoolExecutor> threadPoolExecutorBeanCustomizer() {
+    public BeanCustomizer<ThreadPoolExecutor> threadPoolExecutorCustomizer() {
         return new BeanCustomizer<ThreadPoolExecutor>() {
 
             @Override

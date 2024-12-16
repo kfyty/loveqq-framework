@@ -1,6 +1,9 @@
 package com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq.DefaultRedisMessageQueue;
+import com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq.RedisMQMessageListenerRegistry;
+import com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq.RedisMessageQueue;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
@@ -14,6 +17,9 @@ import org.redisson.api.RedissonReactiveClient;
 import org.redisson.client.codec.Codec;
 import org.redisson.codec.JsonJacksonCodec;
 
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+
 /**
  * 描述: redisson 自动配置类
  *
@@ -25,6 +31,11 @@ import org.redisson.codec.JsonJacksonCodec;
 @Import(config = RedissonProperties.class)
 @ConditionalOnBean(RedissonProperties.class)
 public class RedissonAutoConfiguration {
+    @Autowired("defaultThreadPoolExecutor")
+    private ExecutorService defaultThreadPoolExecutor;
+
+    @Autowired("redisListenerExecutor")
+    private Optional<ExecutorService> redisListenerExecutor;
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
@@ -49,5 +60,17 @@ public class RedissonAutoConfiguration {
     @ConditionalOnProperty(prefix = "k.redis.redisson", value = "reactive", havingValue = "true")
     public RedissonReactiveClient reactiveRedissonClient(RedissonClient redissonClient) {
         return redissonClient.reactive();
+    }
+
+    @Bean(resolveNested = false)
+    public RedisMessageQueue redisMessageQueue(RedissonClient redissonClient) {
+        return this.redisListenerExecutor
+                .map(executorService -> new DefaultRedisMessageQueue(redissonClient, executorService))
+                .orElseGet(() -> new DefaultRedisMessageQueue(redissonClient, this.defaultThreadPoolExecutor));
+    }
+
+    @Bean(resolveNested = false)
+    public RedisMQMessageListenerRegistry redisMQMessageListenerRegistry(RedisMessageQueue redisMessageQueue) {
+        return new RedisMQMessageListenerRegistry(redisMessageQueue);
     }
 }
