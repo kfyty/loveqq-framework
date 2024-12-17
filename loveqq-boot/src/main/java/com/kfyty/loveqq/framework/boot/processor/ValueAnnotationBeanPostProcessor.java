@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
@@ -15,7 +16,6 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.Field;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition.resolvePlaceholderValue;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.setFieldValue;
 
 /**
@@ -46,7 +46,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             if (annotation == null) {
                 continue;
             }
-            Object property = resolvePlaceholderValue(annotation.value(), field.getGenericType(), this.placeholdersResolver, this.propertyContext);
+            Object property = GenericBeanDefinition.resolvePlaceholderValue(annotation.value(), annotation.bind(), field.getGenericType(), this.placeholdersResolver, this.propertyContext);
             if (property != null) {
                 setFieldValue(target, field, property);
                 if (bean != target && AopUtil.isCglibProxy(bean)) {

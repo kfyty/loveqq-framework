@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.support.concurrent;
+package com.kfyty.loveqq.framework.core.lang.util.concurrent;
 
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;

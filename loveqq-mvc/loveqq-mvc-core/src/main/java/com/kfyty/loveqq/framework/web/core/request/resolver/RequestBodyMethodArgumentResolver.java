@@ -49,7 +49,7 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
         SimpleGeneric simpleGeneric = SimpleGeneric.from(parameter.getSource().getClass(), parameter.getParameter());
         if (simpleGeneric.isSimpleGeneric()) {
             if (simpleGeneric.isGeneric(Collection.class)) {
-                return JsonUtil.toCollection(json, (Class<? extends Collection>) QualifierGeneric.getRawType(simpleGeneric.getResolveType()), simpleGeneric.getSimpleActualType());
+                return JsonUtil.toCollection(json, (Class<? extends Collection>) simpleGeneric.getRawType(), simpleGeneric.getSimpleActualType());
             }
             if (simpleGeneric.isSimpleArray()) {
                 Collection<?> collection = JsonUtil.toCollection(json, List.class, simpleGeneric.getSimpleActualType());

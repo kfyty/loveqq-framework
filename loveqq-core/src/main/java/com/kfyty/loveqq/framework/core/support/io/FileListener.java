@@ -1,7 +1,8 @@
-package com.kfyty.loveqq.framework.core.support;
+package com.kfyty.loveqq.framework.core.support.io;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
+import com.kfyty.loveqq.framework.core.support.Triple;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -145,8 +146,13 @@ public class FileListener {
         return this;
     }
 
-    public void start() {
+    public FileListener registry() {
         FileListenerTask.INSTANCE.registry(new Triple<>(this.path, this.watchService, this.eventListener));
+        return this;
+    }
+
+    public void start() {
+        FileListenerTask.INSTANCE.start();
     }
 
     public void stop() {

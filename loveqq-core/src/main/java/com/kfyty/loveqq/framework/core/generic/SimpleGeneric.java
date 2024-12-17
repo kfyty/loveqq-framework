@@ -108,7 +108,10 @@ public class SimpleGeneric extends QualifierGeneric {
      * @return true if simple generic
      */
     public boolean isSimpleGeneric() {
-        return this.resolveType instanceof Class<?> && this.hasGeneric() || this.size() == 1 || this.isMapGeneric();
+        if (this.resolveType instanceof Class<?> && this.hasGeneric()) {
+            return this.resolveType != this.getFirst().get();
+        }
+        return this.size() == 1 || this.isMapGeneric();
     }
 
     /**
@@ -146,20 +149,19 @@ public class SimpleGeneric extends QualifierGeneric {
      */
     public Class<?> getSimpleType() {
         // 自定义的类实现或继承具有泛型的接口，应该返回自定义的类型
-        Class<?> rawType = getRawType(this.resolveType);
         if (this.resolveType instanceof Class<?> && this.hasGeneric() && this.getFirst() instanceof SuperGeneric) {
-            return rawType;
+            return this.rawType;
         }
         Class<?> actualType = this.getSimpleActualType();
         if (actualType == Object.class) {
-            return rawType;
+            return this.rawType;
         }
         if (!(this.resolveType instanceof ParameterizedType)) {
             return actualType;
         }
         for (Class<?> clazz : IGNORED_NESTED_GENERIC_CLASSES) {
-            if (clazz == rawType) {
-                return rawType;
+            if (clazz == this.rawType) {
+                return this.rawType;
             }
         }
         return actualType;
@@ -172,11 +174,11 @@ public class SimpleGeneric extends QualifierGeneric {
      * @return 泛型
      */
     public Class<?> getSimpleActualType() {
-        if (isMapGeneric()) {
+        if (this.isMapGeneric()) {
             return this.getMapValueType().get();
         }
-        if (!isSimpleGeneric()) {
-            return getRawType(this.resolveType);
+        if (!this.isSimpleGeneric()) {
+            return this.rawType;
         }
         return getFirst().get();
     }

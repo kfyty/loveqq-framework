@@ -45,11 +45,20 @@ public class QualifierGeneric {
     /**
      * 解析的目标类型
      *
+     * @see Class#getGenericSuperclass()
+     * @see Class#getGenericInterfaces()
      * @see Field#getGenericType()
      * @see Method#getGenericReturnType()
      * @see Parameter#getParameterizedType()
      */
     protected final Type resolveType;
+
+    /**
+     * 解析类型的原始类型
+     *
+     * @see QualifierGeneric#getRawType(Type)
+     */
+    protected final Class<?> rawType;
 
     /**
      * 泛型类型，对于其 key，取值如下：
@@ -60,7 +69,7 @@ public class QualifierGeneric {
      * 如果是 Field，则为其类型的直接泛型
      * 如果是 Method，则为其返回值类型的直接泛型
      * 如果是 Parameter，则为其参数类型的直接泛型
-     * 对于其 value，如果 key 是泛型，则递归查询，直到查询到泛型为 TypeVariable
+     * 对于其 value，如果 key 是泛型，则递归查询，否则为空
      */
     protected final Map<Generic, QualifierGeneric> genericInfo;
 
@@ -91,6 +100,7 @@ public class QualifierGeneric {
     public QualifierGeneric(Class<?> sourceType, Type genericType) {
         this.sourceType = sourceType;
         this.resolveType = genericType;
+        this.rawType = getRawType(genericType);
         this.genericInfo = new LinkedHashMap<>(4);
     }
 
@@ -131,7 +141,7 @@ public class QualifierGeneric {
      * @return true if is generic
      */
     public boolean isGeneric(Class<?> generic) {
-        return generic.isAssignableFrom(this.sourceType) || generic.isAssignableFrom(getRawType(this.resolveType));
+        return generic.isAssignableFrom(this.sourceType) || generic.isAssignableFrom(this.rawType);
     }
 
     /**

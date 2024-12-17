@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.support;
+package com.kfyty.loveqq.framework.core.lang.util;
 
 import lombok.RequiredArgsConstructor;
 

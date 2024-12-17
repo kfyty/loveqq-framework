@@ -1,19 +1,19 @@
 package com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq;
 
 import com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq.annotation.RedisMQMessageConsumer;
-import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * 描述: rocketmq 消息监听器 bean
@@ -22,25 +22,33 @@ import java.util.Map;
  * @date 2024/12/09 21:54
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 @RequiredArgsConstructor
-public class RedisMQMessageListenerRegistry implements ContextOnRefresh {
+public class RedisMQMessageListenerRegistry implements BeanPostProcessor {
+    /**
+     * bean 工厂
+     */
+    private final BeanFactory beanFactory;
+
     /**
      * redis 消息队列
      */
     private final RedisMessageQueue queue;
 
     @Override
-    public void onRefresh(ApplicationContext applicationContext) {
-        Map<String, BeanDefinition> beanDefinitionMap = applicationContext.getBeanDefinitionWithAnnotation(RedisMQMessageConsumer.class, true);
-        for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
-            for (Method method : ReflectUtil.getMethods(entry.getValue().getBeanType())) {
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        Object target = AopUtil.getTarget(bean);
+        if (AnnotationUtil.hasAnnotation(target.getClass(), RedisMQMessageConsumer.class)) {
+            for (Method method : ReflectUtil.getMethods(target.getClass())) {
                 RedisMQMessageConsumer annotation = AnnotationUtil.findAnnotation(method, RedisMQMessageConsumer.class);
                 if (annotation != null) {
-                    ReflectiveMessageListener listener = new ReflectiveMessageListener(new Lazy<>(() -> applicationContext.getBean(entry.getKey())), method);
+                    ReflectiveMessageListener listener = new ReflectiveMessageListener(new Lazy<>(() -> this.beanFactory.getBean(beanName)), method);
                     this.queue.registryMessageListener(annotation.value(), listener);
+                    log.info("Registry RedisMQ message listener: '{}' -> {}", annotation.value(), method);
                 }
             }
         }
+        return null;
     }
 
     @RequiredArgsConstructor

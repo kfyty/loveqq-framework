@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
@@ -70,7 +71,7 @@ public class RedissonAutoConfiguration {
     }
 
     @Bean(resolveNested = false)
-    public RedisMQMessageListenerRegistry redisMQMessageListenerRegistry(RedisMessageQueue redisMessageQueue) {
-        return new RedisMQMessageListenerRegistry(redisMessageQueue);
+    public RedisMQMessageListenerRegistry redisMQMessageListenerRegistry(BeanFactory beanFactory, RedisMessageQueue redisMessageQueue) {
+        return new RedisMQMessageListenerRegistry(beanFactory, redisMessageQueue);
     }
 }

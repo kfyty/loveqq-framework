@@ -124,12 +124,12 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
         if (result != null) {
             List<?> list = CommonUtil.toList(result);
             for (Object value : list) {
-                this.dpHandleListenerResult(value);
+                this.doHandleListenerResult(value);
             }
         }
     }
 
-    public void dpHandleListenerResult(Object value) {
+    public void doHandleListenerResult(Object value) {
         if (value instanceof ApplicationEvent<?>) {
             this.context.publishEvent((ApplicationEvent<?>) value);
             return;

@@ -621,7 +621,7 @@ public abstract class ReflectUtil {
         } else {
             stack.push(children);
             for (QualifierGeneric child : children) {
-                Class<?> rawType = QualifierGeneric.getRawType(child.getResolveType());
+                Class<?> rawType = child.getRawType();
                 if (rawType != Object.class) {
                     resolveSuperGenericPath(rawType, container, stack, paths);
                 }

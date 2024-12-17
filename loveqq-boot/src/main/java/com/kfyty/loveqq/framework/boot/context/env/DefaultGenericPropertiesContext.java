@@ -149,7 +149,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         SimpleGeneric nestedType = valueType.isArray()
                 ? (SimpleGeneric) new SimpleGeneric(targetType.getSourceType(), targetType.getSecond().get()).resolve()
                 : (SimpleGeneric) targetType.getNested(targetType.getSecond());
-        return convertAndBind(key, (Map<String, Object>) newInstance(QualifierGeneric.getRawType(targetType.getResolveType())), valueType, targetType, nestedType);
+        return convertAndBind(key, (Map<String, Object>) newInstance(targetType.getRawType()), valueType, targetType, nestedType);
     }
 
     /**
@@ -188,7 +188,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         if (targetType.getResolveType() instanceof TypeVariable<?>) {
             rawType = targetType.getFirst().get();
         } else {
-            rawType = QualifierGeneric.getRawType(targetType.getResolveType());
+            rawType = targetType.getRawType();
         }
 
         if (rawType.isArray()) {
