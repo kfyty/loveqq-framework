@@ -31,7 +31,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.getTargetClass;
@@ -130,8 +129,9 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(SimpleGeneric simpleGeneric, AutowiredDescription description, Class<?> requiredType) {
         String beanName = BeanUtil.getBeanName(simpleGeneric.getSimpleType(), description == null ? null : description.value());
-        Supplier<Object> targetBeanProvider = () -> this.doResolveBean(beanName, simpleGeneric, description);
-        Object targetBean = simpleGeneric.isGeneric(LaziedObject.class) ? new Lazy<>(targetBeanProvider) : targetBeanProvider.get();
+        Object targetBean = simpleGeneric.isGeneric(LaziedObject.class)
+                ? new Lazy<>(() -> this.doResolveBean(beanName, simpleGeneric, description))
+                : this.doResolveBean(beanName, simpleGeneric, description);
         if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {
             targetBean = AopUtil.getTarget(targetBean);
         }
@@ -148,30 +148,43 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(String targetBeanName, SimpleGeneric returnType, AutowiredDescription autowired) {
         Object resolveBean = null;
-        Class<?> targetType = returnType.getSimpleType();
-        Map<String, Object> beans = this.doGetBean(targetBeanName, targetType, returnType, autowired);
-        if (returnType.isGeneric(List.class)) {
-            resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, returnType).values());
+        SimpleGeneric actualReturnType = this.preProcessGeneric(returnType, autowired);
+        Map<String, Object> beans = this.doGetBean(targetBeanName, actualReturnType.getSimpleType(), actualReturnType, autowired);
+        if (actualReturnType.isGeneric(List.class)) {
+            resolveBean = new ArrayList<>(this.filterMapBeanIfNecessary(beans, actualReturnType).values());
         }
-        if (returnType.isGeneric(Set.class)) {
-            resolveBean = new HashSet<>(this.filterMapBeanIfNecessary(beans, returnType).values());
+        if (actualReturnType.isGeneric(Set.class)) {
+            resolveBean = new HashSet<>(this.filterMapBeanIfNecessary(beans, actualReturnType).values());
         }
-        if (returnType.isMapGeneric()) {
-            resolveBean = this.filterMapBeanIfNecessary(beans, returnType);
+        if (actualReturnType.isMapGeneric()) {
+            resolveBean = this.filterMapBeanIfNecessary(beans, actualReturnType);
         }
-        if (returnType.isSimpleArray()) {
-            resolveBean = CommonUtil.copyToArray(returnType.getSimpleActualType(), this.filterMapBeanIfNecessary(beans, returnType).values());
+        if (actualReturnType.isSimpleArray()) {
+            resolveBean = CommonUtil.copyToArray(actualReturnType.getSimpleActualType(), this.filterMapBeanIfNecessary(beans, actualReturnType).values());
         }
         if (beans.isEmpty()) {
             return returnType.isGeneric(Optional.class) ? Optional.empty() : resolveBean;
         }
         if (resolveBean == null) {
-            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, returnType, true);
+            resolveBean = beans.size() == 1 ? beans.values().iterator().next() : this.matchBeanIfNecessary(beans, targetBeanName, actualReturnType, true);
         }
         if (returnType.isGeneric(Optional.class)) {
             return Optional.ofNullable(resolveBean);
         }
         return resolveBean;
+    }
+
+    private SimpleGeneric preProcessGeneric(SimpleGeneric returnType, AutowiredDescription autowired) {
+        if (returnType.isGeneric(Optional.class)) {
+            autowired.markRequired(false);
+            SimpleGeneric nested = (SimpleGeneric) returnType.getNestedGeneric();
+            return nested == null ? returnType : nested;
+        }
+        if (returnType.isGeneric(LaziedObject.class)) {
+            SimpleGeneric nested = (SimpleGeneric) returnType.getNestedGeneric();
+            return nested == null ? returnType : nested;
+        }
+        return returnType;
     }
 
     private synchronized void checkResolving(String targetBeanName) {
@@ -261,7 +274,7 @@ public class AutowiredProcessor {
             }
         }
         if (AutowiredDescription.isRequired(autowired)) {
-            if (beanOfType.isEmpty() && !returnType.isGeneric(Optional.class)) {
+            if (beanOfType.isEmpty()) {
                 throw new BeansException("Resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
             }
             if (!isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {

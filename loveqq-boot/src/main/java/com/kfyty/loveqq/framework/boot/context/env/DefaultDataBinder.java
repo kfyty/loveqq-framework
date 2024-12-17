@@ -68,7 +68,7 @@ public class DefaultDataBinder implements DataBinder {
             if (ReflectUtil.isStaticFinal(entry.getValue().getModifiers())) {
                 continue;
             }
-            String key = prefix + "." + entry.getKey();
+            String key = prefix + '.' + entry.getKey();
             this.bind(target, key, entry.getValue(), ignoreInvalidFields, ignoreUnknownFields);
         }
         return target;
@@ -95,7 +95,7 @@ public class DefaultDataBinder implements DataBinder {
         }
 
         try {
-            Object property = this.propertyContext.getProperty(key, target.buildTargetGeneric(field));
+            Object property = this.propertyContext.getProperty(key, simpleGeneric);
             if (property != null) {
                 mergeOrUpdateFieldValue(property, field, target);
             }

@@ -9,8 +9,8 @@ import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.io.ByteArrayInputStream;
@@ -33,7 +33,7 @@ import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.isIndexedCla
  * @since JDK 1.8
  */
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
 public class K {
     /**

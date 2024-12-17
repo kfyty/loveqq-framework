@@ -11,6 +11,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -142,11 +143,15 @@ public class GenericTest implements CommandLineRunner {
         @Autowired
         private Optional<Dept3> user3Opt;
 
+        @Autowired
+        private Optional<List<Dept2>> user2List;
+
         @Override
         public void run(String... args) throws Exception {
             Assertions.assertInstanceOf(Dept1.class, user1Opt.get());
             Assertions.assertInstanceOf(Dept2.class, user2Opt.get());
             Assertions.assertSame(user3Opt, Optional.empty());
+            Assertions.assertEquals(user2List.get(), Collections.singletonList(user2Opt.get()));
         }
 
         static class Dept1 {}
