@@ -1,10 +1,8 @@
 package com.kfyty.loveqq.framework.core.generic;
 
-import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
-import com.kfyty.loveqq.framework.core.lang.Lazy;
 import jakarta.inject.Provider;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +38,6 @@ public class SimpleGeneric extends QualifierGeneric {
     public static final List<Class<?>> IGNORED_NESTED_GENERIC_CLASSES = new LinkedList<>();
 
     static {
-        IGNORED_NESTED_GENERIC_CLASSES.add(Lazy.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Class.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Supplier.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Consumer.class);
@@ -49,7 +46,6 @@ public class SimpleGeneric extends QualifierGeneric {
         IGNORED_NESTED_GENERIC_CLASSES.add(BiFunction.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(Comparable.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(FactoryBean.class);
-        IGNORED_NESTED_GENERIC_CLASSES.add(LaziedObject.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationEvent.class);
         IGNORED_NESTED_GENERIC_CLASSES.add(ApplicationListener.class);
 

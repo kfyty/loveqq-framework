@@ -157,6 +157,18 @@ public class QualifierGeneric {
     }
 
     /**
+     * 获取嵌套的泛型信息，如果泛型有多个则抛出异常
+     *
+     * @return 嵌套的泛型
+     */
+    public QualifierGeneric getNestedGeneric() {
+        if (this.size() > 1) {
+            throw new ResolvableException("More than one generic: " + this);
+        }
+        return this.getNestedFirst();
+    }
+
+    /**
      * 获取嵌套的泛型
      *
      * @param generic 嵌套类型的父泛型
@@ -173,9 +185,21 @@ public class QualifierGeneric {
      */
     public Generic getFirst() {
         if (this.size() < 1) {
-            throw new ResolvableException("The generic doesn't exists !");
+            throw new ResolvableException("The generic doesn't exists of index 0");
         }
         return this.genericInfo.keySet().iterator().next();
+    }
+
+    /**
+     * 获取第一个泛型
+     *
+     * @return 第一个泛型
+     */
+    public QualifierGeneric getNestedFirst() {
+        if (this.size() < 1) {
+            throw new ResolvableException("The generic doesn't exists of index 0");
+        }
+        return this.genericInfo.values().iterator().next();
     }
 
     /**
@@ -185,9 +209,23 @@ public class QualifierGeneric {
      */
     public Generic getSecond() {
         if (this.size() < 2) {
-            throw new ResolvableException("The generic doesn't exists !");
+            throw new ResolvableException("The generic doesn't exists of index 1");
         }
         Iterator<Generic> iterator = this.genericInfo.keySet().iterator();
+        iterator.next();
+        return iterator.next();
+    }
+
+    /**
+     * 获取第二个泛型
+     *
+     * @return 第二个泛型
+     */
+    public QualifierGeneric getNestedSecond() {
+        if (this.size() < 2) {
+            throw new ResolvableException("The generic doesn't exists of index 1");
+        }
+        Iterator<QualifierGeneric> iterator = this.genericInfo.values().iterator();
         iterator.next();
         return iterator.next();
     }
