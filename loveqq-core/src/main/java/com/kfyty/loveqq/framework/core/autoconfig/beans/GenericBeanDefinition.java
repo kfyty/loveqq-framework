@@ -12,7 +12,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DelegatedAutow
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
+import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
+import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
@@ -25,6 +27,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
@@ -33,9 +36,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
+import static com.kfyty.loveqq.framework.core.utils.ConverterUtil.convert;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -350,7 +353,7 @@ public class GenericBeanDefinition implements BeanDefinition {
             Parameter parameter = parameters[i];
             Value value = findAnnotation(parameter, Value.class);
             if (value != null) {
-                constructorArgs.add(new Pair<>(parameter.getType(), this.resolvePlaceholderValue(value.value(), parameter.getParameterizedType())));
+                constructorArgs.add(new Pair<>(parameter.getType(), this.resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType())));
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
@@ -360,21 +363,26 @@ public class GenericBeanDefinition implements BeanDefinition {
         return constructorArgs;
     }
 
-    protected Object resolvePlaceholderValue(String value, Type targetType) {
+    protected Object resolvePlaceholderValue(String value, boolean bind, Type targetType) {
         ApplicationContext context = autowiredProcessor.getContext();
         PlaceholdersResolver placeholdersResolver = context.getBean(PlaceholdersResolver.class);
         GenericPropertiesContext propertiesContext = context.getBean(GenericPropertiesContext.class);
-        return resolvePlaceholderValue(value, targetType, placeholdersResolver, propertiesContext);
+        return resolvePlaceholderValue(value, bind, targetType, placeholdersResolver, propertiesContext);
     }
 
-    public static Object resolvePlaceholderValue(String value, Type targetType, PlaceholdersResolver placeholdersResolver, GenericPropertiesContext propertyContext) {
-        String tempKey = "__temp__" + UUID.randomUUID() + "__key__";
-        try {
-            String resolved = placeholdersResolver.resolvePlaceholders(value);
-            propertyContext.setProperty(tempKey, resolved);
-            return propertyContext.getProperty(tempKey, targetType);
-        } finally {
-            propertyContext.removeProperty(tempKey);
+    public static Object resolvePlaceholderValue(String value, boolean bind, Type targetType, PlaceholdersResolver placeholdersResolver, GenericPropertiesContext propertyContext) {
+        String resolved = placeholdersResolver.resolvePlaceholders(value);
+        if (bind) {
+            Object instance = ReflectUtil.newInstance(QualifierGeneric.getRawType(targetType));
+            return propertyContext.getDataBinder().bind(new Instance(instance), resolved).getTarget();
         }
+        SimpleGeneric targetGeneric = (SimpleGeneric) new SimpleGeneric(targetType).resolve();
+        if (targetGeneric.isMapGeneric()) {
+            throw new UnsupportedOperationException("@Value doesn't support Map type, please set @Value#bind() to true.");
+        }
+        if (targetGeneric.isSimpleGeneric() || targetGeneric.getResolveType() instanceof GenericArrayType) {
+            return CommonUtil.split(resolved, propertyContext.getDataBinder().getBindPropertyDelimiter(), e -> convert(e, targetGeneric.getSimpleType()));
+        }
+        return convert(resolved, targetGeneric.getSimpleType());
     }
 }

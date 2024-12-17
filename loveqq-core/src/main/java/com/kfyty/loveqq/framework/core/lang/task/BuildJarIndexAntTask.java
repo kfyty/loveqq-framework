@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.core.lang.task;
 
 import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
-import com.kfyty.loveqq.framework.core.support.EnumerationIterator;
+import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 

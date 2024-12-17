@@ -2,17 +2,18 @@ package com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig.annotation.MessageBody;
 import com.kfyty.loveqq.framework.boot.mq.rocket.autoconfig.annotation.RocketMQMessageListener;
-import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
+import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
@@ -37,7 +38,6 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 描述: rocketmq 消息监听器 bean
@@ -49,7 +49,12 @@ import java.util.Map;
 @Slf4j
 @Component
 @ConditionalOnProperty(value = "rocketmq.endpoints", matchIfNonNull = true)
-public class RocketMQMessageListenerRegistry implements ContextOnRefresh, DestroyBean {
+public class RocketMQMessageListenerRegistry implements BeanPostProcessor, BeanFactoryAware, DestroyBean {
+    /**
+     * bean 工厂
+     */
+    private BeanFactory beanFactory;
+
     /**
      * {@link ClientConfiguration}
      */
@@ -72,27 +77,34 @@ public class RocketMQMessageListenerRegistry implements ContextOnRefresh, Destro
     }
 
     @Override
-    public void onRefresh(ApplicationContext applicationContext) {
-        // 注册 MessageListener bean
-        Map<String, BeanDefinition> messageListeners = applicationContext.getBeanDefinitions(MessageListener.class);
-        for (Map.Entry<String, BeanDefinition> entry : messageListeners.entrySet()) {
-            RocketMQMessageListener annotation = AnnotationUtil.findAnnotation(entry.getValue().getBeanType(), RocketMQMessageListener.class);
-            if (annotation == null) {
-                throw new ResolvableException("Register rocketmq message listener failed, the bean " + entry.getKey() + " should annotated with RocketMQMessageListener.");
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        Object target = AopUtil.getTarget(bean);
+        RocketMQMessageListener annotation = AnnotationUtil.findAnnotation(target, RocketMQMessageListener.class);
+        if (annotation == null) {
+            if (bean instanceof MessageListener) {
+                throw new ResolvableException("Register rocketmq message listener failed, the bean " + beanName + " should annotated with RocketMQMessageListener.");
             }
-            this.registerRocketMQMessageListener(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())), annotation);
+            return null;
+        }
+
+        // 注册 MessageListener bean
+        if (bean instanceof MessageListener) {
+            this.registerRocketMQMessageListener(target.getClass(), new Lazy<>(() -> this.beanFactory.getBean(beanName)), annotation);
         }
 
         // 注册方法级监听器
-        Map<String, BeanDefinition> beanDefinitionMap = applicationContext.getBeanDefinitionWithAnnotation(RocketMQMessageListener.class, true);
-        for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
-            for (Method method : ReflectUtil.getMethods(entry.getValue().getBeanType())) {
-                RocketMQMessageListener annotation = AnnotationUtil.findAnnotation(method, RocketMQMessageListener.class);
-                if (annotation != null) {
-                    this.registerRocketMQMessageListener(new Lazy<>(() -> applicationContext.getBean(entry.getKey())), method, annotation);
-                }
+        for (Method method : ReflectUtil.getMethods(target.getClass())) {
+            RocketMQMessageListener methodAnnotation = AnnotationUtil.findAnnotation(method, RocketMQMessageListener.class);
+            if (methodAnnotation != null) {
+                this.registerRocketMQMessageListener(new Lazy<>(() -> this.beanFactory.getBean(beanName)), method, methodAnnotation);
             }
         }
+        return null;
     }
 
     @Override

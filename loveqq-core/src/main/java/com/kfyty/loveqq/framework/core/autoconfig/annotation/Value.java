@@ -18,7 +18,18 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Value {
     /**
-     * 配置文件的属性 eg: ${a.b:default}
+     * 配置文件的属性或前缀
+     * <p>
+     * eg: ${a.b:default}
+     * 当 {@link this#bind()} == false 时，表示取配置属性 a.b 的值，仅支持普通属性
+     * 当 {@link this#bind()} == true 时，表示取配置属性 a.b 的值作为配置属性的前缀，此时支持复杂属性绑定
      */
     String value();
+
+    /**
+     * 是否绑定嵌套属性
+     *
+     * @return true/false
+     */
+    boolean bind() default false;
 }

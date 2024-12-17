@@ -10,7 +10,7 @@ import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
-import com.kfyty.loveqq.framework.core.support.FileListener;
+import com.kfyty.loveqq.framework.core.support.io.FileListener;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
@@ -213,7 +213,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
                         loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));
                         applicationContext.publishEvent(new PropertyConfigRefreshedEvent(applicationContext));
                     }))
-                    .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).start())
+                    .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).registry().start())
                     .then(this.fileListeners::add);
         }
     }

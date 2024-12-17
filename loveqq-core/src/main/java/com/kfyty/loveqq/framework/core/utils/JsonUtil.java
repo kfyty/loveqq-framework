@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.kfyty.loveqq.framework.core.converter.StringToLocalDateTimeConverter;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.support.json.Array;
 import com.kfyty.loveqq.framework.core.support.json.JSON;
 import lombok.NoArgsConstructor;
@@ -25,7 +27,6 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -204,7 +205,6 @@ public abstract class JsonUtil {
     @Slf4j
     @NoArgsConstructor
     public static class CommonLocalDateTimeDeserializer extends LocalDateTimeDeserializer {
-        private static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         public CommonLocalDateTimeDeserializer(DateTimeFormatter formatter) {
             super(formatter);
@@ -227,16 +227,13 @@ public abstract class JsonUtil {
 
             // 解析字符串
             String string = parser.getText().trim();
-            if (string.length() > 10 && string.charAt(10) == 'T') {
-                if (string.endsWith("Z")) {
-                    return LocalDateTime.ofInstant(Instant.parse(string), ZoneOffset.UTC);
+            return StringToLocalDateTimeConverter.apply(string, s -> {
+                try {
+                    return super.deserialize(parser, context);
+                } catch (IOException e) {
+                    throw new ResolvableException("Deserialize LocalDateTime failed: " + e.getMessage(), e);
                 }
-                return LocalDateTime.parse(string, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            }
-            if (string.length() == 19 && string.charAt(10) == ' ') {
-                return LocalDateTime.parse(string, DEFAULT_DATE_TIME_FORMATTER);
-            }
-            return super.deserialize(parser, context);
+            });
         }
     }
 

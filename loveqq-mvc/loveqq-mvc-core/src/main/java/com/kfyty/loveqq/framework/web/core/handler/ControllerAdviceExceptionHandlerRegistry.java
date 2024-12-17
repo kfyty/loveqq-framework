@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Component
-public class ControllerAdviceExceptionHandlerResolver implements BeanFactoryPostProcessor {
+public class ControllerAdviceExceptionHandlerRegistry implements BeanFactoryPostProcessor {
 
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {

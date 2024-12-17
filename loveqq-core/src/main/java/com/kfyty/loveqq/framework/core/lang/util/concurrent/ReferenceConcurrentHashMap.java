@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang.util.concurrent;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.thread.SingleThreadTask;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
 import java.io.Serializable;
@@ -276,16 +277,11 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
         }
     }
 
-    private static class ReferenceManager implements Runnable {
+    private static class ReferenceManager extends SingleThreadTask {
         /**
          * 单例
          */
         private static final ReferenceManager INSTANCE = new ReferenceManager();
-
-        /**
-         * 是否已启动
-         */
-        private volatile boolean started;
 
         /**
          * 监听队列
@@ -293,7 +289,7 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
         private final Queue<Pair<ReferenceQueue<?>, Map<?, ?>>> references;
 
         private ReferenceManager() {
-            this.started = false;
+            super("reference-manager-thread");
             this.references = new LinkedBlockingDeque<>();
         }
 
@@ -301,36 +297,20 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
             this.references.add(new Pair<>(referenceQueue, target));
         }
 
-        public void start() {
-            if (!this.started) {
-                synchronized (ReferenceManager.class) {
-                    if (!this.started) {
-                        this.started = true;
-                        Thread thread = new Thread(this, "reference-manager-thread");
-                        thread.setDaemon(true);
-                        thread.start();
-                        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
-                    }
-                }
-            }
-        }
-
-        public void stop() {
-            this.started = false;
+        @Override
+        protected void sleep() {
+            CommonUtil.sleep(3000);
         }
 
         @Override
-        public void run() {
-            while (this.started) {
-                Reference<?> reference = null;
-                for (Pair<ReferenceQueue<?>, Map<?, ?>> referencePair : this.references) {
-                    ReferenceQueue<?> referenceQueue = referencePair.getKey();
-                    Map<?, ?> target = referencePair.getValue();
-                    while ((reference = referenceQueue.poll()) != null) {
-                        target.remove(reference);
-                    }
+        public void doRun() {
+            Reference<?> reference = null;
+            for (Pair<ReferenceQueue<?>, Map<?, ?>> referencePair : this.references) {
+                ReferenceQueue<?> referenceQueue = referencePair.getKey();
+                Map<?, ?> target = referencePair.getValue();
+                while ((reference = referenceQueue.poll()) != null) {
+                    target.remove(reference);
                 }
-                CommonUtil.sleep(3000);
             }
         }
     }

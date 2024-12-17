@@ -1,11 +1,15 @@
 package com.kfyty.loveqq.framework.core.support.json;
 
+import com.kfyty.loveqq.framework.core.converter.StringToLocalDateTimeConverter;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -33,6 +37,21 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
     public String getString(String key) {
         Object o = this.decorate.get(key);
         return o == null ? null : o instanceof CharSequence ? o.toString() : JsonUtil.toJSONString(o);
+    }
+
+    public Boolean getBoolean(String key) {
+        Object o = this.decorate.get(key);
+        return o == null || o instanceof Boolean ? (Boolean) o : Boolean.parseBoolean(o.toString());
+    }
+
+    public Byte getByte(String key) {
+        Object o = this.decorate.get(key);
+        return o == null || o instanceof Byte ? (Byte) o : Byte.parseByte(o.toString());
+    }
+
+    public Short getShort(String key) {
+        Object o = this.decorate.get(key);
+        return o == null || o instanceof Short ? (Short) o : Short.parseShort(o.toString());
     }
 
     public Integer getInteger(String key) {
@@ -63,6 +82,24 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
     public BigDecimal getBigDecimal(String key) {
         Object o = this.decorate.get(key);
         return o == null || o instanceof BigDecimal ? (BigDecimal) o : new BigDecimal(o.toString());
+    }
+
+    public LocalTime getLocalTime(String key) {
+        Object o = this.decorate.get(key);
+        return o == null || o instanceof LocalTime ? (LocalTime) o : LocalTime.parse(o.toString());
+    }
+
+    public LocalDate getLocalDate(String key) {
+        Object o = this.decorate.get(key);
+        return o == null || o instanceof LocalDate ? (LocalDate) o : LocalDate.parse(o.toString());
+    }
+
+    public LocalDateTime getLocalDateTime(String key) {
+        Object o = this.decorate.get(key);
+        if (o == null || o instanceof LocalDateTime) {
+            return (LocalDateTime) o;
+        }
+        return new StringToLocalDateTimeConverter().apply(o.toString());
     }
 
     public <T> T getObject(String key, Class<T> clazz) {
