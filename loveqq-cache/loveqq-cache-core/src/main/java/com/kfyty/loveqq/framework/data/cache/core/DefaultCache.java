@@ -83,7 +83,7 @@ public class DefaultCache extends AbstractCache {
         @Override
         public void run() {
             DefaultCache.this.clear(name);
-            LogUtil.logIfDebugEnabled(log, log -> log.debug("Clear cache named: {}", name));
+            LogUtil.logIfDebugEnabled(log, log -> log.debug("clear cache named: {}", name));
         }
     }
 }

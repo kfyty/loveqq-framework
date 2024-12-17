@@ -5,7 +5,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -71,14 +70,14 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         if (resolveType instanceof Class) {
             Class<?> clazz = (Class<?>) resolveType;
             if (!clazz.isArray() && !Map.class.isAssignableFrom(clazz)) {
-                return (T) this.getProperty(key, targetType.getSimpleType(), null);
+                return (T) this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
             }
         }
 
         if (resolveType instanceof TypeVariable<?>) {
             Class<?> clazz = targetType.getFirst().get();
             if (clazz == null || !Collection.class.isAssignableFrom(clazz) && !Map.class.isAssignableFrom(clazz)) {
-                return (T) this.getProperty(key, targetType.getSimpleType(), null);
+                return (T) this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
             }
         }
 
@@ -148,7 +147,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         Class<?> valueType = targetType.getMapValueType().get();
         SimpleGeneric nestedType = valueType.isArray()
                 ? (SimpleGeneric) new SimpleGeneric(targetType.getSourceType(), targetType.getSecond().get()).resolve()
-                : (SimpleGeneric) targetType.getNested(targetType.getSecond());
+                : (SimpleGeneric) targetType.getNestedSecond();
         return convertAndBind(key, (Map<String, Object>) newInstance(targetType.getRawType()), valueType, targetType, nestedType);
     }
 
@@ -170,7 +169,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             if (CommonUtil.notEmpty(properties)) {
                 SimpleGeneric nestedType = targetType.getResolveType() instanceof GenericArrayType
                         ? (SimpleGeneric) new SimpleGeneric(targetType.getSourceType(), ((GenericArrayType) targetType.getResolveType()).getGenericComponentType()).resolve()
-                        : (SimpleGeneric) targetType.getNested(targetType.getFirst());
+                        : (SimpleGeneric) targetType.getNestedFirst();
                 Class<?> elementType = nestedType != null ? nestedType.getSimpleType() : targetType.getSimpleType();
                 retValue = this.convertAndBind(key, elementType, targetType, nestedType, properties);
             }
@@ -225,7 +224,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
                 continue;
             }
             String key = prefix + entry.getKey();
-            Instance instance = new Instance(newInstance(elementType), (SimpleGeneric) targetType.getNested(targetType.getFirst()));
+            Instance instance = new Instance(newInstance(elementType), (SimpleGeneric) targetType.getNestedFirst());
             this.dataBinder.bind(instance, key);
             result.add(instance.getTarget());
         }
