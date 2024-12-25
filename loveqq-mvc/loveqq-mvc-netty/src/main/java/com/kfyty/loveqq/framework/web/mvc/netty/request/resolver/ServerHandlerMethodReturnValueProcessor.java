@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
+import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
 import io.netty.buffer.ByteBuf;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -70,6 +71,9 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
         }
         if (retValue instanceof ByteBuf) {
             return response.send(Mono.just((ByteBuf) retValue), e -> isSse);
+        }
+        if (retValue instanceof SseEventStream) {
+            return response.send(Mono.just(((SseEventStream) retValue).build()), e -> isSse);
         }
         if (retValue instanceof byte[]) {
             return response.sendByteArray(Mono.just((byte[]) retValue));

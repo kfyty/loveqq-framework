@@ -39,34 +39,4 @@ public abstract class NIOUtil {
         byteBuf.readBytes(bytes, 0, bytes.length);
         return bytes;
     }
-
-    /**
-     * 创建一个 {@link ByteBuf}
-     *
-     * @param bytes 字节数据
-     * @return {@link ByteBuf}
-     */
-    public static ByteBuf newByteBuf(byte[] bytes) {
-        return Unpooled.wrappedBuffer(bytes);
-    }
-
-    /**
-     * 格式化 sse 数据
-     *
-     * @param data 实际数据
-     * @return 符合 sse 标准的数据
-     */
-    public static ByteBuf formatSseData(Object data) {
-        if (data instanceof CharSequence) {
-            return newByteBuf(("data:" + data + "\n\n").getBytes(StandardCharsets.UTF_8));
-        }
-        if (data instanceof byte[]) {
-            ByteBuf buffer = Unpooled.buffer();
-            buffer.writeBytes("data:".getBytes(StandardCharsets.UTF_8));
-            buffer.writeBytes((byte[]) data);
-            buffer.writeBytes("\n\n".getBytes(StandardCharsets.UTF_8));
-            return buffer;
-        }
-        throw new IllegalArgumentException("The sse value must be String/byte[]");
-    }
 }
