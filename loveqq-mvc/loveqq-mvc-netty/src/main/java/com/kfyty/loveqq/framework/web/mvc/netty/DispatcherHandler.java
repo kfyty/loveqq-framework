@@ -133,10 +133,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             boolean isSse = this.isEventStream(response.getContentType());
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
             Object processedReturnValue = super.handleReturnValue(retValue, methodParameter, request, response);
-            if (!isSse) {
-                return writeReturnValue(processedReturnValue, serverResponse, false);
-            }
-            return writeReturnValue(NIOUtil.formatSseData(processedReturnValue), serverResponse, true);
+            return writeReturnValue(processedReturnValue, serverResponse, isSse);
         } catch (Exception e) {
             throw new NettyServerException(e);
         }
