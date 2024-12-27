@@ -26,7 +26,7 @@ public class JSONResponseBodyHandlerMethodReturnValueProcessor extends AbstractR
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJSONString(returnValue);
     }
 }

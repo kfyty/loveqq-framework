@@ -102,7 +102,7 @@ public class Main {
 <parent>
     <groupId>com.kfyty</groupId>
     <artifactId>loveqq-framework</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
 </parent>
 
 <dependencies>
@@ -162,9 +162,9 @@ ext {
 }
 
 dependencies {
-    implementation 'com.kfyty:loveqq-framework:1.0.8@pom'
-    implementation 'com.kfyty:loveqq-boot:1.0.8'
-    implementation 'com.kfyty:loveqq-boot-starter-logback:1.0.8'
+    implementation 'com.kfyty:loveqq-framework:1.0.9@pom'
+    implementation 'com.kfyty:loveqq-boot:1.0.9'
+    implementation 'com.kfyty:loveqq-boot-starter-logback:1.0.9'
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.javassist:javassist:3.29.0-GA'
     compileOnly "org.projectlombok:lombok:1.18.30"

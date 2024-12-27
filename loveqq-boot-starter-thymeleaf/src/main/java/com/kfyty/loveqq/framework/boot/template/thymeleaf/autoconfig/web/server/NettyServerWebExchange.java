@@ -17,8 +17,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 
 /**
  * 描述:
@@ -52,7 +58,7 @@ public class NettyServerWebExchange implements IWebExchange {
 
     @Override
     public Locale getLocale() {
-        return Locale.getDefault();
+        return request.getLocale();
     }
 
     @Override
@@ -142,7 +148,7 @@ public class NettyServerWebExchange implements IWebExchange {
             public String getQueryString() {
                 HttpServerRequest serverRequest = (HttpServerRequest) request.getRawRequest();
                 String uri = serverRequest.uri();
-                int index = uri.indexOf('?');
+                final int index = uri.indexOf('?');
                 return index < 0 ? null : uri.substring(index + 1);
             }
 
@@ -163,12 +169,12 @@ public class NettyServerWebExchange implements IWebExchange {
 
             @Override
             public Map<String, String[]> getHeaderMap() {
-                return request.getHeaderNames().stream().collect(Collectors.toMap(k -> k, v -> new String[]{request.getHeader(v)}));
+                return request.getHeaderNames().stream().collect(Collectors.toMap(k -> k, this::getHeaderValues));
             }
 
             @Override
             public String[] getHeaderValues(String name) {
-                return request.getHeaderNames().stream().map(request::getHeader).toArray(String[]::new);
+                return request.getHeaders(name).toArray(new String[0]);
             }
 
             @Override
@@ -188,12 +194,12 @@ public class NettyServerWebExchange implements IWebExchange {
 
             @Override
             public Map<String, String[]> getParameterMap() {
-                return request.getParameterNames().stream().collect(Collectors.toMap(k -> k, v -> new String[]{request.getParameter(v)}));
+                return request.getParameterNames().stream().collect(Collectors.toMap(k -> k, this::getParameterValues));
             }
 
             @Override
             public String[] getParameterValues(String name) {
-                return request.getParameterNames().stream().map(request::getParameter).toArray(String[]::new);
+                return new String[]{request.getParameter(name)};
             }
 
             @Override
@@ -213,12 +219,12 @@ public class NettyServerWebExchange implements IWebExchange {
 
             @Override
             public Map<String, String[]> getCookieMap() {
-                return Arrays.stream(request.getCookies()).collect(Collectors.toMap(HttpCookie::getName, v -> new String[]{v.getValue()}));
+                return Arrays.stream(request.getCookies()).collect(groupingBy(HttpCookie::getName, collectingAndThen(mapping(HttpCookie::getValue, toList()), e -> e.toArray(new String[0]))));
             }
 
             @Override
             public String[] getCookieValues(String name) {
-                return Arrays.stream(request.getCookies()).map(HttpCookie::getValue).toArray(String[]::new);
+                return Arrays.stream(request.getCookies()).filter(e -> Objects.equals(name, e.getName())).map(HttpCookie::getValue).toArray(String[]::new);
             }
         };
     }

@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
-import com.kfyty.loveqq.framework.core.utils.NIOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -130,21 +129,20 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     @Override
     protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response) {
         try {
-            boolean isSse = this.isEventStream(response.getContentType());
-            HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
             Object processedReturnValue = super.handleReturnValue(retValue, methodParameter, request, response);
-            return writeReturnValue(processedReturnValue, serverResponse, isSse);
+            HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
+            return writeReturnValue(processedReturnValue, serverResponse, this.isEventStream(response.getContentType()));
         } catch (Exception e) {
             throw new NettyServerException(e);
         }
     }
 
     @Override
-    protected Object doProcessReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+    protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
         if (returnValueProcessor instanceof ServerHandlerMethodReturnValueProcessor) {
-            return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).processReturnValue(retValue, returnType, container);
+            return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).doHandleReturnValue(retValue, returnType, container);
         }
-        return super.doProcessReturnValue(retValue, returnType, container, returnValueProcessor);
+        return super.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
     }
 
     protected Mono<?> adapterReturnValue(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Object invoked) {

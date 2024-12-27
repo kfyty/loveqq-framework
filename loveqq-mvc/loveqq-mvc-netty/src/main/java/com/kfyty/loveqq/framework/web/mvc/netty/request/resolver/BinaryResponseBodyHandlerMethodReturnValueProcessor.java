@@ -27,7 +27,7 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         if (returnValue instanceof byte[] || returnValue instanceof InputStream) {
             return returnValue;
         }

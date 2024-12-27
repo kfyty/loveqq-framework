@@ -31,7 +31,7 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
      * @param container   模型视图容器
      */
     default void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        Object processedReturnValue = this.processReturnValue(returnValue, returnType, container);
+        Object processedReturnValue = this.doHandleReturnValue(returnValue, returnType, container);
         if (processedReturnValue != null) {
             HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
             Mono.from(writeReturnValue(processedReturnValue, serverResponse, false)).subscribe();
@@ -46,7 +46,7 @@ public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodRe
      * @param container   模型视图容器
      * @return 处理后的返回值
      */
-    Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception;
+    Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception;
 
     /**
      * 写出返回值到响应

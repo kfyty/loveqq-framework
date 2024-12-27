@@ -190,13 +190,22 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
         for (HandlerMethodReturnValueProcessor returnValueProcessor : this.returnValueProcessors) {
             if (returnValueProcessor.supportsReturnType(retValue, returnType)) {
-                return this.doProcessReturnValue(retValue, returnType, container, returnValueProcessor);
+                return this.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
             }
         }
         throw new IllegalArgumentException("Can't resolve return value, no return value processor support !");
     }
 
-    protected Object doProcessReturnValue(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
+    /**
+     * 应用返回值处理器
+     *
+     * @param retValue             处理器返回值
+     * @param returnType           返回值类型
+     * @param container            模型视图容器
+     * @param returnValueProcessor 返回值处理器
+     * @return 可能的处理后的返回值，servlet 会直接写入响应，无返回值。reactor-netty 会适配返回值，返回适配后的返回值
+     */
+    protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
         returnValueProcessor.handleReturnValue(retValue, returnType, container);
         return null;
     }
