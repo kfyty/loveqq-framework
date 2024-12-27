@@ -26,9 +26,9 @@ import java.util.Locale;
 public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFactoryAware, ServerHandlerMethodReturnValueProcessor {
     private BeanFactory beanFactory;
 
-    private TemplateEngine templateEngine;
+    private volatile TemplateEngine templateEngine;
 
-    private IWebApplication webApplication;
+    private volatile IWebApplication webApplication;
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
@@ -41,7 +41,7 @@ public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFacto
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         this.ensureEngine();
         String template = returnValue.toString();
         AbstractContext context = this.buildWebContext(container);
@@ -56,8 +56,12 @@ public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFacto
 
     protected void ensureEngine() {
         if (this.templateEngine == null) {
-            this.templateEngine = this.beanFactory.getBean(TemplateEngine.class);
-            this.webApplication = this.beanFactory.getBean(IWebApplication.class);
+            synchronized (this) {
+                if (this.templateEngine == null) {
+                    this.templateEngine = this.beanFactory.getBean(TemplateEngine.class);
+                    this.webApplication = this.beanFactory.getBean(IWebApplication.class);
+                }
+            }
         }
     }
 

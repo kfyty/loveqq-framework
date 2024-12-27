@@ -24,7 +24,7 @@ public class RedirectViewHandlerMethodReturnValueProcessor implements ServerHand
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         String view = returnValue.toString();
         return container.getResponse().sendRedirect(removePrefix("redirect:", view));
     }

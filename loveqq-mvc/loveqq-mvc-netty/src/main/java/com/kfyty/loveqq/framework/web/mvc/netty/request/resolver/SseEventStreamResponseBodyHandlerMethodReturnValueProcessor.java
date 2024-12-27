@@ -7,8 +7,6 @@ import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBody
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
 
-import java.io.InputStream;
-
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
 
 /**
@@ -28,7 +26,7 @@ public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends
     }
 
     @Override
-    public Object processReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         if (returnValue instanceof SseEventStream) {
             return returnValue;
         }
