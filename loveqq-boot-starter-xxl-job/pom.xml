@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <xxl.job.version>2.4.0</xxl.job.version>
+        <xxl.job.version>2.4.2</xxl.job.version>
     </properties>
 
     <dependencies>
