@@ -68,9 +68,9 @@
         <cglib.version>3.3.0</cglib.version>
         <asm.version>9.5</asm.version>
         <javassist.version>3.28.0-GA</javassist.version>
-        <netty.version>4.1.110.Final</netty.version>
+        <netty.version>4.1.115.Final</netty.version>
         <reactor.core.version>3.6.0</reactor.core.version>
-        <reactor.netty.version>1.1.20</reactor.netty.version>
+        <reactor.netty.version>1.2.1</reactor.netty.version>
         <ognl.version>3.3.5</ognl.version>
         <jackson.version>2.16.2</jackson.version>
         <snakeyaml.version>2.2</snakeyaml.version>
@@ -96,7 +96,7 @@
         <mysql.version>8.0.16</mysql.version>
         <oracle14.version>10.2.0.4.0</oracle14.version>
         <mssql.version>7.4.0.jre8</mssql.version>
-        <redisson-version>3.32.0</redisson-version>
+        <redisson-version>3.40.2</redisson-version>
         <lettuce.version>6.1.5.RELEASE</lettuce.version>
         <mybatis.version>3.5.16</mybatis.version>
 

@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <quartz.version>2.3.2</quartz.version>
+        <quartz.version>2.5.0</quartz.version>
     </properties>
 
     <dependencies>
