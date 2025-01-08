@@ -1,3 +1,10 @@
+<h1 align="center" style="text-align:center;">
+    <img src="loveqq.png" width="100"  alt=""/>
+    <p align="center" style="font-size: 20px">
+      loveqq-framework，轻量级 ioc/aop/javafx 框架
+    </p>
+</h1>
+
 # loveqq-framework
     轻量级 ioc/aop 框架，比 spring 更强大的条件推断；抽象出 mvc 模式，提供嵌入式 reactor-netty、tomcat 服务器；
     提供 javafx mvvm 框架，可实现模型-数据的双向绑定；提供动态数据源配置支持；提供注解式缓存支持；
@@ -32,6 +39,12 @@ mvc 模式的 servlet 实现，主要实现了 DispatcherServlet，以及 Filter
 mvc 模式的 netty 实现，主要实现了 DispatcherHandler，并添加自定义 Filter 的自动配置等。
 配套的启动器是 loveqq-boot-starter-netty
 
+## loveqq-cache-core
+loveqq 缓存基础抽象，默认基于内存实现。支持缓存注解，统一命令式/响应式缓存注解使用方式
+
+## loveqq-cache-redis
+loveqq 缓存基于 redis 的实现
+
 ## loveqq-boot-cloud-bootstrap
 微服务架构必须的引导启动模块
 
@@ -40,6 +53,18 @@ jsr303-valid 集成，并添加了自定义约束注解，可实现基于 Ognl �
 
 ## loveqq-boot-starter-discovery-nacos/loveqq-boot-starter-config-nacos
 集成了 nacos 服务发现、服务配置
+
+## loveqq-boot-starter-dubbo
+集成了 dubbo 自动配置
+
+## loveqq-boot-starter-feign
+集成了 feign 自动配置，可配合注册中心使用，支持 loveqq-mvc 注解
+
+## loveqq-boot-starter-rocketmq
+集成了 rocketmq 自动配置
+
+## loveqq-boot-starter-redisson
+集成了基于 redisson 的 redis 支持，同时内置了基于 redis 的简易 mq 实现
 
 ## loveqq-sdk
 用于快速封装 sdk，只需编写请求及响应模型，支持拦截器，易于拓展，支持命令式、响应式风格
@@ -60,6 +85,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Async;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.EventListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
+import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import com.kfyty.loveqq.framework.web.core.annotation.GetMapping;
 import com.kfyty.loveqq.framework.web.core.autoconfig.annotation.EnableWebMvc;
 import lombok.Data;
@@ -74,6 +100,7 @@ public class Main {
         K.run(Main.class, args);
     }
 
+    @Cacheable
     @GetMapping
     public User hello(@Valid User user) {
         return user;
