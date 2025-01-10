@@ -131,7 +131,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected Object[] preparedMethodParams(ServerRequest request, ServerResponse response, MethodMapping methodMapping) throws IOException {
+    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) throws IOException {
         int index = 0;
         Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
         Object[] paramValues = new Object[parameters.length];
@@ -151,7 +151,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
 
             throw new IllegalArgumentException("Can't resolve parameters, no argument resolver support !");
         }
-        return paramValues;
+        return methodMapping.buildMethodParameter(paramValues).metadata(methodMapping);
     }
 
     protected Object resolveRequestResponseParam(Parameter parameter, ServerRequest request, ServerResponse response) {

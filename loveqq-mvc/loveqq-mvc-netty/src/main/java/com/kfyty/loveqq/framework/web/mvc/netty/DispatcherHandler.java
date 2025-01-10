@@ -50,7 +50,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         return this.processRequest(req, resp);
     }
 
-    protected void preparedRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
+    protected void prepareRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
@@ -58,6 +58,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
         }
+        LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI()));
     }
 
     protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
@@ -67,11 +68,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         }
         AtomicReference<Throwable> throwableReference = new AtomicReference<>();
         return Mono.just(methodMapping)
-                .doOnNext(mapping -> this.preparedRequestResponse(mapping, request, response))
-                .doOnNext(mapping -> LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI())))
+                .doOnNext(mapping -> this.prepareRequestResponse(mapping, request, response))
                 .filterWhen(mapping -> this.processPreInterceptorAsync(request, response, mapping))
-                .map(mapping -> this.preparedMethodParams(request, response, mapping))
-                .map(params -> methodMapping.buildMethodParameter(params).metadata(methodMapping))
+                .map(mapping -> this.prepareMethodParameter(request, response, mapping))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .filterWhen(p -> this.processPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
@@ -108,9 +107,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     @Override
-    protected Object[] preparedMethodParams(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
+    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
         try {
-            return super.preparedMethodParams(request, response, methodMapping);
+            return super.prepareMethodParameter(request, response, methodMapping);
         } catch (IOException e) {
             throw new NettyServerException(e);
         }
@@ -127,9 +126,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     @Override
-    protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter methodParameter, ServerRequest request, ServerResponse response) {
+    protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter parameter, ServerRequest request, ServerResponse response) {
         try {
-            Object processedReturnValue = super.handleReturnValue(retValue, methodParameter, request, response);
+            Object processedReturnValue = super.handleReturnValue(retValue, parameter, request, response);
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
             return writeReturnValue(processedReturnValue, serverResponse, this.isEventStream(response.getContentType()));
         } catch (Exception e) {
