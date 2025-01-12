@@ -27,6 +27,7 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import java.io.IOException;
 import java.lang.reflect.Parameter;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -147,6 +148,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     protected Mono<?> adapterReturnValue(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Object invoked) {
         if (invoked instanceof NettyOutbound) {
             return Mono.from((NettyOutbound) invoked);
+        }
+        if (invoked instanceof CompletionStage<?>) {
+            return Mono.fromCompletionStage((CompletionStage<?>) invoked);
         }
         if (invoked instanceof Mono<?>) {
             return (Mono<?>) invoked;
