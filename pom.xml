@@ -34,7 +34,7 @@
     <modules>
         <module>loveqq-core</module>
         <module>loveqq-boot</module>
-        <module>loveqq-data-jdbc</module>
+        <module>loveqq-data</module>
         <module>loveqq-mvc</module>
         <module>loveqq-javafx</module>
         <module>loveqq-aop</module>

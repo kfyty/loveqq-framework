@@ -2,37 +2,38 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>loveqq-framework</artifactId>
         <version>1.0.9</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>loveqq-boot-starter-uid-generator</artifactId>
-    <packaging>jar</packaging>
+    <modules>
+        <module>loveqq-data-korm</module>
+        <module>loveqq-data-codegen</module>
+    </modules>
 
-    <properties>
-        <uid.generator.loveqq.branch.version>1.0.0</uid.generator.loveqq.branch.version>
-    </properties>
+    <artifactId>loveqq-data</artifactId>
+    <packaging>pom</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-data-korm</artifactId>
+            <artifactId>loveqq-core</artifactId>
             <version>${loveqq.framework.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>com.baidu.fsg</groupId>
-            <artifactId>uid-generator</artifactId>
-            <version>${uid.generator.loveqq.branch.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.kfyty</groupId>
+            <artifactId>loveqq-boot-starter-datasource</artifactId>
+            <version>${loveqq.framework.version}</version>
         </dependency>
     </dependencies>
 </project>
