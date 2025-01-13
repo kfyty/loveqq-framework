@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.kfyty</groupId>
+        <artifactId>loveqq-data</artifactId>
+        <version>1.0.9</version>
+    </parent>
+
+    <artifactId>loveqq-data-korm</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- mapper 模板 -->
+        <dependency>
+            <groupId>com.jfinal</groupId>
+            <artifactId>enjoy</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- If 注解计算 -->
+        <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

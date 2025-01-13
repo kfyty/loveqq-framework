@@ -2,10 +2,10 @@ package com.kfyty.loveqq.framework.boot.uid.baidu.autoconfig.mapper;
 
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
 import com.kfyty.loveqq.framework.boot.uid.baidu.autoconfig.entity.WorkerNode;
-import com.kfyty.loveqq.framework.data.jdbc.BaseMapper;
-import com.kfyty.loveqq.framework.data.jdbc.annotation.Param;
-import com.kfyty.loveqq.framework.data.jdbc.annotation.Query;
-import com.kfyty.loveqq.framework.data.jdbc.autoconfig.Mapper;
+import com.kfyty.loveqq.framework.data.korm.BaseMapper;
+import com.kfyty.loveqq.framework.data.korm.annotation.Param;
+import com.kfyty.loveqq.framework.data.korm.annotation.Query;
+import com.kfyty.loveqq.framework.data.korm.autoconfig.Mapper;
 
 /**
  * 描述: WorkerNodeEntity mapper

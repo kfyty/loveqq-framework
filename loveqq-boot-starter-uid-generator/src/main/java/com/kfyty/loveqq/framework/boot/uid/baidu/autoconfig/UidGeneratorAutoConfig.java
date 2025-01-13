@@ -6,10 +6,10 @@ import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import com.baidu.fsg.uid.worker.WorkerIdAssigner;
 import com.kfyty.loveqq.framework.boot.uid.baidu.autoconfig.mapper.WorkerNodeMapper;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
-import com.kfyty.loveqq.framework.data.jdbc.intercept.internal.GeneratedKeysInterceptor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
+import com.kfyty.loveqq.framework.data.korm.intercept.internal.GeneratedKeysInterceptor;
 
 /**
  * 描述: 集成百度 uid 自动配置

@@ -1,8 +1,8 @@
 package com.kfyty.loveqq.framework.boot.uid.baidu.autoconfig.entity;
 
 import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
-import com.kfyty.loveqq.framework.data.jdbc.annotation.TableId;
-import com.kfyty.loveqq.framework.data.jdbc.annotation.TableName;
+import com.kfyty.loveqq.framework.data.korm.annotation.TableId;
+import com.kfyty.loveqq.framework.data.korm.annotation.TableName;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
