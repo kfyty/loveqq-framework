@@ -11,16 +11,18 @@ import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import com.kfyty.loveqq.framework.data.cache.core.proxy.AbstractCacheInterceptorProxy;
 import com.kfyty.loveqq.framework.data.cache.core.reactive.ReactiveCache;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * 描述: 响应式缓存代理
@@ -45,49 +47,45 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
                          Lazy<Map<String, Object>> context,
                          Method method,
                          ProceedingJoinPoint pjp) throws Throwable {
+        final boolean isMono = Mono.class.isAssignableFrom(method.getReturnType());
         if (cacheable == null) {
-            return this.proceed(cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp);
+            return this.proceed(isMono, cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp);
         }
-        if (Mono.class.isAssignableFrom(method.getReturnType())) {
-            return this.getReactiveCache().getAsync(cacheableName)
-                    .switchIfEmpty(Mono.defer(() -> (Mono<?>) this.proceed(cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
+        if (isMono) {
+            return this.getReactiveCache()
+                    .getAsync(cacheableName)
+                    .map(value -> value == NullValue.INSTANCE ? null : value)
+                    .switchIfEmpty(Mono.defer(() -> (Mono<?>) this.proceed(true, cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
         }
-        return this.getReactiveCache().getAsync(cacheableName)
+        return this.getReactiveCache()
+                .getAsync(cacheableName)
+                .map(value -> value == NullValue.INSTANCE ? null : value)
                 .flatMapMany(e -> Flux.fromIterable((Iterable<?>) e))
-                .switchIfEmpty(Flux.defer(() -> this.proceed(cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
+                .switchIfEmpty(Flux.defer(() -> this.proceed(false, cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
     }
 
     /**
      * 继续调用目标方法，并放入缓存
      */
     @SuppressWarnings("rawtypes")
-    protected Publisher proceed(String cacheableName,
+    protected Publisher proceed(final boolean isMono,
+                                String cacheableName,
                                 String cacheClearName,
                                 Cacheable cacheable,
                                 CacheClear cacheClear,
                                 Lazy<Map<String, Object>> context,
                                 Method method,
                                 ProceedingJoinPoint pjp) {
-        Mono<?> publisher;
-        boolean isMono = Mono.class.isAssignableFrom(method.getReturnType());
         if (isMono) {
-            publisher = this.preClear(cacheClearName, cacheClear).then(invokeJoinPoint(pjp));
-        } else {
-            publisher = this.preClear(cacheClearName, cacheClear).thenMany(invokeJoinPointFlux(pjp)).collectList();
+            return this.preClear(cacheClearName, cacheClear)
+                    .then(invokeJoinPoint(pjp))
+                    .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClear, context.get(), method, pjp));
         }
-
-        publisher = publisher
-                .flatMap(value -> {
-                    if (cacheable == null && cacheClear == null) {
-                        return Mono.just(value);
-                    }
-                    context.get().put(OGNL_RETURN_VALUE_KEY, value);
-                    return this.processCacheable(cacheableName, cacheable, value, method, pjp, context.get())
-                            .then(this.processCacheClear(cacheClearName, cacheClear, method, pjp, context.get()))
-                            .thenReturn(value);
-                });
-
-        return isMono ? publisher : publisher.flatMapIterable(e -> (Iterable<?>) e);
+        return this.preClear(cacheClearName, cacheClear)
+                .thenMany(invokeJoinPointFlux(pjp))
+                .collectList()
+                .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClear, context.get(), method, pjp))
+                .flatMapIterable(e -> (Iterable<?>) e);
     }
 
     protected Mono<?> invokeJoinPoint(ProceedingJoinPoint pjp) {
@@ -111,40 +109,64 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
             if (cacheClear.preClearTimeout() <= 0) {
                 return this.getReactiveCache().clearAsync(cacheClearName);
             } else {
-                this.executorService.execute(() -> Mono.just(cacheClearName).delayElement(Duration.ofMillis(cacheClear.preClearTimeout())).flatMap(this.getReactiveCache()::clearAsync).subscribe());
+                this.executorService.schedule(() -> this.getReactiveCache().clearAsync(cacheClearName).subscribe(), cacheClear.preClearTimeout(), TimeUnit.MILLISECONDS);
                 return Mono.empty();
             }
         }
         return Mono.empty();
     }
 
-    protected Mono<Void> processCacheable(String cacheName, Cacheable cacheable, Object retValue, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-        if (cacheable == null || retValue == null && !cacheable.putIfNull()) {
-            return Mono.empty();
-        }
-        if (CommonUtil.notEmpty(cacheable.condition()) && !OgnlUtil.getBoolean(cacheable.condition(), context)) {
-            return Mono.empty();
-        }
-        if (retValue == null) {
-            retValue = NullValue.INSTANCE;
-        }
-        return Mono.just(retValue)
-                .flatMap(value -> {
-                    Mono<Object> prev = this.getReactiveCache().putIfAbsentAsync(cacheName, value, cacheable.ttl(), cacheable.unit());
-                    if (prev == null) {
-                        return Mono.empty();
-                    }
-                    return prev.flatMap(prevValue -> Objects.equals(prevValue, value) ? Mono.empty() : this.getReactiveCache().clearAsync(cacheName));
-                });
-    }
+    @RequiredArgsConstructor
+    protected class CacheProcessor<T> implements Function<T, Mono<T>> {
+        protected final String cacheableName;
 
-    protected Mono<Void> processCacheClear(String cacheName, CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-        if (cacheClear == null) {
-            return Mono.empty();
+        protected final String cacheClearName;
+
+        protected final Cacheable cacheable;
+
+        protected final CacheClear cacheClear;
+
+        protected final Map<String, Object> context;
+
+        protected final Method method;
+
+        protected final ProceedingJoinPoint pjp;
+
+        @Override
+        public Mono<T> apply(T value) {
+            if (cacheable == null && cacheClear == null) {
+                return Mono.just(value);
+            }
+            context.put(OGNL_RETURN_VALUE_KEY, value);
+            return this.processCacheable(cacheableName, cacheable, value, method, pjp, context)
+                    .then(this.processCacheClear(cacheClearName, cacheClear, method, pjp, context))
+                    .thenReturn(value);
         }
-        if (CommonUtil.notEmpty(cacheClear.condition()) && !OgnlUtil.getBoolean(cacheClear.condition(), context)) {
-            return Mono.empty();
+
+        protected Mono<Void> processCacheable(String cacheName, Cacheable cacheable, Object retValue, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+            if (cacheable == null || retValue == null && !cacheable.putIfNull()) {
+                return Mono.empty();
+            }
+            if (CommonUtil.notEmpty(cacheable.condition()) && !OgnlUtil.getBoolean(cacheable.condition(), context)) {
+                return Mono.empty();
+            }
+            if (retValue == null) {
+                retValue = NullValue.INSTANCE;
+            }
+            final Object value = retValue;
+            final ReactiveCache reactiveCache = getReactiveCache();
+            return reactiveCache.putIfAbsentAsync(cacheName, retValue, cacheable.ttl(), cacheable.unit())
+                    .flatMap(prev -> prev == null || Objects.equals(prev, value) ? Mono.empty() : reactiveCache.clearAsync(cacheName));
         }
-        return this.getReactiveCache().clearAsync(cacheName);
+
+        protected Mono<Void> processCacheClear(String cacheName, CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+            if (cacheClear == null) {
+                return Mono.empty();
+            }
+            if (CommonUtil.notEmpty(cacheClear.condition()) && !OgnlUtil.getBoolean(cacheClear.condition(), context)) {
+                return Mono.empty();
+            }
+            return getReactiveCache().clearAsync(cacheName);
+        }
     }
 }

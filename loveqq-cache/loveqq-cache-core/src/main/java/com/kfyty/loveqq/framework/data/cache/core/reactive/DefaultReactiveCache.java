@@ -30,7 +30,7 @@ public class DefaultReactiveCache extends AbstractReactiveCache implements React
     @Override
     public Mono<Object> putIfAbsentAsync(String name, Object value, long ttl, TimeUnit timeUnit) {
         Object prev = this.cache.putIfAbsent(name, value, ttl, timeUnit);
-        return Mono.justOrEmpty(prev);
+        return prev == null ? Mono.empty() : Mono.just(prev);
     }
 
     @Override
@@ -45,6 +45,7 @@ public class DefaultReactiveCache extends AbstractReactiveCache implements React
 
     @Override
     protected <T> Mono<T> getInternalAsync(String name) {
-        return Mono.justOrEmpty(this.cache.get(name));
+        T o = this.cache.get(name);
+        return o == null ? Mono.empty() : Mono.just(o);
     }
 }
