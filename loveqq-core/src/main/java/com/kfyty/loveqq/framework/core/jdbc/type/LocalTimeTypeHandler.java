@@ -1,12 +1,11 @@
 package com.kfyty.loveqq.framework.core.jdbc.type;
 
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Types;
 import java.time.LocalTime;
-import java.time.ZoneId;
 
 /**
  * 描述:
@@ -28,10 +27,7 @@ public class LocalTimeTypeHandler implements TypeHandler<LocalTime> {
 
     @Override
     public LocalTime getResult(ResultSet rs, String columnName) throws SQLException {
-        Date date = rs.getDate(columnName);
-        if(date == null) {
-            return null;
-        }
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+        Time time = rs.getTime(columnName);
+        return time == null ? null : time.toLocalTime();
     }
 }

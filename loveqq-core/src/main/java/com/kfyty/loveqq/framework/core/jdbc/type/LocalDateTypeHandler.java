@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 /**
  * 描述:
@@ -29,9 +28,6 @@ public class LocalDateTypeHandler implements TypeHandler<LocalDate> {
     @Override
     public LocalDate getResult(ResultSet rs, String columnName) throws SQLException {
         Date date = rs.getDate(columnName);
-        if(date == null) {
-            return null;
-        }
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return date == null ? null : date.toLocalDate();
     }
 }
