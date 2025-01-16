@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.aop.support.pattern;
 
-import com.kfyty.aop.support.SimpleShadowMatch;
 import com.kfyty.loveqq.framework.aop.MethodMatcher;
+import com.kfyty.loveqq.framework.aop.support.SimpleShadowMatch;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import org.aspectj.weaver.tools.ShadowMatch;

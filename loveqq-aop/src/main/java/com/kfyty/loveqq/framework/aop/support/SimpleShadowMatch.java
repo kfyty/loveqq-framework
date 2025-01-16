@@ -1,4 +1,4 @@
-package com.kfyty.aop.support;
+package com.kfyty.loveqq.framework.aop.support;
 
 import org.aspectj.weaver.tools.JoinPointMatch;
 import org.aspectj.weaver.tools.MatchingContext;
