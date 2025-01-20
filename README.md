@@ -17,30 +17,41 @@
 
 ## loveqq-core
 项目核心，包含一些通用工具类、jar index 启动引导、泛型推断工具、jdbc 访问工具、bean 封装工具、包读取工具、json 转换工具以及自动配置接口、自动配置注解等
+详情请点击 [loveqq-core 模块 README.md.](./loveqq-core/README.md)
 
 ## loveqq-boot
 ioc 容器具体实现、自动装配、作用域代理(单例/原型/刷新)、懒加载代理、配置文件属性自动绑定(支持嵌套的复杂类型绑定)、条件注解、jsr 条件注解校验器、异步事件、动态代理、spi、自定义 jar index 类加载器等。
+详情请点击 [loveqq-boot 模块 README.md.](./loveqq-boot/README.md)
 
 ## loveqq-aop
 aop 模块，支持 ant 路径匹配、注解类型匹配、集成 AspectJ 支持 pointcut 表达式匹配。
+详情请点击 [loveqq-aop 模块 README.md.](./loveqq-aop/README.md)
 
-## loveqq-data-jdbc
-数据库访问工具，基于代理实现了接口式 jdbc 访问，支持注解编写 SQL 或者基于模板引擎(如：enjoy/freemarker) 的动态 SQL；
-内置代码生成器和默认生成模板，支持 java 编程模板、enjoy/freemarker 模板以及 jsp 模板（需要 k-jte 支持），或者自定义模板引擎。
+## loveqq-boot-starter-datasource
+数据源启动器，支持 HikariCP、druid、tomcat-jdbc 的自动配置，支持动态数据源
+详情请点击 [loveqq-boot-starter-datasource 模块 README.md.](./loveqq-boot-starter-datasource/README.md)
 
-## loveqq-mvc
+## loveqq-data-korm
+数据库访问工具，基于代理实现了接口式 jdbc 访问，支持注解编写 SQL 或者基于模板引擎(如：enjoy/freemarker) 的动态 SQL。
+
+## loveqq-data-codegen
+代码生成器和默认生成模板，支持 java 编程模板、enjoy/freemarker 模板以及 jsp 模板（需要 k-jte 支持），或者自定义模板引擎。
+
+## loveqq-mvc-core
 基础 mvc 抽象，用于适配不同的 web 服务器，包含了路由注册、参数绑定、请求分发、请求拦截器等。
+详情请点击 [loveqq-mvc-core 模块 README.md.](./loveqq-mvc/loveqq-mvc-core/README.md)
 
 ## loveqq-mvc-servlet
 mvc 模式的 servlet 实现，主要实现了 DispatcherServlet，以及 Filter、Servlet 的自动配置等。
-配套的启动器是 loveqq-boot-starter-tomcat
+配套的启动器是 loveqq-boot-starter-tomcat。详情请点击 [loveqq-mvc-servlet 模块 README.md.](./loveqq-mvc/loveqq-mvc-servlet/README.md)
 
 ## loveqq-mvc-netty
 mvc 模式的 netty 实现，主要实现了 DispatcherHandler，并添加自定义 Filter 的自动配置等。
-配套的启动器是 loveqq-boot-starter-netty
+配套的启动器是 loveqq-boot-starter-netty。详情请点击 [loveqq-mvc-netty 模块 README.md.](./loveqq-mvc/loveqq-mvc-netty/README.md)
 
 ## loveqq-cache-core
 loveqq 缓存基础抽象，默认基于内存实现。支持缓存注解，统一命令式/响应式缓存注解使用方式
+详情请点击 [loveqq-cache-core 模块 README.md.](./loveqq-cache/loveqq-cache-core/README.md)
 
 ## loveqq-cache-redis
 loveqq 缓存基于 redis 的实现
@@ -70,7 +81,8 @@ jsr303-valid 集成，并添加了自定义约束注解，可实现基于 Ognl �
 用于快速封装 sdk，只需编写请求及响应模型，支持拦截器，易于拓展，支持命令式、响应式风格
 
 ## loveqq-javafx
-javafx mvvm 框架，实现了视图和数据模型的双向绑定。代码中只需操作数据即可反应到视图上，视图上编辑数据即可反应到模型里。详见 javafx 模块 README.md.
+javafx mvvm 框架，实现了视图和数据模型的双向绑定。代码中只需操作数据即可反应到视图上，视图上编辑数据即可反应到模型里。
+详情请点击 [loveqq-javafx 模块 README.md.](./loveqq-javafx/README.md)
 
 ## Ruoyi-for-loveqq
 基于 loveqq 框架的单体版若依，去除了底层 spring 及其 spring boot starter。详情请查看仓库列表。
