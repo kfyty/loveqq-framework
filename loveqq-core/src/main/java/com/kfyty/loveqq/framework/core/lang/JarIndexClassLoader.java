@@ -40,6 +40,17 @@ import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
 @Getter
 public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
+     * 注册并行能力
+     */
+    static {
+        try {
+            registerAsParallelCapable();
+        } catch (Throwable e) {
+            // ignored
+        }
+    }
+
+    /**
      * jar index
      */
     protected final JarIndex jarIndex;
