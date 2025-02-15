@@ -12,6 +12,7 @@
     <artifactId>loveqq-boot-starter-thymeleaf</artifactId>
 
     <properties>
+        <ognl.version>3.3.5</ognl.version>
         <thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
     </properties>
 
