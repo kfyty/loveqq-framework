@@ -36,18 +36,18 @@ public class MethodProxy {
     private final Object[] arguments;
 
     /**
-     * cglib 的代理方法对象
+     * javassist 的代理方法对象
      */
-    private final net.sf.cglib.proxy.MethodProxy methodProxy;
+    private final Method proxyMethod;
 
     /**
      * 代理目标
-     * 当为 cglib 代理，且直接代理抽象类时，为空
+     * 当为 javassist 代理，且直接代理抽象类时，为空
      */
     private Object target;
 
     /**
-     * 是否应该执行 {@link net.sf.cglib.proxy.MethodProxy#invokeSuper(Object, Object[])}
+     * 是否应该使用代理方法执行自调用
      */
     private boolean shouldInvokeSuper;
 
@@ -55,27 +55,27 @@ public class MethodProxy {
         this(target, proxy, method, args, null);
     }
 
-    public MethodProxy(Object target, Object proxy, Method method, Object[] args, net.sf.cglib.proxy.MethodProxy methodProxy) {
+    public MethodProxy(Object target, Object proxy, Method method, Object[] args, Method proxyMethod) {
         this.target = target;
         this.proxy = proxy;
         this.method = method;
         this.arguments = args;
-        this.methodProxy = methodProxy;
-        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, methodProxy);
+        this.proxyMethod = proxyMethod;
+        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, proxyMethod);
     }
 
     /**
      * 初始化是否应该支持自调用
      *
      * @param target      代理目标
-     * @param methodProxy 代理方法
+     * @param proxyMethod 代理方法
      * @return true/false
      */
-    protected boolean initShouldInvokeSuper(Object target, net.sf.cglib.proxy.MethodProxy methodProxy) {
+    protected boolean initShouldInvokeSuper(Object target, Method proxyMethod) {
         if (target == null) {
             return true;
         }
-        if (methodProxy == null) {
+        if (proxyMethod == null) {
             return false;
         }
         This annotation = findAnnotation(target, This.class);
@@ -92,7 +92,7 @@ public class MethodProxy {
      */
     public void setTarget(Object target) {
         this.target = target;
-        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, this.methodProxy);
+        this.shouldInvokeSuper = this.initShouldInvokeSuper(target, this.proxyMethod);
     }
 
     /**
@@ -149,10 +149,7 @@ public class MethodProxy {
      */
     public Object invoke(Object[] args) throws Throwable {
         if (this.shouldInvokeSuper) {
-            return this.methodProxy.invokeSuper(this.proxy, args);
-        }
-        if (this.methodProxy != null) {
-            return this.methodProxy.invoke(this.target, args);
+            return this.proxyMethod.invoke(this.proxy, args);
         }
         return ReflectUtil.invokeMethod(this.target, this.method, args);
     }
@@ -172,7 +169,7 @@ public class MethodProxy {
         return Objects.equals(this.target, other.target) &&
                 Objects.equals(this.method, other.method) &&
                 Objects.deepEquals(this.arguments, other.arguments) &&
-                Objects.equals(this.methodProxy, other.methodProxy) &&
+                Objects.equals(this.proxyMethod, other.proxyMethod) &&
                 Objects.equals(this.shouldInvokeSuper, other.shouldInvokeSuper);
     }
 }
