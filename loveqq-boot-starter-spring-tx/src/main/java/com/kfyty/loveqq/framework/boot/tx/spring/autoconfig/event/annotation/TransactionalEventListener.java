@@ -30,6 +30,14 @@ public @interface TransactionalEventListener {
     Class<? extends ApplicationEvent<?>>[] value() default {};
 
     /**
+     * 监听器监听条件，条件存在时，仅当条件表达式结果为 true 时才会被调用
+     *
+     * @return ognl 表达式
+     */
+    @AliasFor(annotation = EventListener.class)
+    String condition() default "";
+
+    /**
      * 事件执行的事务阶段，默认是提交之后
      *
      * @see TransactionPhase

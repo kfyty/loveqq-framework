@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.OgnlUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,7 +14,9 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -57,14 +60,20 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
     protected final Class<?> listenerType;
 
     /**
+     * 监听条件
+     */
+    protected final String condition;
+
+    /**
      * 应用上下文
      */
     protected final ApplicationContext context;
 
-    public EventListenerAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext context) {
+    public EventListenerAnnotationListener(String beanName, Method listenerMethod, Class<?> listenerType, String condition, ApplicationContext context) {
         this.beanName = beanName;
         this.listenerMethod = listenerMethod;
         this.listenerType = listenerType;
+        this.condition = condition;
         this.context = context;
     }
 
@@ -108,11 +117,38 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
     /**
      * 执行监听器
      *
+     * @param target 执行实例
      * @param params 方法参数
      */
     public void invokeListener(Object target, Object[] params) {
-        Object result = ReflectUtil.invokeMethod(target, this.listenerMethod, params);
-        this.handleListenerResult(result);
+        if (this.shouldInvokeListener(target, params)) {
+            Object result = ReflectUtil.invokeMethod(target, this.listenerMethod, params);
+            this.handleListenerResult(result);
+        }
+    }
+
+    /**
+     * 是否应该执行改监听器
+     *
+     * @param target 执行实例
+     * @param params 执行参数
+     * @return true/false
+     */
+    public boolean shouldInvokeListener(Object target, Object[] params) {
+        if (this.condition.isEmpty()) {
+            return true;
+        }
+        Map<String, Object> conditionContext = new HashMap<>();
+        Parameter[] parameters = this.listenerMethod.getParameters();
+        conditionContext.put("method", this.listenerMethod);
+        conditionContext.put("self", target);
+        conditionContext.put("args", params);
+        for (int i = 0; i < parameters.length; i++) {
+            conditionContext.put("p" + i, parameters[i]);
+            conditionContext.put("arg" + i, params[i]);
+            conditionContext.put(parameters[i].getName(), params[i]);
+        }
+        return OgnlUtil.getBoolean(this.condition, conditionContext);
     }
 
     /**

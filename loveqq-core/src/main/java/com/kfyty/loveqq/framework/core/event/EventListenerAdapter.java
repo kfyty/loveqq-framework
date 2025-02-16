@@ -12,7 +12,7 @@ public interface EventListenerAdapter {
      * 事件监听器适配
      *
      * @param source   原始的监听器
-     * @param listener 事件监听器
+     * @param listener 事件监听器，可能是适配后的
      * @return 适配后的监听器
      */
     @SuppressWarnings("rawtypes")
@@ -27,7 +27,7 @@ public interface EventListenerAdapter {
      * 事件监听器适配
      *
      * @param source   原始的监听器
-     * @param listener 事件监听器
+     * @param listener 事件监听器，可能是适配后的
      * @return 适配后的监听器
      */
     default ApplicationListener<?> adapt(EventListenerAnnotationListener source, ApplicationListener<ApplicationEvent<?>> listener) {
