@@ -96,18 +96,17 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
         // ioc
         context.put("ioc", IOC.getBeanFactory());
 
-        // 方法
+        // 方法及参数
         context.put("method", method);
+        context.put("args", args);
+
+        // 详细参数
         Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
             context.put("p" + i, parameters[i]);
-        }
-
-        // 参数
-        if (args != null) {
-            context.put("args", args);
-            for (int i = 0; i < args.length; i++) {
+            if (args != null) {
                 context.put("arg" + i, args[i]);
+                context.put(parameters[i].getName(), args[i]);
             }
         }
 

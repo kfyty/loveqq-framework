@@ -28,4 +28,11 @@ public @interface EventListener {
      * 要监听的事件
      */
     Class<? extends ApplicationEvent<?>>[] value() default {};
+
+    /**
+     * 监听器监听条件，条件存在时，仅当条件表达式结果为 true 时才会被调用
+     *
+     * @return ognl 表达式
+     */
+    String condition() default "";
 }

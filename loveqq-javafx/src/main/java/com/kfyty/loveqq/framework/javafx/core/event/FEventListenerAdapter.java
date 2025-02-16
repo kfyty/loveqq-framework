@@ -80,7 +80,7 @@ public class FEventListenerAdapter implements EventListenerAdapter, ApplicationC
         if (EventListenerAnnotationListener.class.isInstance(listener)) {
             return new FEventAnnotationListener((EventListenerAnnotationListener) (ApplicationListener) listener);
         }
-        LogUtil.logIfDebugEnabled(log, log -> log.debug("JavaFx event listener adapter doesn't listener type of: {}", listener.getClass()));
+        LogUtil.logIfDebugEnabled(log, log -> log.debug("JavaFx event listener doesn't adapt listener type of: {}", listener.getClass()));
         return listener;
     }
 
