@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodInvocationInterceptor;
+import javassist.util.proxy.ProxyFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -20,11 +21,10 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AopUtil {
-    public static final String CGLIB_TAG = "ByLoveqqFramework";
-
-    public static final String CGLIB_CLASS_SEPARATOR = "$$Enhancer" + CGLIB_TAG + "$$";
-
-    public static final String CGLIB_PROXY_CALLBACK_FIELD = "CGLIB$CALLBACK_0";
+    /**
+     * 代理类名称标签
+     */
+    public static final String PROXY_TAG = "EnhancerByLoveqqFramework";
 
     /**
      * 测试给定实例是否是代理对象
@@ -33,7 +33,7 @@ public abstract class AopUtil {
      * @return true if proxy object
      */
     public static boolean isProxy(Object instance) {
-        return isJdkProxy(instance) || isCglibProxy(instance);
+        return isJdkProxy(instance) || isClassProxy(instance);
     }
 
     /**
@@ -55,11 +55,11 @@ public abstract class AopUtil {
      * @param instance 实例
      * @return true if cglib proxy
      */
-    public static boolean isCglibProxy(Object instance) {
+    public static boolean isClassProxy(Object instance) {
         if (instance instanceof Class<?>) {
-            return ((Class<?>) instance).getName().contains(CGLIB_CLASS_SEPARATOR);
+            return ProxyFactory.isProxyClass((Class<?>) instance);
         }
-        return instance.getClass().getName().contains(CGLIB_CLASS_SEPARATOR);
+        return ProxyFactory.isProxyClass(instance.getClass());
     }
 
     /**
@@ -69,17 +69,17 @@ public abstract class AopUtil {
      * @return 原 bean
      */
     public static Object getTarget(Object bean) {
-        if (!isProxy(bean)) {
-            return bean;
-        }
-        if (isCglibProxy(bean)) {
+        if (isClassProxy(bean)) {
             return of(getProxyInterceptorChain(bean)).map(MethodInvocationInterceptor::getTarget).orElse(bean);
         }
-        InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-        if (!(invocationHandler instanceof MethodInterceptorChain)) {
+        if (isJdkProxy(bean)) {
+            InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
+            if (invocationHandler instanceof MethodInterceptorChain) {
+                return of(invocationHandler).map(e -> ((MethodInterceptorChain) e).getTarget()).orElse(bean);
+            }
             return invocationHandler;
         }
-        return of(invocationHandler).map(e -> ((MethodInterceptorChain) e).getTarget()).orElse(bean);
+        return bean;
     }
 
     /**
@@ -90,7 +90,7 @@ public abstract class AopUtil {
      */
     public static Class<?> getTargetClass(Object bean) {
         Object target = getTarget(bean);
-        if (bean == target && isCglibProxy(bean)) {
+        if (bean == target && isClassProxy(bean)) {
             return bean.getClass().getSuperclass();
         }
         return target.getClass();
@@ -105,7 +105,7 @@ public abstract class AopUtil {
      */
     public static Method getTargetMethod(Class<?> targetClass, Method method) {
         Class<?> declaringClass = method.getDeclaringClass();
-        if (isJdkProxy(targetClass) || declaringClass.equals(targetClass) || declaringClass == Object.class) {
+        if (isJdkProxy(targetClass) || declaringClass == targetClass || declaringClass == Object.class) {
             return method;
         }
         return ofNullable(ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);
@@ -140,19 +140,18 @@ public abstract class AopUtil {
      * @return true if success
      */
     public static boolean addProxyInterceptorPoint(Object bean, MethodInterceptorChainPoint methodInterceptorChainPoint) {
-        if (isCglibProxy(bean)) {
+        if (isClassProxy(bean)) {
             getProxyInterceptorChain(bean).addInterceptorPoint(methodInterceptorChainPoint);
             return true;
         }
-        if (!isJdkProxy(bean)) {
-            return false;
+        if (isJdkProxy(bean)) {
+            InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
+            if (invocationHandler instanceof MethodInterceptorChain) {
+                ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
+                return true;
+            }
         }
-        InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-        if (!(invocationHandler instanceof MethodInterceptorChain)) {
-            return false;
-        }
-        ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
-        return true;
+        return false;
     }
 
     /**
@@ -165,7 +164,7 @@ public abstract class AopUtil {
         if (!isProxy(proxy)) {
             throw new ResolvableException("The instance is not a proxy: " + proxy);
         }
-        Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) : ReflectUtil.getFieldValue(proxy, CGLIB_PROXY_CALLBACK_FIELD);
+        Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) : ProxyFactory.getHandler((javassist.util.proxy.Proxy) proxy);
         if (interceptorChain instanceof MethodInterceptorChain) {
             return (MethodInterceptorChain) interceptorChain;
         }

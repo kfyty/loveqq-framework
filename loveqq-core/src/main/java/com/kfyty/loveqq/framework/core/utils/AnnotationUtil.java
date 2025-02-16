@@ -167,7 +167,7 @@ public abstract class AnnotationUtil {
             if (element instanceof Class<?>) {
                 if (AopUtil.isJdkProxy(element)) {
                     resolvedAnnotations = Arrays.stream(((Class<?>) element).getInterfaces()).flatMap(e -> Arrays.stream(findAnnotations(e))).toArray(Annotation[]::new);
-                } else if (AopUtil.isCglibProxy(element)) {
+                } else if (AopUtil.isClassProxy(element)) {
                     resolvedAnnotations = findAnnotations(((Class<?>) element).getSuperclass());
                 } else {
                     resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
