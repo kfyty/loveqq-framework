@@ -62,7 +62,7 @@ public class EventListenerRegistry implements ContextOnRefresh, InternalPriority
                 this.applicationEventPublisher.registerEventListener(applicationContext.getBean(entry.getKey()));
             } else {
                 Class<?> listenerType = ReflectUtil.getSuperGeneric(entry.getValue().getBeanType(), SUPER_GENERIC_FILTER);
-                ApplicationListener<?> eventListener = this.createEventListener(entry.getKey(), null, listenerType, applicationContext);
+                ApplicationListener<?> eventListener = this.createEventListener(entry.getKey(), null, listenerType, null, applicationContext);
                 this.applicationEventPublisher.registerEventListener(eventListener);
             }
             log.info("Register event listener: {}", entry.getValue().getBeanType());
@@ -100,7 +100,7 @@ public class EventListenerRegistry implements ContextOnRefresh, InternalPriority
             if (GenericApplicationEvent.class.isAssignableFrom(eventType)) {
                 eventType = ReflectUtil.getSuperGeneric(eventType, parameterTypes[i], 0, GENERIC_EVENT_GENERIC_FILTER);
             }
-            ApplicationListener<?> annotationListener = this.createEventListener(beanName, listenerMethod, eventType, applicationContext);
+            ApplicationListener<?> annotationListener = this.createEventListener(beanName, listenerMethod, eventType, eventListener.condition(), applicationContext);
             this.applicationEventPublisher.registerEventListener(annotationListener);
             log.info("Register annotation event listener: {}", annotationListener);
         }
@@ -112,10 +112,11 @@ public class EventListenerRegistry implements ContextOnRefresh, InternalPriority
      * @param beanName           bean name
      * @param listenerMethod     监听方法
      * @param listenerType       监听类型
+     * @param condition          监听条件
      * @param applicationContext 应用上下文
      * @return 监听器
      */
-    protected ApplicationListener<?> createEventListener(String beanName, Method listenerMethod, Class<?> listenerType, ApplicationContext applicationContext) {
-        return new EventListenerAnnotationListener(beanName, listenerMethod, listenerType, applicationContext);
+    protected ApplicationListener<?> createEventListener(String beanName, Method listenerMethod, Class<?> listenerType, String condition, ApplicationContext applicationContext) {
+        return new EventListenerAnnotationListener(beanName, listenerMethod, listenerType, condition, applicationContext);
     }
 }

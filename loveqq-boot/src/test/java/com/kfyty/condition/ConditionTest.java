@@ -1,5 +1,7 @@
 package com.kfyty.condition;
 
+import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
@@ -8,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import org.junit.jupiter.api.Assertions;
 
@@ -21,11 +24,15 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Component
-public class ConditionTest {
+@EventListener
+public class ConditionTest implements CommandLineRunner {
     private boolean isOverride;
 
     @Autowired(required = false)
     private List<Inter> cons;
+
+    @Autowired
+    private ApplicationContext context;
 
     @Bean
     public BB bbOverride() {
@@ -37,6 +44,34 @@ public class ConditionTest {
     public void onComplete(ContextRefreshedEvent event) {
         Assertions.assertSame(this.isOverride, true);
         Assertions.assertSame(this.cons.size(), 5);
+    }
+
+    @EventListener(condition = "arg0.source == 1")
+    public void onInt1(IntEvent event) {
+        Assertions.assertSame(event.getSource(), 1);
+    }
+
+    @EventListener(condition = "arg0.source == 2")
+    public void onInt2(IntEvent event) {
+        Assertions.assertSame(event.getSource(), 2);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        this.context.publishEvent(new IntEvent(1));
+        this.context.publishEvent(new IntEvent(2));
+    }
+
+    public static class IntEvent extends ApplicationEvent<Integer> {
+        /**
+         * Constructs a prototypical Event.
+         *
+         * @param source The object on which the Event initially occurred.
+         * @throws IllegalArgumentException if source is null.
+         */
+        public IntEvent(Integer source) {
+            super(source);
+        }
     }
 }
 
