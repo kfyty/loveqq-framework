@@ -46,7 +46,7 @@
   * 如果需要递归查询父类注解，可实现：com.kfyty.loveqq.framework.core.lang.annotation.Inherited
 * 动态代理工厂：com.kfyty.loveqq.framework.core.proxy.factory.DynamicProxyFactory
   * jdk 实现：com.kfyty.loveqq.framework.core.proxy.factory.JdkDynamicProxyFactory
-  * cglib 实现：com.kfyty.loveqq.framework.core.proxy.factory.CglibDynamicProxyFactory
+  * javassist 实现：com.kfyty.loveqq.framework.core.proxy.factory.JavassistDynamicProxyFactory
   * 代理拦截链：com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain
   * aop 联盟接口适配器：com.kfyty.loveqq.framework.core.proxy.aop.adapter.MethodProxyInvocationAdapter
 

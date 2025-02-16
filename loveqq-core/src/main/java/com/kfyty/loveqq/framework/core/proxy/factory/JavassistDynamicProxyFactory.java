@@ -1,18 +1,16 @@
 package com.kfyty.loveqq.framework.core.proxy.factory;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
-import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import javassist.util.proxy.MethodFilter;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.Proxy;
+import javassist.util.proxy.ProxyFactory;
 import lombok.NoArgsConstructor;
-import net.sf.cglib.core.DefaultNamingPolicy;
-import net.sf.cglib.proxy.Callback;
-import net.sf.cglib.proxy.CallbackFilter;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.Factory;
 import sun.misc.Unsafe;
 import sun.reflect.ReflectionFactory;
 
@@ -20,11 +18,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.LinkedList;
 
-import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_CLASS_ARRAY;
-import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_OBJECT_ARRAY;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.isAbstract;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.load;
 import static java.util.Optional.ofNullable;
@@ -37,7 +32,30 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 @NoArgsConstructor
-public class CglibDynamicProxyFactory extends DynamicProxyFactory {
+public class JavassistDynamicProxyFactory extends DynamicProxyFactory {
+    /**
+     * 默认过滤器
+     */
+    public static final MethodFilter DEFAULT_FILTER = e -> true;
+
+    static {
+        ProxyFactory.nameGenerator = new ProxyFactory.UniqueName() {
+            /**
+             * 代理类名称前缀
+             */
+            private final String sep = AopUtil.PROXY_TAG + Integer.toHexString(this.hashCode() & 0xfff) + "_";
+
+            /**
+             * 自增器
+             */
+            private int counter = 0;
+
+            @Override
+            public String get(String classname) {
+                return classname + sep + Integer.toHexString(counter++);
+            }
+        };
+    }
 
     @Override
     public <T> T createProxy(T source, BeanDefinition beanDefinition) {
@@ -45,73 +63,33 @@ public class CglibDynamicProxyFactory extends DynamicProxyFactory {
     }
 
     @Override
-    public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
-        Callback[] callbacks = new Callback[]{new MethodInterceptorChain(source, ofNullable(this.points).orElse(new LinkedList<>()))};
-        return createProxy(source, targetClass, argTypes, argValues, null, callbacks);
-    }
-
-    public <T> T createProxy(T source, CallbackFilter callbackFilter, Callback... callbacks) {
-        if (CommonUtil.notEmpty(this.points)) {
-            callbacks = this.collectCallback(source, callbacks);
-        }
-        //noinspection unchecked
-        return createProxy(source, (Class<T>) source.getClass(), EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY, callbackFilter, callbacks);
-    }
-
-    public <T> T createProxy(Class<T> targetClass, CallbackFilter callbackFilter, Callback... callbacks) {
-        if (CommonUtil.notEmpty(this.points)) {
-            callbacks = this.collectCallback(null, callbacks);
-        }
-        return createProxy(null, targetClass, EMPTY_CLASS_ARRAY, EMPTY_OBJECT_ARRAY, callbackFilter, callbacks);
-    }
-
     @SuppressWarnings("unchecked")
-    public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues, CallbackFilter callbackFilter, Callback... callbacks) {
-        Enhancer enhancer = new Enhancer();
+    public <T> T createProxy(T source, Class<T> targetClass, Class<?>[] argTypes, Object[] argValues) {
+        ProxyFactory factory = new ProxyFactory();
+        MethodHandler handler = new MethodInterceptorChain(source, ofNullable(this.points).orElse(new LinkedList<>()));
         Class<?>[] interfaces = ReflectUtil.getInterfaces(targetClass);
-        enhancer.setSuperclass(targetClass);
-        enhancer.setInterfaces(interfaces);
-        enhancer.setCallbackFilter(callbackFilter);
-        enhancer.setNamingPolicy(new NamingPolicy());
-        enhancer.setClassLoader(ClassLoaderUtil.classLoader(this.getClass()));
+        factory.setSuperclass(targetClass);
+        factory.setInterfaces(interfaces);
+        factory.setFilter(DEFAULT_FILTER);
         if (Modifier.isFinal(targetClass.getModifiers()) && interfaces.length > 0) {
-            enhancer.setSuperclass(null);
+            factory.setSuperclass(null);
         }
-        if (!this.isReflectionInstance(source, targetClass)) {
-            enhancer.setCallbacks(callbacks);
-            return (T) enhancer.create(argTypes, argValues);
+        try {
+            if (!this.isReflectionInstance(source, targetClass)) {
+                T proxy = (T) factory.create(argTypes, argValues);
+                ((Proxy) proxy).setHandler(handler);
+                return proxy;
+            }
+            T proxy = (T) SunReflectionSupport.newInstance(factory.createClass());
+            ((Proxy) proxy).setHandler(handler);
+            return proxy;
+        } catch (Exception e) {
+            throw new ResolvableException("create javassist proxy failed: " + e.getMessage(), e);
         }
-        enhancer.setCallbackTypes(Arrays.stream(callbacks).map(Callback::getClass).toArray(Class[]::new));
-        return this.newReflectionInstance(enhancer.createClass(), callbacks);
     }
 
     protected <T> boolean isReflectionInstance(T source, Class<T> targetClass) {
         return source == null && !isAbstract(targetClass) && SunReflectionSupport.isSupport();
-    }
-
-    @SuppressWarnings("unchecked")
-    protected <T> T newReflectionInstance(Class<?> proxy, Callback... callbacks) {
-        Factory object = (Factory) SunReflectionSupport.newInstance(proxy);
-        object.setCallbacks(callbacks);
-        return (T) object;
-    }
-
-    protected <T> Callback[] collectCallback(T source, Callback... callbacks) {
-        if (CommonUtil.empty(callbacks)) {
-            return new Callback[]{new MethodInterceptorChain(source, ofNullable(this.points).orElse(new LinkedList<>()))};
-        }
-        Callback[] newCallbacks = new Callback[callbacks.length + 1];
-        newCallbacks[0] = new MethodInterceptorChain(source, ofNullable(this.points).orElse(new LinkedList<>()));
-        System.arraycopy(callbacks, 0, newCallbacks, 1, callbacks.length);
-        return newCallbacks;
-    }
-
-    protected static class NamingPolicy extends DefaultNamingPolicy {
-
-        @Override
-        protected String getTag() {
-            return AopUtil.CGLIB_TAG;
-        }
     }
 
     public static class SunReflectionSupport {

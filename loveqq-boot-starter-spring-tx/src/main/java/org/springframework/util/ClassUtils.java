@@ -18,7 +18,6 @@ package org.springframework.util;
 
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import net.sf.cglib.core.TypeUtils;
 import org.springframework.lang.Nullable;
 
 import java.beans.Introspector;

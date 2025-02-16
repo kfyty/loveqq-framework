@@ -49,7 +49,7 @@ public class ValueAnnotationBeanPostProcessor implements InstantiationAwareBeanP
             Object property = GenericBeanDefinition.resolvePlaceholderValue(annotation.value(), annotation.bind(), field.getGenericType(), this.placeholdersResolver, this.propertyContext);
             if (property != null) {
                 setFieldValue(target, field, property);
-                if (bean != target && AopUtil.isCglibProxy(bean)) {
+                if (bean != target && AopUtil.isClassProxy(bean)) {
                     setFieldValue(bean, field, property);
                 }
             }

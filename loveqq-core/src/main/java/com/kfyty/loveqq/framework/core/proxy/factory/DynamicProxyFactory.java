@@ -47,7 +47,7 @@ public abstract class DynamicProxyFactory {
      * @return 代理工厂
      */
     public static DynamicProxyFactory create(boolean proxyTargetClass) {
-        return !proxyTargetClass ? new JdkDynamicProxyFactory() : new CglibDynamicProxyFactory();
+        return !proxyTargetClass ? new JdkDynamicProxyFactory() : new JavassistDynamicProxyFactory();
     }
 
     /**

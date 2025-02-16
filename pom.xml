@@ -65,8 +65,7 @@
 
     <properties>
         <aspectj.version>1.9.7</aspectj.version>
-        <cglib.version>3.3.0</cglib.version>
-        <asm.version>9.5</asm.version>
+        <asm.version>9.6</asm.version>
         <javassist.version>3.30.2-GA</javassist.version>
         <netty.version>4.1.115.Final</netty.version>
         <reactor.core.version>3.6.0</reactor.core.version>
@@ -171,12 +170,6 @@
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
                 <version>${aspectj.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>cglib</groupId>
-                <artifactId>cglib</artifactId>
-                <version>${cglib.version}</version>
             </dependency>
 
             <dependency>
