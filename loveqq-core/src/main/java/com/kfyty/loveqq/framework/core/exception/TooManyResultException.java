@@ -17,12 +17,12 @@ public class TooManyResultException extends RuntimeException {
         super(message);
     }
 
-    public TooManyResultException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public TooManyResultException(Throwable cause) {
         super(cause);
+    }
+
+    public TooManyResultException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     protected TooManyResultException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

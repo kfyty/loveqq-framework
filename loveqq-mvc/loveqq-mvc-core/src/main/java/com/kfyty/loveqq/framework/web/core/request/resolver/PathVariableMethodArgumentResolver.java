@@ -8,7 +8,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.PathVariable;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
-import java.io.IOException;
 import java.util.List;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
@@ -29,7 +28,7 @@ public class PathVariableMethodArgumentResolver extends AbstractHandlerMethodArg
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         String paramName = parameter.getParameterName(findAnnotation(parameter.getParameter(), PathVariable.class), PathVariable::value);
         Integer paramIndex = mapping.getRestfulMappingIndex(paramName);

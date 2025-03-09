@@ -17,12 +17,12 @@ public class AsyncMethodException extends RuntimeException {
         super(message);
     }
 
-    public AsyncMethodException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public AsyncMethodException(Throwable cause) {
         super(cause);
+    }
+
+    public AsyncMethodException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     protected AsyncMethodException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

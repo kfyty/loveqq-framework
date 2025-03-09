@@ -16,7 +16,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.removePrefix;
  */
 @Component
 @Order(Integer.MIN_VALUE)
-public class RedirectViewHandlerMethodReturnValueProcessor implements ServerHandlerMethodReturnValueProcessor {
+public class RedirectViewHandlerMethodReturnValueProcessor implements ReactorHandlerMethodReturnValueProcessor {
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
@@ -24,7 +24,7 @@ public class RedirectViewHandlerMethodReturnValueProcessor implements ServerHand
     }
 
     @Override
-    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         String view = returnValue.toString();
         return container.getResponse().sendRedirect(removePrefix("redirect:", view));
     }

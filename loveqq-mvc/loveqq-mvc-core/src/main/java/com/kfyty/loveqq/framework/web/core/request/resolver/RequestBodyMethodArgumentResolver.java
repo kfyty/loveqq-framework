@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.request.resolver;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
-import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -12,7 +11,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
@@ -35,7 +33,7 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         if (InputStream.class.isAssignableFrom(parameter.getParamType())) {
             return request.getInputStream();
         }

@@ -7,8 +7,6 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.support.Model;
 
-import java.io.IOException;
-
 /**
  * 描述:
  *
@@ -26,7 +24,7 @@ public class ModelMethodArgumentResolver implements HandlerMethodArgumentResolve
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         return new Model();
     }
 }

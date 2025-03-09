@@ -10,7 +10,7 @@ import java.util.Map;
  * @date 2022/3/12 15:06
  * @email kfyty725@hotmail.com
  */
-public interface PropertyContext extends AutoCloseable {
+public interface PropertyContext extends AutoCloseable, Cloneable {
     /**
      * 添加配置文件
      *
@@ -104,6 +104,13 @@ public interface PropertyContext extends AutoCloseable {
      * @return 属性值
      */
     <T> T getProperty(String key, Class<T> targetType, T defaultValue);
+
+    /**
+     * 克隆属性上下文，但清空属性配置
+     *
+     * @return cloned
+     */
+    PropertyContext clone();
 
     /**
      * 关闭这个属性上下文

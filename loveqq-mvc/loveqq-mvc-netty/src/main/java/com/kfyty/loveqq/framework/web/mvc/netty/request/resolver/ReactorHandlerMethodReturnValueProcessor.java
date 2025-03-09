@@ -7,6 +7,8 @@ import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
 import io.netty.buffer.ByteBuf;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerResponse;
@@ -16,37 +18,45 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 /**
- * 描述: server 实现
+ * 描述: reactor 实现
  *
  * @author kfyty725
  * @date 2021/6/10 11:15
  * @email kfyty725@hotmail.com
  */
-public interface ServerHandlerMethodReturnValueProcessor extends HandlerMethodReturnValueProcessor {
+public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodReturnValueProcessor {
+    /**
+     * 日志
+     */
+    Logger log = LoggerFactory.getLogger(ReactorHandlerMethodReturnValueProcessor.class);
+
     /**
      * 处理返回值
+     * 响应式处理的默认实现，一般不会被调用
      *
      * @param returnValue 控制器返回值
      * @param returnType  返回类型
      * @param container   模型视图容器
      */
     default void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        Object processedReturnValue = this.doHandleReturnValue(returnValue, returnType, container);
+        Object processedReturnValue = this.transformReturnValue(returnValue, returnType, container);
         if (processedReturnValue != null) {
             HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
             Mono.from(writeReturnValue(processedReturnValue, serverResponse, false)).subscribe();
+            log.warn("reactor return value processor should not invoke this implements: {}", this);
         }
     }
 
     /**
-     * 处理返回值，但不写入响应，主要是响应式服务器使用
+     * 转化返回值
+     * 该方法仅转化返回值，不写入响应，转化后的返回值将作为发布者发布
      *
      * @param returnValue 处理后的返回值，除了重定向外，不会是发布者
      * @param returnType  返回类型，实际控制器的类型，可能是发布者
      * @param container   模型视图容器
      * @return 处理后的返回值
      */
-    Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception;
+    Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception;
 
     /**
      * 写出返回值到响应

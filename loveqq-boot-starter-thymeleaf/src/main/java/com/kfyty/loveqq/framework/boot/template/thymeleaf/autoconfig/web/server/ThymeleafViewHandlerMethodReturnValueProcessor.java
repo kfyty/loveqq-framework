@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
-import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor;
 import lombok.RequiredArgsConstructor;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.AbstractContext;
@@ -23,7 +23,7 @@ import java.util.Locale;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFactoryAware, ServerHandlerMethodReturnValueProcessor {
+public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFactoryAware, ReactorHandlerMethodReturnValueProcessor {
     private BeanFactory beanFactory;
 
     private volatile TemplateEngine templateEngine;
@@ -41,7 +41,7 @@ public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFacto
     }
 
     @Override
-    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         this.ensureEngine();
         String template = returnValue.toString();
         AbstractContext context = this.buildWebContext(container);

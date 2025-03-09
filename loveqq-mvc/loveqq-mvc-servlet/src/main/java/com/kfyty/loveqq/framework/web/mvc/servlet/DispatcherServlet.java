@@ -135,14 +135,14 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
     }
 
     @Override
-    protected Object resolveRequestResponseParam(Parameter parameter, ServerRequest request, ServerResponse response) {
+    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
         if (HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
             return request.getRawRequest();
         }
         if (HttpServletResponse.class.isAssignableFrom(parameter.getType())) {
             return response.getRawResponse();
         }
-        return super.resolveRequestResponseParam(parameter, request, response);
+        return super.resolveInternalParameter(parameter, request, response);
     }
 
     protected void handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, MethodParameter parameter, Throwable throwable) throws ServletException {

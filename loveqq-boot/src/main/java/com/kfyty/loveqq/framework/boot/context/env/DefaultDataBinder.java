@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfiguration
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.loveqq.framework.core.exception.DataBindException;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -103,7 +104,7 @@ public class DefaultDataBinder implements DataBinder {
             if (ignoreInvalidFields) {
                 return target;
             }
-            throw new IllegalArgumentException("configuration properties bind failed, property key: [" + key + "]", e);
+            throw new DataBindException(key, "properties bind failed, property key: [" + key + "]", e);
         }
         return target;
     }
@@ -112,7 +113,7 @@ public class DefaultDataBinder implements DataBinder {
     public DataBinder clone() {
         try {
             DataBinder clone = (DataBinder) super.clone();
-            clone.setPropertyContext(newInstance(this.propertyContext.getClass()));
+            clone.setPropertyContext((GenericPropertiesContext) this.propertyContext.clone());
             clone.getPropertyContext().setDataBinder(clone);
             return clone;
         } catch (CloneNotSupportedException e) {
