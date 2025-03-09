@@ -10,7 +10,6 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +40,7 @@ public class MultipartFileMethodArgumentResolver implements HandlerMethodArgumen
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         Collection<MultipartFile> files = request.getMultipart();
         if (CommonUtil.empty(files)) {
             return null;

@@ -7,7 +7,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.CookieValue;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
-import java.io.IOException;
 import java.net.HttpCookie;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
@@ -28,7 +27,7 @@ public class CookieValueMethodArgumentResolver extends AbstractHandlerMethodArgu
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         String parameterName = parameter.getParameterName(findAnnotation(parameter.getParameter(), CookieValue.class), CookieValue::value);
         HttpCookie cookie = request.getCookie(parameterName);
         if (cookie == null) {

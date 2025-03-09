@@ -18,7 +18,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
  */
 @Component
 @Order(HIGHEST_PRECEDENCE >> 1)
-public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends AbstractResponseBodyHandlerMethodReturnValueProcessor implements ServerHandlerMethodReturnValueProcessor {
+public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends AbstractResponseBodyHandlerMethodReturnValueProcessor implements ReactorHandlerMethodReturnValueProcessor {
 
     @Override
     protected boolean supportsContentType(String contentType) {
@@ -26,7 +26,7 @@ public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends
     }
 
     @Override
-    public Object doHandleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
+    public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         if (returnValue instanceof SseEventStream) {
             return returnValue;
         }

@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
@@ -17,7 +18,6 @@ import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
 
-import java.io.IOException;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,12 +131,12 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) throws IOException {
+    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
         int index = 0;
         Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
         Object[] paramValues = new Object[parameters.length];
         for (Parameter parameter : parameters) {
-            Object param = this.resolveRequestResponseParam(parameter, request, response);
+            Object param = this.resolveInternalParameter(parameter, request, response);
             if (param != null) {
                 paramValues[index++] = param;
                 continue;
@@ -149,12 +149,12 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
                 continue;
             }
 
-            throw new IllegalArgumentException("Can't resolve parameters, no argument resolver support !");
+            throw new MethodArgumentResolveException("Can't resolve parameters, there is no suitable parameter resolver available.");
         }
         return methodMapping.buildMethodParameter(paramValues).metadata(methodMapping);
     }
 
-    protected Object resolveRequestResponseParam(Parameter parameter, ServerRequest request, ServerResponse response) {
+    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
         if (ServerRequest.class.isAssignableFrom(parameter.getType())) {
             return request;
         }
@@ -164,14 +164,19 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return null;
     }
 
-    protected MethodParameter resolveMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) throws IOException {
-        for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
-            if (argumentResolver.supportsParameter(methodParameter)) {
-                methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
-                return methodParameter;
+    protected MethodParameter resolveMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) {
+        try {
+            for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
+                if (argumentResolver.supportsParameter(methodParameter)) {
+                    methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
+                    return methodParameter;
+                }
             }
+            return null;
+        } catch (Exception e) {
+            Parameter parameter = methodParameter.getParameter();
+            throw new MethodArgumentResolveException(parameter, "method parameter resolve failed: " + parameter.getName(), e);
         }
-        return null;
     }
 
     protected Object handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
@@ -193,7 +198,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
                 return this.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
             }
         }
-        throw new IllegalArgumentException("Can't resolve return value, no return value processor support !");
+        throw new IllegalArgumentException("Can't resolve return value, there is no suitable return value processor available.");
     }
 
     /**

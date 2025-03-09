@@ -8,7 +8,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -28,7 +27,7 @@ public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentReso
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         Map<String, String> parametersMap = request.getParameterMap();
         return this.createDataBinder(parametersMap).getPropertyContext().getProperty(parameter.getParamName(), parameter.getParameterGeneric());
     }

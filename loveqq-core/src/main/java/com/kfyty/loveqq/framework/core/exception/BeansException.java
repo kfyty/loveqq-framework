@@ -17,12 +17,12 @@ public class BeansException extends RuntimeException {
         super(message);
     }
 
-    public BeansException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public BeansException(Throwable cause) {
         super(cause);
+    }
+
+    public BeansException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     protected BeansException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

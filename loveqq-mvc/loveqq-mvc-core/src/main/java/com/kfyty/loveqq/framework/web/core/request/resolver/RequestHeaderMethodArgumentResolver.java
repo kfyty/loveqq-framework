@@ -7,8 +7,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestHeader;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
-import java.io.IOException;
-
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 
 /**
@@ -27,7 +25,7 @@ public class RequestHeaderMethodArgumentResolver extends AbstractHandlerMethodAr
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         String parameterName = parameter.getParameterName(findAnnotation(parameter.getParameter(), RequestHeader.class), RequestHeader::value);
         String header = request.getHeader(parameterName);
         return header == null ? null : this.createDataBinder(parameterName, header).getPropertyContext().getProperty(parameterName, parameter.getParameterGeneric());

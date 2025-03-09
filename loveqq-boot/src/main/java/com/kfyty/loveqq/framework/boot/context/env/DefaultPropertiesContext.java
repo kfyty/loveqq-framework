@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.support.io.FileListener;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
+import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -185,6 +186,19 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
         this.addConfig(DEFAULT_PROPERTIES_LOCATION);
         this.addLocationProperties(Mapping.from(this.getProperty(ConstantConfig.LOCATION_KEY)).notEmptyMap(e -> CommonUtil.split(e, ",", true)).get());
         this.loadProperties();
+    }
+
+    @Override
+    public PropertyContext clone() {
+        try {
+            DefaultPropertiesContext clone = (DefaultPropertiesContext) super.clone();
+            clone.configs.clear();
+            clone.fileListeners.clear();
+            clone.propertySources.clear();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw ExceptionUtil.wrap(e);
+        }
     }
 
     @Override

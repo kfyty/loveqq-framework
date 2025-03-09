@@ -9,8 +9,6 @@ import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.io.IOException;
-
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 
 /**
@@ -29,7 +27,7 @@ public class SessionAttributeMethodArgumentResolver implements HandlerMethodArgu
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) throws IOException {
+    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
         HttpServletRequest servletRequest = (HttpServletRequest) request.getRawRequest();
         return servletRequest.getSession().getAttribute(parameter.getParameterName(findAnnotation(parameter.getParameter(), SessionAttribute.class), SessionAttribute::value));
     }

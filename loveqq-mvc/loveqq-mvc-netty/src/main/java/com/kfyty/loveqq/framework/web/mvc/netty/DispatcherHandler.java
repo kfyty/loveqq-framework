@@ -10,7 +10,7 @@ import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.mvc.netty.exception.NettyServerException;
-import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.support.RequestContextHolder;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.support.ResponseContextHolder;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -25,7 +25,6 @@ import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import java.io.IOException;
 import java.lang.reflect.Parameter;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,7 +32,7 @@ import java.util.function.Supplier;
 
 import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
 import static com.kfyty.loveqq.framework.web.core.request.RequestMethod.matchRequestMethod;
-import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ServerHandlerMethodReturnValueProcessor.writeReturnValue;
+import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor.writeReturnValue;
 
 /**
  * 功能描述: 前端控制器
@@ -97,23 +96,14 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     @Override
-    protected Object resolveRequestResponseParam(Parameter parameter, ServerRequest request, ServerResponse response) {
+    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
         if (HttpServerRequest.class.isAssignableFrom(parameter.getType())) {
             return request.getRawRequest();
         }
         if (HttpServerResponse.class.isAssignableFrom(parameter.getType())) {
             return response.getRawResponse();
         }
-        return super.resolveRequestResponseParam(parameter, request, response);
-    }
-
-    @Override
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
-        try {
-            return super.prepareMethodParameter(request, response, methodMapping);
-        } catch (IOException e) {
-            throw new NettyServerException(e);
-        }
+        return super.resolveInternalParameter(parameter, request, response);
     }
 
     @SuppressWarnings("rawtypes")
@@ -133,14 +123,14 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
             return writeReturnValue(processedReturnValue, serverResponse, this.isEventStream(response.getContentType()));
         } catch (Exception e) {
-            throw new NettyServerException(e);
+            throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }
     }
 
     @Override
     protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
-        if (returnValueProcessor instanceof ServerHandlerMethodReturnValueProcessor) {
-            return ((ServerHandlerMethodReturnValueProcessor) returnValueProcessor).doHandleReturnValue(retValue, returnType, container);
+        if (returnValueProcessor instanceof ReactorHandlerMethodReturnValueProcessor) {
+            return ((ReactorHandlerMethodReturnValueProcessor) returnValueProcessor).transformReturnValue(retValue, returnType, container);
         }
         return super.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
     }

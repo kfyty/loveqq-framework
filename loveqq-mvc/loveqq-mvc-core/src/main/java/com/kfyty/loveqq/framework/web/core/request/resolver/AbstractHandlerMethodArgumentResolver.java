@@ -31,9 +31,15 @@ public abstract class AbstractHandlerMethodArgumentResolver implements BeanFacto
      */
     protected BeanFactory beanFactory;
 
+    /**
+     * 数据绑定器，只能克隆后使用
+     */
+    private DataBinder dataBinder;
+
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
+        this.dataBinder = beanFactory.getBean(DataBinder.class);
     }
 
     public DataBinder createDataBinder(String name, String value) {
@@ -49,8 +55,8 @@ public abstract class AbstractHandlerMethodArgumentResolver implements BeanFacto
     }
 
     protected DataBinder createDataBinder() {
-        if (this.beanFactory != null) {
-            return this.beanFactory.getBean(DataBinder.class).clone();
+        if (this.dataBinder != null) {
+            return this.dataBinder.clone();
         }
         DataBinder dataBinder = (DataBinder) ReflectUtil.newInstance(DEFAULT_DATA_BINDER_CLASS);
         dataBinder.setPropertyContext(this.createPropertiesContext());
