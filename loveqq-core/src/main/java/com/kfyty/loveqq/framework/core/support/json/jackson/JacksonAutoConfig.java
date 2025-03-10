@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.support.json;
+package com.kfyty.loveqq.framework.core.support.json.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;

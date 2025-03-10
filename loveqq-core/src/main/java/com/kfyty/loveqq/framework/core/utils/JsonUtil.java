@@ -74,6 +74,8 @@ public abstract class JsonUtil {
                 .with(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
+    /*----------------------------------------------------- 配置 -----------------------------------------------------*/
+
     public static ObjectMapper configure() {
         return DEFAULT_OBJECT_MAPPER;
     }
@@ -89,6 +91,9 @@ public abstract class JsonUtil {
     public static ObjectWriter configureWriter() {
         return configure().writer();
     }
+
+    /*---------------------------------------------------- 简单转换 ----------------------------------------------------*/
+
 
     public static <T> T convert(Object source, Class<T> target) {
         return DEFAULT_OBJECT_MAPPER.convertValue(source, target);
@@ -111,6 +116,8 @@ public abstract class JsonUtil {
         return new Array((List) toList(o));
     }
 
+    /*------------------------------------------------- Map -> Object -------------------------------------------------*/
+
     public static <T> T toObject(Map<?, ?> map, Class<T> clazz) {
         return DEFAULT_OBJECT_MAPPER.convertValue(map, clazz);
     }
@@ -129,15 +136,17 @@ public abstract class JsonUtil {
         return DEFAULT_OBJECT_MAPPER.convertValue(map, typeReference);
     }
 
-    public static <T> T toObject(String json, Class<T> clazz) {
+    /*------------------------------------------------ String -> Object ------------------------------------------------*/
+
+    public static <T> T toObject(CharSequence json, Class<T> clazz) {
         try {
-            return DEFAULT_OBJECT_MAPPER.readValue(json, clazz);
+            return DEFAULT_OBJECT_MAPPER.readValue(json.toString(), clazz);
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }
 
-    public static <T> T toObject(String json, Type type) {
+    public static <T> T toObject(CharSequence json, Type type) {
         return toObject(json, new TypeReference<>() {
 
             @Override
@@ -147,26 +156,40 @@ public abstract class JsonUtil {
         });
     }
 
-    public static <T> T toObject(String json, TypeReference<T> typeReference) {
+    public static <T> T toObject(CharSequence json, TypeReference<T> typeReference) {
         try {
-            return DEFAULT_OBJECT_MAPPER.readValue(json, typeReference);
+            return DEFAULT_OBJECT_MAPPER.readValue(json.toString(), typeReference);
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }
     }
+
+    /*--------------------------------------------- String -> Collection ---------------------------------------------*/
 
     @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> toList(CharSequence o) {
         return (List<Map<String, Object>>) toObject(o.toString(), ArrayList.class);
     }
 
-    public static <T> List<T> toList(String json, Class<T> clazz) {
+    public static <T> List<T> toList(CharSequence json, Class<T> clazz) {
         return (List<T>) toCollection(json, List.class, clazz);
     }
 
-    public static <T> Set<T> toSet(String json, Class<T> clazz) {
+    public static <T> Set<T> toSet(CharSequence json, Class<T> clazz) {
         return (Set<T>) toCollection(json, Set.class, clazz);
     }
+
+    @SuppressWarnings("rawtypes")
+    public static <T> Collection<T> toCollection(CharSequence json, Class<? extends Collection> collectionType, Class<T> clazz) {
+        try {
+            CollectionType javaType = DEFAULT_OBJECT_MAPPER.getTypeFactory().constructCollectionType(collectionType, clazz);
+            return DEFAULT_OBJECT_MAPPER.readValue(json.toString(), javaType);
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /*--------------------------------------------- String -> Map ---------------------------------------------*/
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(Object o) {
@@ -176,24 +199,14 @@ public abstract class JsonUtil {
         return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
     }
 
-    public static <V> Map<String, V> toMap(String json, Class<V> valueType) {
+    public static <V> Map<String, V> toMap(CharSequence json, Class<V> valueType) {
         return toMap(json, String.class, valueType);
     }
 
-    public static <K, V> Map<K, V> toMap(String json, Class<K> keyType, Class<V> valueType) {
+    public static <K, V> Map<K, V> toMap(CharSequence json, Class<K> keyType, Class<V> valueType) {
         try {
             MapType javaType = DEFAULT_OBJECT_MAPPER.getTypeFactory().constructMapType(LinkedHashMap.class, keyType, valueType);
-            return DEFAULT_OBJECT_MAPPER.readValue(json, javaType);
-        } catch (IOException e) {
-            throw ExceptionUtil.wrap(e);
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    public static <T> Collection<T> toCollection(String json, Class<? extends Collection> collectionType, Class<T> clazz) {
-        try {
-            CollectionType javaType = DEFAULT_OBJECT_MAPPER.getTypeFactory().constructCollectionType(collectionType, clazz);
-            return DEFAULT_OBJECT_MAPPER.readValue(json, javaType);
+            return DEFAULT_OBJECT_MAPPER.readValue(json.toString(), javaType);
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }

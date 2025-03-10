@@ -34,6 +34,14 @@ public @interface RequestMapping {
     RequestMethod method() default RequestMethod.GET;
 
     /**
+     * 是否自动暴露 {@code public} 修饰的公开方法，返回 true 时所有公开方法将暴露为 POST 方法
+     * 仅注解在类上有效
+     *
+     * @return true/false
+     */
+    boolean expose() default true;
+
+    /**
      * 设置响应的 content-type
      *
      * @return content-type
