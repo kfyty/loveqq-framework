@@ -159,7 +159,8 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         ProtocolHandler protocolHandler = connector.getProtocolHandler();
-        if (protocolHandler instanceof AbstractProtocol<?> protocol) {
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            AbstractProtocol<?> protocol = (AbstractProtocol<?>) protocolHandler;
             Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
             Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
             Mapping.from(this.config.getMaxConnections()).whenNotNull(protocol::setMaxConnections);

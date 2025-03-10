@@ -6,13 +6,16 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>loveqq-framework</artifactId>
-        <version>1.0.9</version>
+        <version>1.0.9-java8</version>
     </parent>
 
     <artifactId>loveqq-javafx</artifactId>
     <packaging>jar</packaging>
 
     <properties>
+        <maven.source.version>17</maven.source.version>
+        <maven.target.version>17</maven.target.version>
+
         <javafx.version>21</javafx.version>
     </properties>
 
