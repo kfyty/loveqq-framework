@@ -25,10 +25,10 @@ public @interface ConditionalOnWebApplication {
      *
      * @return 应用类型
      */
-    WebApplicationType value() default WebApplicationType.NONE;
+    WebApplicationType value() default WebApplicationType.ANY;
 
     enum WebApplicationType {
-        NONE,
+        ANY,
         SERVLET,
         SERVER;
     }

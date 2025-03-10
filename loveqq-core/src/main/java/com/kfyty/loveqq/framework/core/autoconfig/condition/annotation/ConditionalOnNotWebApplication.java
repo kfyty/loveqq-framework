@@ -25,5 +25,5 @@ public @interface ConditionalOnNotWebApplication {
      *
      * @return 应用类型
      */
-    ConditionalOnWebApplication.WebApplicationType value() default ConditionalOnWebApplication.WebApplicationType.NONE;
+    ConditionalOnWebApplication.WebApplicationType value() default ConditionalOnWebApplication.WebApplicationType.ANY;
 }

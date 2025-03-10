@@ -15,6 +15,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
+import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.netflix.loadbalancer.IRule;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
@@ -55,7 +56,7 @@ public class FeignAutoConfiguration {
     @Bean(resolveNested = false, independent = true)
     public Encoder feignEncoder() {
         if (this.objectMapper == null) {
-            return new LoveqqEncoder(new JacksonEncoder());
+            return new LoveqqEncoder(new JacksonEncoder(JsonUtil.configure()));
         }
         return new LoveqqEncoder(new JacksonEncoder(this.objectMapper));
     }
@@ -64,7 +65,7 @@ public class FeignAutoConfiguration {
     @Bean(resolveNested = false, independent = true)
     public Decoder feignDecoder() {
         if (this.objectMapper == null) {
-            return new LoveqqDecoder();
+            return new LoveqqDecoder(JsonUtil.configure());
         }
         return new LoveqqDecoder(this.objectMapper);
     }

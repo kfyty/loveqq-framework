@@ -59,11 +59,8 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         if (applicationContext == null) {
             return;
         }
-        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitions();
+        Map<String, BeanDefinition> beanDefinitions = this.applicationContext.getBeanDefinitionWithAnnotation(XxlJob.class, true);
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-            if (!entry.getValue().isAutowireCandidate() || !AnnotationUtil.hasAnnotation(entry.getValue().getBeanType(), XxlJob.class)) {
-                continue;
-            }
             Object bean = this.applicationContext.getBean(entry.getKey());
             for (Method executeMethod : ReflectUtil.getMethods(bean.getClass())) {
                 XxlJob xxlJob = AnnotationUtil.findAnnotation(executeMethod, XxlJob.class);

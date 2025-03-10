@@ -19,7 +19,7 @@ public class JarManifest extends Manifest {
     /**
      * 该 {@link Manifest} 所在 jar 的 URL
      */
-    protected URL jar;
+    protected final URL jar;
 
     public JarManifest(InputStream is, URL jar) throws IOException {
         super(is);
