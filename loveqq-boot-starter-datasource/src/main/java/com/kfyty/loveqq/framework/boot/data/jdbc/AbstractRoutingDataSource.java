@@ -63,10 +63,7 @@ public abstract class AbstractRoutingDataSource extends AbstractDataSource imple
      */
     protected DataSource obtainTargetDataSource() {
         Object dataSourceKey = this.obtainTargetDataSourceKey();
-        DataSource dataSource = this.dataSources.get(dataSourceKey);
-        if (dataSource == null) {
-            dataSource = this.defaultDataSource;
-        }
+        DataSource dataSource = dataSourceKey == null ? this.defaultDataSource : this.dataSources.getOrDefault(dataSourceKey, this.defaultDataSource);
         if (dataSource == null) {
             throw new IllegalStateException("Cannot determine target DataSource for key [" + dataSourceKey + "]");
         }
