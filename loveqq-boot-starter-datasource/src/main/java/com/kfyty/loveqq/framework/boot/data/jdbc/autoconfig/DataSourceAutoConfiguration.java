@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.jakarta.StatViewServlet;
+import com.kfyty.loveqq.framework.boot.data.jdbc.DataSourceAspect;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
@@ -31,6 +32,11 @@ import javax.sql.DataSource;
 @Import(config = DataSourceProperties.class)
 @ConditionalOnBean(DataSourceProperties.class)
 public class DataSourceAutoConfiguration {
+
+    @Bean
+    public DataSourceAspect defaultDataSourceAspect() {
+        return new DataSourceAspect();
+    }
 
     @Component
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.zaxxer.hikari.HikariDataSource")

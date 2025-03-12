@@ -13,7 +13,6 @@ import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.support.io.FileListener;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
-import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.file.StandardWatchEventKinds;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
@@ -179,6 +181,37 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     }
 
     @Override
+    public Map<String, String> searchMapProperties(String prefix) {
+        final String mapPrefix = prefix + ".";
+        return this.getProperties().entrySet().stream().filter(e -> e.getKey().startsWith(mapPrefix)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public Map<String, Map<String, String>> searchCollectionProperties(String prefix) {
+        String pattern = prefix.replace(".", "\\.").replace("[", "\\[") + "\\[[0-9]+].*";
+        Map<String, Map<String, String>> properties = new TreeMap<>();
+        for (Map.Entry<String, String> entry : this.getProperties().entrySet()) {
+            if (!entry.getKey().matches(pattern)) {
+                continue;
+            }
+            int left = entry.getKey().indexOf('[', prefix.length());
+            int right = entry.getKey().indexOf(']', left);
+            String index = entry.getKey().substring(left, right + 1);
+            Map<String, String> nested = properties.computeIfAbsent(index, k -> new HashMap<>());
+            if (right == entry.getKey().length() - 1) {
+                nested.put(entry.getKey(), entry.getValue());
+                continue;
+            }
+            if (entry.getKey().charAt(right + 1) == '[') {
+                nested.put(entry.getKey().substring(right + 1), entry.getValue());
+                continue;
+            }
+            nested.put(entry.getKey().substring(right + 2), entry.getValue());
+        }
+        return properties;
+    }
+
+    @Override
     public void afterPropertiesSet() {
         this.propertySources.putAll(loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
         this.addConfig(DEFAULT_YML_LOCATION);
@@ -190,15 +223,9 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public PropertyContext clone() {
-        try {
-            DefaultPropertiesContext clone = (DefaultPropertiesContext) super.clone();
-            clone.configs.clear();
-            clone.fileListeners.clear();
-            clone.propertySources.clear();
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw ExceptionUtil.wrap(e);
-        }
+        DefaultPropertiesContext clone = new DefaultPropertiesContext();
+        clone.setConfigurableApplicationContext(this.applicationContext);
+        return clone;
     }
 
     @Override
