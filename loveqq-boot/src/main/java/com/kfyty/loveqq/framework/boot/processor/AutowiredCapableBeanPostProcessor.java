@@ -135,7 +135,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
                 laziedFields.add(new Pair<>(field, description));
                 continue;
             }
-            Object autowired = this.autowiredProcessor.doAutowired(bean, field, description);
+            Object autowired = this.autowiredProcessor.resolveAutowired(bean, field, description);
             if (autowired != null && bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                 ReflectUtil.setFieldValue(exposedBean, field, autowired);
             }
@@ -143,7 +143,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
 
         // 注入临时忽略的属性
         for (Pair<Field, AutowiredDescription> fieldPair : laziedFields) {
-            Object autowired = this.autowiredProcessor.doAutowired(bean, fieldPair.getKey(), fieldPair.getValue());
+            Object autowired = this.autowiredProcessor.resolveAutowired(bean, fieldPair.getKey(), fieldPair.getValue());
             if (autowired != null && bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                 ReflectUtil.setFieldValue(exposedBean, fieldPair.getKey(), autowired);
             }
@@ -157,7 +157,7 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
                 if (AnnotationUtil.hasAnnotation(method, Bean.class)) {
                     continue;                                                                                           // Bean 方法创建实例时会注入，此时无需自动注入
                 }
-                Object[] parameters = this.autowiredProcessor.doAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
+                Object[] parameters = this.autowiredProcessor.resolveAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
                 if (bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                     ReflectUtil.invokeMethod(exposedBean, method, parameters);
                 }

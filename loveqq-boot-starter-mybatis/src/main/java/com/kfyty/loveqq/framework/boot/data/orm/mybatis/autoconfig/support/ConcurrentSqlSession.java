@@ -266,7 +266,7 @@ public class ConcurrentSqlSession implements SqlSession {
         SqlSessionHolder holder;
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             Environment environment = sessionFactory.getConfiguration().getEnvironment();
-            if (environment.getTransactionFactory() instanceof IocTransactionFactory) {
+            if (environment.getTransactionFactory() instanceof LoveqqTransactionFactory) {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("Registering transaction synchronization for SqlSession [" + session + "]"));
                 holder = new SqlSessionHolder(session, executorType);
                 TransactionSynchronizationManager.bindResource(sessionFactory, holder);

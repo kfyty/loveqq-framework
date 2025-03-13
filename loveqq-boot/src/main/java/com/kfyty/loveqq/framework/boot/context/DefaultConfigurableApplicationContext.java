@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.boot.context;
 
-import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
@@ -16,7 +15,6 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,10 +35,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @date 2022/10/29 15:00
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public class DefaultConfigurableApplicationContext extends AbstractApplicationContext implements ConfigurableApplicationContext {
-    protected static final String BOOTSTRAP_APPLICATION_CLASS = "com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BeanFactoryBootstrapApplication";
-
     protected String[] commanderArgs;
 
     protected Class<?> primarySource;
@@ -152,18 +147,6 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
             }
         }
         return false;
-    }
-
-    @Override
-    public ApplicationContext refresh() {
-        if (BOOTSTRAP_APPLICATION_CLASS.equals(this.primarySource.getName())) {
-            return super.refresh();
-        }
-        log.info("Boot loading...");
-        long start = System.currentTimeMillis();
-        ApplicationContext applicationContext = super.refresh();
-        log.info("Started {} in {} seconds", applicationContext.getPrimarySource().getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
-        return applicationContext;
     }
 
     @Override

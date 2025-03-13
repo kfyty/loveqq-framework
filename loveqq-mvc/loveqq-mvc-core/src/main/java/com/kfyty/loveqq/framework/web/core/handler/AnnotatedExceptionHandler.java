@@ -85,7 +85,7 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                 return true;
             }
         }
-        return AnnotationUtil.hasAnyAnnotationElement(target.getClass(), this.controllerAdviceAnnotations);
+        return AnnotationUtil.hasAnyAnnotation(target.getClass(), this.controllerAdviceAnnotations);
     }
 
     @Override

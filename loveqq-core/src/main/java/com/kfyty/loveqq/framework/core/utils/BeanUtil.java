@@ -92,11 +92,11 @@ public abstract class BeanUtil {
      * 从 class 以及 Autowired 注解中解析 bean name
      *
      * @param clazz         class
-     * @param autowiredName 可能的自动注入名称
+     * @param possibleBeanName 可能的自动注入名称
      * @return bean name
      */
-    public static String getBeanName(Class<?> clazz, String autowiredName) {
-        return CommonUtil.notEmpty(autowiredName) ? autowiredName : getBeanName(clazz);
+    public static String getBeanName(Class<?> clazz, String possibleBeanName) {
+        return CommonUtil.notEmpty(possibleBeanName) ? possibleBeanName : getBeanName(clazz);
     }
 
     /**
@@ -150,11 +150,11 @@ public abstract class BeanUtil {
             return isLazyInit(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
-            boolean isLazyInit = AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanMethod(), Lazy.class);
+            boolean isLazyInit = AnnotationUtil.hasAnnotation(beanDefinition.getBeanMethod(), Lazy.class);
             return isLazyInit || isLazyInit(((MethodBeanDefinition) beanDefinition).getParentDefinition());
         }
         if (beanDefinition instanceof GenericBeanDefinition) {
-            return AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanType(), Lazy.class);
+            return AnnotationUtil.hasAnnotation(beanDefinition.getBeanType(), Lazy.class);
         }
         return false;
     }

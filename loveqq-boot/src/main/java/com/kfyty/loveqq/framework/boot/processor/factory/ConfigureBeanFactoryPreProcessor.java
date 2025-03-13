@@ -88,8 +88,8 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
             return;
         }
         this.applicationContext.addScannedClass(clazz);
-        if (AnnotationUtil.hasAnnotationElement(clazz, Component.class)) {
-            ComponentScan componentScan = AnnotationUtil.findAnnotationElement(clazz, ComponentScan.class);
+        if (AnnotationUtil.hasAnnotation(clazz, Component.class)) {
+            ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
             if (componentScan != null) {
                 this.prepareScanBean(new HashSet<>(Arrays.asList(componentScan.value())));
                 if (this.applicationContext.getComponentMatcher().stream().noneMatch(e -> e.getClass() == componentScan.matcher())) {

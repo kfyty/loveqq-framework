@@ -19,7 +19,6 @@ import java.util.function.Function;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_CLASS_ARRAY;
 
 /**
@@ -55,7 +54,7 @@ public class MethodValidationInterceptorProxy implements MethodInterceptorChainP
         Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
             final Parameter parameter = parameters[i];
-            if (hasAnnotation(parameter, Valid.class) || hasAnnotationElement(parameter, Constraint.class)) {
+            if (hasAnnotation(parameter, Valid.class) || hasAnnotation(parameter, Constraint.class)) {
                 final Object parameterValue = args[i];
                 Group group = findAnnotation(parameter, Group.class);
                 this.doValid(v -> v.validate(parameterValue, group == null ? EMPTY_CLASS_ARRAY : group.value()));

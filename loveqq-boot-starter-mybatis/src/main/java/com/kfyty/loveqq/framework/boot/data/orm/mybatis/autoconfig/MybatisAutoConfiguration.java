@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.ConcurrentSqlSession;
-import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.IocTransactionFactory;
+import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.LoveqqTransactionFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
@@ -20,7 +20,7 @@ public class MybatisAutoConfiguration {
 
     @Bean
     public TransactionFactory mytbatisTransactionFactory() {
-        return new IocTransactionFactory();
+        return new LoveqqTransactionFactory();
     }
 
     @Bean

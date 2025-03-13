@@ -9,7 +9,7 @@ import jakarta.inject.Singleton;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述: 作用域工具
@@ -46,15 +46,15 @@ public abstract class ScopeUtil {
     }
 
     public static Scope resolveScope(Class<?> clazz) {
-        if (hasAnnotationElement(clazz, Configuration.class) || AutowiredDescription.INJECT_AVAILABLE && hasAnnotationElement(clazz, Singleton.class)) {
+        if (hasAnnotation(clazz, Configuration.class) || AutowiredDescription.INJECT_AVAILABLE && hasAnnotation(clazz, Singleton.class)) {
             return defaultScope();
         }
-        Scope scope = AnnotationUtil.findAnnotationElement(clazz, Scope.class);
+        Scope scope = AnnotationUtil.findAnnotation(clazz, Scope.class);
         return scope != null ? scope : defaultScope();
     }
 
     public static Scope resolveScope(Method beanMethod) {
-        Scope scope = AnnotationUtil.findAnnotationElement(beanMethod, Scope.class);
+        Scope scope = AnnotationUtil.findAnnotation(beanMethod, Scope.class);
         return scope != null ? scope : defaultScope();
     }
 

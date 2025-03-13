@@ -32,6 +32,7 @@ import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
 
 /**
  * 描述: 支持 jar 索引的类加载器
+ * 这里不要使用 {@link lombok.extern.slf4j.Slf4j} 打印日志
  *
  * @author kfyty725
  * @date 2023/3/15 19:59

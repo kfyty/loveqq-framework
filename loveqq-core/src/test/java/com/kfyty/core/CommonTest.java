@@ -29,6 +29,20 @@ import java.util.Set;
 public class CommonTest {
 
     @Test
+    public void underline2CamelCaseTest() {
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("a_b"), "aB");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("a__b"), "aB");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("a_bc"), "aBc");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("a__bc"), "aBc");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("_a__bc"), "aBc");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc"), "aBc");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc_dfg"), "aBcDfg");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc_dfg__"), "aBcDfg");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc_dfg__", true), "ABcDfg");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("--a--bc-dfg--", '-', false), "aBcDfg");
+    }
+
+    @Test
     public void formatTest() {
         String format = CommonUtil.format("{}{}{}", 1, 2, 3);
         String format2 = CommonUtil.format("hello{} {}", ",", "world");
