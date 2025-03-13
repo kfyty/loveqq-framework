@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.support.json;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +24,9 @@ public interface JSONAware {
         if (o instanceof Map<?, ?>) {
             return new JSON((Map<String, Object>) o);
         }
+        if (o instanceof CharSequence) {
+            return JsonUtil.toJSON(o);
+        }
         throw new IllegalStateException(msg);
     }
 
@@ -33,6 +37,9 @@ public interface JSONAware {
         }
         if (o instanceof Collection<?> || o.getClass().isArray()) {
             return new Array((List<Object>) CommonUtil.toList(o));
+        }
+        if (o instanceof CharSequence) {
+            return JsonUtil.toJSONArray((CharSequence) o);
         }
         throw new IllegalStateException(msg);
     }

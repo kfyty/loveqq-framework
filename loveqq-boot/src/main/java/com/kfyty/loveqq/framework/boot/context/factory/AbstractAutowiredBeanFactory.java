@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -120,7 +120,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
         if (beanDefinition instanceof MethodBeanDefinition) {
             MethodBeanDefinition methodBeanDefinition = (MethodBeanDefinition) beanDefinition;
             ConditionalBeanDefinition parentConditionalBeanDefinition = this.conditionBeanMap.get(methodBeanDefinition.getParentDefinition().getBeanName());
-            if (parentConditionalBeanDefinition != null || hasAnnotationElement(methodBeanDefinition.getBeanMethod(), Conditional.class)) {
+            if (parentConditionalBeanDefinition != null || hasAnnotation(methodBeanDefinition.getBeanMethod(), Conditional.class)) {
                 this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
@@ -131,7 +131,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
                 this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition, parentConditionalBeanDefinition));
                 return;
             }
-        } else if (hasAnnotationElement(beanDefinition.getBeanType(), Conditional.class)) {
+        } else if (hasAnnotation(beanDefinition.getBeanType(), Conditional.class)) {
             this.registerConditionBeanDefinition(name, new ConditionalBeanDefinition(beanDefinition));
             return;
         }

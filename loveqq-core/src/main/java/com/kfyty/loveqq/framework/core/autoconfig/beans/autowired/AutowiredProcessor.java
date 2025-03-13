@@ -3,7 +3,9 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
@@ -34,6 +36,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.isJdkProxy;
 import static java.util.Optional.ofNullable;
@@ -70,34 +73,67 @@ public class AutowiredProcessor {
     @Getter
     private final AutowiredDescriptionResolver resolver;
 
+    /**
+     * 构造器
+     *
+     * @param context 上下文
+     */
     public AutowiredProcessor(ApplicationContext context) {
         this(context, Objects.requireNonNull(context.getBean(AutowiredDescriptionResolver.class), "The bean doesn't exists of type: " + AutowiredDescriptionResolver.class));
     }
 
+    /**
+     * 构造器
+     *
+     * @param context  上下文
+     * @param resolver 自动装配描述解析器
+     */
     public AutowiredProcessor(ApplicationContext context, AutowiredDescriptionResolver resolver) {
         this.context = context;
         this.resolver = resolver;
         this.resolving = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
-    public Object doAutowired(Object bean, Field field) {
+    /**
+     * 自动装配一个实例属性
+     *
+     * @param bean  实例
+     * @param field 属性
+     * @return 自动装配的实例
+     */
+    public Object resolveAutowired(Object bean, Field field) {
         AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(field);
         if (description != null) {
-            return this.doAutowired(bean, field, description);
+            return this.resolveAutowired(bean, field, description);
         }
         return null;
     }
 
-    public void doAutowired(Object bean, Method method) {
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean   实例
+     * @param method 方法
+     */
+    public void resolveAutowired(Object bean, Method method) {
         AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(method);
         if (description != null) {
-            this.doAutowired(bean, method, description);
+            this.resolveAutowired(bean, method, description);
         }
     }
 
-    public Object doAutowired(Object bean, Field field, AutowiredDescription description) {
-        if (ReflectUtil.getFieldValue(bean, field) != null) {
-            return null;
+    /**
+     * 自动装配一个实例属性
+     *
+     * @param bean        实例
+     * @param field       属性
+     * @param description 自动注入描述符解析器
+     * @return 自动装配的实例
+     */
+    public Object resolveAutowired(Object bean, Field field, AutowiredDescription description) {
+        Object value = ReflectUtil.getFieldValue(bean, field);
+        if (value != null) {
+            return value;
         }
         SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), field);
         Object targetBean = this.doResolveBean(simpleGeneric, description, field.getType());
@@ -108,14 +144,34 @@ public class AutowiredProcessor {
         return targetBean;
     }
 
-    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description) {
-        return this.doAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean        实例
+     * @param method      方法
+     * @param description 自动注入描述符解析器
+     */
+    public Object[] resolveAutowired(Object bean, Method method, AutowiredDescription description) {
+        return this.resolveAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
     }
 
-    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean                                  实例
+     * @param method                                方法
+     * @param description                           自动注入描述符解析器
+     * @param parameterAutowiredDescriptionResolver 方法参数转换为自动注入描述符
+     */
+    public Object[] resolveAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
+            Value annotation = findAnnotation(parameter, Value.class);
+            if (annotation != null) {
+                parameters[index++] = GenericBeanDefinition.resolvePlaceholderValue(annotation.value(), annotation.bind(), parameter.getParameterizedType());
+                continue;
+            }
             SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), parameter);
             AutowiredDescription paramDescription = ofNullable(parameterAutowiredDescriptionResolver.apply(parameter)).orElse(description);
             Object targetBean = this.doResolveBean(simpleGeneric, paramDescription, parameter.getType());
@@ -181,6 +237,14 @@ public class AutowiredProcessor {
         return resolveBean;
     }
 
+    /**
+     * 泛型预处理
+     * 对于 {@link Optional} 或者 {@link LaziedObject} 获取其嵌套泛型，以确保解析准确
+     *
+     * @param returnType 目标泛型
+     * @param autowired  自动注入描述符
+     * @return 预处理后的泛型
+     */
     private SimpleGeneric preProcessGeneric(SimpleGeneric returnType, AutowiredDescription autowired) {
         if (returnType.isGeneric(Optional.class)) {
             autowired.markRequired(false);
@@ -196,7 +260,7 @@ public class AutowiredProcessor {
 
     private synchronized void checkResolving(String targetBeanName) {
         if (this.resolving.contains(targetBeanName)) {
-            throw new BeansException("Bean circular dependency: \r\n" + this.buildCircularDependency());
+            throw new BeansException("Bean circular dependency: \r\n" + this.buildCycleDependencyInfo());
         }
     }
 
@@ -390,7 +454,7 @@ public class AutowiredProcessor {
         return bean;
     }
 
-    private String buildCircularDependency() {
+    private String buildCycleDependencyInfo() {
         StringBuilder builder = new StringBuilder("┌─────┐\r\n");
         Object[] beanNames = this.resolving.toArray();
         for (int i = 0; i < beanNames.length; i++) {

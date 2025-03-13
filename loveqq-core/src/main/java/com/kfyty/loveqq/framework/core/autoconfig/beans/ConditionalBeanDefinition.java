@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotationElements;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.flatRepeatableAnnotation;
 import static java.util.Collections.unmodifiableList;
 
@@ -233,7 +233,7 @@ public class ConditionalBeanDefinition implements BeanDefinition {
         AnnotatedElement annotatedElement = beanDefinition.isMethodBean()
                 ? beanDefinition.getBeanMethod() : beanDefinition instanceof FactoryBeanDefinition
                 ? ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
-        List<Annotation> annotations = flatRepeatableAnnotation(findAnnotationElements(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class)));
+        List<Annotation> annotations = flatRepeatableAnnotation(findAnnotations(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class)));
 
         for (Annotation annotation : annotations) {
             this.conditionDeclares.add(this.buildConditionDeclare(annotation));
@@ -252,7 +252,7 @@ public class ConditionalBeanDefinition implements BeanDefinition {
      * @return 条件
      */
     private ConditionDeclare buildConditionDeclare(Annotation annotation) {
-        Conditional conditional = AnnotationUtil.findAnnotationElement(annotation.annotationType(), Conditional.class);
+        Conditional conditional = AnnotationUtil.findAnnotation(annotation.annotationType(), Conditional.class);
         List<Condition> conditions = Arrays.stream(conditional.value()).map(ReflectUtil::newInstance).collect(Collectors.toList());
         return new ConditionDeclare(conditional, annotation, unmodifiableList(conditions));
     }

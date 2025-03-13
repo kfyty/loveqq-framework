@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig;
 
+import com.alibaba.druid.filter.Filter;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.jakarta.StatViewServlet;
 import com.kfyty.loveqq.framework.boot.data.jdbc.DataSourceAspect;
@@ -20,6 +21,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.servlet.ServletContext;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 /**
  * 描述: 数据源自动配置
@@ -67,12 +69,13 @@ public class DataSourceAutoConfiguration {
         @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.druid")
         @Bean(destroyMethod = "close", resolveNested = false, independent = true)
-        public DataSource druidDataSource() {
+        public DataSource druidDataSource(@Autowired(required = false) List<Filter> filters) {
             DruidDataSource druidDataSource = new DruidDataSource();
             druidDataSource.setUsername(this.dataSourceProperties.getUsername());
             druidDataSource.setPassword(this.dataSourceProperties.getPassword());
             druidDataSource.setUrl(this.dataSourceProperties.getUrl());
             druidDataSource.setDriverClassName(this.dataSourceProperties.getDriverClassName());
+            druidDataSource.setProxyFilters(filters);
             return druidDataSource;
         }
 
@@ -84,11 +87,11 @@ public class DataSourceAutoConfiguration {
             @Bean(resolveNested = false, independent = true)
             @ConditionalOnProperty(prefix = "k.datasource.druid.statViewServlet", value = "enabled", havingValue = "true")
             public ServletRegistrationBean statViewServletBean(@Value("${k.datasource.druid.statViewServlet.allow:}") String allow,
-                                                           @Value("${k.datasource.druid.statViewServlet.deny:}") String deny,
-                                                           @Value("${k.datasource.druid.statViewServlet.remoteAddress:}") String remoteAddress,
-                                                           @Value("${k.datasource.druid.statViewServlet.urlPattern}") String urlPattern,
-                                                           @Value("${k.datasource.druid.statViewServlet.loginUsername}") String loginUsername,
-                                                           @Value("${k.datasource.druid.statViewServlet.loginPassword}") String loginPassword) {
+                                                               @Value("${k.datasource.druid.statViewServlet.deny:}") String deny,
+                                                               @Value("${k.datasource.druid.statViewServlet.remoteAddress:}") String remoteAddress,
+                                                               @Value("${k.datasource.druid.statViewServlet.urlPattern}") String urlPattern,
+                                                               @Value("${k.datasource.druid.statViewServlet.loginUsername}") String loginUsername,
+                                                               @Value("${k.datasource.druid.statViewServlet.loginPassword}") String loginPassword) {
                 return new ServletRegistrationBean()
                         .setServlet(new StatViewServlet())
                         .setUrlPatterns(CommonUtil.split(urlPattern, ","))

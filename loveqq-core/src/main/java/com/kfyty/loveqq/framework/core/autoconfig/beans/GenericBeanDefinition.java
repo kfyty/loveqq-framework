@@ -353,7 +353,7 @@ public class GenericBeanDefinition implements BeanDefinition {
             Parameter parameter = parameters[i];
             Value value = findAnnotation(parameter, Value.class);
             if (value != null) {
-                constructorArgs.add(new Pair<>(parameter.getType(), this.resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType())));
+                constructorArgs.add(new Pair<>(parameter.getType(), resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType())));
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
@@ -363,7 +363,7 @@ public class GenericBeanDefinition implements BeanDefinition {
         return constructorArgs;
     }
 
-    protected Object resolvePlaceholderValue(String value, boolean bind, Type targetType) {
+    public static Object resolvePlaceholderValue(String value, boolean bind, Type targetType) {
         ApplicationContext context = autowiredProcessor.getContext();
         PlaceholdersResolver placeholdersResolver = context.getBean(PlaceholdersResolver.class);
         GenericPropertiesContext propertiesContext = context.getBean(GenericPropertiesContext.class);
