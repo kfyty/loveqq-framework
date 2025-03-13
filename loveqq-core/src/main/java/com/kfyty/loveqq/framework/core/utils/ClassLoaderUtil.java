@@ -15,6 +15,7 @@ import java.util.jar.JarFile;
 
 /**
  * 描述: 类加载器工具
+ * 这里不要使用 {@link lombok.extern.slf4j.Slf4j} 打印日志
  *
  * @author kfyty725
  * @date 2023/3/15 19:51

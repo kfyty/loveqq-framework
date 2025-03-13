@@ -301,27 +301,33 @@ public abstract class CommonUtil {
         return underline2CamelCase(s, false);
     }
 
-    public static String underline2CamelCase(String target, boolean isClass) {
-        if (empty(target)) {
+    public static String underline2CamelCase(String target, boolean firstUpper) {
+        return underline2CamelCase(target, '_', firstUpper);
+    }
+
+    public static String underline2CamelCase(String underlineTarget, char lineChar, boolean firstUpper) {
+        if (underlineTarget == null || underlineTarget.isEmpty()) {
             throw new ResolvableException("convert underline to camel case failed, target can't empty !");
         }
+
+        // 全部都是大写字母或数字，需先转换为小写，包含 lineChar 时也要先转换，因为此时判断大小写无效
+        String target = UPPER_CASE_PATTERN.matcher(underlineTarget).matches() || underlineTarget.indexOf(lineChar) > 0 ? underlineTarget.toLowerCase() : underlineTarget;
+
         StringBuilder builder = new StringBuilder();
-        target = UPPER_CASE_PATTERN.matcher(target).matches() || target.contains("_") ? target.toLowerCase() : target;
         for (int i = 0; i < target.length(); i++) {
             char c = target.charAt(i);
-            if (c != '_') {
+            if (c != lineChar) {
                 builder.append(c);
                 continue;
             }
-            while (i < target.length() && (c = target.charAt(i)) == '_') {
+            while (i < target.length() && (c = target.charAt(i)) == lineChar) {
                 i++;
             }
             if (i < target.length()) {
-                builder.append(i == 1 ? c : Character.toUpperCase(c));
+                builder.append(builder.isEmpty() && !firstUpper ? c : Character.toUpperCase(c));
             }
         }
-        target = builder.toString();
-        return !isClass ? target : target.length() == 1 ? target.toUpperCase() : Character.toUpperCase(target.charAt(0)) + target.substring(1);
+        return builder.toString();
     }
 
     public static String camelCase2Underline(String s) {
@@ -329,11 +335,11 @@ public abstract class CommonUtil {
     }
 
     public static String camelCase2Underline(String target, boolean lower) {
-        if (empty(target)) {
+        if (target == null || target.isEmpty()) {
             throw new ResolvableException("convert camel case to underline failed, target can't empty !");
         }
         if (UPPER_CASE_PATTERN.matcher(target).matches()) {
-            return lower ? target.toLowerCase() : target.toUpperCase();
+            return lower ? target.toLowerCase() : target.toUpperCase();                                                 // 纯大写字母或数字，无法转换
         }
         char c = target.charAt(0);
         StringBuilder builder = new StringBuilder();
