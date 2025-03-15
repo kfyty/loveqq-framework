@@ -18,7 +18,8 @@ import org.apache.ibatis.transaction.TransactionFactory;
 @Configuration
 public class MybatisAutoConfiguration {
 
-    @Bean
+    @ConditionalOnMissingBean
+    @Bean(resolveNested = false, independent = true)
     public TransactionFactory mytbatisTransactionFactory() {
         return new LoveqqTransactionFactory();
     }
@@ -30,8 +31,11 @@ public class MybatisAutoConfiguration {
     }
 
     @Bean
-    public ConcurrentSqlSession sqlSession(SqlSessionFactory sqlSessionFactory) {
-        return new ConcurrentSqlSession(sqlSessionFactory);
+    public ConcurrentSqlSession sqlSession(MybatisProperties properties, SqlSessionFactory sqlSessionFactory) {
+        if (properties.getExecutorType() == null) {
+            return new ConcurrentSqlSession(sqlSessionFactory);
+        }
+        return new ConcurrentSqlSession(sqlSessionFactory, properties.getExecutorType());
     }
 
     @Bean
