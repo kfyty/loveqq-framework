@@ -4,6 +4,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
@@ -13,6 +15,7 @@ import lombok.Data;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.cache.Cache;
+import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
@@ -25,6 +28,7 @@ import org.apache.ibatis.type.TypeHandler;
 
 import javax.sql.DataSource;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -49,6 +53,9 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
 
     @Autowired
     private TransactionFactory transactionFactory;
+
+    @Autowired(required = false)
+    private DatabaseIdProvider databaseIdProvider;
 
     @Autowired(required = false)
     private Cache cache;
@@ -91,7 +98,11 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
         this.sqlSessionFactory.getConfiguration().getMappedStatementNames();
     }
 
-    protected SqlSessionFactory buildSqlSessionFactory() {
+    protected Class<? extends Configuration> obtainConfigurationClass() {
+        return Configuration.class;
+    }
+
+    protected Pair<Configuration, XMLConfigBuilder> buildConfiguration() {
         // 构建配置
         Configuration configuration;
         XMLConfigBuilder xmlConfigBuilder = null;
@@ -107,43 +118,23 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
         }
         // 存在 mybatis 配置文件
         else if (this.mybatisProperties.getConfigLocation() != null) {
-            xmlConfigBuilder = new XMLConfigBuilder(IOUtil.load(this.mybatisProperties.getConfigLocation()), null, this.mybatisProperties.getConfigurationProperties());
+            xmlConfigBuilder = new XMLConfigBuilder(this.obtainConfigurationClass(), IOUtil.load(this.mybatisProperties.getConfigLocation()), null, this.mybatisProperties.getConfigurationProperties());
             configuration = xmlConfigBuilder.getConfiguration();
         }
         // 默认配置
         else {
-            configuration = new Configuration();
+            configuration = ReflectUtil.newInstance(this.obtainConfigurationClass());
             Optional.ofNullable(this.mybatisProperties.getConfigurationProperties()).ifPresent(configuration::setVariables);
         }
 
-        Optional.ofNullable(this.cache).ifPresent(configuration::addCache);
-        Optional.ofNullable(this.plugins).ifPresent(p -> p.forEach(configuration::addInterceptor));
-        Optional.ofNullable(this.typeHandlers).ifPresent(t -> t.forEach(configuration.getTypeHandlerRegistry()::register));
-        Optional.ofNullable(this.objectFactory).ifPresent(configuration::setObjectFactory);
-        Optional.ofNullable(this.objectWrapperFactory).ifPresent(configuration::setObjectWrapperFactory);
-        Optional.ofNullable(this.mybatisProperties.getVfs()).ifPresent(configuration::setVfsImpl);
-        Optional.ofNullable(this.mybatisProperties.getDefaultScriptingLanguageDriver()).ifPresent(configuration::setDefaultScriptingLanguage);
+        return new Pair<>(configuration, xmlConfigBuilder);
+    }
 
-        if (CommonUtil.notEmpty(this.mybatisProperties.getTypeAliasesPackage())) {
-            PackageUtil.scanClass(this.mybatisProperties.getTypeAliasesPackage(), this.pathMatchingResourcePatternResolver)
-                    .stream()
-                    .filter(e -> !ReflectUtil.isAbstract(e))
-                    .forEach(configuration.getTypeAliasRegistry()::registerAlias);
-        }
-
-        if (CommonUtil.notEmpty(this.mybatisProperties.getTypeHandlersPackage())) {
-            PackageUtil.scanClass(this.mybatisProperties.getTypeHandlersPackage(), this.pathMatchingResourcePatternResolver)
-                    .stream()
-                    .filter(e -> !ReflectUtil.isAbstract(e))
-                    .forEach(configuration.getTypeHandlerRegistry()::register);
-        }
-
-        if (xmlConfigBuilder != null) {
-            xmlConfigBuilder.parse();
-        }
-
+    protected void buildEnvironment(Configuration configuration) {
         configuration.setEnvironment(new Environment(SqlSessionFactoryBean.class.getSimpleName(), this.transactionFactory, this.dataSource));
+    }
 
+    protected void buildMapperLocations() {
         if (CommonUtil.notEmpty(this.mybatisProperties.getMapperLocations())) {
             for (String mapperLocation : this.mybatisProperties.getMapperLocations()) {
                 Set<URL> resources = this.pathMatchingResourcePatternResolver.findResources(mapperLocation);
@@ -153,7 +144,58 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
                 }
             }
         }
+    }
 
+    protected SqlSessionFactory build(Configuration configuration) {
         return new SqlSessionFactoryBuilder().build(configuration);
+    }
+
+    protected SqlSessionFactory buildSqlSessionFactory() {
+        // 构建配置
+        Pair<Configuration, XMLConfigBuilder> configPair = this.buildConfiguration();
+        Configuration configuration = configPair.getKey();
+        XMLConfigBuilder xmlConfigBuilder = configPair.getValue();
+
+        Optional.ofNullable(this.cache).ifPresent(configuration::addCache);
+        Optional.ofNullable(this.plugins).ifPresent(p -> p.forEach(configuration::addInterceptor));
+        Optional.ofNullable(this.typeHandlers).ifPresent(t -> t.forEach(configuration.getTypeHandlerRegistry()::register));
+        Optional.ofNullable(this.objectFactory).ifPresent(configuration::setObjectFactory);
+        Optional.ofNullable(this.objectWrapperFactory).ifPresent(configuration::setObjectWrapperFactory);
+        Optional.ofNullable(this.mybatisProperties.getVfs()).ifPresent(configuration::setVfsImpl);
+        Optional.ofNullable(this.mybatisProperties.getDefaultScriptingLanguageDriver()).ifPresent(configuration::setDefaultScriptingLanguage);
+
+        if (this.databaseIdProvider != null) {
+            try {
+                configuration.setDatabaseId(this.databaseIdProvider.getDatabaseId(this.dataSource));
+            } catch (SQLException e) {
+                throw new ResolvableException("Failed getting a databaseId", e);
+            }
+        }
+
+        if (CommonUtil.notEmpty(this.mybatisProperties.getTypeAliasesPackage())) {
+            CommonUtil.split(this.mybatisProperties.getTypeAliasesPackage(), ",")
+                    .stream()
+                    .flatMap(p -> PackageUtil.scanClass(p, this.pathMatchingResourcePatternResolver).stream())
+                    .filter(e -> !ReflectUtil.isAbstract(e))
+                    .forEach(configuration.getTypeAliasRegistry()::registerAlias);
+        }
+
+        if (CommonUtil.notEmpty(this.mybatisProperties.getTypeHandlersPackage())) {
+            CommonUtil.split(this.mybatisProperties.getTypeHandlersPackage(), ",")
+                    .stream()
+                    .flatMap(p -> PackageUtil.scanClass(p, this.pathMatchingResourcePatternResolver).stream())
+                    .filter(e -> !ReflectUtil.isAbstract(e))
+                    .forEach(configuration.getTypeHandlerRegistry()::register);
+        }
+
+        if (xmlConfigBuilder != null) {
+            xmlConfigBuilder.parse();
+        }
+
+        this.buildEnvironment(configuration);
+
+        this.buildMapperLocations();
+
+        return this.build(configuration);
     }
 }
