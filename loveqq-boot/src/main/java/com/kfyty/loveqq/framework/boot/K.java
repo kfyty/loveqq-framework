@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.boot.context.DefaultConfigurableApplicationContext.LOGGER;
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.isIndexedClassLoader;
 
 /**
@@ -63,12 +64,22 @@ public class K {
 
     /**
      * 启动应用
+     * 这里的 log 引用其他类的常亮是避免引导启动时加载过多的类
+     * 事实上，该类所引用的类都应该避免使用 log，以避免引导启动时加载过多的类
      *
      * @return {@link ApplicationContext}
      */
     public ApplicationContext run() {
+        LOGGER.info("Boot loading...");
+
+        long start = System.currentTimeMillis();
+
         ApplicationContext applicationContext = this.applicationContextFactory.create(this).refresh();
+
+        LOGGER.info("Started {} in {} seconds", applicationContext.getPrimarySource().getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
+
         this.invokeRunner(applicationContext);
+
         return applicationContext;
     }
 

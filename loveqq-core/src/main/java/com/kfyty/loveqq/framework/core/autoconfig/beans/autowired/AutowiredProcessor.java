@@ -2,7 +2,10 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
@@ -33,6 +36,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.getTargetClass;
 import static com.kfyty.loveqq.framework.core.utils.AopUtil.isJdkProxy;
 import static java.util.Optional.ofNullable;
@@ -46,6 +50,12 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 public class AutowiredProcessor {
+    /**
+     * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
+     * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
+     */
+    public static final ThreadLocal<String> CURRENT_CREATING_BEAN = new ThreadLocal<>();
+
     /**
      * 正在解析中的 bean name
      */
@@ -63,34 +73,67 @@ public class AutowiredProcessor {
     @Getter
     private final AutowiredDescriptionResolver resolver;
 
+    /**
+     * 构造器
+     *
+     * @param context 上下文
+     */
     public AutowiredProcessor(ApplicationContext context) {
         this(context, Objects.requireNonNull(context.getBean(AutowiredDescriptionResolver.class), "The bean doesn't exists of type: " + AutowiredDescriptionResolver.class));
     }
 
+    /**
+     * 构造器
+     *
+     * @param context  上下文
+     * @param resolver 自动装配描述解析器
+     */
     public AutowiredProcessor(ApplicationContext context, AutowiredDescriptionResolver resolver) {
         this.context = context;
         this.resolver = resolver;
         this.resolving = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
-    public Object doAutowired(Object bean, Field field) {
+    /**
+     * 自动装配一个实例属性
+     *
+     * @param bean  实例
+     * @param field 属性
+     * @return 自动装配的实例
+     */
+    public Object resolveAutowired(Object bean, Field field) {
         AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(field);
         if (description != null) {
-            return this.doAutowired(bean, field, description);
+            return this.resolveAutowired(bean, field, description);
         }
         return null;
     }
 
-    public void doAutowired(Object bean, Method method) {
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean   实例
+     * @param method 方法
+     */
+    public void resolveAutowired(Object bean, Method method) {
         AutowiredDescription description = DefaultAutowiredDescriptionResolver.doResolve(method);
         if (description != null) {
-            this.doAutowired(bean, method, description);
+            this.resolveAutowired(bean, method, description);
         }
     }
 
-    public Object doAutowired(Object bean, Field field, AutowiredDescription description) {
-        if (ReflectUtil.getFieldValue(bean, field) != null) {
-            return null;
+    /**
+     * 自动装配一个实例属性
+     *
+     * @param bean        实例
+     * @param field       属性
+     * @param description 自动注入描述符解析器
+     * @return 自动装配的实例
+     */
+    public Object resolveAutowired(Object bean, Field field, AutowiredDescription description) {
+        Object value = ReflectUtil.getFieldValue(bean, field);
+        if (value != null) {
+            return value;
         }
         SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), field);
         Object targetBean = this.doResolveBean(simpleGeneric, description, field.getType());
@@ -101,14 +144,34 @@ public class AutowiredProcessor {
         return targetBean;
     }
 
-    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description) {
-        return this.doAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean        实例
+     * @param method      方法
+     * @param description 自动注入描述符解析器
+     */
+    public Object[] resolveAutowired(Object bean, Method method, AutowiredDescription description) {
+        return this.resolveAutowired(bean, method, description, DefaultAutowiredDescriptionResolver::doResolve);
     }
 
-    public Object[] doAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
+    /**
+     * 自动装配一个实例方法
+     *
+     * @param bean                                  实例
+     * @param method                                方法
+     * @param description                           自动注入描述符解析器
+     * @param parameterAutowiredDescriptionResolver 方法参数转换为自动注入描述符
+     */
+    public Object[] resolveAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
         int index = 0;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
+            Value annotation = findAnnotation(parameter, Value.class);
+            if (annotation != null) {
+                parameters[index++] = GenericBeanDefinition.resolvePlaceholderValue(annotation.value(), annotation.bind(), parameter.getParameterizedType());
+                continue;
+            }
             SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), parameter);
             AutowiredDescription paramDescription = ofNullable(parameterAutowiredDescriptionResolver.apply(parameter)).orElse(description);
             Object targetBean = this.doResolveBean(simpleGeneric, paramDescription, parameter.getType());
@@ -174,6 +237,14 @@ public class AutowiredProcessor {
         return resolveBean;
     }
 
+    /**
+     * 泛型预处理
+     * 对于 {@link Optional} 或者 {@link LaziedObject} 获取其嵌套泛型，以确保解析准确
+     *
+     * @param returnType 目标泛型
+     * @param autowired  自动注入描述符
+     * @return 预处理后的泛型
+     */
     private SimpleGeneric preProcessGeneric(SimpleGeneric returnType, AutowiredDescription autowired) {
         if (returnType.isGeneric(Optional.class)) {
             autowired.markRequired(false);
@@ -189,11 +260,11 @@ public class AutowiredProcessor {
 
     private synchronized void checkResolving(String targetBeanName) {
         if (this.resolving.contains(targetBeanName)) {
-            throw new BeansException("Bean circular dependency: \r\n" + this.buildCircularDependency());
+            throw new BeansException("Bean circular dependency: \r\n" + this.buildCycleDependencyInfo());
         }
     }
 
-    private synchronized void prepareResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+    private synchronized void prepareResolving(String targetBeanName, Map<String, BeanDefinition> targetBeanDefinitions, boolean isGeneric) {
         if (!isGeneric) {
             this.checkResolving(targetBeanName);
             if (!this.context.containsReference(targetBeanName)) {
@@ -201,7 +272,7 @@ public class AutowiredProcessor {
             }
             return;
         }
-        for (BeanDefinition beanDefinition : this.context.getBeanDefinitions(targetType).values()) {
+        for (BeanDefinition beanDefinition : targetBeanDefinitions.values()) {
             this.checkResolving(beanDefinition.getBeanName());
             if (!this.context.containsReference(beanDefinition.getBeanName())) {
                 this.resolving.add(beanDefinition.getBeanName());
@@ -209,11 +280,29 @@ public class AutowiredProcessor {
         }
     }
 
-    private synchronized void removeResolving(String targetBeanName, Class<?> targetType, boolean isGeneric) {
+    private synchronized void removeResolving(String targetBeanName, Map<String, BeanDefinition> targetBeanDefinitions, boolean isGeneric) {
         if (!isGeneric) {
             this.resolving.remove(targetBeanName);
         } else {
-            this.context.getBeanDefinitions(targetType).values().forEach(e -> this.resolving.remove(e.getBeanName()));
+            targetBeanDefinitions.values().forEach(e -> this.resolving.remove(e.getBeanName()));
+        }
+    }
+
+    /**
+     * 当使用同类型的 bean，再去创建一个同类型的 bean 时，移除当前 bean
+     * eg：多数据源配置场景
+     *
+     * @param targetBeanDefinitions 全部 bean 定义
+     */
+    private void removeCreatingBeanIfNecessary(Map<String, BeanDefinition> targetBeanDefinitions) {
+        String creatingBean = CURRENT_CREATING_BEAN.get();
+
+        if (creatingBean == null || !targetBeanDefinitions.containsKey(creatingBean) || this.context.contains(creatingBean)) {
+            return;
+        }
+
+        if (this.resolving.contains(creatingBean)) {
+            targetBeanDefinitions.remove(creatingBean);
         }
     }
 
@@ -221,10 +310,11 @@ public class AutowiredProcessor {
         boolean isGeneric = returnType.isSimpleGeneric();
         Map<String, Object> beanOfType = new LinkedHashMap<>(2);
         Map<String, BeanDefinition> targetBeanDefinitions = new LinkedHashMap<>();
-        if (this.context.containsBeanDefinition(targetBeanName)) {
+        if (!isGeneric && this.context.containsBeanDefinition(targetBeanName)) {
             Optional.of(this.context.getBeanDefinition(targetBeanName)).ifPresent(bd -> targetBeanDefinitions.put(bd.getBeanName(), bd));
         } else {
             targetBeanDefinitions.putAll(this.context.getBeanDefinitions(targetType));
+            this.removeCreatingBeanIfNecessary(targetBeanDefinitions);
         }
         for (Iterator<Map.Entry<String, BeanDefinition>> i = targetBeanDefinitions.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String, BeanDefinition> entry = i.next();
@@ -236,16 +326,16 @@ public class AutowiredProcessor {
                 beanOfType.put(entry.getKey(), this.context.getBean(entry.getKey()));
             } else if (isGeneric) {
                 try {
-                    this.prepareResolving(targetBeanName, targetType, true);
+                    this.prepareResolving(targetBeanName, targetBeanDefinitions, true);
                     this.context.registerBeanReference(entry.getValue());                       // 泛型先注册 bean 引用，下一步再注册完整的 bean，避免循环依赖
                 } finally {
-                    this.removeResolving(targetBeanName, targetType, true);
+                    this.removeResolving(targetBeanName, targetBeanDefinitions, true);
                 }
             }
         }
         if (beanOfType.size() < targetBeanDefinitions.size()) {
             try {
-                this.prepareResolving(targetBeanName, targetType, isGeneric);
+                this.prepareResolving(targetBeanName, targetBeanDefinitions, isGeneric);
                 if (isGeneric) {
                     for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
                         if (!beanOfType.containsKey(entry.getKey())) {
@@ -270,7 +360,7 @@ public class AutowiredProcessor {
                     beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition, AutowiredDescription.isLazied(autowired)));
                 }
             } finally {
-                this.removeResolving(targetBeanName, targetType, isGeneric);
+                this.removeResolving(targetBeanName, targetBeanDefinitions, isGeneric);
             }
         }
         if (AutowiredDescription.isRequired(autowired)) {
@@ -364,7 +454,7 @@ public class AutowiredProcessor {
         return bean;
     }
 
-    private String buildCircularDependency() {
+    private String buildCycleDependencyInfo() {
         StringBuilder builder = new StringBuilder("┌─────┐\r\n");
         Object[] beanNames = this.resolving.toArray();
         for (int i = 0; i < beanNames.length; i++) {

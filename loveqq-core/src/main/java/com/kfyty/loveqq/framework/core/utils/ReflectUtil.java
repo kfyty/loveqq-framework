@@ -343,12 +343,11 @@ public abstract class ReflectUtil {
     public static Object getFieldValue(Object obj, Field field, boolean useGetter) {
         try {
             if (obj == null || !useGetter) {
-                makeAccessible(field);
-                return field.get(obj);
+                return makeAccessible(field).get(obj);
             }
             Method getter = getMethod(obj.getClass(), CommonUtil.getGetter(field.getName()));
             if (getter == null) {
-                return getFieldValue(obj, field, false);
+                return makeAccessible(field).get(obj);
             }
             return invokeMethod(obj, getter);
         } catch (Exception e) {

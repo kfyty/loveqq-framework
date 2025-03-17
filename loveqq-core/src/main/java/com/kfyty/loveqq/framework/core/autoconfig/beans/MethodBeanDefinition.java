@@ -89,7 +89,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         for (Parameter parameter : this.beanMethod.getParameters()) {
             Value value = findAnnotation(parameter, Value.class);
             if (value != null) {
-                parameters[index++] = this.resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType());
+                parameters[index++] = resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType());
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(methodDescription);

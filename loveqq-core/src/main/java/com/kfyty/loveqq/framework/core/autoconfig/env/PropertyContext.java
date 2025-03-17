@@ -106,6 +106,24 @@ public interface PropertyContext extends AutoCloseable, Cloneable {
     <T> T getProperty(String key, Class<T> targetType, T defaultValue);
 
     /**
+     * 根据配置 key 前缀获取配置
+     *
+     * @param prefix 前缀
+     * @return 配置
+     */
+    Map<String, String> searchMapProperties(String prefix);
+
+    /**
+     * 根据配置 key 前缀获取配置
+     *
+     * @param prefix 前缀
+     * @return 配置
+     * key: 集合索引: [0]
+     * value: 属性配置值: [0].id -> unique_list_list
+     */
+    Map<String, Map<String, String>> searchCollectionProperties(String prefix);
+
+    /**
      * 克隆属性上下文，但清空属性配置
      *
      * @return cloned

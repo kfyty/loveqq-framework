@@ -39,7 +39,7 @@ public @interface RequestMapping {
      *
      * @return true/false
      */
-    boolean expose() default true;
+    boolean expose() default false;
 
     /**
      * 设置响应的 content-type

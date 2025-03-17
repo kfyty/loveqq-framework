@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
@@ -15,13 +16,10 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.ConverterUtil.convert;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
@@ -92,47 +90,11 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
         throw new ResolvableException("Complex generic are not supported: " + targetType);
     }
 
-    /**
-     * 根据配置 key 前缀获取配置
-     *
-     * @param prefix 前缀
-     * @return 配置
-     */
-    public Map<String, String> searchMapProperties(String prefix) {
-        final String mapPrefix = prefix + ".";
-        return this.getProperties().entrySet().stream().filter(e -> e.getKey().startsWith(mapPrefix)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    /**
-     * 根据配置 key 前缀获取配置
-     *
-     * @param prefix 前缀
-     * @return 配置
-     * key: 集合索引: [0]
-     * value: 属性配置值: [0].id -> unique_list_list
-     */
-    public Map<String, Map<String, String>> searchCollectionProperties(String prefix) {
-        String pattern = prefix.replace(".", "\\.").replace("[", "\\[") + "\\[[0-9]+].*";
-        Map<String, Map<String, String>> properties = new TreeMap<>();
-        for (Map.Entry<String, String> entry : this.getProperties().entrySet()) {
-            if (!entry.getKey().matches(pattern)) {
-                continue;
-            }
-            int left = entry.getKey().indexOf('[', prefix.length());
-            int right = entry.getKey().indexOf(']', left);
-            String index = entry.getKey().substring(left, right + 1);
-            Map<String, String> nested = properties.computeIfAbsent(index, k -> new HashMap<>());
-            if (right == entry.getKey().length() - 1) {
-                nested.put(entry.getKey(), entry.getValue());
-                continue;
-            }
-            if (entry.getKey().charAt(right + 1) == '[') {
-                nested.put(entry.getKey().substring(right + 1), entry.getValue());
-                continue;
-            }
-            nested.put(entry.getKey().substring(right + 2), entry.getValue());
-        }
-        return properties;
+    @Override
+    public PropertyContext clone() {
+        DefaultPropertiesContext clone = new DefaultGenericPropertiesContext();
+        clone.setConfigurableApplicationContext(this.applicationContext);
+        return clone;
     }
 
     /**

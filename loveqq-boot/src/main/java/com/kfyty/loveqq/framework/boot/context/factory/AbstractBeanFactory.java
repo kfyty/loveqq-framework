@@ -6,12 +6,12 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.InstantiatedBeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
@@ -52,12 +52,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     protected static final Supplier<Map<String, BeanDefinition>> MAP_FACTORY = () -> new LinkedHashMap<>(2);
 
     /**
-     * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
-     * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
-     */
-    protected static final ThreadLocal<String> CURRENT_CREATING_BEAN = new ThreadLocal<>();
-
-    /**
      * bean 定义
      */
     protected final Map<String, BeanDefinition> beanDefinitions;
@@ -93,7 +87,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      * @return bean name
      */
     public static String getCreatingBean() {
-        return CURRENT_CREATING_BEAN.get();
+        return AutowiredProcessor.CURRENT_CREATING_BEAN.get();
     }
 
     /**
@@ -102,7 +96,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      * @param beanName bean name
      */
     public static void setCreatingBean(String beanName) {
-        CURRENT_CREATING_BEAN.set(beanName);
+        AutowiredProcessor.CURRENT_CREATING_BEAN.set(beanName);
     }
 
     public AbstractBeanFactory() {
