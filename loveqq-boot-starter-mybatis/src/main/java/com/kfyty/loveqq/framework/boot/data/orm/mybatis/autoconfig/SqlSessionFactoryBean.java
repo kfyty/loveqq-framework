@@ -134,7 +134,7 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
         configuration.setEnvironment(new Environment(SqlSessionFactoryBean.class.getSimpleName(), this.transactionFactory, this.dataSource));
     }
 
-    protected void buildMapperLocations() {
+    protected void buildMapperLocations(Configuration configuration) {
         if (CommonUtil.notEmpty(this.mybatisProperties.getMapperLocations())) {
             for (String mapperLocation : this.mybatisProperties.getMapperLocations()) {
                 Set<URL> resources = this.pathMatchingResourcePatternResolver.findResources(mapperLocation);
@@ -194,7 +194,7 @@ public class SqlSessionFactoryBean implements FactoryBean<SqlSessionFactory>, Ap
 
         this.buildEnvironment(configuration);
 
-        this.buildMapperLocations();
+        this.buildMapperLocations(configuration);
 
         return this.build(configuration);
     }
