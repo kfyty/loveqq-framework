@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.getSnapshotFactoryBeanMap;
+import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.getFactoryBeanCacheMap;
 
 /**
  * 描述:
@@ -28,41 +28,50 @@ public class OnBeanCondition extends AbstractBeanCondition {
     public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
         BeanFactory beanFactory = context.getBeanFactory();
         for (String conditionName : this.conditionNames(metadata)) {
-            if (!beanFactory.containsBeanDefinition(conditionName)) {
+            if (!this.isMatchBeanName(context, beanFactory, metadata, conditionName)) {
                 return false;
             }
         }
         for (Class<?> conditionType : this.conditionTypes(metadata)) {
-            if (beanFactory.getBeanDefinitionNames(conditionType).isEmpty()) {
-                // 二次判断是否为 FactoryBean 声明的 bean
-                Map<String, FactoryBean<?>> factoryBeanMap = getSnapshotFactoryBeanMap();
-                Stream<Map.Entry<String, FactoryBean<?>>> stream = factoryBeanMap.entrySet().stream().filter(e -> conditionType.isAssignableFrom(e.getValue().getBeanType()));
-
-                // 需要排除掉自身的 FactoryBean
-                if (metadata.getCurrentBeanDefinition() != null && metadata.getCurrentBeanDefinition().isFactoryBean()) {
-                    FactoryBean<?> factoryBean = factoryBeanMap.get(metadata.getCurrentBeanDefinition().getBeanName());
-                    stream = stream.filter(e -> e.getValue() != factoryBean);
-                }
-                if (metadata.getParentBeanDefinition() != null && metadata.getParentBeanDefinition().isFactoryBean()) {
-                    FactoryBean<?> factoryBean = factoryBeanMap.get(metadata.getParentBeanDefinition().getBeanName());
-                    stream = stream.filter(e -> e.getValue() != factoryBean);
-                }
-
-                // 判断匹配的 bean 是否应该被跳过
-                List<String> matchBeanNames = stream.map(Map.Entry::getKey).collect(Collectors.toList());
-                for (Iterator<String> i = matchBeanNames.iterator(); i.hasNext(); ) {
-                    ConditionalBeanDefinition conditionalBeanDefinition = context.getConditionBeanMap().get(i.next());
-                    if (conditionalBeanDefinition != null && context.shouldSkip(conditionalBeanDefinition)) {
-                        i.remove();
-                    }
-                }
-
-                if (matchBeanNames.isEmpty()) {
-                    return false;
-                }
+            if (!this.isMatchBeanType(context, beanFactory, metadata, conditionType)) {
+                return false;
             }
         }
         return true;
+    }
+
+    protected boolean isMatchBeanName(ConditionContext context, BeanFactory beanFactory, AnnotationMetadata<?> metadata, String conditionName) {
+        return beanFactory.containsBeanDefinition(conditionName);
+    }
+
+    protected boolean isMatchBeanType(ConditionContext context, BeanFactory beanFactory, AnnotationMetadata<?> metadata, Class<?> conditionType) {
+        if (!beanFactory.getBeanDefinitionNames(conditionType).isEmpty()) {
+            return true;
+        }
+        // 二次判断是否为 FactoryBean 声明的 bean
+        Map<String, FactoryBean<?>> factoryBeanMap = getFactoryBeanCacheMap();
+        Stream<Map.Entry<String, FactoryBean<?>>> stream = factoryBeanMap.entrySet().stream().filter(e -> conditionType.isAssignableFrom(e.getValue().getBeanType()));
+
+        // 需要排除掉自身的 FactoryBean
+        if (metadata.getCurrentBeanDefinition() != null && metadata.getCurrentBeanDefinition().isFactoryBean()) {
+            FactoryBean<?> factoryBean = factoryBeanMap.get(metadata.getCurrentBeanDefinition().getBeanName());
+            stream = stream.filter(e -> e.getValue() != factoryBean);
+        }
+        if (metadata.getParentBeanDefinition() != null && metadata.getParentBeanDefinition().isFactoryBean()) {
+            FactoryBean<?> factoryBean = factoryBeanMap.get(metadata.getParentBeanDefinition().getBeanName());
+            stream = stream.filter(e -> e.getValue() != factoryBean);
+        }
+
+        // 判断匹配的 bean 是否应该被跳过
+        List<String> matchBeanNames = stream.map(Map.Entry::getKey).collect(Collectors.toList());
+        for (Iterator<String> i = matchBeanNames.iterator(); i.hasNext(); ) {
+            ConditionalBeanDefinition conditionalBeanDefinition = context.getConditionBeanMap().get(i.next());
+            if (conditionalBeanDefinition != null && context.shouldSkip(conditionalBeanDefinition)) {
+                i.remove();
+            }
+        }
+
+        return !matchBeanNames.isEmpty();
     }
 
     @Override

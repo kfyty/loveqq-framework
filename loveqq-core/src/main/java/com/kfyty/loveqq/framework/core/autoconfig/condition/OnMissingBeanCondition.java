@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig.condition;
 
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
@@ -14,8 +15,19 @@ import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
 public class OnMissingBeanCondition extends OnBeanCondition {
 
     @Override
-    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> annotationMetadata) {
-        return !super.isMatch(context, annotationMetadata);
+    public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
+        BeanFactory beanFactory = context.getBeanFactory();
+        for (String conditionName : this.conditionNames(metadata)) {
+            if (this.isMatchBeanName(context, beanFactory, metadata, conditionName)) {
+                return false;
+            }
+        }
+        for (Class<?> conditionType : this.conditionTypes(metadata)) {
+            if (this.isMatchBeanType(context, beanFactory, metadata, conditionType)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

@@ -54,12 +54,10 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         if (isMono) {
             return this.getReactiveCache()
                     .getAsync(cacheableName)
-                    .map(value -> value == NullValue.INSTANCE ? null : value)
                     .switchIfEmpty(Mono.defer(() -> (Mono<?>) this.proceed(true, cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
         }
         return this.getReactiveCache()
                 .getAsync(cacheableName)
-                .map(value -> value == NullValue.INSTANCE ? null : value)
                 .flatMapMany(e -> Flux.fromIterable((Iterable<?>) e))
                 .switchIfEmpty(Flux.defer(() -> this.proceed(false, cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp)));
     }

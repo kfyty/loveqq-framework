@@ -10,13 +10,13 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 
 /**
- * 描述: IocTransactionFactory
+ * 描述: LoveqqTransactionFactory
  *
  * @author kfyty725
  * @date 2024/6/03 18:55
  * @email kfyty725@hotmail.com
  */
-public class IocTransactionFactory implements TransactionFactory {
+public class LoveqqTransactionFactory implements TransactionFactory {
 
     @Override
     public Transaction newTransaction(Connection conn) {

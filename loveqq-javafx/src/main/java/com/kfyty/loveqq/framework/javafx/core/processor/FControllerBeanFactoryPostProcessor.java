@@ -27,7 +27,7 @@ public class FControllerBeanFactoryPostProcessor implements BeanFactoryPostProce
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
             FController annotation = AnnotationUtil.findAnnotation(entry.getValue().getBeanType(), FController.class);
             if (annotation != null && CommonUtil.notEmpty(annotation.value())) {
-                Scope scope = AnnotationUtil.findAnnotationElement(entry.getValue().getBeanType(), Scope.class);
+                Scope scope = AnnotationUtil.findAnnotation(entry.getValue().getBeanType(), Scope.class);
                 this.registerFXMLComponentBeanDefinition(entry.getKey(), annotation, scope, beanFactory);
             }
         }

@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.beans;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,6 +33,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
 
     /**
      * 临时 FactoryBean 对象缓存，用于获取目标 bean 定义信息
+     * {@link ConditionalOnBean} 条件也需要该缓存
      */
     private static final Map<String, FactoryBean<?>> SNAPSHOT_FACTORY_BEAN_CACHE = new ConcurrentHashMap<>();
 
@@ -43,7 +45,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     private final BeanDefinition factoryBeanDefinition;
 
     public FactoryBeanDefinition(BeanDefinition factoryBeanDefinition) {
-        this(getSnapshotFactoryBean(factoryBeanDefinition), factoryBeanDefinition);
+        this(getFactoryBeanCache(factoryBeanDefinition), factoryBeanDefinition);
     }
 
     private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
@@ -72,18 +74,18 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
             return context.getBean(this.getBeanName());
         }
         Object bean = factoryBean.getObject();
-        return LogUtil.logIfDebugEnabled(log, log ->  log.debug("instantiate bean from factory bean: {}", bean), bean);
+        return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from factory bean: {}", bean), bean);
     }
 
-    public static FactoryBean<?> getSnapshotFactoryBean(BeanDefinition beanDefinition) {
+    public static FactoryBean<?> getFactoryBeanCache(BeanDefinition beanDefinition) {
         return SNAPSHOT_FACTORY_BEAN_CACHE.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), beanDefinition.getDefaultConstructArgs()));
     }
 
-    public static Map<String, FactoryBean<?>> getSnapshotFactoryBeanMap() {
+    public static Map<String, FactoryBean<?>> getFactoryBeanCacheMap() {
         return SNAPSHOT_FACTORY_BEAN_CACHE;
     }
 
-    public static void addSnapFactoryBeanCache(String beanName, FactoryBean<?> factoryBean) {
+    public static void addFactoryBeanCache(String beanName, FactoryBean<?> factoryBean) {
         SNAPSHOT_FACTORY_BEAN_CACHE.putIfAbsent(beanName, factoryBean);
     }
 }

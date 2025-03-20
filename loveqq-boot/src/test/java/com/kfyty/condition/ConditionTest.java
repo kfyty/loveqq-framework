@@ -29,6 +29,18 @@ public class ConditionTest implements CommandLineRunner {
     private boolean isOverride;
 
     @Autowired(required = false)
+    private II1 ii1;
+
+    @Autowired(required = false)
+    private II2 ii2;
+
+    @Autowired(required = false)
+    private II3 ii3;
+
+    @Autowired(required = false)
+    private II4 ii4;
+
+    @Autowired(required = false)
     private List<Inter> cons;
 
     @Autowired
@@ -44,6 +56,11 @@ public class ConditionTest implements CommandLineRunner {
     public void onComplete(ContextRefreshedEvent event) {
         Assertions.assertSame(this.isOverride, true);
         Assertions.assertSame(this.cons.size(), 5);
+
+        Assertions.assertNotNull(ii1);
+        Assertions.assertNull(ii2);
+        Assertions.assertNull(ii3);
+        Assertions.assertNotNull(ii4);
     }
 
     @EventListener(condition = "arg0.source == 1")
@@ -115,3 +132,25 @@ class DDF implements FactoryBean<DD> {
 }
 
 class EE implements Inter {}
+
+@Component
+class GG1 {}
+@Component
+class HH1 {}
+@Component
+@ConditionalOnBean({GG1.class, HH1.class})
+class II1 {}        // 应该存在
+
+@Component
+class GG2 {}
+class HH2 {}
+class HH3 {}
+@Component
+@ConditionalOnBean({GG2.class, HH2.class})
+class II2 {}        // 不应该存在
+@Component
+@ConditionalOnMissingBean({GG2.class, HH2.class})
+class II3 {}        // 不应该存在
+@Component
+@ConditionalOnMissingBean({HH2.class, HH3.class})
+class II4 {}        // 应该存在

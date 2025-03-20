@@ -15,8 +15,6 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,8 +36,6 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @email kfyty725@hotmail.com
  */
 public class DefaultConfigurableApplicationContext extends AbstractApplicationContext implements ConfigurableApplicationContext {
-    public static final Logger LOGGER = LoggerFactory.getLogger(DefaultConfigurableApplicationContext.class);
-
     protected String[] commanderArgs;
 
     protected Class<?> primarySource;

@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.getSnapshotFactoryBean;
+import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.getFactoryBeanCache;
 
 /**
  * 描述: 条件匹配上下文
@@ -209,7 +209,7 @@ public class ConditionContext implements AutoCloseable {
         for (Class<?> conditionType : abstractBeanCondition.conditionTypes(metadata)) {
             List<ConditionalBeanDefinition> collect = this.conditionBeanMap.values()
                     .stream()
-                    .filter(e -> conditionType.isAssignableFrom(e.getBeanType()) || e.isFactoryBean() && conditionType.isAssignableFrom(getSnapshotFactoryBean(e).getBeanType()))
+                    .filter(e -> conditionType.isAssignableFrom(e.getBeanType()) || e.isFactoryBean() && conditionType.isAssignableFrom(getFactoryBeanCache(e).getBeanType()))
                     .collect(Collectors.toList());
             List<ConditionalBeanDefinition> reference = this.nestedConditionReference.keySet()
                     .stream()

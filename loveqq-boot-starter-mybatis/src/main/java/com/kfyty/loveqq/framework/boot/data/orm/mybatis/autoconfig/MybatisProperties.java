@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProper
 import lombok.Data;
 import org.apache.ibatis.io.VFS;
 import org.apache.ibatis.scripting.LanguageDriver;
+import org.apache.ibatis.session.ExecutorType;
 
 import java.util.Properties;
 
@@ -38,6 +39,11 @@ public class MybatisProperties {
      * mapper 路径配置
      */
     private String[] mapperLocations;
+
+    /**
+     * {@link com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.ConcurrentSqlSession} 执行器类型
+     */
+    private ExecutorType executorType;
 
     /**
      * vfs

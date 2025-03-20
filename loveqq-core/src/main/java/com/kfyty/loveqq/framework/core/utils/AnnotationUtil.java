@@ -107,18 +107,9 @@ public abstract class AnnotationUtil {
         return findAnnotation(source, annotation) != null;
     }
 
-    public static boolean hasAnnotationElement(Object source, Class<? extends Annotation> annotation) {
-        return findAnnotationElement(source, annotation) != null;
-    }
-
     @SafeVarargs
     public static boolean hasAnyAnnotation(Object source, Class<? extends Annotation>... annotations) {
         return Arrays.stream(annotations).anyMatch(e -> hasAnnotation(source, e));
-    }
-
-    @SafeVarargs
-    public static boolean hasAnyAnnotationElement(Object source, Class<? extends Annotation>... annotations) {
-        return Arrays.stream(annotations).anyMatch(e -> hasAnnotationElement(source, e));
     }
 
     /* ------------------------------------------ 获取注解 ------------------------------------------ */
@@ -135,6 +126,10 @@ public abstract class AnnotationUtil {
             return findAnnotations((AnnotatedElement) source);
         }
         return findAnnotations(source.getClass());
+    }
+
+    public static Annotation[] findAnnotations(AnnotatedElement annotatedElement, Predicate<Annotation> annotationTest) {
+        return Arrays.stream(findAnnotations(annotatedElement)).filter(annotationTest).toArray(Annotation[]::new);
     }
 
     @SuppressWarnings("unchecked")
@@ -208,16 +203,6 @@ public abstract class AnnotationUtil {
         }
         ANNOTATION_CACHE.putIfAbsent(element, resolvedAnnotations);
         return resolvedAnnotations;
-    }
-
-    /* ------------------------------------------ 获取注解元素 ------------------------------------------ */
-
-    public static <T extends Annotation> T findAnnotationElement(Object source, Class<T> annotationClass) {
-        return findAnnotation(source, annotationClass);
-    }
-
-    public static Annotation[] findAnnotationElements(AnnotatedElement annotatedElement, Predicate<Annotation> annotationTest) {
-        return Arrays.stream(findAnnotations(annotatedElement)).filter(annotationTest).toArray(Annotation[]::new);
     }
 
     /**

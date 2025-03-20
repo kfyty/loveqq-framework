@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 
 import java.util.List;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotationElement;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 
 /**
  * 描述: 组件匹配器
@@ -67,7 +67,7 @@ public class DefaultComponentMatcher implements ComponentMatcher, ConfigurableAp
             if (filter.getClasses().contains(beanClass)) {
                 return new Pair<>(isInclude, filter);
             }
-            if (filter.getAnnotations().stream().anyMatch(e -> hasAnnotationElement(beanClass, e))) {
+            if (filter.getAnnotations().stream().anyMatch(e -> hasAnnotation(beanClass, e))) {
                 return new Pair<>(isInclude, filter);
             }
         }

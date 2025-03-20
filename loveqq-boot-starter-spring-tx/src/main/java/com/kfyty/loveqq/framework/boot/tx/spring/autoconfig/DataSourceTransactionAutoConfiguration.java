@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.event.EventListenerAdapter;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -28,7 +29,7 @@ public class DataSourceTransactionAutoConfiguration {
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public DataSourceTransactionManager dataSourceTransactionManager(DataSource dataSource) {
+    public PlatformTransactionManager dataSourceTransactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
 
@@ -44,7 +45,7 @@ public class DataSourceTransactionAutoConfiguration {
     }
 
     @Bean(resolveNested = false, independent = true)
-    public TransactionTemplate transactionTemplate(DataSourceTransactionManager dataSourceTransactionManager) {
-        return new TransactionTemplate(dataSourceTransactionManager);
+    public TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager) {
+        return new TransactionTemplate(platformTransactionManager);
     }
 }

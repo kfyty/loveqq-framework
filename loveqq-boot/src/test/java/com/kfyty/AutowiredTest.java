@@ -94,7 +94,7 @@ public class AutowiredTest {
     @PostConstruct
     public void afterPropertiesSet() {
         Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
-        Assertions.assertTrue(AnnotationUtil.hasAnnotationElement(this.autowiredTest, Component.class));
+        Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));

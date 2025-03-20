@@ -19,7 +19,7 @@ import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 import java.lang.reflect.Method;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.FACTORY_BEAN_PREFIX;
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.addSnapFactoryBeanCache;
+import static com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition.addFactoryBeanCache;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
 
 /**
@@ -133,11 +133,12 @@ public class BeanDefinitionBuilder {
             this.setScope(BeanDefinition.SCOPE_SINGLETON);
         }
         if (this.beanDefinition.isFactoryBean()) {
-            if (!(this.beanDefinition instanceof MethodBeanDefinition) && this.beanDefinition.getBeanName().equals(resolveBeanName(this.beanDefinition.getBeanType()))) {
-                FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.beanDefinition.getDefaultConstructArgs());
+            FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.beanDefinition.getDefaultConstructArgs());
+            if (!this.beanDefinition.isMethodBean() && this.beanDefinition.getBeanName().equals(resolveBeanName(this.beanDefinition.getBeanType()))) {
+                // 如果是 class 定义 FactoryBean，且是默认名称，则更新名称为实际 bean 类型的默认名称，否则会冲突
                 this.setBeanName(resolveBeanName(factoryBean.getBeanType()));
-                addSnapFactoryBeanCache(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName(), factoryBean);
             }
+            addFactoryBeanCache(FACTORY_BEAN_PREFIX + this.beanDefinition.getBeanName(), factoryBean);
         }
     }
 

@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
@@ -23,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.kfyty.loveqq.framework.boot.context.DefaultConfigurableApplicationContext.LOGGER;
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.isIndexedClassLoader;
 
 /**
@@ -64,19 +65,21 @@ public class K {
 
     /**
      * 启动应用
-     * 这里的 log 引用其他类的常亮是避免引导启动时加载过多的类
+     * 这里的 log 不是常亮是避免引导启动时加载过多的类
      * 事实上，该类所引用的类都应该避免使用 log，以避免引导启动时加载过多的类
      *
      * @return {@link ApplicationContext}
      */
     public ApplicationContext run() {
-        LOGGER.info("Boot loading...");
+        Logger log = LoggerFactory.getLogger(this.primarySource);
+
+        log.info("Boot loading...");
 
         long start = System.currentTimeMillis();
 
         ApplicationContext applicationContext = this.applicationContextFactory.create(this).refresh();
 
-        LOGGER.info("Started {} in {} seconds", applicationContext.getPrimarySource().getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
+        log.info("Started {} in {} seconds", applicationContext.getPrimarySource().getSimpleName(), (System.currentTimeMillis() - start) / 1000D);
 
         this.invokeRunner(applicationContext);
 

@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.ConcurrentSqlSession;
-import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.IocTransactionFactory;
+import com.kfyty.loveqq.framework.boot.data.orm.mybatis.autoconfig.support.LoveqqTransactionFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
@@ -18,9 +18,10 @@ import org.apache.ibatis.transaction.TransactionFactory;
 @Configuration
 public class MybatisAutoConfiguration {
 
-    @Bean
+    @ConditionalOnMissingBean
+    @Bean(resolveNested = false, independent = true)
     public TransactionFactory mytbatisTransactionFactory() {
-        return new IocTransactionFactory();
+        return new LoveqqTransactionFactory();
     }
 
     @Bean
@@ -30,8 +31,11 @@ public class MybatisAutoConfiguration {
     }
 
     @Bean
-    public ConcurrentSqlSession sqlSession(SqlSessionFactory sqlSessionFactory) {
-        return new ConcurrentSqlSession(sqlSessionFactory);
+    public ConcurrentSqlSession sqlSession(MybatisProperties properties, SqlSessionFactory sqlSessionFactory) {
+        if (properties.getExecutorType() == null) {
+            return new ConcurrentSqlSession(sqlSessionFactory);
+        }
+        return new ConcurrentSqlSession(sqlSessionFactory, properties.getExecutorType());
     }
 
     @Bean

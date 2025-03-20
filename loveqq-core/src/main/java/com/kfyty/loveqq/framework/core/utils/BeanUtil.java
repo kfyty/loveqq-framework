@@ -150,11 +150,11 @@ public abstract class BeanUtil {
             return isLazyInit(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
         if (beanDefinition instanceof MethodBeanDefinition) {
-            boolean isLazyInit = AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanMethod(), Lazy.class);
+            boolean isLazyInit = AnnotationUtil.hasAnnotation(beanDefinition.getBeanMethod(), Lazy.class);
             return isLazyInit || isLazyInit(((MethodBeanDefinition) beanDefinition).getParentDefinition());
         }
         if (beanDefinition instanceof GenericBeanDefinition) {
-            return AnnotationUtil.hasAnnotationElement(beanDefinition.getBeanType(), Lazy.class);
+            return AnnotationUtil.hasAnnotation(beanDefinition.getBeanType(), Lazy.class);
         }
         return false;
     }
