@@ -22,7 +22,6 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,22 +59,39 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
 
     protected void preProcessBeanFactory(ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+        this.prepareScanBean();
         this.prepareScanBean(Collections.singleton(applicationContext.getPrimarySource().getPackage().getName()));
         this.prepareScanAutoConfigFactories();
+    }
+
+    protected void prepareScanBean() {
+        Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
+        for (Class<?> scannedClass : this.applicationContext.getScannedClasses()) {                                     // 处理自定义配置的 class
+            boolean contains = factories.contains(scannedClass.getName());
+            if (contains && this.excludeQualifierAutoConfigNames.contains(scannedClass.getName())) {
+                continue;
+            }
+            this.doProcessScanBean(scannedClass, contains);
+        }
+    }
+
+    protected void prepareScanBean(Set<String> basePackages) {
+        for (String basePackage : basePackages) {
+            for (Class<?> scanClass : PackageUtil.scanClass(basePackage)) {
+                this.processScanBean(scanClass, false);
+            }
+        }
     }
 
     protected void prepareScanAutoConfigFactories() {
         Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
         for (String className : factories) {
             if (!this.excludeQualifierAutoConfigNames.contains(className)) {
-                Optional.ofNullable(ReflectUtil.load(className, false, false)).ifPresent(e -> this.processScanBean(e, true));
+                Class<?> loaded = ReflectUtil.load(className, false, false);
+                if (loaded != null) {
+                    this.processScanBean(loaded, true);
+                }
             }
-        }
-    }
-
-    protected void prepareScanBean(Set<String> basePackages) {
-        for (String basePackage : basePackages) {
-            PackageUtil.scanClass(basePackage).forEach(e -> this.processScanBean(e, false));
         }
     }
 
@@ -87,6 +103,10 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
         if (!autoconfig && FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(clazz.getName())) {
             return;
         }
+        this.doProcessScanBean(clazz, autoconfig);
+    }
+
+    protected void doProcessScanBean(Class<?> clazz, boolean autoconfig) {
         this.applicationContext.addScannedClass(clazz);
         if (AnnotationUtil.hasAnnotation(clazz, Component.class)) {
             ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);

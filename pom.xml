@@ -61,6 +61,7 @@
         <module>loveqq-boot-starter-mail</module>
         <module>loveqq-boot-starter-netty</module>
         <module>loveqq-boot-starter-rocketmq</module>
+        <module>loveqq-boot-starter-test</module>
     </modules>
 
     <properties>

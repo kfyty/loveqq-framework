@@ -9,7 +9,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import static com.kfyty.loveqq.framework.core.utils.BeanUtil.removeFactoryBeanNamePrefix;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
@@ -35,7 +35,7 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
      * 临时 FactoryBean 对象缓存，用于获取目标 bean 定义信息
      * {@link ConditionalOnBean} 条件也需要该缓存
      */
-    private static final Map<String, FactoryBean<?>> SNAPSHOT_FACTORY_BEAN_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, FactoryBean<?>> SNAPSHOT_FACTORY_BEAN_CACHE = new ConcurrentSkipListMap<>();
 
     /**
      * 该 bean 定义所在的工厂 bean 定义
