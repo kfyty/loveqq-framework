@@ -152,10 +152,8 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     public void close() {
         super.close();
-        this.scannedClasses.clear();
-        this.includeFilters.clear();
-        this.excludeFilters.clear();
-        this.componentMatchers.clear();
+
+        // 这里的资源不再清理，否则重新刷新时会丢失自定义的配置
     }
 
     @Override
