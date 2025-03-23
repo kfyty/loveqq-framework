@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 public class NacosNamingEventListener extends AbstractEventListener implements ApplicationContextAware {
+    /**
+     * 应用上下文
+     */
     private ApplicationContext applicationContext;
 
     @Override

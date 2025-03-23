@@ -49,8 +49,15 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
     }
 
     private FactoryBeanDefinition(FactoryBean<?> temp, BeanDefinition factoryBeanDefinition) {
-        super(removeFactoryBeanNamePrefix(factoryBeanDefinition.getBeanName()), temp.getBeanType(), factoryBeanDefinition.getScope(), factoryBeanDefinition.isScopeProxy(), factoryBeanDefinition.isLazyInit(), factoryBeanDefinition.isLazyProxy());
+        super(removeFactoryBeanNamePrefix(factoryBeanDefinition.getBeanName()),
+                temp.getBeanType(),
+                factoryBeanDefinition.getScope(),
+                factoryBeanDefinition.isScopeProxy(),
+                factoryBeanDefinition.isLazyInit(),
+                factoryBeanDefinition.isLazyProxy());
         this.factoryBeanDefinition = factoryBeanDefinition;
+        this.setInitMethod(factoryBeanDefinition.getInitMethod());
+        this.setDestroyMethod(factoryBeanDefinition.getDestroyMethod());
         if (temp.isSingleton()) {
             this.factoryBeanDefinition.setScope(SCOPE_SINGLETON);
         }
