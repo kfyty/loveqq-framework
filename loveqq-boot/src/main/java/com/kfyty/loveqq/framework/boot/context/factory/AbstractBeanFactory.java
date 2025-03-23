@@ -19,6 +19,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -505,8 +506,10 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
         bean = this.getExposedBean(beanDefinition, bean);
 
-        final Object invokeInitBean = bean;
-        ofNullable(beanDefinition.getInitMethod(invokeInitBean)).ifPresent(e -> ReflectUtil.invokeMethod(invokeInitBean, e));
+        Method initMethod = beanDefinition.getInitMethod(bean);
+        if (initMethod != null) {
+            ReflectUtil.invokeMethod(bean, initMethod);
+        }
 
         bean = this.getExposedBean(beanDefinition, bean);
 
@@ -532,7 +535,10 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             ((DestroyBean) bean).destroy();
         }
 
-        ofNullable(beanDefinition.getDestroyMethod(bean)).ifPresent(e -> ReflectUtil.invokeMethod(bean, e));
+        Method destroyMethod = beanDefinition.getDestroyMethod(bean);
+        if (destroyMethod != null) {
+            ReflectUtil.invokeMethod(bean, destroyMethod);
+        }
 
         this.beanReference.remove(beanName);
         this.beanInstances.remove(beanName);

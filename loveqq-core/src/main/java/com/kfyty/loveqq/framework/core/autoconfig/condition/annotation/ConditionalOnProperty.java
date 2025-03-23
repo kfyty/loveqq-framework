@@ -58,6 +58,14 @@ public @interface ConditionalOnProperty {
     boolean matchIfNonNull() default false;
 
     /**
+     * 配置中存在以 key 为前缀的属性时，条件是否成立
+     * 仅当配置中不存在属性 key 时有效
+     *
+     * @return 默认 false
+     */
+    boolean matchIfNonEmpty() default false;
+
+    /**
      * 属性条件容器
      */
     @Documented

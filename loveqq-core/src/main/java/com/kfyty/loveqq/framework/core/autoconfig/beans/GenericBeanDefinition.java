@@ -266,6 +266,16 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public String getInitMethod() {
+        return this.initMethod;
+    }
+
+    @Override
+    public String getDestroyMethod() {
+        return this.destroyMethod;
+    }
+
+    @Override
     public void setAutowireCandidate(boolean autowireCandidate) {
         this.isAutowireCandidate = autowireCandidate;
     }

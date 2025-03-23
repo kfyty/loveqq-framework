@@ -5,15 +5,20 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.utils.NetUtils;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
+import com.kfyty.loveqq.framework.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor;
+import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
-import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * 描述: nacos 服务注册
@@ -22,51 +27,92 @@ import java.util.Collections;
  * @date 2024/03/10 10:58
  * @email kfyty725@hotmail.com
  */
-public class NacosDiscoveryRegisterService implements ApplicationListener<ContextRefreshedEvent> {
+public class NacosDiscoveryRegisterService implements ContextOnRefresh, ApplicationListener<ContextRefreshedEvent> {
+    /**
+     * 应用服务名称
+     */
+    @Value("${k.application.name:}")
+    private String applicationName;
+
+    /**
+     * 应用端口
+     */
+    @Value("${k.server.port:-1}")
+    private Integer serverPort;
+
+    /**
+     * 应用上下文
+     */
+    private ApplicationContext applicationContext;
+
+    /**
+     * {@link com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean} 后置处理器
+     */
+    @Autowired
+    private FactoryBeanBeanFactoryPostProcessor factoryBeanBeanFactoryPostProcessor;
+
+    /**
+     * 配置属性
+     */
     @Autowired
     private NacosDiscoveryProperties discoveryProperties;
 
-    @Autowired
-    private NamingService namingService;
-
-    @Autowired
-    private PropertyContext propertyContext;
-
+    /**
+     * 监听器
+     */
     @Autowired(required = false)
     private NacosNamingEventListener nacosNamingEventListener;
 
-    protected Instance buildInstance(String serverIp, int serverPort, String clusterName) {
-        Instance instance = new Instance();
-        instance.setIp(serverIp);
-        instance.setPort(serverPort);
-        instance.setClusterName(clusterName);
-        instance.setWeight(this.discoveryProperties.getWeight());
-        instance.setHealthy(this.discoveryProperties.getHealthy());
-        instance.setEnabled(this.discoveryProperties.getEnabled());
-        instance.setEphemeral(this.discoveryProperties.getEphemeral());
-        instance.setMetadata(this.discoveryProperties.getMetadata());
-        return instance;
+    @Override
+    public void onRefresh(ApplicationContext applicationContext) {
+        for (Map.Entry<String, NacosDiscoveryProperties> entry : this.discoveryProperties.getDiscoveries().entrySet()) {
+            BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(NamingServiceFactoryBean.class)
+                    .setBeanName(entry.getKey())
+                    .addConstructorArgs(NacosDiscoveryProperties.class, entry.getValue())
+                    .setDestroyMethod("shutDown")
+                    .getBeanDefinition();
+            applicationContext.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, false);
+            this.factoryBeanBeanFactoryPostProcessor.postProcessBeanDefinition(beanDefinition, applicationContext);
+        }
+        this.applicationContext = applicationContext;
     }
 
     public void registerService() {
-        try {
-            String groupName = this.discoveryProperties.getGroupName();
-            String clusterName = this.discoveryProperties.getClusterName();
-            String application = this.propertyContext.getProperty(ConstantConfig.APPLICATION_NAME_KEY);
-            String serverIp = CommonUtil.empty(this.discoveryProperties.getIp()) ? NetUtils.localIP() : this.discoveryProperties.getIp();
-            String serverPort = this.propertyContext.getProperty(ConstantConfig.SERVER_PORT_KEY);
-            Instance instance = this.buildInstance(serverIp, Integer.parseInt(serverPort), clusterName);
-            this.namingService.registerInstance(application, groupName, instance);
-            if (this.nacosNamingEventListener != null) {
-                this.namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
+        for (Map.Entry<String, NacosDiscoveryProperties> entry : this.discoveryProperties.getDiscoveries().entrySet()) {
+            NacosDiscoveryProperties properties = entry.getValue();
+            NamingService namingService = this.applicationContext.getBean(entry.getKey());
+            String groupName = properties.getGroupName();
+            String clusterName = properties.getClusterName();
+            String application = CommonUtil.empty(properties.getService()) ? this.applicationName : properties.getService();
+            String serverIp = CommonUtil.empty(properties.getIp()) ? NetUtils.localIP() : properties.getIp();
+            int serverPort = properties.getPort() < 0 ? this.serverPort : properties.getPort();
+            Instance instance = this.buildInstance(serverIp, serverPort, clusterName, properties);
+            try {
+                namingService.registerInstance(application, groupName, instance);
+                if (this.nacosNamingEventListener != null) {
+                    namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
+                }
+            } catch (NacosException e) {
+                throw new ResolvableException("Register service discovery failed", e);
             }
-        } catch (NacosException e) {
-            throw new ResolvableException("Register service discovery failed", e);
         }
     }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         this.registerService();
+    }
+
+    protected Instance buildInstance(String serverIp, int serverPort, String clusterName, NacosDiscoveryProperties properties) {
+        Instance instance = new Instance();
+        instance.setIp(serverIp);
+        instance.setPort(serverPort);
+        instance.setClusterName(clusterName);
+        instance.setWeight(properties.getWeight());
+        instance.setHealthy(properties.getHealthy());
+        instance.setEnabled(properties.getEnabled());
+        instance.setEphemeral(properties.getEphemeral());
+        instance.setMetadata(properties.getMetadata());
+        return instance;
     }
 }

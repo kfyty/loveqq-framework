@@ -24,6 +24,9 @@ public class OnPropertyCondition implements Condition {
         PropertyContext propertyContext = context.getBeanFactory().getBean(PropertyContext.class);
         String propertyKey = this.obtainPropertyKey(conditional);
         if (!propertyContext.contains(propertyKey)) {
+            if (conditional.matchIfNonEmpty()) {
+                return !propertyContext.searchMapProperties(propertyKey).isEmpty();
+            }
             return conditional.matchIfMissing();
         }
         if (conditional.matchIfNonNull()) {
