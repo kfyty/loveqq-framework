@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotations;
+import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.flatRepeatableAnnotation;
 
 /**
  * 描述: mapper 接口扫描器
@@ -51,13 +53,13 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {
         // 只取启动类注解，减少搜索次数
-        MapperScan mapperScan = AnnotationUtil.findAnnotation(this.applicationContext.getPrimarySource(), MapperScan.class);
-        if (mapperScan != null) {
-            this.loadMapperScan(beanFactory, mapperScan);
+        MapperScan[] mapperScans = flatRepeatableAnnotation(findAnnotations(this.applicationContext.getPrimarySource()), e -> e.annotationType() == MapperScan.class, MapperScan[]::new);
+        for (MapperScan mapperScan : mapperScans) {
+            this.scanMapper(beanFactory, mapperScan);
         }
     }
 
-    protected void loadMapperScan(BeanFactory beanFactory, MapperScan mapperScan) {
+    protected void scanMapper(BeanFactory beanFactory, MapperScan mapperScan) {
         Set<Class<?>> classes = new HashSet<>();
 
         if (CommonUtil.notEmpty(mapperScan.value())) {
@@ -87,8 +89,8 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
     }
 
     protected ConcurrentSqlSession obtainSqlSession(MapperScan mapperScan) {
-        if (CommonUtil.notEmpty(mapperScan.concurrentSqlSession())) {
-            return this.applicationContext.getBean(mapperScan.concurrentSqlSession());
+        if (CommonUtil.notEmpty(mapperScan.sqlSession())) {
+            return this.applicationContext.getBean(mapperScan.sqlSession());
         }
         return this.applicationContext.getBean(ConcurrentSqlSession.class);
     }
