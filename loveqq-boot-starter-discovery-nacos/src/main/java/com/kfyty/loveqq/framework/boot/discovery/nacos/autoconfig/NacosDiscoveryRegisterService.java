@@ -5,12 +5,11 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.utils.NetUtils;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
-import com.kfyty.loveqq.framework.boot.processor.factory.FactoryBeanBeanFactoryPostProcessor;
-import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
-import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
+import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
@@ -27,7 +26,7 @@ import java.util.Map;
  * @date 2024/03/10 10:58
  * @email kfyty725@hotmail.com
  */
-public class NacosDiscoveryRegisterService implements ContextOnRefresh, ApplicationListener<ContextRefreshedEvent> {
+public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, ApplicationListener<ContextRefreshedEvent> {
     /**
      * 应用服务名称
      */
@@ -41,15 +40,9 @@ public class NacosDiscoveryRegisterService implements ContextOnRefresh, Applicat
     private Integer serverPort;
 
     /**
-     * 应用上下文
+     * bean 工厂
      */
-    private ApplicationContext applicationContext;
-
-    /**
-     * {@link com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean} 后置处理器
-     */
-    @Autowired
-    private FactoryBeanBeanFactoryPostProcessor factoryBeanBeanFactoryPostProcessor;
+    private BeanFactory beanFactory;
 
     /**
      * 配置属性
@@ -64,23 +57,22 @@ public class NacosDiscoveryRegisterService implements ContextOnRefresh, Applicat
     private NacosNamingEventListener nacosNamingEventListener;
 
     @Override
-    public void onRefresh(ApplicationContext applicationContext) {
+    public void postProcessBeanFactory(BeanFactory beanFactory) {
         for (Map.Entry<String, NacosDiscoveryProperties> entry : this.discoveryProperties.getDiscoveries().entrySet()) {
             BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(NamingServiceFactoryBean.class)
                     .setBeanName(entry.getKey())
                     .addConstructorArgs(NacosDiscoveryProperties.class, entry.getValue())
                     .setDestroyMethod("shutDown")
                     .getBeanDefinition();
-            applicationContext.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, false);
-            this.factoryBeanBeanFactoryPostProcessor.postProcessBeanDefinition(beanDefinition, applicationContext);
+            beanFactory.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, false);
         }
-        this.applicationContext = applicationContext;
+        this.beanFactory = beanFactory;
     }
 
     public void registerService() {
         for (Map.Entry<String, NacosDiscoveryProperties> entry : this.discoveryProperties.getDiscoveries().entrySet()) {
             NacosDiscoveryProperties properties = entry.getValue();
-            NamingService namingService = this.applicationContext.getBean(entry.getKey());
+            NamingService namingService = this.beanFactory.getBean(entry.getKey());
             String groupName = properties.getGroupName();
             String clusterName = properties.getClusterName();
             String application = CommonUtil.empty(properties.getService()) ? this.applicationName : properties.getService();

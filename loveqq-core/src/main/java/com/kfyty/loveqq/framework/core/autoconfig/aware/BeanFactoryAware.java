@@ -10,5 +10,10 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
  * @email kfyty725@hotmail.com
  */
 public interface BeanFactoryAware {
+    /**
+     * 设置 bean 工厂
+     *
+     * @param beanFactory bean 工厂
+     */
     void setBeanFactory(BeanFactory beanFactory);
 }
