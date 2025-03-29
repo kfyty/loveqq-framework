@@ -26,11 +26,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition.isIgnoredAutowired;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
+import static java.util.Objects.requireNonNull;
 
 /**
  * 功能描述: Autowired 注解处理器
@@ -43,7 +43,7 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation
 @Slf4j
 @Order(Integer.MIN_VALUE)
 @Component(AutowiredCapableSupport.BEAN_NAME)
-public class AutowiredCapableBeanPostProcessor implements ApplicationContextAware, AutowiredCapableSupport, InternalPriority {
+public class DefaultAutowiredCapableSupport implements ApplicationContextAware, AutowiredCapableSupport, InternalPriority {
     /**
      * 应用上下文
      */
@@ -56,32 +56,32 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
-        this.onApplicationContext(this.applicationContext = applicationContext);
-    }
-
-    @Override
-    public void autowiredBean(String beanName, Object bean) {
-        Object target = AopUtil.getTarget(bean);
-        BeanDefinition beanDefinition = beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);
-        this.resolveCycleAutowired(bean);
-        this.resolvePropertyAutowired(beanName, beanDefinition, target, bean);
-        this.resolveBeanAutowired(beanName, beanDefinition, target, bean);
-    }
-
-    protected void onApplicationContext(ApplicationContext applicationContext) {
-        AutowiredDescriptionResolver resolver = Objects.requireNonNull(applicationContext.getBean(AutowiredDescriptionResolver.class), "The bean doesn't exists of type: " + AutowiredDescriptionResolver.class);
+        this.applicationContext = applicationContext;
+        AutowiredDescriptionResolver resolver = applicationContext.getBean(AutowiredDescriptionResolver.class);
+        if (resolver == null) {
+            throw new IllegalStateException("The bean doesn't exists of type: " + AutowiredDescriptionResolver.class);
+        }
         if (this.autowiredProcessor == null) {
             this.autowiredProcessor = new AutowiredProcessor(applicationContext, resolver);
         }
         this.autowiredBean(null, applicationContext);
     }
 
-    protected void resolveCycleAutowired(Object bean) {
+    @Override
+    public void autowiredBean(String beanName, Object bean) {
+        Object target = AopUtil.getTarget(bean);
+        BeanDefinition beanDefinition = this.preprocess(beanName, bean);
+        this.resolvePropertyAutowired(beanName, beanDefinition, target, bean);
+        this.resolveBeanPropertyAutowired(beanName, beanDefinition, target, bean);
+    }
+
+    protected BeanDefinition preprocess(String beanName, Object bean) {
         if (this.autowiredProcessor == null) {
             if (bean instanceof AutowiredDescriptionResolver) {
                 this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
             }
         }
+        return beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);
     }
 
     protected void resolvePropertyAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
@@ -90,30 +90,32 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
         }
         Class<?> targetClass = target.getClass();
         for (PropertyValue propertyValue : beanDefinition.getPropertyValues()) {
-            Field field = ReflectUtil.getField(targetClass, Objects.requireNonNull(propertyValue.getName(), "The name field is required"));
-            Objects.requireNonNull(field, CommonUtil.format("The field of name: {} doesn't exists", propertyValue.getName()));
+            Field field = ReflectUtil.getField(targetClass, propertyValue.getName());
+            if (field == null) {
+                throw new IllegalArgumentException(CommonUtil.format("The field of name: {} doesn't exists", propertyValue.getName()));
+            }
 
             // 属性值
-            Object autowired = null;
+            Object autowiredValue = null;
             if (propertyValue.isPropertyValue()) {
-                autowired = propertyValue.getValue();
+                autowiredValue = propertyValue.getValue();
             }
             // 属性引用
             else {
-                Objects.requireNonNull(propertyValue.getReference(), "The reference field is required");
-                Objects.requireNonNull(propertyValue.getReferenceType(), "The referenceType field is required");
-                autowired = this.autowiredProcessor.doResolveBean(SimpleGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
+                requireNonNull(propertyValue.getReference(), "The reference field is required");
+                requireNonNull(propertyValue.getReferenceType(), "The referenceType field is required");
+                autowiredValue = this.autowiredProcessor.doResolveBean(SimpleGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
             }
-            if (autowired != null) {
-                ReflectUtil.setFieldValue(target, field, autowired);
+            if (autowiredValue != null) {
+                ReflectUtil.setFieldValue(target, field, autowiredValue);
                 if (target != exposedBean && AopUtil.isClassProxy(exposedBean)) {
-                    ReflectUtil.setFieldValue(exposedBean, field, autowired);
+                    ReflectUtil.setFieldValue(exposedBean, field, autowiredValue);
                 }
             }
         }
     }
 
-    protected void resolveBeanAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
+    protected void resolveBeanPropertyAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
         if (beanName != null && isIgnoredAutowired(beanDefinition)) {
             return;
         }
@@ -123,8 +125,11 @@ public class AutowiredCapableBeanPostProcessor implements ApplicationContextAwar
     }
 
     protected void resolveFieldAutowired(Class<?> clazz, Object bean, Object exposedBean) {
+        // 如果注入的字段的类型，和当前 bean 中的 @Bean 方法返回值类型相同，则最后注入
         List<Pair<Field, AutowiredDescription>> laziedFields = new LinkedList<>();
         Collection<Method> beanMethods = Arrays.stream(ReflectUtil.getMethods(clazz)).filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
+
+        // 开始字段注入
         for (Field field : ReflectUtil.getFields(clazz)) {
             AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(field);
             if (description == null) {

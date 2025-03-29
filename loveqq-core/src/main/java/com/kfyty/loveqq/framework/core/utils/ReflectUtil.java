@@ -382,7 +382,7 @@ public abstract class ReflectUtil {
     public static Field getField(Class<?> clazz, String fieldName) {
         Field[] fields = getFields(clazz);
         for (Field field : fields) {
-            if (fieldName.equals(field.getName())) {
+            if (field.getName().equals(fieldName)) {
                 return field;
             }
         }
@@ -391,7 +391,7 @@ public abstract class ReflectUtil {
 
     public static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         for (Method method : getMethods(clazz)) {
-            if (methodName.equals(method.getName()) && (parameterTypes == null || Arrays.equals(parameterTypes, method.getParameterTypes()))) {
+            if (method.getName().equals(methodName) && (parameterTypes == null || Arrays.equals(parameterTypes, method.getParameterTypes()))) {
                 return method;
             }
         }

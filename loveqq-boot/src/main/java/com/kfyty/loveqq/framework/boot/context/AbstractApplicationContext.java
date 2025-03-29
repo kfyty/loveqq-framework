@@ -12,10 +12,12 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.SerializableInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionBeanDefinitionRegistry;
+import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
@@ -43,9 +45,21 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
      */
     protected final Thread shutdownHook = new Thread(this::close, "LoveqqFrameworkShutdownHook");
 
+    /**
+     * 属性上下文
+     */
+    @Autowired
+    protected GenericPropertiesContext propertiesContext;
+
+    /**
+     * 默认线程池
+     */
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
     protected ExecutorService executorService;
 
+    /**
+     * 事件订阅发布器
+     */
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 
@@ -115,6 +129,9 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     protected void invokeAwareMethod(String beanName, Object bean) {
         super.invokeAwareMethod(beanName, bean);
+        if (bean instanceof PropertyContextContextAware) {
+            ((PropertyContextContextAware) bean).setPropertyContext(this.propertiesContext);
+        }
         if (bean instanceof ApplicationContextAware) {
             ((ApplicationContextAware) bean).setApplicationContext(this);
         }

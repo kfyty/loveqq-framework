@@ -10,5 +10,10 @@ import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext
  * @email kfyty725@hotmail.com
  */
 public interface ConfigurableApplicationContextAware {
+    /**
+     * 设置可配置的应用上下文
+     *
+     * @param applicationContext 应用上下文
+     */
     void setConfigurableApplicationContext(ConfigurableApplicationContext applicationContext);
 }
