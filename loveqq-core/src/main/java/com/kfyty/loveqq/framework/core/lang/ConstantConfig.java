@@ -85,7 +85,12 @@ public interface ConstantConfig {
     String LOCATION_KEY = "k.config.location";
 
     /**
-     * 是否加载系统属性到属性配置的配置 key
+     * 是否加载系统属性到属性配置的配置 key，布尔类型
+     * 系统属性的配置会直接覆盖配置文件的配置
+     * 只有 -D 命令行参数形式有效
+     *
+     * @see System#getenv()
+     * @see System#getProperties()
      */
     String LOAD_SYSTEM_PROPERTY_KEY = "k.config.load-system-property";
 }

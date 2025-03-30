@@ -27,8 +27,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.IMPORT_KEY;
 import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.classLoader;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
 import static com.kfyty.loveqq.framework.core.utils.PropertiesUtil.include;
@@ -103,30 +105,26 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void loadProperties() {
-        this.getConfigs().forEach(this::loadProperties);
+        for (String config : this.configs) {
+            this.loadProperties(config);
+        }
         Mapping.from(this.getProperty(ConstantConfig.LAZY_INIT_KEY)).whenNotNull(e -> System.setProperty(ConstantConfig.LAZY_INIT_KEY, e));
         Mapping.from(this.getProperty(ConstantConfig.CONCURRENT_INIT_KEY)).whenNotNull(e -> System.setProperty(ConstantConfig.CONCURRENT_INIT_KEY, e));
-        Mapping.from(this.getProperty(ConstantConfig.LOAD_SYSTEM_PROPERTY_KEY, Boolean.class))
-                .when(load -> load != null && load, e -> {
-                    System.getenv().forEach((k, v) -> this.setProperty(k, v, false));
-                    System.getProperties().forEach((k, v) -> this.setProperty(k.toString(), v.toString(), false));
-                });
     }
 
     @Override
     public void loadProperties(String path) {
         // 这里前置将已有数据加入是为了解析占位符
+        // 这里加载的配置不应覆盖已有的配置，所以直接覆盖
+        final Consumer<Properties> before = p -> this.propertySources.entrySet().stream().filter(e -> !e.getKey().startsWith(IMPORT_KEY)).forEach(e -> p.put(e.getKey(), e.getValue()));
         PropertiesUtil.load(
                 path,
                 classLoader(this.getClass()),
-                p -> this.propertySources.entrySet()
-                        .stream()
-                        .filter(e -> !ConstantConfig.IMPORT_KEY.equals(e.getKey()))
-                        .forEach(e -> p.putIfAbsent(e.getKey(), e.getValue())),
+                before,
                 (p, c) -> {
-                    include(p, c);
+                    include(p, c, before);
                     for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                        this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());
+                        this.propertySources.putIfAbsent(entry.getKey().toString(), entry.getValue().toString());       // 加载的配置，不应覆盖已有的配置
                     }
                 }
         );
@@ -213,11 +211,18 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public void afterPropertiesSet() {
-        this.propertySources.putAll(loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--"));
+        // 添加默认读取的配置
         this.addConfig(DEFAULT_YML_LOCATION);
         this.addConfig(DEFAULT_YAML_LOCATION);
         this.addConfig(DEFAULT_PROPERTIES_LOCATION);
-        this.addLocationProperties(Mapping.from(this.getProperty(ConstantConfig.LOCATION_KEY)).notEmptyMap(e -> CommonUtil.split(e, ",", true)).get());
+
+        // 读取系统属性
+        final Map<String, String> properties = this.loadSystemProperties();
+
+        // 添加外部本地磁盘配置
+        this.addLocationProperties(properties, Mapping.from(this.getProperty(ConstantConfig.LOCATION_KEY)).notEmptyMap(e -> CommonUtil.split(e, ",", true)).get());
+
+        // 读取添加的配置
         this.loadProperties();
     }
 
@@ -241,18 +246,34 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
         this.propertySources.clear();
     }
 
-    protected void addLocationProperties(Collection<String> locationKeys) {
+    protected Map<String, String> loadSystemProperties() {
+        // 命令行变量
+        Map<String, String> properties = loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--");
+
+        // 系统属性
+        if (Boolean.parseBoolean(System.getProperty(ConstantConfig.LOAD_SYSTEM_PROPERTY_KEY))) {
+            properties.putAll((Map) System.getProperties());
+            properties.putAll(System.getenv());
+        }
+
+        this.propertySources.putAll(properties);
+
+        return properties;
+    }
+
+    protected void addLocationProperties(Map<String, String> systemProperties, Collection<String> locationKeys) {
         if (locationKeys == null || locationKeys.isEmpty()) {
             return;
         }
+        final Consumer<Properties> before = p -> p.putAll(systemProperties);
         for (String locationKey : locationKeys) {
             this.addConfig(locationKey);
             Mapping.from(PathUtil.getPath(locationKey))
                     .notNullMap(FileListener::new)
                     .then(e -> e.onModify((path, event) -> {
-                        Properties loaded = load(locationKey, classLoader(this.getClass()));
+                        Properties loaded = load(locationKey, classLoader(this.getClass()), before, (p, c) -> include(p, c, before));
                         loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));
-                        applicationContext.publishEvent(new PropertyConfigRefreshedEvent(applicationContext));
+                        this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
                     }))
                     .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).registry().start())
                     .then(this.fileListeners::add);

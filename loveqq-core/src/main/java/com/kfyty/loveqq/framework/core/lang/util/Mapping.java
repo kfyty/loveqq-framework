@@ -78,6 +78,32 @@ public class Mapping<T> implements Cloneable, Serializable {
     /**
      * 获取当前值
      *
+     * @param throwable 异常
+     * @return value
+     */
+    public <EX extends Throwable> T getThrow(EX throwable) throws EX {
+        if (this.value == null) {
+            throw throwable;
+        }
+        return this.value;
+    }
+
+    /**
+     * 获取当前值
+     *
+     * @param throwable 异常
+     * @return value
+     */
+    public <EX extends Throwable> T getThrow(Supplier<EX> throwable) throws EX {
+        if (this.value == null) {
+            throw throwable.get();
+        }
+        return this.value;
+    }
+
+    /**
+     * 获取当前值
+     *
      * @param parameter           参数
      * @param defaultValueMapping 默认值映射
      * @return value
@@ -116,7 +142,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      */
     @SuppressWarnings("unchecked")
     public <B> Mapping<B> back(Class<B> backType) {
-        return (Mapping<B>) (this.prev == null ? this : this.prev);
+        return (Mapping<B>) this.prev;
     }
 
     /**
@@ -259,7 +285,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      *
      * @return {@link Optional}
      */
-    public Optional<T> tOptional() {
+    public Optional<T> optional() {
         return Optional.ofNullable(this.value);
     }
 
@@ -303,6 +329,12 @@ public class Mapping<T> implements Cloneable, Serializable {
         if (value == null) {
             return (Mapping<T>) NULLABLE;
         }
+        if (value instanceof Mapping<?>) {
+            return from((T) ((Mapping<?>) value).get());
+        }
+        if (value instanceof Optional<?>) {
+            return from((T) ((Optional<?>) value).orElse(null));
+        }
         return new Mapping<>(value);
     }
 
@@ -313,7 +345,14 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param prev  前一个值
      * @return {@link Mapping}
      */
+    @SuppressWarnings("unchecked")
     public static <T> Mapping<T> from(T value, Mapping<?> prev) {
+        if (value instanceof Mapping<?>) {
+            return from((T) ((Mapping<?>) value).get(), prev);
+        }
+        if (value instanceof Optional<?>) {
+            return from((T) ((Optional<?>) value).orElse(null), prev);
+        }
         return new Mapping<>(value, prev);
     }
 }
