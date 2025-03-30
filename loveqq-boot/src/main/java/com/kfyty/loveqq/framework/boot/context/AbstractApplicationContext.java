@@ -122,6 +122,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     public void close() {
         super.close();
+        this.propertiesContext = null;
         this.executorService = null;
         this.applicationEventPublisher = null;
     }

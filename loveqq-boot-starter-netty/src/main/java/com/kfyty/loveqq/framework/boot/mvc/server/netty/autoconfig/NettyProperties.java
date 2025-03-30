@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import reactor.netty.http.HttpProtocol;
+import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.tcp.SslProvider;
 
@@ -32,6 +33,11 @@ public class NettyProperties extends WebServerProperties {
      * select 线程数
      */
     private Integer selectThreads = 1;
+
+    /**
+     * 是否启用 {@link HttpClient}
+     */
+    private Boolean enableClient;
 
     /**
      * 是否启用压缩
