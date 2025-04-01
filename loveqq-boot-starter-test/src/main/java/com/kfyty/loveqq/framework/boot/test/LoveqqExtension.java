@@ -3,13 +3,14 @@ package com.kfyty.loveqq.framework.boot.test;
 import com.kfyty.loveqq.framework.boot.context.DefaultConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.boot.test.annotation.LoveqqTest;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
-import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstanceFactory;
 import org.junit.jupiter.api.extension.TestInstanceFactoryContext;
 import org.junit.jupiter.api.extension.TestInstantiationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -22,6 +23,11 @@ import java.util.Arrays;
  */
 public class LoveqqExtension extends DefaultConfigurableApplicationContext implements BeforeAllCallback, AfterAllCallback, TestInstanceFactory {
     /**
+     * log
+     */
+    protected Logger log;
+
+    /**
      * 测试注解
      */
     protected LoveqqTest annotation;
@@ -29,9 +35,10 @@ public class LoveqqExtension extends DefaultConfigurableApplicationContext imple
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         Class<?> testClass = context.getRequiredTestClass();
-        LoveqqTest annotation = testClass.getAnnotation(LoveqqTest.class);
-        Class<?> primarySource = annotation.value() == Object.class ? testClass : annotation.value();
-        this.refreshApplicationContext(primarySource, annotation);
+        this.log = LoggerFactory.getLogger(testClass);
+        this.annotation = testClass.getAnnotation(LoveqqTest.class);
+        Class<?> primarySource = this.annotation.value() == Object.class ? testClass : this.annotation.value();
+        this.refreshApplicationContext(testClass, primarySource);
     }
 
     @Override
@@ -46,19 +53,25 @@ public class LoveqqExtension extends DefaultConfigurableApplicationContext imple
     }
 
     @Override
-    public void onRefresh() {
-        PropertyContext propertyContext = this.getBean(PropertyContext.class);
+    protected void invokeBeanFactoryPostProcessor() {
         for (String property : this.annotation.properties()) {
-            propertyContext.addConfig(property);
-            propertyContext.loadProperties(property);
+            this.propertiesContext.addConfig(property);
+            this.propertiesContext.loadProperties(property);
         }
+        super.invokeBeanFactoryPostProcessor();
     }
 
-    protected void refreshApplicationContext(Class<?> primarySource, LoveqqTest annotation) {
-        this.annotation = annotation;
+    protected void refreshApplicationContext(Class<?> testClass, Class<?> primarySource) {
         this.setPrimarySource(primarySource);
-        this.setCommandLineArgs(annotation.args());
-        this.addScannedClasses(Arrays.asList(annotation.classes()));
+        this.setCommandLineArgs(this.annotation.args());
+        this.addSources(Arrays.asList(this.annotation.classes()));
+
+        this.log.info("Test Boot loading...");
+
+        long start = System.currentTimeMillis();
+
         this.refresh();
+
+        this.log.info("Test Boot loaded succeed in {} seconds", (System.currentTimeMillis() - start) / 1000D);
     }
 }

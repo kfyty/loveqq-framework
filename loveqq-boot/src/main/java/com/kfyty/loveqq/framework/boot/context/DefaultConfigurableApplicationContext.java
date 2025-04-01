@@ -36,23 +36,50 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @email kfyty725@hotmail.com
  */
 public class DefaultConfigurableApplicationContext extends AbstractApplicationContext implements ConfigurableApplicationContext {
+    /**
+     * 命令行
+     */
     protected String[] commanderArgs;
 
+    /**
+     * 启动类资源
+     */
     protected Class<?> primarySource;
 
+    /**
+     * 路径匹配器
+     */
     protected PatternMatcher patternMatcher;
 
+    /**
+     * 自定义配置资源
+     */
+    protected List<Object> sources;
+
+    /**
+     * 已扫描的 class
+     */
     protected Set<Class<?>> scannedClasses;
 
+    /**
+     * 包含组件过滤器
+     */
     protected List<ComponentFilterDescription> includeFilters;
 
+    /**
+     * 排除组件过滤器
+     */
     protected List<ComponentFilterDescription> excludeFilters;
 
+    /**
+     * 组件匹配器
+     */
     protected List<ComponentMatcher> componentMatchers;
 
     public DefaultConfigurableApplicationContext() {
         super();
         this.patternMatcher = new AntPathMatcher();
+        this.sources = new LinkedList<>();
         this.scannedClasses = new HashSet<>();
         this.includeFilters = new LinkedList<>();
         this.excludeFilters = new LinkedList<>();
@@ -72,6 +99,11 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     public PatternMatcher getPatternMatcher() {
         return this.patternMatcher;
+    }
+
+    @Override
+    public List<Object> getSources() {
+        return this.sources;
     }
 
     @Override
@@ -110,23 +142,27 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
+    public void addSource(Object clazz) {
+        this.sources.add(clazz);
+    }
+
+    @Override
+    public void addSources(Collection<Object> classes) {
+        this.sources.addAll(classes);
+    }
+
+    @Override
     public void addScannedClass(Class<?> clazz) {
         this.scannedClasses.add(clazz);
     }
 
     @Override
-    public void addScannedClasses(Collection<Class<?>> classes) {
-        this.scannedClasses.addAll(classes);
-    }
-
-    @Override
-    public void addIncludeFilter(ComponentFilterDescription componentFilter) {
-        this.includeFilters.add(componentFilter);
-    }
-
-    @Override
-    public void addExcludeFilter(ComponentFilterDescription componentFilter) {
-        this.excludeFilters.add(componentFilter);
+    public void addComponentFilter(ComponentFilterDescription componentFilter) {
+        if (componentFilter.isInclude()) {
+            this.includeFilters.add(componentFilter);
+        } else {
+            this.excludeFilters.add(componentFilter);
+        }
     }
 
     @Override
@@ -152,8 +188,10 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     public void close() {
         super.close();
-
-        // 这里的资源不再清理，否则重新刷新时会丢失自定义的配置
+        this.scannedClasses.clear();
+        this.includeFilters.clear();
+        this.excludeFilters.clear();
+        this.componentMatchers.clear();
     }
 
     @Override
