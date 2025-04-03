@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.proxy;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.meta.This;
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Data;
@@ -82,7 +83,10 @@ public class MethodProxy {
         if (annotation == null) {
             return false;
         }
-        return !annotation.instrument() || (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class);
+        if (this.getClass().getClassLoader() instanceof JarIndexClassLoader) {
+            return !annotation.instrument() || (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class);
+        }
+        return true;
     }
 
     /**
