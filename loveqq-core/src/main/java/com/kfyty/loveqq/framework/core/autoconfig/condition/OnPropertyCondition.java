@@ -23,16 +23,17 @@ public class OnPropertyCondition implements Condition {
         ConditionalOnProperty conditional = (ConditionalOnProperty) metadata.get();
         PropertyContext propertyContext = context.getBeanFactory().getBean(PropertyContext.class);
         String propertyKey = this.obtainPropertyKey(conditional);
-        if (!propertyContext.contains(propertyKey)) {
+        String propertyValue = propertyContext.getProperty(propertyKey);
+        if (propertyValue == null || propertyValue.isEmpty()) {
             if (conditional.matchIfNonEmpty()) {
                 return !propertyContext.searchMapProperties(propertyKey).isEmpty();
             }
             return conditional.matchIfMissing();
         }
         if (conditional.matchIfNonNull()) {
-            return CommonUtil.notEmpty(propertyContext.getProperty(propertyKey));
+            return CommonUtil.notEmpty(propertyValue);
         }
-        return Objects.equals(propertyContext.getProperty(propertyKey), conditional.havingValue());
+        return Objects.equals(propertyValue, conditional.havingValue());
     }
 
     protected String obtainPropertyKey(ConditionalOnProperty conditional) {
