@@ -15,7 +15,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.formatURI;
@@ -30,10 +29,6 @@ import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.Stra
  */
 @Slf4j
 public class RequestMappingAnnotationHandler implements RequestMappingHandler {
-    /**
-     * 验证是否是 restful 风格 url 的正则表达式
-     */
-    public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
 
     public List<MethodMapping> resolveRequestMapping(Class<?> controllerClass, Lazy<Object> controller) {
         String superUrl = CommonUtil.EMPTY_STRING;

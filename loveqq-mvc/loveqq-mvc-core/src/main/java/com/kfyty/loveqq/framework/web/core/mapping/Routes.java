@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * 描述: 请求方法映射信息
@@ -16,6 +17,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Data
 public class Routes {
+    /**
+     * {} 正则
+     */
+    public static final Pattern SIMPLE_BRACE_PATTERN = Pattern.compile("[{}]");
+
+    /**
+     * / 正则
+     */
+    public static final Pattern SLASH_PATTERN = Pattern.compile("[/]");
+
+    /**
+     * {*} 正则
+     */
+    public static final Pattern BRACE_PATTERN = Pattern.compile("\\{.*}");
+
+    /**
+     * 验证是否是 restful 风格 url 的正则表达式
+     */
+    public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
+
     /**
      * 空路由
      */
