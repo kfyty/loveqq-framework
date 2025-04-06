@@ -114,8 +114,8 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
      * @return 路由
      */
     protected MethodMapping preciseMatch(RequestMethod method, String requestURI) {
-        List<String> paths = CommonUtil.split(requestURI, "[/]");
-        Map<String, MethodMapping> mappingMap = this.getRoutes(method).getIndexMapping().get(paths.size());
+        String[] paths = Routes.SLASH_PATTERN.split(requestURI, 0);
+        Map<String, MethodMapping> mappingMap = this.getRoutes(method).getIndexMapping().get(paths.length);
         if (CommonUtil.empty(mappingMap)) {
             return null;
         }
@@ -134,7 +134,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
         Routes routes = this.getRoutes(method);
         for (Map<String, MethodMapping> mappingMap : routes.getIndexMapping().values()) {
             for (Map.Entry<String, MethodMapping> entry : mappingMap.entrySet()) {
-                String pattern = entry.getValue().isRestful() ? entry.getKey().replaceAll("\\{.*}", "*") : entry.getKey();
+                String pattern = entry.getValue().isRestful() ? Routes.BRACE_PATTERN.matcher(entry.getKey()).replaceAll("*") : entry.getKey();
                 if (this.patternMatcher.matches(pattern, requestURI)) {
                     return entry.getValue();
                 }
@@ -152,18 +152,18 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
      * @param mappingMap 路由集合
      * @return 路由
      */
-    protected MethodMapping restfulMatch(RequestMethod method, String requestURI, List<String> paths, Map<String, MethodMapping> mappingMap) {
+    protected MethodMapping restfulMatch(RequestMethod method, String requestURI, String[] paths, Map<String, MethodMapping> mappingMap) {
         List<MethodMapping> methodMappings = new ArrayList<>();
         for (MethodMapping methodMapping : mappingMap.values()) {
             if (!methodMapping.isRestful()) {
                 continue;
             }
             boolean match = true;
-            for (int i = 0; i < paths.size(); i++) {
+            for (int i = 0, length = paths.length; i < length; i++) {
                 if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(methodMapping.getPaths()[i]).matches()) {
                     continue;
                 }
-                if (!methodMapping.getPaths()[i].equals(paths.get(i))) {
+                if (!methodMapping.getPaths()[i].equals(paths[i])) {
                     match = false;
                     break;
                 }
@@ -172,7 +172,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
                 methodMappings.add(methodMapping);
             }
         }
-        return matchBestRestful(method, requestURI, methodMappings);
+        return this.matchBestRestful(method, requestURI, methodMappings);
     }
 
     /**
@@ -192,7 +192,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
         }
         methodMappings = methodMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulMappingIndex().length)).collect(Collectors.toList());
         if (methodMappings.get(0).getRestfulMappingIndex().length == methodMappings.get(1).getRestfulMappingIndex().length) {
-            throw new IllegalArgumentException(CommonUtil.format("mapping method ambiguous: [RequestMethod: {}, URL:{}] !", method, requestURI));
+            throw new IllegalArgumentException(CommonUtil.format("Request mapping method ambiguous: [RequestMethod: {}, URI:{}] !", method, requestURI));
         }
         return methodMappings.get(0);
     }
