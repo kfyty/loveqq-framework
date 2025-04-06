@@ -1,4 +1,5 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig.DataSourceProperties,\
     com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration,\
     com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration$HikariDataSourceAutoConfig,\
     com.kfyty.loveqq.framework.boot.data.jdbc.autoconfig.DataSourceAutoConfiguration$DruidDataSourceAutoConfig,\
