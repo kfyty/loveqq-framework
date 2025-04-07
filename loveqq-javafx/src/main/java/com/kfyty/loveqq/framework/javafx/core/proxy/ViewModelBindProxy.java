@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.loveqq.framework.javafx.core.BootstrapApplication;
 import com.kfyty.loveqq.framework.javafx.core.LifeCycleController;
+import com.kfyty.loveqq.framework.javafx.core.ViewModelBindAware;
 import com.kfyty.loveqq.framework.javafx.core.binder.ViewPropertyBinder;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WritableValue;
@@ -49,11 +50,14 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        int hashCode = methodProxy.getTarget().hashCode();
-        Object proceed = chain.proceed(methodProxy);
-        int proceedHashCode = methodProxy.getTarget().hashCode();
+        final int hashCode = methodProxy.getTarget().hashCode();
+        final Object proceed = chain.proceed(methodProxy);
+        final int proceedHashCode = methodProxy.getTarget().hashCode();
         if (hashCode != proceedHashCode) {
             this.viewBind(methodProxy);
+        } else if (proceed instanceof ViewModelBindAware viewModelBindAware && viewModelBindAware.isMarkBind()) {
+            this.viewBind(methodProxy);
+            viewModelBindAware.unmarkBind();
         }
         return proceed;
     }
@@ -90,6 +94,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
             if (view instanceof WritableValue<?> writableValue) {
                 if (binder.support(writableValue, view.getClass())) {
                     binder.bind(writableValue, value);
+                    break;
                 }
             }
         }

@@ -49,6 +49,11 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
     protected boolean isInit;
 
     /**
+     * 绑定标记
+     */
+    protected boolean bindMark;
+
+    /**
      * 控制器所属视图
      */
     protected View view;
@@ -250,5 +255,20 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
             Optional.ofNullable(this.window.getOnCloseRequest()).ifPresent(onClose -> onClose.handle(new WindowEvent(this.window, WindowEvent.WINDOW_CLOSE_REQUEST)));
             this.window.close();
         }
+    }
+
+    @Override
+    public boolean isMarkBind() {
+        return this.bindMark;
+    }
+
+    @Override
+    public void markBind() {
+        this.bindMark = true;
+    }
+
+    @Override
+    public void unmarkBind() {
+        this.bindMark = false;
     }
 }
