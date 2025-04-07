@@ -13,7 +13,7 @@ import javafx.stage.WindowEvent;
  * @date 2024/2/21 11:56
  * @email kfyty725@hotmail.com
  */
-public interface LifeCycleController extends LifeCycleBinder {
+public interface LifeCycleController extends LifeCycleBinder, ViewModelBindAware {
     /**
      * @see Window#onShowing
      */
