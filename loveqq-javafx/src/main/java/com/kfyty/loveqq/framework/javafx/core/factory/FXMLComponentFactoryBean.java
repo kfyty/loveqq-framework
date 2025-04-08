@@ -49,7 +49,7 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
 
     @Override
     public Class<?> getBeanType() {
-        return this.fController.main() ? Scene.class : this.fController.window() ? Stage.class : this.fController.componentType();
+        return this.fController.window() ? Stage.class : this.fController.componentType();
     }
 
     @Override
@@ -62,26 +62,24 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
             fxmlLoader.setControllerFactory(this.controllerFactory);
             Parent component = fxmlLoader.load();
 
-            // 绑定视图和控制器的对应关系
+            // 添加配置文件绑定
             component.getProperties().put(component, fxmlLoader);
-            if (fxmlLoader.getController() instanceof AbstractController controller) {
-                controller.setView(component);
-            }
 
             // 添加到事件监听器缓存
             this.eventListenerAdapter.addController(this.controllerBeanName, component, fxmlLoader.getController());
 
-            // 包装组件
-            if (this.getBeanType() == Scene.class) {
-                return this.createScene(component);
-            }
-
-            if (this.getBeanType() != Stage.class) {
+            if (!Stage.class.isAssignableFrom(this.getBeanType())) {
                 return component;
             }
 
             Stage window = new Stage();
             initWindowProperties(window, this.fController);
+
+            // 绑定视图和控制器的对应关系
+            if (fxmlLoader.getController() instanceof AbstractController controller) {
+                controller.setView(component);
+                controller.setWindow(window);
+            }
 
             // 绑定生命周期
             if (fxmlLoader.getController() instanceof LifeCycleController controller) {
@@ -94,7 +92,7 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
                 controller.setWindow(window);
             }
 
-            if (this.fController.show()) {
+            if (this.fController.main() || this.fController.show()) {
                 window.show();
             }
 
