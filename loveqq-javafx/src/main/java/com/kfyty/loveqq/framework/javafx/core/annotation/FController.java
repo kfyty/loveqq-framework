@@ -122,7 +122,7 @@ public @interface FController {
     boolean window() default true;
 
     /**
-     * fxml 是否是主场景，返回 true 时，{@link this#window()} 无效，{@link this#show()} 无效，并包装为 {@link javafx.scene.Scene}
+     * fxml 是否是主场景，返回 true 时，{@link this#show()} 强制为 true
      *
      * @return true if main window
      */

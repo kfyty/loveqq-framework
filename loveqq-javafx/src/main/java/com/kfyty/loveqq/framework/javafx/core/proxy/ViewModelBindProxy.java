@@ -5,10 +5,10 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.javafx.core.AbstractViewModelBindCapableController;
-import com.kfyty.loveqq.framework.javafx.core.BootstrapApplication;
 import com.kfyty.loveqq.framework.javafx.core.LifeCycleController;
 import com.kfyty.loveqq.framework.javafx.core.ViewModelBindAware;
 import com.kfyty.loveqq.framework.javafx.core.binder.ViewPropertyBinder;
@@ -105,7 +105,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
             synchronized (ViewModelBindProxy.class) {
                 if (viewPropertyBinders == null) {
                     viewPropertyBinders = PackageUtil.scanInstance(ViewPropertyBinder.class);
-                    viewPropertyBinders.addAll(BootstrapApplication.getApplicationContext().getBeanOfType(ViewPropertyBinder.class).values());
+                    viewPropertyBinders.addAll(IOC.getApplicationContext().getBeanOfType(ViewPropertyBinder.class).values());
                 }
             }
         }
