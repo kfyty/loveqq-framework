@@ -28,7 +28,7 @@ public @interface FView {
      * 当 {@link this#method()} 返回 false 时，表示获取 text 属性，绑定到 user.name
      * 当 {@link this#method()} 返回 true 时，表示调用 text() 方法，绑定到 user.name
      * <p>
-     * {@link this#method()} 返回 true 时，支持多级方法调用，且必须都是无参方法
+     * {@link this#method()} 返回 true 时，必须都是无参方法
      * <p>
      * <b>最终返回值必须是 {@link javafx.beans.value.ObservableValue} 类型</b>
      *

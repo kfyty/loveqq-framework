@@ -2,3 +2,10 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.javafx.core.autoconfig.JavaFXAutoConfig,\
     com.kfyty.loveqq.framework.javafx.core.event.ViewCloseEventListener,\
     com.kfyty.loveqq.framework.javafx.core.event.FEventListenerAdapter
+
+com.kfyty.loveqq.framework.javafx.core.binder.ViewPropertyBinder=\
+    com.kfyty.loveqq.framework.javafx.core.binder.NumberPropertyViewBinder,\
+    com.kfyty.loveqq.framework.javafx.core.binder.BooleanPropertyViewBinder,\
+    com.kfyty.loveqq.framework.javafx.core.binder.StringPropertyViewBinder,\
+    com.kfyty.loveqq.framework.javafx.core.binder.CollectionPropertyViewBinder,\
+    com.kfyty.loveqq.framework.javafx.core.binder.MapPropertyViewBinder
