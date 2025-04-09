@@ -6,7 +6,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.javafx.core.annotation.FView;
 import com.kfyty.loveqq.framework.javafx.core.proxy.ViewModelBindProxy;
@@ -16,6 +15,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableArray;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
@@ -90,6 +90,9 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
         this.dataBinder = dataBinder.clone();
     }
 
+    /**
+     * 初始化视图模型绑定
+     */
     protected void initViewBind() {
         DataBinder dataBinder = this.getDataBinder();
         Field[] fields = ReflectUtil.getFields(AopUtil.getTargetClass(this));
@@ -104,68 +107,96 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
         }
     }
 
-    protected void initViewBind(Field field, FView view, DataBinder dataBinder) {
-        if (CommonUtil.empty(view.value())) {
-            return;
-        }
-
-        String[] split = view.value().split(":");
+    /**
+     * 初始化视图模型绑定
+     *
+     * @param field      标注 {@link FView} 的字段
+     * @param fview      {@link FView}
+     * @param dataBinder 数据绑定器
+     */
+    protected void initViewBind(Field field, FView fview, DataBinder dataBinder) {
+        String[] split = fview.value().split(":");
         String property = split[0];
         String bindPath = split[1];
         Node viewNode = (Node) ReflectUtil.getFieldValue(this, field);
+        ObservableValue<?> view = ViewModelBindUtil.resolveView(property, viewNode, fview);
 
-        this.initModelBind(property, bindPath, viewNode, view);
-        this.initViewBind(property, bindPath, viewNode, view, dataBinder);
+        this.initModelToViewBind(view, bindPath);
+        this.initViewToModelBind(view, bindPath, dataBinder);
     }
 
-    protected void initModelBind(String property, String bindPath, Node viewNode, FView view) {
+    /**
+     * 初始化模型到视图的绑定
+     *
+     * @param view     可观测的视图
+     * @param bindPath 绑定模型路径
+     */
+    protected void initModelToViewBind(ObservableValue<?> view, String bindPath) {
         // 获取绑定的属性
-        ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
-        Pair<Field, Object> fieldValuePair = ViewModelBindUtil.resolveModel(this, bindPath, view);
-        Field modelProp = fieldValuePair.getKey();
+        Pair<Field, Object> fieldValuePair = ViewModelBindUtil.resolveModel(this, bindPath);
+        Field modelField = fieldValuePair.getKey();
         Object modelValue = fieldValuePair.getValue();
 
         // 空值时初始化一个默认值
         if (modelValue == null) {
-            modelValue = ReflectUtil.newInstance(modelProp.getType());
+            modelValue = ReflectUtil.newInstance(modelField.getType());
         }
 
         // 添加模型绑定代理
-        ViewModelBindProxy proxy = ViewModelBindUtil.bindModelProxy(this, modelProp, modelValue);
-        proxy.addBindView(bindPath, propertyValue);
+        ViewModelBindProxy proxy = ViewModelBindUtil.bindModelProxy(this, modelField, modelValue);
+        proxy.addBindView(bindPath, view);
     }
 
-    protected void initViewBind(String property, String bindPath, Node viewNode, FView view, DataBinder dataBinder) {
-        ObservableValue<?> propertyValue = ViewModelBindUtil.resolveView(property, viewNode, view);
+    /**
+     * 初始化视图到模型的绑定
+     *
+     * @param view       可观测的视图
+     * @param bindPath   绑定模型路径
+     * @param dataBinder 数据绑定器
+     */
+    protected void initViewToModelBind(ObservableValue<?> view, String bindPath, DataBinder dataBinder) {
         ViewBindEventHandler viewBindEventHandler = new ViewBindEventHandler(bindPath, dataBinder, this);
 
-        propertyValue.addListener(viewBindEventHandler);
+        view.addListener(viewBindEventHandler);
 
-        if (propertyValue instanceof ObjectProperty<?> objectProperty) {
+        if (view instanceof ObjectProperty<?> objectProperty) {
             Object value = objectProperty.getValue();
+            if (value instanceof ObservableArray<?>) {
+                throw new UnsupportedOperationException("array bind doesn't support yet: " + bindPath);
+            }
             if (value instanceof ObservableList<?> observableList) {
-                observableList.addListener((ListChangeListener<Object>) c -> viewBindEventHandler.changed(propertyValue, c.getList(), c.getList()));
+                observableList.addListener((ListChangeListener<Object>) c -> viewBindEventHandler.changed(view, c.getList(), c.getList()));
             }
             if (value instanceof ObservableSet<?> observableSet) {
-                observableSet.addListener((SetChangeListener<Object>) c -> viewBindEventHandler.changed(propertyValue, c.getSet(), c.getSet()));
+                observableSet.addListener((SetChangeListener<Object>) c -> viewBindEventHandler.changed(view, c.getSet(), c.getSet()));
             }
             if (value instanceof ObservableMap<?, ?> observableMap) {
-                observableMap.addListener((MapChangeListener<Object, Object>) c -> viewBindEventHandler.changed(propertyValue, c.getMap(), c.getMap()));
+                observableMap.addListener((MapChangeListener<Object, Object>) c -> viewBindEventHandler.changed(view, c.getMap(), c.getMap()));
             }
         }
     }
 
     @RequiredArgsConstructor
     public static class ViewBindEventHandler implements ChangeListener<Object> {
+        /**
+         * 模型绑定路径
+         */
         private final String bindPath;
 
+        /**
+         * 数据绑定器
+         */
         private final DataBinder dataBinder;
 
+        /**
+         * 控制器
+         */
         private final AbstractViewModelBindCapableController controller;
 
         /**
          * Collection/Map 类型是否已初始化
          * 集合类型不做代理，因此直接设置 javafx 集合对象到绑定模型，以实现直接操作集合即可直接操作视图
+         * 所以 Collection/Map 类型的模型只能使用接口，而不是实现类
          */
         private boolean isInit;
 
@@ -181,7 +212,7 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
             try (GenericPropertiesContext context = this.dataBinder.getPropertyContext()) {
                 if (newValue != null) {
                     String virtual = UUID.randomUUID().toString();
-                    context.setProperty(virtual + '.' + bindPath, newValue.toString());
+                    context.setProperty(virtual + '.' + this.bindPath, newValue.toString());
                     this.dataBinder.bind(new Instance(this.controller), virtual);
                 }
             } catch (Throwable e) {

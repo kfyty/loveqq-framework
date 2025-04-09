@@ -1,12 +1,12 @@
 package com.kfyty.loveqq.framework.javafx.core.proxy;
 
+import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChain;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
-import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.javafx.core.AbstractViewModelBindCapableController;
 import com.kfyty.loveqq.framework.javafx.core.LifeCycleController;
@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 描述: 模型绑定代理
@@ -63,7 +64,7 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
     }
 
     public void viewBind(MethodProxy methodProxy) {
-        // 事件过来的不处理
+        // 事件过来的不处理，否则会死循环
         for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
             if (stackTraceElement.getClassName().equals(AbstractViewModelBindCapableController.ViewBindEventHandler.class.getName())) {
                 return;
@@ -94,17 +95,23 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
             if (view instanceof WritableValue<?> writableValue) {
                 if (binder.support(writableValue, view.getClass())) {
                     binder.bind(writableValue, value);
-                    break;
+                    return;
                 }
             }
         }
+        throw new IllegalArgumentException("No suitable binder is available of type: " + view.getClass() + ", " + value.getClass());
     }
 
     protected void obtainViewPropertyBinder() {
         if (viewPropertyBinders == null) {
             synchronized (ViewModelBindProxy.class) {
                 if (viewPropertyBinders == null) {
-                    viewPropertyBinders = PackageUtil.scanInstance(ViewPropertyBinder.class);
+                    viewPropertyBinders = FactoriesLoader.loadFactories(ViewPropertyBinder.class)
+                            .stream()
+                            .map(ReflectUtil::load)
+                            .map(ReflectUtil::newInstance)
+                            .map(e -> (ViewPropertyBinder) e)
+                            .collect(Collectors.toList());
                     viewPropertyBinders.addAll(IOC.getApplicationContext().getBeanOfType(ViewPropertyBinder.class).values());
                 }
             }

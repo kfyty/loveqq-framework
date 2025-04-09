@@ -29,9 +29,9 @@ import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation
  */
 public class ViewModelBindUtil {
     /**
-     * 解析模型
+     * 解析模型，即获取直属控制器的模型属性字段
      */
-    public static Pair<Field, Object> resolveModel(Object controller, String bindPath, FView view) {
+    public static Pair<Field, Object> resolveModel(Object controller, String bindPath) {
         String property = bindPath.split("\\.")[0];
         Field field = ReflectUtil.getField(controller.getClass(), property);
         if (field == null) {
@@ -44,21 +44,22 @@ public class ViewModelBindUtil {
      * 解析视图
      */
     public static ObservableValue<?> resolveView(String property, Node viewNode, FView view) {
-        if (!view.method()) {
-            Field nodeProperty = ReflectUtil.getField(viewNode.getClass(), property);
-            if (nodeProperty == null) {
-                throw new IllegalArgumentException("bind view failed, view doesn't exists: " + property);
-            }
-            return (ObservableValue<?>) ReflectUtil.getFieldValue(viewNode, nodeProperty, false);
-        }
         Object value = viewNode;
         String[] split = property.split("\\.");
-        for (String methodName : split) {
-            Method method = ReflectUtil.getMethod(value.getClass(), methodName);
-            if (method == null) {
-                throw new IllegalArgumentException("bind view failed, view method doesn't exists: " + property);
+        for (String path : split) {
+            if (view.method()) {
+                Method method = ReflectUtil.getMethod(value.getClass(), path);
+                if (method == null) {
+                    throw new IllegalArgumentException("bind view failed, view method doesn't exists: " + property);
+                }
+                value = ReflectUtil.invokeMethod(value, method);
+            } else {
+                Field field = ReflectUtil.getField(value.getClass(), path);
+                if (field == null) {
+                    throw new IllegalArgumentException("bind view failed, view doesn't exists: " + property);
+                }
+                value = ReflectUtil.getFieldValue(viewNode, field, false);
             }
-            value = ReflectUtil.invokeMethod(value, method);
         }
         return (ObservableValue<?>) value;
     }
