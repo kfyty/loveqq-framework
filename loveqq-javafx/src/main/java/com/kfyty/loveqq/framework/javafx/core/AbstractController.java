@@ -147,6 +147,13 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
         // 注册子窗口
         this.registerChild(child);
         controller.setInit(true);
+
+        // 显示窗口
+        FController annotation = AnnotationUtil.findAnnotation(componentController, FController.class);
+        if (annotation.main() || annotation.show()) {
+            controller.show();
+        }
+
         return (T) controller;
     }
 

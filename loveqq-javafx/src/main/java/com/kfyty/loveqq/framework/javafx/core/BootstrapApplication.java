@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.javafx.core.annotation.FController;
 import com.kfyty.loveqq.framework.javafx.core.event.PrimaryStageLoadedEvent;
 import javafx.application.Application;
 import javafx.application.HostServices;
+import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
 
 import java.util.Collection;
@@ -40,6 +41,10 @@ public class BootstrapApplication extends AbstractApplication implements Command
             if (annotation != null && annotation.main()) {
                 Stage root = IOC.getBean(annotation.value());
                 IOC.publishEvent(new PrimaryStageLoadedEvent(primaryStage));
+                if (((FXMLLoader) root.getScene().getRoot().getProperties().get(root.getScene().getRoot())).getController() instanceof AbstractController<?> controller) {
+                    controller.setInit(true);
+                    controller.show();
+                }
                 break;
             }
         }

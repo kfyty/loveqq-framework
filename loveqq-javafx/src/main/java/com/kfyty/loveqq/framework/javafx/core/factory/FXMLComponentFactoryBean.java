@@ -92,10 +92,6 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
                 controller.setWindow(window);
             }
 
-            if (this.fController.main() || this.fController.show()) {
-                window.show();
-            }
-
             return window;
         } catch (IOException e) {
             throw new ResolvableException("failed load FXML component: " + this.path, e);
