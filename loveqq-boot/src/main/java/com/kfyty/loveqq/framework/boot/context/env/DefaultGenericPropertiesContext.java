@@ -33,6 +33,9 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
  */
 @Component
 public class DefaultGenericPropertiesContext extends DefaultPropertiesContext implements GenericPropertiesContext {
+    /**
+     * 数据绑定器
+     */
     protected DataBinder dataBinder;
 
     @Lazy
@@ -77,6 +80,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             if (clazz == null || !Collection.class.isAssignableFrom(clazz) && !Map.class.isAssignableFrom(clazz)) {
                 return (T) this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
             }
+            return this.getProperty(key, (SimpleGeneric) targetType.getNestedFirst());
         }
 
         if (targetType.isMapGeneric()) {

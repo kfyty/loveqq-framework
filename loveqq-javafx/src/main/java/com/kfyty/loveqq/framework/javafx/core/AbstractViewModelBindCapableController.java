@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.javafx.core;
 
+import com.kfyty.loveqq.framework.boot.context.env.DefaultDataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
@@ -77,7 +78,11 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
      * @return {@link DataBinder}
      */
     public DataBinder getDataBinder() {
-        return this.dataBinder.clone();
+        DataBinder binder = this.dataBinder.clone();
+        if (binder instanceof DefaultDataBinder dataBinder) {
+            dataBinder.setIgnoreInvalidFields(true);
+        }
+        return binder;
     }
 
     /**

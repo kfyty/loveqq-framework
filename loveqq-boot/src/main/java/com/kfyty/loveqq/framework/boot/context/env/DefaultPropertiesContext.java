@@ -47,10 +47,19 @@ import static java.util.Collections.unmodifiableMap;
  */
 @Slf4j
 public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
+    /**
+     * 默认配置文件
+     */
     protected static final String DEFAULT_YML_LOCATION = "application.yml";
 
+    /**
+     * 默认配置文件
+     */
     protected static final String DEFAULT_YAML_LOCATION = "application.yaml";
 
+    /**
+     * 默认配置文件
+     */
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
