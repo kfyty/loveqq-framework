@@ -149,6 +149,8 @@ class PropertiesConfig implements InitializingBean {
 
     private com.kfyty.loveqq.framework.core.lang.Value<User> valueUser;
 
+    private com.kfyty.loveqq.framework.core.lang.Value<List<User>> valueListUser;
+
     private com.kfyty.loveqq.framework.core.lang.Value<List<String>> values;
 
     private Pair<Long, String> pair;
@@ -181,6 +183,7 @@ class PropertiesConfig implements InitializingBean {
         Assertions.assertEquals(this.configListMap.get("list").get(0).getId(), "unique_map_list");
         Assertions.assertEquals(this.values.get(), Arrays.asList("1", "2"));
         Assertions.assertEquals(this.valueUser.get().getId(), "id");
+        Assertions.assertEquals(this.valueListUser.get().get(0).getId(), "id");
         Assertions.assertEquals(this.listPair.getValue(), Arrays.asList("1", "2"));
     }
 

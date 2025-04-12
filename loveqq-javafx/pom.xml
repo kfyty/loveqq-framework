@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>loveqq-javafx</artifactId>
-    <version>1.1.1-RC2</version>
+    <version>1.1.1-RC3</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -22,6 +22,13 @@
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-core</artifactId>
             <version>${loveqq.framework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.kfyty</groupId>
+            <artifactId>loveqq-boot</artifactId>
+            <version>1.1.1-RC3</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

@@ -14,6 +14,7 @@ import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -34,6 +35,7 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 @Getter
+@Setter
 @Component
 public class DefaultDataBinder implements DataBinder {
     @Value("${k.config.property.bind.internal.ignore-invalid-fields:false}")
