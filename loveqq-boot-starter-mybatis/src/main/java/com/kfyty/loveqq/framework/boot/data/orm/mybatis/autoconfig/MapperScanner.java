@@ -53,7 +53,7 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {
         // 只取启动类注解，减少搜索次数
-        MapperScan[] mapperScans = flatRepeatableAnnotation(findAnnotations(this.applicationContext.getPrimarySource()), e -> e.annotationType() == MapperScan.class, MapperScan[]::new);
+        MapperScan[] mapperScans = flatRepeatableAnnotation(findAnnotations(this.applicationContext.getPrimarySource()), MapperScan.class);
         for (MapperScan mapperScan : mapperScans) {
             this.scanMapper(beanFactory, mapperScan);
         }

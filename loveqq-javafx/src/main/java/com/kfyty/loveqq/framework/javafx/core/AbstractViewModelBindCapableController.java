@@ -105,7 +105,7 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
             if (field.getDeclaringClass() == Object.class || ReflectUtil.isStaticFinal(field.getModifiers())) {
                 continue;
             }
-            FView[] annotations = flatRepeatableAnnotation(findAnnotations(field), e -> e.annotationType() == FView.class, FView[]::new);
+            FView[] annotations = flatRepeatableAnnotation(findAnnotations(field), FView.class);
             for (FView view : annotations) {
                 this.initViewBind(field, view, dataBinder);
             }

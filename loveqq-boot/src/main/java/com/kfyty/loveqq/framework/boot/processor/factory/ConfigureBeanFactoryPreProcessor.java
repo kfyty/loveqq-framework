@@ -68,7 +68,7 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
     protected void preProcessBeanFactory(ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
         this.prepareScanSources();
-        this.prepareScanBean(Collections.singleton(applicationContext.getPrimarySource().getPackage().getName()));
+        this.prepareScanPrimarySource();
         this.prepareScanAutoConfigFactories();
     }
 
@@ -99,6 +99,15 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
             else {
                 throw new IllegalArgumentException("Not supported source type: " + source);
             }
+        }
+    }
+
+    protected void prepareScanPrimarySource() {
+        Package _package_ = this.applicationContext.getPrimarySource().getPackage();
+        if (_package_ == null || _package_.getName().isEmpty()) {
+            this.processScanBean(this.applicationContext.getPrimarySource(), false);
+        } else {
+            this.prepareScanBean(Collections.singleton(_package_.getName()));
         }
     }
 

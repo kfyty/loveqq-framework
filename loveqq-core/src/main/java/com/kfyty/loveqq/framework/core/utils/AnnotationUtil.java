@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMa
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -76,6 +77,11 @@ public abstract class AnnotationUtil {
 
     public static void setAnnotationValue(Annotation annotation, String annotationField, Object value) {
         getAnnotationValues(annotation).put(annotationField, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Annotation> T[] flatRepeatableAnnotation(Annotation[] annotations, Class<T> clazz) {
+        return flatRepeatableAnnotation(annotations, e -> e.annotationType() == clazz, value -> (T[]) Array.newInstance(clazz, value));
     }
 
     public static <T extends Annotation> T[] flatRepeatableAnnotation(Annotation[] annotations, Predicate<Annotation> test, IntFunction<T[]> supplier) {
