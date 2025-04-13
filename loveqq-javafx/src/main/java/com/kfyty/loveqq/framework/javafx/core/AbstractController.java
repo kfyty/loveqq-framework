@@ -75,6 +75,7 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
 
     /**
      * 父窗口传来的参数上下文
+     * 也可以自行放入上下文参数
      */
     protected volatile Map<String, Object> context;
 
@@ -91,7 +92,7 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
      * @param childWindowControllerClass 子窗口控制类型
      */
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass) {
-        return this.openWindow(childWindowControllerClass, null);
+        return this.openWindow(childWindowControllerClass, (Map<String, Object>) null);
     }
 
     /**
@@ -100,7 +101,19 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
      * @param childWindowControllerClass 子窗口控制类型
      * @param parameters                 子窗口参数
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass, String parameters) {
+        Map parameterMap = CommonUtil.resolveURLParameters(parameters, PARAMETER_PREFIX);
+        return this.openWindow(childWindowControllerClass, (Map<String, Object>) parameterMap);
+    }
+
+    /**
+     * 打开新窗口
+     *
+     * @param childWindowControllerClass 子窗口控制类型
+     * @param parameters                 子窗口参数
+     */
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Class<T> childWindowControllerClass, Map<String, Object> parameters) {
         FController fController = AnnotationUtil.findAnnotation(childWindowControllerClass, FController.class);
         Stage child = IOC.getBean(fController.value());
         return this.openWindow(child, parameters);
@@ -112,7 +125,7 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
      * @param child 窗口
      */
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child) {
-        return this.openWindow(child, null);
+        return this.openWindow(child, (Map<String, Object>) null);
     }
 
     /**
@@ -121,8 +134,20 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
      * @param child     窗口
      * @param parameter url 风格参数
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child, String parameter) {
+        Map parameters = CommonUtil.resolveURLParameters(parameter, PARAMETER_PREFIX);
+        return this.openWindow(child, (Map<String, Object>) parameters);
+    }
+
+    /**
+     * 打开新窗口，并传参到子窗口
+     *
+     * @param child      窗口
+     * @param parameters 参数
+     */
+    @SuppressWarnings("unchecked")
+    public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child, Map<String, Object> parameters) {
         Parent component = child.getScene().getRoot();
         Object componentController = this.getController(component);
         if (!(componentController instanceof AbstractController<?> controller)) {
@@ -136,10 +161,10 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
         }
 
         // 数据绑定
-        DataBinder dataBinder = this.getDataBinder();
-        Map<String, String> parameters = CommonUtil.resolveURLParameters(parameter, PARAMETER_PREFIX);
         if (CommonUtil.notEmpty(parameters)) {
-            parameters.forEach(dataBinder::setProperty);
+            DataBinder dataBinder = this.getDataBinder();
+            parameters.forEach(controller::addParameters);
+            parameters.forEach((k, v) -> dataBinder.setProperty(k, String.valueOf(v)));
             dataBinder.bind(new Instance(controller), PARAMETER_PREFIX);
             ViewModelBindProxy.triggerViewBind(controller);
         }
