@@ -65,6 +65,9 @@ public class LoveqqExtension extends DefaultConfigurableApplicationContext imple
         this.setPrimarySource(primarySource);
         this.setCommandLineArgs(this.annotation.args());
         this.addSources(Arrays.asList(this.annotation.classes()));
+        if (testClass != primarySource) {
+            this.addSource(testClass);
+        }
 
         this.log.info("Test Boot loading...");
 

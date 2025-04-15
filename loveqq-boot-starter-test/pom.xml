@@ -6,11 +6,12 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>loveqq-framework</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
     </parent>
 
     <artifactId>loveqq-boot-starter-test</artifactId>
     <packaging>jar</packaging>
+    <description>loveqq 框架单元测试集成</description>
 
     <dependencies>
         <dependency>
