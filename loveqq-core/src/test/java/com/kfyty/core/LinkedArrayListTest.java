@@ -44,7 +44,7 @@ public class LinkedArrayListTest {
         list.add(1, 2);
         list.add(0, 0);
         Assertions.assertEquals(list, Arrays.asList(0, 1, 2, 3));
-        Assertions.assertArrayEquals(list.toArray(Integer[]::new), new Integer[] {0, 1, 2, 3});
+        Assertions.assertArrayEquals(list.toArray(Integer[]::new), new Integer[]{0, 1, 2, 3});
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream);
@@ -149,6 +149,34 @@ public class LinkedArrayListTest {
     }
 
     @Test
+    public void test56() {
+        List<Integer> list = new LinkedArrayList<>(3);
+        list.add(0);
+        list.add(1);
+        list.addAll(Arrays.asList(2, 3, 4, 5));
+        for (int i = 0; i < list.size(); i++) {
+            Assertions.assertEquals(i, list.get(i));
+        }
+    }
+
+    @Test
+    public void test57() {
+        List<Integer> list = new LinkedArrayList<>(3);
+        list.add(0);
+        list.add(1);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        list.add(9);
+        list.addAll(2, Arrays.asList(2, 3));
+        for (int i = 0; i < list.size(); i++) {
+            Assertions.assertEquals(i, list.get(i));
+        }
+    }
+
+    @Test
     public void test6() {
         int count = 10000;
         Random random = new Random();
@@ -167,12 +195,14 @@ public class LinkedArrayListTest {
                 list2.addAll(index, Collections.singletonList(value));
             }
             Assertions.assertEquals(list2, list1);
+            Assertions.assertArrayEquals(list2.toArray(new Integer[0]), list1.toArray(new Integer[0]));
         }
         for (int i = 0; i < count - 10; i++) {
             int index = random.nextInt(list1.size());
             list1.remove(index);
             list2.remove(index);
             Assertions.assertEquals(list2, list1);
+            Assertions.assertArrayEquals(list2.toArray(new Integer[0]), list1.toArray(new Integer[0]));
         }
         log.info("Correctness testing complete");
     }

@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.RandomAccess;
 
 /**
@@ -84,44 +83,37 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public boolean add(E e) {
-        this.add(size(), e);
+        this.add(this.size, e);
         return true;
     }
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return this.addAll(size(), c);
+        return this.addAll(this.size, c);
     }
 
     @Override
     public E get(int index) {
-        if (index < (this.size >> 2)) {
-            return Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().get(v.getKey())).orElse(null);
-        }
-        return Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().get(v.getKey())).orElse(null);
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        return resolved == null ? null : resolved.getValue().get(resolved.getKey());
     }
 
     @Override
     public E set(int index, E element) {
-        if (index < (this.size >> 2)) {
-            return Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().set(v.getKey(), element)).orElse(null);
-        }
-        return Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().set(v.getKey(), element)).orElse(null);
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        return resolved == null ? null : resolved.getValue().set(resolved.getKey(), element);
     }
 
     @Override
     public void add(int index, E element) {
-        if (index < (this.size >> 2)) {
-            Optional.ofNullable(this.findNode(index)).ifPresent(v -> v.getValue().add(v.getKey(), element));
-        } else {
-            Optional.ofNullable(this.findNodeReverse(index)).ifPresent(v -> v.getValue().add(v.getKey(), element));
-        }
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        resolved.getValue().add(resolved.getKey(), element);
         this.size++;
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
-        Pair<Integer, LinkedArrayNode> target = index < (this.size >> 2) ? this.findNode(index) : this.findNodeReverse(index);
+        Pair<Integer, LinkedArrayNode> target = this.resolveNode(index);
         if (target == null) {
             return false;
         }
@@ -131,9 +123,8 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public E remove(int index) {
-        E remove = index < (this.size >> 2)
-                ? Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().remove(v.getKey())).orElse(null)
-                : Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().remove(v.getKey())).orElse(null);
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        E remove = resolved == null ? null : resolved.getValue().remove(resolved.getKey());
         this.size--;
         return remove;
     }
@@ -192,7 +183,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     public <T> T[] toArray(T[] a) {
         int index = 0;
         LinkedArrayNode node = this.head;
-        T[] retValue = a.length >= this.size() ? a : (T[]) Array.newInstance(a.getClass().getComponentType(), size);
+        T[] retValue = a.length >= this.size ? a : (T[]) Array.newInstance(a.getClass().getComponentType(), this.size);
         while (node != null) {
             System.arraycopy(node.element, 0, retValue, index, node.nodeSize);
             index += node.nodeSize;
@@ -222,6 +213,10 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             }
         }
         return !(self.hasNext() || other.hasNext());
+    }
+
+    private Pair<Integer, LinkedArrayNode> resolveNode(int index) {
+        return index < (this.size >> 2) ? this.findNode(index) : this.findNodeReverse(index);
     }
 
     private Pair<Integer, LinkedArrayNode> findNode(int index) {
@@ -474,6 +469,9 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
             // 剩下的顺序插入，这里更新一下 size，不然范围检查报错
             LinkedArrayList.this.size += array.length - (toMove.length - toCopy);
+            if (node.next == null) {
+                LinkedArrayList.this.tail = node;
+            }
             for (int j = toCopy, k = 0; j < toMove.length; j++, k++) {
                 node.add(node.nodeSize + k, (E) toMove[j]);
                 LinkedArrayList.this.size++;

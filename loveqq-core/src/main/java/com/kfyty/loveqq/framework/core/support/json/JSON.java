@@ -28,6 +28,9 @@ import java.util.function.Function;
  */
 @RequiredArgsConstructor
 public class JSON extends AbstractMap<String, Object> implements JSONAware {
+    /**
+     * 包装
+     */
     private final Map<String, Object> decorate;
 
     public JSON() {
@@ -41,37 +44,67 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     public Boolean getBoolean(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Boolean ? (Boolean) o : Boolean.parseBoolean(o.toString());
+        if (o == null || o instanceof Boolean) {
+            return (Boolean) o;
+        }
+        return Boolean.parseBoolean(o.toString());
+    }
+
+    public Character getChar(String key) {
+        Object o = this.decorate.get(key);
+        if (o == null || o instanceof Character) {
+            return (Character) o;
+        }
+        String str = o.toString();
+        return str.isEmpty() ? null : str.charAt(0);
     }
 
     public Byte getByte(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Byte ? (Byte) o : Byte.parseByte(o.toString());
+        if (o == null || o instanceof Byte) {
+            return (Byte) o;
+        }
+        return Byte.parseByte(o.toString());
     }
 
     public Short getShort(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Short ? (Short) o : Short.parseShort(o.toString());
+        if (o == null || o instanceof Short) {
+            return (Short) o;
+        }
+        return Short.parseShort(o.toString());
     }
 
     public Integer getInteger(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Integer ? (Integer) o : Integer.parseInt(o.toString());
+        if (o == null || o instanceof Integer) {
+            return (Integer) o;
+        }
+        return Integer.parseInt(o.toString());
     }
 
     public Long getLong(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Long ? (Long) o : Long.parseLong(o.toString());
+        if (o == null || o instanceof Long) {
+            return (Long) o;
+        }
+        return Long.parseLong(o.toString());
     }
 
     public Float getFloat(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Float ? (Float) o : Float.parseFloat(o.toString());
+        if (o == null || o instanceof Float) {
+            return (Float) o;
+        }
+        return Float.parseFloat(o.toString());
     }
 
     public Double getDouble(String key) {
         Object o = this.decorate.get(key);
-        return o == null || o instanceof Double ? (Double) o : Double.parseDouble(o.toString());
+        if (o == null || o instanceof Double) {
+            return (Double) o;
+        }
+        return Double.parseDouble(o.toString());
     }
 
     public BigInteger getBigInteger(String key) {
@@ -99,15 +132,21 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
         if (o == null || o instanceof LocalDateTime) {
             return (LocalDateTime) o;
         }
-        return new StringToLocalDateTimeConverter().apply(o.toString());
+        return StringToLocalDateTimeConverter.INSTANCE.apply(o.toString());
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getObject(String key, Class<T> clazz) {
-        return JsonUtil.toObject(this.getString(key), clazz);
+        Object o = this.decorate.get(key);
+        if (o == null || clazz.isInstance(o)) {
+            return (T) o;
+        }
+        return JsonUtil.toObject(o.toString(), clazz);
     }
 
     public <T> T getObject(String key, Type type) {
-        return JsonUtil.toObject(this.getString(key), type);
+        Object o = this.decorate.get(key);
+        return o == null ? null : JsonUtil.toObject(o.toString(), type);
     }
 
     public JSON getJSON(String key) {
