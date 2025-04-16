@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * 描述:
@@ -31,6 +32,36 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class LinkedArrayListTest {
+
+    @Test
+    public void streamTest1() {
+        List<Integer> list = new LinkedArrayList<>(3);
+        list.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        List<Integer> collect1 = list.stream().map(e -> e * 2).collect(Collectors.toList());
+        List<Integer> collect2 = list.parallelStream().map(e -> e * 2).sorted().collect(Collectors.toList());
+        Assertions.assertEquals(collect1, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+        Assertions.assertEquals(collect2, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+    }
+
+    @Test
+    public void streamTest2() {
+        List<Integer> list = new LinkedArrayList<>();
+        list.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        List<Integer> collect1 = list.stream().map(e -> e * 2).collect(Collectors.toList());
+        List<Integer> collect2 = list.parallelStream().map(e -> e * 2).sorted().collect(Collectors.toList());
+        Assertions.assertEquals(collect1, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+        Assertions.assertEquals(collect2, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+    }
+
+    @Test
+    public void streamTest3() {
+        List<Integer> list = new LinkedArrayList<>(1);
+        list.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        List<Integer> collect1 = list.stream().map(e -> e * 2).collect(Collectors.toList());
+        List<Integer> collect2 = list.parallelStream().map(e -> e * 2).sorted().collect(Collectors.toList());
+        Assertions.assertEquals(collect1, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+        Assertions.assertEquals(collect2, Arrays.asList(2, 4, 6, 8, 10, 12, 14, 16, 18, 20));
+    }
 
     @Test
     @SneakyThrows

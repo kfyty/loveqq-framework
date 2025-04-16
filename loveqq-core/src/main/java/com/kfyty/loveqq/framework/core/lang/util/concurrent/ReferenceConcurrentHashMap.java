@@ -62,7 +62,7 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
         this.target = new ConcurrentHashMap<>(initialCapacity, loadFactor);
         this.referenceType = referenceType;
         this.referenceQueue = new ReferenceQueue<>();
-        ReferenceManager.INSTANCE.registry(this.referenceQueue, this);
+        ReferenceManager.INSTANCE.registry(this.referenceQueue, this.target);
         ReferenceManager.INSTANCE.start();
     }
 
