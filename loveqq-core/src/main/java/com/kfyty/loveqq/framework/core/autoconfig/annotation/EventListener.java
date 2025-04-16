@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * @date 2021/6/21 16:45
  * @email kfyty725@hotmail.com
  * @see com.kfyty.loveqq.framework.core.event.EventListenerAdapter
- * @see com.kfyty.loveqq.framework.boot.event.EventListenerResolver
+ * @see com.kfyty.loveqq.framework.boot.event.EventListenerRegistry
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
