@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang.util;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
+import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.RandomAccess;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * 描述: 链式数组，适用于大量随机插入随机删除
@@ -82,6 +85,17 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     }
 
     @Override
+    public Spliterator<E> spliterator() {
+        int nodeCount = 0;
+        LinkedArrayNode node = this.head;
+        while (node != null) {
+            nodeCount++;
+            node = node.next;
+        }
+        return new LinkedArraySpliterator(nodeCount, this.modCount, 0, this.head, this.tail);
+    }
+
+    @Override
     public boolean add(E e) {
         this.add(this.size, e);
         return true;
@@ -100,12 +114,14 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public E set(int index, E element) {
+        this.modCount++;
         Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
         return resolved == null ? null : resolved.getValue().set(resolved.getKey(), element);
     }
 
     @Override
     public void add(int index, E element) {
+        this.modCount++;
         Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
         resolved.getValue().add(resolved.getKey(), element);
         this.size++;
@@ -117,12 +133,14 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
         if (target == null) {
             return false;
         }
+        this.modCount++;
         target.getValue().addAll(target.getKey(), c);
         return true;
     }
 
     @Override
     public E remove(int index) {
+        this.modCount++;
         Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
         E remove = resolved == null ? null : resolved.getValue().remove(resolved.getKey());
         this.size--;
@@ -161,6 +179,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public void clear() {
+        this.modCount++;
         LinkedArrayNode node = this.head;
         while (node != null) {
             node.nodeSize = 0;
@@ -216,7 +235,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     }
 
     private Pair<Integer, LinkedArrayNode> resolveNode(int index) {
-        return index < (this.size >> 2) ? this.findNode(index) : this.findNodeReverse(index);
+        return index < (this.size >> 1) ? this.findNode(index) : this.findNodeReverse(index);
     }
 
     private Pair<Integer, LinkedArrayNode> findNode(int index) {
@@ -319,6 +338,113 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             this.curNode.remove(--curNodeCursor);
             this.curSize--;
             LinkedArrayList.this.size--;
+        }
+    }
+
+    /**
+     * 分割器
+     */
+    @AllArgsConstructor
+    private class LinkedArraySpliterator implements Spliterator<E> {
+        /**
+         * 节点数量
+         */
+        private int nodeCount;
+
+        /**
+         * {@link #modCount}
+         */
+        private int expectedModCount;
+
+        /**
+         * 节点迭代索引
+         */
+        private int index;
+
+        /**
+         * 当前头结点
+         */
+        private LinkedArrayNode head;
+
+        /**
+         * 当前尾节点
+         */
+        private LinkedArrayNode tail;
+
+        @Override
+        public Spliterator<E> trySplit() {
+            if (nodeCount <= 1) {
+                return null;                                                // 一个节点无需分割
+            }
+            int mid = nodeCount >> 1;                                       // 查找中间节点
+            LinkedArrayNode midNode = head;
+            while (mid-- > 0) {
+                midNode = midNode.next;
+            }
+            LinkedArraySpliterator spliterator = new LinkedArraySpliterator(nodeCount >> 1, expectedModCount, 0, head, midNode.prior);
+            nodeCount -= spliterator.nodeCount;                             // 更新当前节点的节点数量以及头结点
+            head = midNode;
+            return spliterator;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (head == tail) {
+                if (index >= head.nodeSize) {
+                    return false;
+                }
+            }
+            if (index >= head.nodeSize) {
+                head = head.next;
+                index = 0;
+            }
+            E element = (E) head.element[index];
+            action.accept(element);
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+            index++;
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public void forEachRemaining(Consumer<? super E> action) {
+            LinkedArrayNode node = head;
+            while (node != null) {
+                for (; index < node.nodeSize; index++) {
+                    E element = (E) node.element[index];
+                    action.accept(element);
+                }
+                if (node == tail) {
+                    break;
+                }
+                node = node.next;
+                index = 0;
+            }
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            long size = 0L;
+            LinkedArrayNode node = head;
+            while (node != null) {
+                size += node.nodeSize;
+                if (node == tail) {
+                    break;
+                }
+                node = node.next;
+            }
+            return size;
+        }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
         }
     }
 
