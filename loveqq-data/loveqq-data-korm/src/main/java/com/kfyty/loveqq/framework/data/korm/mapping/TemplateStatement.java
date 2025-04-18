@@ -1,4 +1,4 @@
-package com.kfyty.database.jdbc.mapping;
+package com.kfyty.loveqq.framework.data.korm.mapping;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

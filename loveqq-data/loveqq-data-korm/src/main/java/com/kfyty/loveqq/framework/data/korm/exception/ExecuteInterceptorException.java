@@ -1,4 +1,4 @@
-package com.kfyty.database.jdbc.exception;
+package com.kfyty.loveqq.framework.data.korm.exception;
 
 /**
  * 描述: 执行拦截器异常

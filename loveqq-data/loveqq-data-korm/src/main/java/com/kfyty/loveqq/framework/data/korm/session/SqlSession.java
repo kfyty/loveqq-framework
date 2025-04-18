@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.data.korm.session;
 
-import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.jdbc.TransactionHolder;
 import com.kfyty.loveqq.framework.core.jdbc.transaction.Transaction;
@@ -13,6 +12,7 @@ import com.kfyty.loveqq.framework.data.korm.BaseMapper;
 import com.kfyty.loveqq.framework.data.korm.annotation.Execute;
 import com.kfyty.loveqq.framework.data.korm.annotation.Query;
 import com.kfyty.loveqq.framework.data.korm.annotation.SubQuery;
+import com.kfyty.loveqq.framework.data.korm.exception.ExecuteInterceptorException;
 import com.kfyty.loveqq.framework.data.korm.intercept.Interceptor;
 import com.kfyty.loveqq.framework.data.korm.intercept.InterceptorChain;
 import com.kfyty.loveqq.framework.data.korm.sql.Provider;

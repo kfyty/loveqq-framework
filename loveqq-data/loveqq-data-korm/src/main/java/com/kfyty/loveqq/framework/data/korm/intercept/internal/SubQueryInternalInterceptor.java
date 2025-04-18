@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.data.korm.intercept.internal;
 
-import com.kfyty.database.jdbc.exception.ExecuteInterceptorException;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
@@ -10,6 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.data.korm.annotation.Query;
 import com.kfyty.loveqq.framework.data.korm.annotation.SubQuery;
+import com.kfyty.loveqq.framework.data.korm.exception.ExecuteInterceptorException;
 import com.kfyty.loveqq.framework.data.korm.intercept.InterceptorChain;
 import com.kfyty.loveqq.framework.data.korm.intercept.QueryInterceptor;
 import com.kfyty.loveqq.framework.data.korm.session.SqlSession;
