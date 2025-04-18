@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.data.korm.session;
 
-import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.jdbc.transaction.Transaction;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
@@ -10,6 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.data.korm.intercept.Interceptor;
 import com.kfyty.loveqq.framework.data.korm.intercept.InterceptorChain;
 import com.kfyty.loveqq.framework.data.korm.intercept.QueryInterceptor;
+import com.kfyty.loveqq.framework.data.korm.mapping.TemplateStatement;
 import com.kfyty.loveqq.framework.data.korm.sql.dynamic.DynamicProvider;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

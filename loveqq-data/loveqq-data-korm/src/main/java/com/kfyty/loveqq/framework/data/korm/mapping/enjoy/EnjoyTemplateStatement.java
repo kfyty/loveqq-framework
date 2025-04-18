@@ -1,7 +1,7 @@
-package com.kfyty.database.jdbc.mapping.enjoy;
+package com.kfyty.loveqq.framework.data.korm.mapping.enjoy;
 
 import com.jfinal.template.Template;
-import com.kfyty.database.jdbc.mapping.TemplateStatement;
+import com.kfyty.loveqq.framework.data.korm.mapping.TemplateStatement;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
