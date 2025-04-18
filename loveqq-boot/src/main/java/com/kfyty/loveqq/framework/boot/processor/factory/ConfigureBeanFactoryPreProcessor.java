@@ -76,19 +76,20 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
         Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
         for (Object source : this.applicationContext.getSources()) {                                                    // 处理自定义配置的资源
             // 组件过滤器
-            if (source instanceof ComponentFilterDescription componentFilter) {
-                this.applicationContext.addComponentFilter(componentFilter);
+            if (source instanceof ComponentFilterDescription) {
+                this.applicationContext.addComponentFilter((ComponentFilterDescription) source);
             }
             // 组件匹配器
-            else if (source instanceof ComponentMatcher componentMatcher) {
-                this.applicationContext.addComponentMatcher(componentMatcher);
+            else if (source instanceof ComponentMatcher) {
+                this.applicationContext.addComponentMatcher((ComponentMatcher) source);
             }
             // 路径匹配器
-            else if (source instanceof PatternMatcher patternMatcher) {
-                this.applicationContext.setPatternMatcher(patternMatcher);
+            else if (source instanceof PatternMatcher) {
+                this.applicationContext.setPatternMatcher((PatternMatcher) source);
             }
             // class 资源
-            else if (source instanceof Class<?> clazz) {
+            else if (source instanceof Class<?>) {
+                Class<?> clazz = (Class<?>) source;
                 boolean contains = factories.contains(clazz.getName());
                 if (contains && this.excludeQualifierAutoConfigNames.contains(clazz.getName())) {
                     continue;
