@@ -8,8 +8,18 @@ package com.kfyty.loveqq.framework.core.event;
  * @email kfyty725@hotmail.com
  */
 public interface ApplicationEventPublisher {
-
+    /**
+     * 发布事件
+     *
+     * @param event 事件
+     */
     void publishEvent(ApplicationEvent<?> event);
 
+    /**
+     * 注册事件监听器
+     * 监听的事件会自动解析
+     *
+     * @param applicationListener 事件监听器
+     */
     void registerEventListener(ApplicationListener<?> applicationListener);
 }

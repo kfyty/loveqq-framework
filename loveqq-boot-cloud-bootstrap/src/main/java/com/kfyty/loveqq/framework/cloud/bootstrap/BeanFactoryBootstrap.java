@@ -9,6 +9,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.boostrap.Bootstrap;
@@ -99,6 +100,9 @@ public class BeanFactoryBootstrap implements Bootstrap {
     protected void invokeAware(Object bean, ConfigurableApplicationContext applicationContext) {
         if (bean instanceof BeanFactoryAware) {
             ((BeanFactoryAware) bean).setBeanFactory(applicationContext);
+        }
+        if (bean instanceof PropertyContextContextAware) {
+            throw new IllegalStateException("The application context has not init yet, can't invoke this method.");
         }
         if (bean instanceof ApplicationContextAware) {
             ((ApplicationContextAware) bean).setApplicationContext(applicationContext);

@@ -180,6 +180,16 @@ public class ConditionalBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public String getInitMethod() {
+        return this.beanDefinition.getInitMethod();
+    }
+
+    @Override
+    public String getDestroyMethod() {
+        return this.beanDefinition.getDestroyMethod();
+    }
+
+    @Override
     public void setAutowireCandidate(boolean autowireCandidate) {
         this.beanDefinition.setAutowireCandidate(autowireCandidate);
     }

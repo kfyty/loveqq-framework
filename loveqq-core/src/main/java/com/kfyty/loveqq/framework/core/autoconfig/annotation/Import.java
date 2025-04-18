@@ -17,5 +17,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Import {
+    /**
+     * 要导入的配置
+     *
+     * @return 自动配置 class
+     */
     Class<?>[] config() default {};
 }

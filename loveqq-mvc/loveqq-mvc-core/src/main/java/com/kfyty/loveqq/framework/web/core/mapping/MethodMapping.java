@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
-import static com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandler.RESTFUL_URL_PATTERN;
 
 /**
  * 功能描述: url 映射
@@ -109,14 +109,14 @@ public class MethodMapping {
 
     @SuppressWarnings("unchecked")
     public static void resolveRestfulVariableIfNecessary(MethodMapping methodMapping) {
-        if (!RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
+        if (!Routes.RESTFUL_URL_PATTERN.matcher(methodMapping.getUrl()).matches()) {
             return;
         }
         String[] paths = methodMapping.getPaths();
         List<Pair<String, Integer>> mappingIndex = new ArrayList<>();
         for (int i = 0; i < paths.length; i++) {
             if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(paths[i]).matches()) {
-                mappingIndex.add(new Pair<>(paths[i].replaceAll("[{}]", ""), i));
+                mappingIndex.add(new Pair<>(Routes.SIMPLE_BRACE_PATTERN.matcher(paths[i]).replaceAll(EMPTY_STRING), i));
             }
         }
         methodMapping.setRestful(true);

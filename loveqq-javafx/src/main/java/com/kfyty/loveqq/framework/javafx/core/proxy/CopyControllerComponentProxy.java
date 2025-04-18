@@ -24,8 +24,7 @@ public class CopyControllerComponentProxy implements MethodInterceptorChainPoint
 
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        if (!this.copied.get()) {
-            this.copied.set(true);
+        if (this.copied.compareAndSet(false, true)) {
             BeanUtil.copyProperties(methodProxy.getProxy(), methodProxy.getTarget(), (f, v) -> AnnotationUtil.hasAnnotation(f, FXML.class));
         }
         return chain.proceed(methodProxy);

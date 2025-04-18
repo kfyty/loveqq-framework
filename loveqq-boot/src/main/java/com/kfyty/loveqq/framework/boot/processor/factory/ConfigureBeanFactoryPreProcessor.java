@@ -10,9 +10,11 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.filter.ComponentFilterDescription;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.filter.ComponentMatcher;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
+import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.PackageUtil;
@@ -22,7 +24,6 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,8 +39,14 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.filter.ComponentF
 @Component
 @Order(Integer.MIN_VALUE)
 public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor, InternalPriority {
+    /**
+     * 排除的自动配置
+     */
     protected Set<String> excludeQualifierAutoConfigNames;
 
+    /**
+     * 可配置的应用上下文
+     */
     protected ConfigurableApplicationContext applicationContext;
 
     public ConfigureBeanFactoryPreProcessor() {
@@ -60,22 +67,67 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
 
     protected void preProcessBeanFactory(ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-        this.prepareScanBean(Collections.singleton(applicationContext.getPrimarySource().getPackage().getName()));
+        this.prepareScanSources();
+        this.prepareScanPrimarySource();
         this.prepareScanAutoConfigFactories();
+    }
+
+    protected void prepareScanSources() {
+        Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
+        for (Object source : this.applicationContext.getSources()) {                                                    // 处理自定义配置的资源
+            // 组件过滤器
+            if (source instanceof ComponentFilterDescription componentFilter) {
+                this.applicationContext.addComponentFilter(componentFilter);
+            }
+            // 组件匹配器
+            else if (source instanceof ComponentMatcher componentMatcher) {
+                this.applicationContext.addComponentMatcher(componentMatcher);
+            }
+            // 路径匹配器
+            else if (source instanceof PatternMatcher patternMatcher) {
+                this.applicationContext.setPatternMatcher(patternMatcher);
+            }
+            // class 资源
+            else if (source instanceof Class<?> clazz) {
+                boolean contains = factories.contains(clazz.getName());
+                if (contains && this.excludeQualifierAutoConfigNames.contains(clazz.getName())) {
+                    continue;
+                }
+                this.doProcessScanBean(clazz, contains);
+            }
+            // 不支持
+            else {
+                throw new IllegalArgumentException("Not supported source type: " + source);
+            }
+        }
+    }
+
+    protected void prepareScanPrimarySource() {
+        Package _package_ = this.applicationContext.getPrimarySource().getPackage();
+        if (_package_ == null || _package_.getName().isEmpty()) {
+            this.processScanBean(this.applicationContext.getPrimarySource(), false);
+        } else {
+            this.prepareScanBean(Collections.singleton(_package_.getName()));
+        }
+    }
+
+    protected void prepareScanBean(Set<String> basePackages) {
+        for (String basePackage : basePackages) {
+            for (Class<?> scanClass : PackageUtil.scanClass(basePackage)) {
+                this.processScanBean(scanClass, false);
+            }
+        }
     }
 
     protected void prepareScanAutoConfigFactories() {
         Set<String> factories = FactoriesLoader.loadFactories(EnableAutoConfiguration.class);
         for (String className : factories) {
             if (!this.excludeQualifierAutoConfigNames.contains(className)) {
-                Optional.ofNullable(ReflectUtil.load(className, false, false)).ifPresent(e -> this.processScanBean(e, true));
+                Class<?> loaded = ReflectUtil.load(className, false, false);
+                if (loaded != null) {
+                    this.processScanBean(loaded, true);
+                }
             }
-        }
-    }
-
-    protected void prepareScanBean(Set<String> basePackages) {
-        for (String basePackage : basePackages) {
-            PackageUtil.scanClass(basePackage).forEach(e -> this.processScanBean(e, false));
         }
     }
 
@@ -87,6 +139,10 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
         if (!autoconfig && FactoriesLoader.loadFactories(EnableAutoConfiguration.class).contains(clazz.getName())) {
             return;
         }
+        this.doProcessScanBean(clazz, autoconfig);
+    }
+
+    protected void doProcessScanBean(Class<?> clazz, boolean autoconfig) {
         this.applicationContext.addScannedClass(clazz);
         if (AnnotationUtil.hasAnnotation(clazz, Component.class)) {
             ComponentScan componentScan = AnnotationUtil.findAnnotation(clazz, ComponentScan.class);
@@ -130,12 +186,12 @@ public class ConfigureBeanFactoryPreProcessor implements BeanFactoryPreProcessor
         if (componentFilter == null || CommonUtil.empty(componentFilter.value()) && CommonUtil.empty(componentFilter.classes()) && CommonUtil.empty(componentFilter.annotations())) {
             return;
         }
-        ComponentFilterDescription filter = ComponentFilterDescription.from((Class<?>) declaring, componentFilter);
+        ComponentFilterDescription filter = ComponentFilterDescription.from(isInclude, (Class<?>) declaring, componentFilter);
         if (isInclude && !contains(this.applicationContext.getIncludeFilters(), componentFilter)) {
-            this.applicationContext.addIncludeFilter(filter);
+            this.applicationContext.addComponentFilter(filter);
         }
         if (!isInclude && !contains(this.applicationContext.getExcludeFilters(), componentFilter)) {
-            this.applicationContext.addExcludeFilter(filter);
+            this.applicationContext.addComponentFilter(filter);
         }
     }
 }

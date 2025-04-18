@@ -31,7 +31,6 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Configuration
-@Import(config = DataSourceProperties.class)
 @ConditionalOnBean(DataSourceProperties.class)
 public class DataSourceAutoConfiguration {
 
@@ -41,12 +40,13 @@ public class DataSourceAutoConfiguration {
     }
 
     @Component
+    @ConditionalOnMissingBean(DataSource.class)
+    @ConditionalOnBean(DataSourceAutoConfiguration.class)
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.zaxxer.hikari.HikariDataSource")
     public static class HikariDataSourceAutoConfig {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.hikari")
         @Bean(destroyMethod = "close", resolveNested = false, independent = true)
         public DataSource hikariDataSource() {
@@ -61,12 +61,13 @@ public class DataSourceAutoConfiguration {
 
     @Component
     @Import(config = DruidDataSourceAutoConfig.DruidServletAutoConfig.class)
+    @ConditionalOnMissingBean(DataSource.class)
+    @ConditionalOnBean(DataSourceAutoConfiguration.class)
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "com.alibaba.druid.pool.DruidDataSource")
     public static class DruidDataSourceAutoConfig {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.druid")
         @Bean(destroyMethod = "close", resolveNested = false, independent = true)
         public DataSource druidDataSource(@Autowired(required = false) List<Filter> filters) {
@@ -80,12 +81,13 @@ public class DataSourceAutoConfiguration {
         }
 
         @Component
-        @ConditionalOnClass({"jakarta.servlet.ServletContext", "com.alibaba.druid.pool.DruidDataSource"})
+        @ConditionalOnBean(DruidDataSourceAutoConfig.class)
+        @ConditionalOnClass("jakarta.servlet.ServletContext")
+        @ConditionalOnProperty(prefix = "k.datasource.druid.statViewServlet", value = "enabled", havingValue = "true")
         static class DruidServletAutoConfig {
 
             @ConditionalOnBean(ServletContext.class)
             @Bean(resolveNested = false, independent = true)
-            @ConditionalOnProperty(prefix = "k.datasource.druid.statViewServlet", value = "enabled", havingValue = "true")
             public ServletRegistrationBean statViewServletBean(@Value("${k.datasource.druid.statViewServlet.allow:}") String allow,
                                                                @Value("${k.datasource.druid.statViewServlet.deny:}") String deny,
                                                                @Value("${k.datasource.druid.statViewServlet.remoteAddress:}") String remoteAddress,
@@ -105,12 +107,13 @@ public class DataSourceAutoConfiguration {
     }
 
     @Component
+    @ConditionalOnMissingBean(DataSource.class)
+    @ConditionalOnBean(DataSourceAutoConfiguration.class)
     @ConditionalOnProperty(prefix = "k.datasource", value = "type", havingValue = "org.apache.tomcat.jdbc.pool.DataSource")
     public static class TomcatDataSourceAutoConfig {
         @Autowired
         private DataSourceProperties dataSourceProperties;
 
-        @ConditionalOnMissingBean
         @ConfigurationProperties("k.datasource.tomcat")
         @Bean(destroyMethod = "close", resolveNested = false, independent = true)
         public DataSource tomcatJdbcPoolDataSource() {

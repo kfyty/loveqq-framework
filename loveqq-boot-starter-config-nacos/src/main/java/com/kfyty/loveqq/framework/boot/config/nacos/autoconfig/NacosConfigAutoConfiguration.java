@@ -29,9 +29,38 @@ public class NacosConfigAutoConfiguration {
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, configProperties.getServerAddr());
         properties.put(PropertyKeyConst.NAMESPACE, configProperties.getNamespace());
+        properties.put(PropertyKeyConst.ENABLE_REMOTE_SYNC_CONFIG, Boolean.toString(configProperties.isEnableRemoteSyncConfig()));
+        if (configProperties.getClusterName() != null) {
+            properties.put(PropertyKeyConst.CLUSTER_NAME, configProperties.getClusterName());
+        }
+        if (configProperties.getEncode() != null) {
+            properties.put(PropertyKeyConst.ENCODE, configProperties.getEncode());
+        }
+        if (configProperties.getMaxRetry() != null) {
+            properties.put(PropertyKeyConst.MAX_RETRY, configProperties.getMaxRetry());
+        }
+        if (configProperties.getConfigRetryTime() != null) {
+            properties.put(PropertyKeyConst.CONFIG_RETRY_TIME, configProperties.getConfigRetryTime());
+        }
+        if (configProperties.getConfigLongPollTimeout() != null) {
+            properties.put(PropertyKeyConst.CONFIG_LONG_POLL_TIMEOUT, configProperties.getConfigLongPollTimeout());
+        }
         if (configProperties.getUsername() != null && configProperties.getPassword() != null) {
             properties.put(PropertyKeyConst.USERNAME, configProperties.getUsername());
             properties.put(PropertyKeyConst.PASSWORD, configProperties.getPassword());
+        }
+        if (configProperties.getAccessKey() != null && configProperties.getSecretKey() != null) {
+            properties.put(PropertyKeyConst.ACCESS_KEY, configProperties.getAccessKey());
+            properties.put(PropertyKeyConst.SECRET_KEY, configProperties.getSecretKey());
+        }
+        if (configProperties.getEndpoint() != null) {
+            if (configProperties.getEndpoint().indexOf(':') < 0) {
+                properties.put(PropertyKeyConst.ENDPOINT, configProperties.getEndpoint());
+            } else {
+                int index = configProperties.getEndpoint().indexOf(":");
+                properties.put(PropertyKeyConst.ENDPOINT, configProperties.getEndpoint().substring(0, index));
+                properties.put(PropertyKeyConst.ENDPOINT_PORT, configProperties.getEndpoint().substring(index + 1));
+            }
         }
         return NacosFactory.createConfigService(properties);
     }

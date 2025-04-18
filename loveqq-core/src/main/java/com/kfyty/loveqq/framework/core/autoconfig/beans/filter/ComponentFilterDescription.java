@@ -21,6 +21,11 @@ import java.util.Set;
 @Data
 public class ComponentFilterDescription {
     /**
+     * 是否包含过滤器
+     */
+    private boolean include;
+
+    /**
      * 过滤器声明所在类
      */
     private Class<?> declare;
@@ -46,8 +51,9 @@ public class ComponentFilterDescription {
         this.annotations = new HashSet<>(4);
     }
 
-    public static ComponentFilterDescription from(Class<?> declare, ComponentFilter componentFilter) {
+    public static ComponentFilterDescription from(boolean include, Class<?> declare, ComponentFilter componentFilter) {
         ComponentFilterDescription description = new ComponentFilterDescription();
+        description.setInclude(include);
         description.setDeclare(declare);
         description.getBasePackages().addAll(Arrays.asList(componentFilter.value()));
         description.getClasses().addAll(Arrays.asList(componentFilter.classes()));

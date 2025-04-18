@@ -42,6 +42,6 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
 
     protected ConfigurationProperties[] obtainConfigurationPropertiesAnnotation(BeanDefinition beanDefinition) {
         AnnotatedElement annotatedElement = beanDefinition.isMethodBean() ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
-        return flatRepeatableAnnotation(findAnnotations(annotatedElement), e -> e.annotationType() == ConfigurationProperties.class, ConfigurationProperties[]::new);
+        return flatRepeatableAnnotation(findAnnotations(annotatedElement), ConfigurationProperties.class);
     }
 }

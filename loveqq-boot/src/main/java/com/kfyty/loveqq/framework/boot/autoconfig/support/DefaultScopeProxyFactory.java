@@ -8,7 +8,8 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,29 +21,30 @@ import java.util.Map;
  */
 @Slf4j
 public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationListener<ApplicationEvent<?>> {
+    /**
+     * 作用域代理工厂
+     */
     protected volatile Map<String, ScopeProxyFactory> scopeProxyFactoryMap;
 
     @Override
     public Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory) {
-        this.ensureScopeProxyFactory(beanFactory);
-        return this.obtainScopeProxyFactory(beanDefinition.getScope()).getObject(beanDefinition, beanFactory);
+        return this.obtainScopeProxyFactory(beanDefinition.getScope(), beanFactory).getObject(beanDefinition, beanFactory);
     }
 
     @Override
     public void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean) {
-        this.ensureScopeProxyFactory(beanFactory);
-        this.obtainScopeProxyFactory(beanDefinition.getScope()).onInvoked(beanDefinition, beanFactory, bean);
+        this.obtainScopeProxyFactory(beanDefinition.getScope(), beanFactory).onInvoked(beanDefinition, beanFactory, bean);
     }
 
     @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
         if (this.scopeProxyFactoryMap != null) {
-            Map<String, ScopeProxyFactory> copy = new HashMap<>(this.scopeProxyFactoryMap);
-            copy.values().stream().filter(e -> e != this).forEach(v -> v.onApplicationEvent(event));
+            List<ScopeProxyFactory> copy = new ArrayList<>(this.scopeProxyFactoryMap.values());
+            copy.stream().filter(e -> e != this).forEach(v -> v.onApplicationEvent(event));
         }
     }
 
-    protected void ensureScopeProxyFactory(BeanFactory beanFactory) {
+    protected ScopeProxyFactory obtainScopeProxyFactory(String scope, BeanFactory beanFactory) {
         if (this.scopeProxyFactoryMap == null) {
             synchronized (this) {
                 if (this.scopeProxyFactoryMap == null) {
@@ -50,12 +52,9 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
                 }
             }
         }
-    }
-
-    protected ScopeProxyFactory obtainScopeProxyFactory(String scope) {
         ScopeProxyFactory scopeProxyFactory = this.scopeProxyFactoryMap.get(scope);
         if (scopeProxyFactory == null) {
-            throw new BeansException("this scope is not supported temporarily: " + scope);
+            throw new BeansException("this scope doesn't supported yet: " + scope);
         }
         return scopeProxyFactory;
     }
