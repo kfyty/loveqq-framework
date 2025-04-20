@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
-import static com.kfyty.loveqq.framework.core.utils.CommonUtil.formatURI;
 import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.Strategy.DEFAULT;
 
 /**
@@ -35,7 +33,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         List<MethodMapping> retValue = new ArrayList<>();
         RequestMapping annotation = AnnotationUtil.findAnnotation(controllerClass, RequestMapping.class);
         if (annotation != null) {
-            superUrl = formatURI(annotation.value());
+            superUrl = CommonUtil.formatURI(annotation.value());
         }
         this.resolveMethodMapping(annotation, superUrl, controllerClass, controller, retValue);
         return retValue;
@@ -50,11 +48,15 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
             }
             RequestMapping annotation = AnnotationUtil.findAnnotation(method, RequestMapping.class);
             if (annotation == null && expose) {
+                if (!Modifier.isPublic(method.getModifiers())) {
+                    continue;
+                }
                 annotation = superAnnotation;
             }
             if (annotation != null) {
                 RequestMethod requestMethod = annotation == superAnnotation ? RequestMethod.POST : annotation.method();
-                String mappingPath = superUrl + formatURI(empty(annotation.value()) && annotation.strategy() == DEFAULT ? method.getName() : annotation.value());
+                String requestURI = annotation == superAnnotation || CommonUtil.empty(annotation.value()) && annotation.strategy() == DEFAULT ? method.getName() : annotation.value();
+                String mappingPath = superUrl + CommonUtil.formatURI(requestURI);
                 MethodMapping methodMapping = MethodMapping.create(mappingPath, requestMethod, controller, method);
                 methodMappings.add(this.resolveRequestMappingProduces(controllerClass, annotation, methodMapping));
             }
