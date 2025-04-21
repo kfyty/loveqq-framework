@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.boot.validator.context;
 
 import com.kfyty.loveqq.framework.boot.validator.agent.ValidatorValueContextInstrumentation;
 import jakarta.validation.Validator;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.internal.engine.valuecontext.ValueContext;
 
 /**
@@ -17,6 +19,8 @@ public abstract class ValidatorContext {
      *
      * @see Validator
      */
+    @Getter
+    @Setter
     private static Validator validator;
 
     /**
@@ -26,14 +30,6 @@ public abstract class ValidatorContext {
      * @see ValidatorValueContextInstrumentation
      */
     private static final ThreadLocal<ValueContext<?, ?>> VALUE_CONTEXT = new ThreadLocal<>();
-
-    public static Validator getValidator() {
-        return validator;
-    }
-
-    public static void setValidator(Validator validator) {
-        ValidatorContext.validator = validator;
-    }
 
     public static ValueContext<?, ?> getValueContext() {
         return VALUE_CONTEXT.get();

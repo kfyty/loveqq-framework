@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.boot.validator.proxy.MethodValidationIntercept
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -21,7 +22,7 @@ import jakarta.validation.Validator;
 @ConditionalOnMissingBean
 public class MethodValidationBeanPostProcessor extends AbstractProxyCreatorProcessor {
     @Autowired
-    private Validator validator;
+    private Lazy<Validator> validator;
 
     @Override
     public boolean canCreateProxy(String beanName, Class<?> beanType, Object bean) {
