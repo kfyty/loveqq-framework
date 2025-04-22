@@ -1,13 +1,20 @@
 package com.kfyty.loveqq.framework.core.support.json;
 
+import com.kfyty.loveqq.framework.core.converter.StringToLocalDateTimeConverter;
+import com.kfyty.loveqq.framework.core.lang.util.LinkedArrayList;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Spliterator;
@@ -26,10 +33,125 @@ import java.util.stream.Stream;
  */
 @RequiredArgsConstructor
 public class Array extends AbstractList<Object> implements JSONAware {
+    /**
+     * 包装
+     */
     private final List<Object> decorate;
 
     public Array() {
-        this.decorate = new LinkedList<>();
+        this.decorate = new LinkedArrayList<>(8);
+    }
+
+    public String getString(int index) {
+        Object o = this.decorate.get(index);
+        return o == null ? null : o instanceof CharSequence ? o.toString() : JsonUtil.toJSONString(o);
+    }
+
+    public Boolean getBoolean(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Boolean) {
+            return (Boolean) o;
+        }
+        return Boolean.parseBoolean(o.toString());
+    }
+
+    public Character getChar(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Character) {
+            return (Character) o;
+        }
+        String str = o.toString();
+        return str.isEmpty() ? null : str.charAt(0);
+    }
+
+    public Byte getByte(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Byte) {
+            return (Byte) o;
+        }
+        return Byte.parseByte(o.toString());
+    }
+
+    public Short getShort(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Short) {
+            return (Short) o;
+        }
+        return Short.parseShort(o.toString());
+    }
+
+    public Integer getInteger(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Integer) {
+            return (Integer) o;
+        }
+        return Integer.parseInt(o.toString());
+    }
+
+    public Long getLong(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Long) {
+            return (Long) o;
+        }
+        return Long.parseLong(o.toString());
+    }
+
+    public Float getFloat(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Float) {
+            return (Float) o;
+        }
+        return Float.parseFloat(o.toString());
+    }
+
+    public Double getDouble(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof Double) {
+            return (Double) o;
+        }
+        return Double.parseDouble(o.toString());
+    }
+
+    public BigInteger getBigInteger(int index) {
+        Object o = this.decorate.get(index);
+        return o == null || o instanceof BigInteger ? (BigInteger) o : new BigInteger(o.toString());
+    }
+
+    public BigDecimal getBigDecimal(int index) {
+        Object o = this.decorate.get(index);
+        return o == null || o instanceof BigDecimal ? (BigDecimal) o : new BigDecimal(o.toString());
+    }
+
+    public LocalTime getLocalTime(int index) {
+        Object o = this.decorate.get(index);
+        return o == null || o instanceof LocalTime ? (LocalTime) o : LocalTime.parse(o.toString());
+    }
+
+    public LocalDate getLocalDate(int index) {
+        Object o = this.decorate.get(index);
+        return o == null || o instanceof LocalDate ? (LocalDate) o : LocalDate.parse(o.toString());
+    }
+
+    public LocalDateTime getLocalDateTime(int index) {
+        Object o = this.decorate.get(index);
+        if (o == null || o instanceof LocalDateTime) {
+            return (LocalDateTime) o;
+        }
+        return StringToLocalDateTimeConverter.INSTANCE.apply(o.toString());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getObject(int index, Class<T> clazz) {
+        Object o = this.decorate.get(index);
+        if (o == null || clazz.isInstance(o)) {
+            return (T) o;
+        }
+        return JsonUtil.toObject(o.toString(), clazz);
+    }
+
+    public <T> T getObject(int index, Type type) {
+        Object o = this.decorate.get(index);
+        return o == null ? null : JsonUtil.toObject(o.toString(), type);
     }
 
     public JSON getJSON(int index) {

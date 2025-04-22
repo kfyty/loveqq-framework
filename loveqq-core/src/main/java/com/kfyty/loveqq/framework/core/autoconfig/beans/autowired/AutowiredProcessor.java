@@ -427,6 +427,9 @@ public class AutowiredProcessor {
     private <T> T matchBeanIfNecessary(Map<String, T> beans, String beanName, SimpleGeneric returnType, boolean onlyOne) {
         T bean = beans.get(beanName);
         if (bean != null || !returnType.hasGeneric()) {
+            if (bean == null) {
+                throw new BeansException("Resolve target bean failed, more than one generic bean found of type: " + returnType.getResolveType());
+            }
             return bean;
         }
         List<Generic> targetGenerics = new ArrayList<>(returnType.getGenericInfo().keySet());
@@ -447,7 +450,7 @@ public class AutowiredProcessor {
                 }
             }
             if (onlyOne && bean != null) {
-                throw new BeansException("Resolve target bean failed, more than one generic bean found of name: " + beanName);
+                throw new BeansException("Resolve target bean failed, more than one generic bean found of type: " + returnType.getResolveType());
             }
             bean = value;
         }

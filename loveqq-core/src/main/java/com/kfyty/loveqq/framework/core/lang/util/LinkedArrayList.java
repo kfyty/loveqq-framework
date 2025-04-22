@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang.util;
 
 import com.kfyty.loveqq.framework.core.support.Pair;
+import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,8 +16,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.RandomAccess;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * 描述: 链式数组，适用于大量随机插入随机删除
@@ -83,57 +85,64 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     }
 
     @Override
+    public Spliterator<E> spliterator() {
+        int nodeCount = 0;
+        LinkedArrayNode node = this.head;
+        while (node != null) {
+            nodeCount++;
+            node = node.next;
+        }
+        return new LinkedArraySpliterator(nodeCount, this.modCount, 0, this.head, this.tail);
+    }
+
+    @Override
     public boolean add(E e) {
-        this.add(size(), e);
+        this.add(this.size, e);
         return true;
     }
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return this.addAll(size(), c);
+        return this.addAll(this.size, c);
     }
 
     @Override
     public E get(int index) {
-        if (index < (this.size >> 2)) {
-            return Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().get(v.getKey())).orElse(null);
-        }
-        return Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().get(v.getKey())).orElse(null);
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        return resolved == null ? null : resolved.getValue().get(resolved.getKey());
     }
 
     @Override
     public E set(int index, E element) {
-        if (index < (this.size >> 2)) {
-            return Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().set(v.getKey(), element)).orElse(null);
-        }
-        return Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().set(v.getKey(), element)).orElse(null);
+        this.modCount++;
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        return resolved == null ? null : resolved.getValue().set(resolved.getKey(), element);
     }
 
     @Override
     public void add(int index, E element) {
-        if (index < (this.size >> 2)) {
-            Optional.ofNullable(this.findNode(index)).ifPresent(v -> v.getValue().add(v.getKey(), element));
-        } else {
-            Optional.ofNullable(this.findNodeReverse(index)).ifPresent(v -> v.getValue().add(v.getKey(), element));
-        }
+        this.modCount++;
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        resolved.getValue().add(resolved.getKey(), element);
         this.size++;
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
-        Pair<Integer, LinkedArrayNode> target = index < (this.size >> 2) ? this.findNode(index) : this.findNodeReverse(index);
+        Pair<Integer, LinkedArrayNode> target = this.resolveNode(index);
         if (target == null) {
             return false;
         }
+        this.modCount++;
         target.getValue().addAll(target.getKey(), c);
         return true;
     }
 
     @Override
     public E remove(int index) {
-        E remove = index < (this.size >> 2)
-                ? Optional.ofNullable(this.findNode(index)).map(v -> v.getValue().remove(v.getKey())).orElse(null)
-                : Optional.ofNullable(this.findNodeReverse(index)).map(v -> v.getValue().remove(v.getKey())).orElse(null);
+        this.modCount++;
+        Pair<Integer, LinkedArrayNode> resolved = this.resolveNode(index);
+        E remove = resolved == null ? null : resolved.getValue().remove(resolved.getKey());
         this.size--;
         return remove;
     }
@@ -170,6 +179,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
     @Override
     public void clear() {
+        this.modCount++;
         LinkedArrayNode node = this.head;
         while (node != null) {
             node.nodeSize = 0;
@@ -192,7 +202,7 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
     public <T> T[] toArray(T[] a) {
         int index = 0;
         LinkedArrayNode node = this.head;
-        T[] retValue = a.length >= this.size() ? a : (T[]) Array.newInstance(a.getClass().getComponentType(), size);
+        T[] retValue = a.length >= this.size ? a : (T[]) Array.newInstance(a.getClass().getComponentType(), this.size);
         while (node != null) {
             System.arraycopy(node.element, 0, retValue, index, node.nodeSize);
             index += node.nodeSize;
@@ -222,6 +232,10 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             }
         }
         return !(self.hasNext() || other.hasNext());
+    }
+
+    private Pair<Integer, LinkedArrayNode> resolveNode(int index) {
+        return index < (this.size >> 1) ? this.findNode(index) : this.findNodeReverse(index);
     }
 
     private Pair<Integer, LinkedArrayNode> findNode(int index) {
@@ -324,6 +338,113 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
             this.curNode.remove(--curNodeCursor);
             this.curSize--;
             LinkedArrayList.this.size--;
+        }
+    }
+
+    /**
+     * 分割器
+     */
+    @AllArgsConstructor
+    private class LinkedArraySpliterator implements Spliterator<E> {
+        /**
+         * 节点数量
+         */
+        private int nodeCount;
+
+        /**
+         * {@link #modCount}
+         */
+        private int expectedModCount;
+
+        /**
+         * 节点迭代索引
+         */
+        private int index;
+
+        /**
+         * 当前头结点
+         */
+        private LinkedArrayNode head;
+
+        /**
+         * 当前尾节点
+         */
+        private LinkedArrayNode tail;
+
+        @Override
+        public Spliterator<E> trySplit() {
+            if (nodeCount <= 1) {
+                return null;                                                // 一个节点无需分割
+            }
+            int mid = nodeCount >> 1;                                       // 查找中间节点
+            LinkedArrayNode midNode = head;
+            while (mid-- > 0) {
+                midNode = midNode.next;
+            }
+            LinkedArraySpliterator spliterator = new LinkedArraySpliterator(nodeCount >> 1, expectedModCount, 0, head, midNode.prior);
+            nodeCount -= spliterator.nodeCount;                             // 更新当前节点的节点数量以及头结点
+            head = midNode;
+            return spliterator;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean tryAdvance(Consumer<? super E> action) {
+            if (head == tail) {
+                if (index >= head.nodeSize) {
+                    return false;
+                }
+            }
+            if (index >= head.nodeSize) {
+                head = head.next;
+                index = 0;
+            }
+            E element = (E) head.element[index];
+            action.accept(element);
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+            index++;
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public void forEachRemaining(Consumer<? super E> action) {
+            LinkedArrayNode node = head;
+            while (node != null) {
+                for (; index < node.nodeSize; index++) {
+                    E element = (E) node.element[index];
+                    action.accept(element);
+                }
+                if (node == tail) {
+                    break;
+                }
+                node = node.next;
+                index = 0;
+            }
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public long estimateSize() {
+            long size = 0L;
+            LinkedArrayNode node = head;
+            while (node != null) {
+                size += node.nodeSize;
+                if (node == tail) {
+                    break;
+                }
+                node = node.next;
+            }
+            return size;
+        }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
         }
     }
 
@@ -474,6 +595,9 @@ public class LinkedArrayList<E> extends AbstractList<E> implements List<E>, Rand
 
             // 剩下的顺序插入，这里更新一下 size，不然范围检查报错
             LinkedArrayList.this.size += array.length - (toMove.length - toCopy);
+            if (node.next == null) {
+                LinkedArrayList.this.tail = node;
+            }
             for (int j = toCopy, k = 0; j < toMove.length; j++, k++) {
                 node.add(node.nodeSize + k, (E) toMove[j]);
                 LinkedArrayList.this.size++;

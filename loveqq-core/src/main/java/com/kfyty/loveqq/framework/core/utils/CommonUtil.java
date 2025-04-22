@@ -129,10 +129,9 @@ public abstract class CommonUtil {
 
     /* ------------------------------------------ 集合操作 ------------------------------------------ */
 
-    @SuppressWarnings("SizeReplaceableByIsEmpty")
     public static boolean empty(Object obj) {
-        if (obj instanceof CharSequence) {
-            return ((CharSequence) obj).length() < 1;
+        if (obj instanceof CharSequence cs) {
+            return cs.isEmpty();
         }
         return size(obj) < 1;
     }
@@ -148,14 +147,14 @@ public abstract class CommonUtil {
         if (obj.getClass().isArray()) {
             return Array.getLength(obj);
         }
-        if (obj instanceof Collection) {
-            return ((Collection<?>) obj).size();
+        if (obj instanceof Collection<?> c) {
+            return c.size();
         }
-        if (obj instanceof Map) {
-            return ((Map<?, ?>) obj).size();
+        if (obj instanceof Map<?, ?> m) {
+            return m.size();
         }
-        if (obj instanceof Optional<?>) {
-            return ((Optional<?>) obj).isPresent() ? 1 : 0;
+        if (obj instanceof Optional<?> o) {
+            return o.isPresent() ? 1 : 0;
         }
         return 1;
     }

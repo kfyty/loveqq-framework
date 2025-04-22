@@ -17,6 +17,14 @@ import java.util.function.Function;
  * @email kfyty725@hotmail.com
  */
 public class StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
+    /**
+     * 默认实例
+     */
+    public static final StringToLocalDateTimeConverter INSTANCE = new StringToLocalDateTimeConverter();
+
+    /**
+     * 默认时间格式
+     */
     public static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override

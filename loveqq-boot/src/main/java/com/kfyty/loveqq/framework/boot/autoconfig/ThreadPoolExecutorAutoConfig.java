@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.boot.autoconfig;
 
+import com.kfyty.loveqq.framework.boot.autoconfig.support.DefaultScheduledThreadPoolExecutor;
 import com.kfyty.loveqq.framework.boot.autoconfig.support.DefaultThreadPoolExecutor;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -28,7 +30,12 @@ public class ThreadPoolExecutorAutoConfig {
     public static final String DEFAULT_THREAD_POOL_EXECUTOR = "defaultThreadPoolExecutor";
 
     /**
-     * 默认线程池
+     * 默认线程池名称
+     */
+    public static final String DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR = "defaultScheduledThreadPoolExecutor";
+
+    /**
+     * 默认的线程池
      *
      * @return 线程池
      */
@@ -39,6 +46,18 @@ public class ThreadPoolExecutorAutoConfig {
         }
         DefaultThreadPoolExecutor executor = new DefaultThreadPoolExecutor();
         executor.setThreadFactory(new NamedThreadFactory("default-task-executor"));
+        return executor;
+    }
+
+    /**
+     * 默认可调度的线程池
+     *
+     * @return 线程池
+     */
+    @Bean(value = DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR, resolveNested = false, independent = true)
+    public ScheduledExecutorService defaultScheduledThreadPoolExecutor() {
+        DefaultScheduledThreadPoolExecutor executor = new DefaultScheduledThreadPoolExecutor();
+        executor.setThreadFactory(new NamedThreadFactory("default-scheduled-executor"));
         return executor;
     }
 
