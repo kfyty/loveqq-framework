@@ -12,9 +12,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.DelegatedAutow
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PlaceholdersResolver;
-import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
-import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
@@ -382,11 +380,10 @@ public class GenericBeanDefinition implements BeanDefinition {
 
     public static Object resolvePlaceholderValue(String value, boolean bind, Type targetType, PlaceholdersResolver placeholdersResolver, GenericPropertiesContext propertyContext) {
         String resolved = placeholdersResolver.resolvePlaceholders(value);
-        if (bind) {
-            Object instance = ReflectUtil.newInstance(QualifierGeneric.getRawType(targetType));
-            return propertyContext.getDataBinder().bind(new Instance(instance), resolved).getTarget();
-        }
         SimpleGeneric targetGeneric = (SimpleGeneric) new SimpleGeneric(targetType).resolve();
+        if (bind) {
+            return propertyContext.getProperty(resolved, targetGeneric);
+        }
         if (targetGeneric.isMapGeneric()) {
             throw new UnsupportedOperationException("@Value doesn't support Map type, please set @Value#bind() to true.");
         }

@@ -7,12 +7,10 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
-import com.kfyty.loveqq.framework.core.reflect.DefaultParameterizedType;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.slf4j.ILoggerFactory;
@@ -42,6 +40,12 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
         }
     }
 
+    @Value("${logging.config:}")
+    private String config;
+
+    @Value(value = "logging.level", bind = true)
+    private Map<String, String> loggingLevel;
+
     /**
      * {@link LoggerContext}
      */
@@ -54,20 +58,17 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
             throw new ResolvableException("LoggerFactory bind failed");
         }
         this.loggerContext = (LoggerContext) loggerFactory;
-        this.doConfigure(beanFactory.getBean(GenericPropertiesContext.class));
+        this.doConfigure();
     }
 
-    protected void doConfigure(GenericPropertiesContext propertiesContext) {
-        String config = propertiesContext.getProperty("logging.config");
-        Map<String, String> levelMap = propertiesContext.getProperty("logging.level", SimpleGeneric.from(new DefaultParameterizedType(Map.class, new Class[]{String.class, String.class})));
-
-        if (CommonUtil.notEmpty(config)) {
-            URL url = Objects.requireNonNull(this.getClass().getResource(config), "Logback config load failed");
+    protected void doConfigure() {
+        if (CommonUtil.notEmpty(this.config)) {
+            URL url = Objects.requireNonNull(this.getClass().getResource(config), "Logback config load failed.");
             this.doConfigure(url);
         }
 
-        if (CommonUtil.notEmpty(levelMap)) {
-            for (Map.Entry<String, String> entry : levelMap.entrySet()) {
+        if (CommonUtil.notEmpty(this.loggingLevel)) {
+            for (Map.Entry<String, String> entry : this.loggingLevel.entrySet()) {
                 Logger logger = this.loggerContext.getLogger(entry.getKey());
                 if (logger != null) {
                     logger.setLevel(Level.toLevel(entry.getValue()));
@@ -84,7 +85,7 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
         configurator.doConfigure(url);
     }
 
-    private void stopAndReset(LoggerContext loggerContext) {
+    protected void stopAndReset(LoggerContext loggerContext) {
         loggerContext.stop();
         loggerContext.reset();
     }

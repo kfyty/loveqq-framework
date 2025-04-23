@@ -26,7 +26,6 @@ public class DelegatedAutowiredDescriptionResolver implements AutowiredDescripti
         this.resolvers = FactoriesLoader.loadFactories(AutowiredDescriptionResolver.class)
                 .stream()
                 .map(ReflectUtil::load)
-                .filter(AutowiredDescriptionResolver.class::isAssignableFrom)
                 .map(ReflectUtil::newInstance)
                 .map(e -> (AutowiredDescriptionResolver) e)
                 .collect(Collectors.toList());

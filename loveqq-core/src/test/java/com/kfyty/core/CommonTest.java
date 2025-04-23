@@ -34,6 +34,7 @@ public class CommonTest {
         Assertions.assertEquals(CommonUtil.underline2CamelCase("a__b"), "aB");
         Assertions.assertEquals(CommonUtil.underline2CamelCase("a_bc"), "aBc");
         Assertions.assertEquals(CommonUtil.underline2CamelCase("a__bc"), "aBc");
+        Assertions.assertEquals(CommonUtil.underline2CamelCase("a__bc", true), "ABc");
         Assertions.assertEquals(CommonUtil.underline2CamelCase("_a__bc"), "aBc");
         Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc"), "aBc");
         Assertions.assertEquals(CommonUtil.underline2CamelCase("__a__bc_dfg"), "aBcDfg");

@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -110,6 +111,30 @@ class PropertiesRefConfig implements InitializingBean {
         private PropertiesConfig.User object;
 
         private List<PropertiesConfig.User> arr;
+    }
+}
+
+@Component
+class ValueBindConfig implements InitializingBean {
+    @Value(value = "value.bind.user", bind = true)
+    private PropertiesConfig.User user;
+
+    @Value(value = "value.bind.ids", bind = true)
+    private List<String> ids;
+
+    @Value(value = "value.bind.nameMap", bind = true)
+    private Map<String, Integer> nameMap;
+
+    @Value(value = "value.bind.userMap", bind = true)
+    private Map<String, PropertiesConfig.User> userMap;
+
+    @Override
+    public void afterPropertiesSet() {
+        Assertions.assertEquals(user.getId(), "id");
+        Assertions.assertEquals(user.getExtra(), Collections.singletonList("test"));
+        Assertions.assertEquals(ids, Collections.singletonList("test2"));
+        Assertions.assertEquals(nameMap.get("tom"), 1000);
+        Assertions.assertEquals(userMap.get("tom").getName(), "tom");
     }
 }
 

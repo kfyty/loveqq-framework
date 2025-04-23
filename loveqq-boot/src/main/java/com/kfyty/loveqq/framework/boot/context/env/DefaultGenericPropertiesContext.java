@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
@@ -68,10 +69,16 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     @SuppressWarnings("unchecked")
     public <T> T getProperty(String key, SimpleGeneric targetType, T defaultValue) {
         Type resolveType = targetType.getResolveType();
-        if (resolveType instanceof Class) {
-            Class<?> clazz = (Class<?>) resolveType;
+        if (resolveType instanceof Class<?> clazz) {
             if (!clazz.isArray() && !Map.class.isAssignableFrom(clazz)) {
-                return (T) this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
+                if (ReflectUtil.isBaseDataType(clazz)) {
+                    return this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
+                }
+                if (this.propertySources.keySet().stream().anyMatch(e -> e.startsWith(key))) {
+                    Object instance = ReflectUtil.newInstance(QualifierGeneric.getRawType(resolveType));
+                    return (T) this.dataBinder.bind(new Instance(instance), key).getTarget();
+                }
+                return null;
             }
         }
 

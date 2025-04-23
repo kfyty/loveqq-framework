@@ -7,22 +7,30 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 描述: 读取配置文件的值
+ * 描述: 配置字段值
  *
  * @author kfyty725
  * @date 2022/3/12 14:58
  * @email kfyty725@hotmail.com
  */
 @Documented
-@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 public @interface Value {
     /**
-     * 配置文件的属性或前缀
+     * 字段的值，根据 {@link #bind()} 不同，取值规则不同
+     *
      * <p>
-     * eg: ${a.b:default}
-     * 当 {@link this#bind()} == false 时，表示取配置属性 a.b 的值，仅支持普通属性
-     * 当 {@link this#bind()} == true 时，表示取配置属性 a.b 的值作为配置属性的前缀，此时支持复杂属性绑定
+     * 当 {@link this#bind()} == false 时，该值表示字段的值，将自动转换类型赋值给被注解的字段，支持 ${} 从配置文件中取值，
+     * 此时仅支持基础数据类型以及逗号分割的集合类型，并且支持 ${key:default} 的形式设置默认值</br>
+     * eg: https://{ip}
+     * </p>
+     * <p>
+     * 当 {@link this#bind()} == true 时，该值表示配置前缀，将自动进行配置绑定，仍然支持 ${} 从配置文件中取值，但最终的解析值仍然表示前缀，
+     * 此时支持复杂属性绑定，但是将不支持 ${key:default} 的形式设置默认值
+     * </p>
+     *
+     * @see com.kfyty.loveqq.framework.core.utils.ReflectUtil#isBaseDataType(Class)
      */
     String value();
 
