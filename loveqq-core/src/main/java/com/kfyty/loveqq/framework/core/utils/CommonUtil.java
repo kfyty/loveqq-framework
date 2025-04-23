@@ -316,13 +316,15 @@ public abstract class CommonUtil {
         for (int i = 0; i < target.length(); i++) {
             char c = target.charAt(i);
             if (c != lineChar) {
-                builder.append(c);
+                // 说明是不是分割符，此时仅判断首个字符是否需要大写即可
+                builder.append(firstUpper && builder.isEmpty() ? Character.toUpperCase(c) : c);
                 continue;
             }
             while (i < target.length() && (c = target.charAt(i)) == lineChar) {
                 i++;
             }
             if (i < target.length()) {
+                // 说明是分隔符后的非分隔符字符，此时如果是第一个则应根据 firstUpper 写入，否则应写入大写
                 builder.append(builder.isEmpty() && !firstUpper ? c : Character.toUpperCase(c));
             }
         }
