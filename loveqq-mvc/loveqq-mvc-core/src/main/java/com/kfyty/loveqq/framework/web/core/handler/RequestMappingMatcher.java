@@ -27,7 +27,7 @@ public interface RequestMappingMatcher {
      * @param route         处理器，必须是方法引用，否则无法解析
      * @return 路由，可进一步定制
      */
-    MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route);
+    MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route);
 
     /**
      * 注册路由
@@ -37,7 +37,7 @@ public interface RequestMappingMatcher {
      * @param route         处理器，必须是方法引用，否则无法解析
      * @return 路由，可进一步定制
      */
-    MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route);
+    MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route);
 
     /**
      * 注册路由
