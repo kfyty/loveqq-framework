@@ -78,7 +78,11 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
 
     @Override
     public boolean canHandle(MethodMapping mapping, Throwable throwable) {
-        Object target = AopUtil.getTarget(mapping.getController());
+        Object controller = mapping.getController();
+        if (controller == null) {
+            return false;
+        }
+        Object target = AopUtil.getTarget(controller);
         String targetClassName = target.getClass().getName();
         for (String basePackage : this.controllerAdviceBasePackages) {
             if (this.patternMatcher.matches(basePackage, targetClassName)) {

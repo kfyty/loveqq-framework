@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import lombok.SneakyThrows;
 
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
@@ -41,13 +42,21 @@ public abstract class SerializableLambdaUtil {
      * 从 lambda 表达式获取方法
      *
      * @param serializableFunction 实现了 {@link Serializable} 接口的 lambda 表达式
-     * @return 实例及方法对象，仅包含非私有方法
+     * @return 实例及方法对象
      */
+    @SneakyThrows({NoSuchMethodException.class, SecurityException.class})
     public static Pair<Object, Method> resolveMethod(Serializable serializableFunction, Class<?>... paramTypes) {
         SerializedLambda serializedLambda = serializeLambda(serializableFunction);
         Class<?> clazz = ReflectUtil.load(serializedLambda.getImplClass().replace('/', '.'));
         String methodName = serializedLambda.getImplMethodName();
-        return new Pair<>(serializedLambda.getCapturedArg(0), ReflectUtil.getMethod(clazz, methodName, paramTypes));
+        Method method = ReflectUtil.getMethod(clazz, methodName, paramTypes);
+        if (method == null) {
+            method = clazz.getDeclaredMethod(methodName, paramTypes);
+        }
+        if (serializedLambda.getCapturedArgCount() < 1) {
+            return new Pair<>(null, method);
+        }
+        return new Pair<>(serializedLambda.getCapturedArg(0), method);
     }
 
     /**
