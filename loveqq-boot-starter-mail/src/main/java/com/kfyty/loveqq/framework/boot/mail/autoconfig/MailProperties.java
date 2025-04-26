@@ -19,8 +19,8 @@ import java.util.Properties;
 @ConfigurationProperties("k.mail")
 @ConditionalOnProperty(value = "k.mail.host", matchIfNonNull = true)
 public class MailProperties {
-    private Integer port;
     private String host;
+    private Integer port;
     private String protocol;
     private String username;
     private String password;
