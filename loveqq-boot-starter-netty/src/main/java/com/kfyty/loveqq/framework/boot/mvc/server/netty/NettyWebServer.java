@@ -405,7 +405,7 @@ public class NettyWebServer implements ServerWebServer {
         }
         FileUpload upload = (FileUpload) form;
         Lazy<InputStream> lazyInputStream = new Lazy<>(newInputStream(form));
-        return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.getMaxSize(), lazyInputStream));
+        return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.length(), lazyInputStream));
     }
 
     public static byte[] getBytes(HttpData data) {
@@ -436,6 +436,16 @@ public class NettyWebServer implements ServerWebServer {
         }
     }
 
+    /**
+     * 构建输入流提供者
+     * <p>
+     * 如果在内存中则先复制到字节数组，否则该订阅流程结束后会被释放，后续获取不到
+     * <p>
+     * 如果是文件则重命名，否则也会被释放，后续获取不到
+     *
+     * @param upload 上传数据
+     * @return 输入流提供者
+     */
     public static Supplier<InputStream> newInputStream(HttpData upload) {
         if (upload.isInMemory()) {
             byte[] bytes = getBytes(upload);
