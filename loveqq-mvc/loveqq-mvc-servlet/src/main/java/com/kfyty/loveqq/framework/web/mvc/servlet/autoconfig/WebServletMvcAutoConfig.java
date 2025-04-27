@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
@@ -49,11 +50,10 @@ public class WebServletMvcAutoConfig {
     private List<ExceptionHandler> exceptionHandlers;
 
     @Bean(resolveNested = false, independent = true)
-    public MultipartConfigElement multipartConfig(@Value("${k.mvc.multipart.location:}") String location,
-                                                  @Value("${k.mvc.multipart.maxFileSize:-1}") int maxFileSize,
+    public MultipartConfigElement multipartConfig(WebServerProperties serverProperties,
                                                   @Value("${k.mvc.multipart.maxRequestSize:-1}") int maxRequestSize,
                                                   @Value("${k.mvc.multipart.fileSizeThreshold:0}") int fileSizeThreshold) {
-        return new MultipartConfigElement(location, maxFileSize, maxRequestSize, fileSizeThreshold);
+        return new MultipartConfigElement(serverProperties.getLocation(), serverProperties.getMaxFileSize(), maxRequestSize, fileSizeThreshold);
     }
 
     @Bean

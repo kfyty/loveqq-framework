@@ -55,6 +55,11 @@ public class NettyProperties extends WebServerProperties {
     private Boolean accessLog;
 
     /**
+     * 上传文件保持在内存的最大限制
+     */
+    private Long maxInMemorySize;
+
+    /**
      * 空闲时间
      */
     private Duration idleTimeout;
