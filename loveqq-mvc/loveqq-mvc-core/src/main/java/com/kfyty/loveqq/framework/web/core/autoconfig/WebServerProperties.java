@@ -31,12 +31,22 @@ public class WebServerProperties {
     /**
      * 最大线程数
      */
-    private Integer maxThreads;
+    protected Integer maxThreads;
 
     /**
      * 端口
      */
     protected int port;
+
+    /**
+     * 上传文件临时目录
+     */
+    protected String location;
+
+    /**
+     * 最大上传文件限制
+     */
+    protected Long maxFileSize;
 
     /**
      * 项目中的静态资源路径
@@ -77,6 +87,9 @@ public class WebServerProperties {
 
     public <T extends WebServerProperties> T copy(T subClass) {
         subClass.setVirtualThread(this.virtualThread);
+        subClass.setMaxThreads(this.maxThreads);
+        subClass.setLocation(this.location);
+        subClass.setMaxFileSize(this.maxFileSize);
         subClass.setPort(this.port);
         subClass.setResources(this.resources);
         if (subClass.getPrimarySource() == null) {
