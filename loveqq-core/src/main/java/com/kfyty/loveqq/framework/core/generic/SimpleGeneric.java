@@ -3,10 +3,10 @@ package com.kfyty.loveqq.framework.core.generic;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
-import jakarta.inject.Provider;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.inject.Provider;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

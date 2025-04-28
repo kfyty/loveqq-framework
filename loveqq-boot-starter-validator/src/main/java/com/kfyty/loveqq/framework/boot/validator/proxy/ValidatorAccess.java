@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.boot.validator.proxy;
 
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import jakarta.validation.Validator;
 import lombok.Getter;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.hibernate.validator.internal.engine.validationcontext.BaseBeanValidationContext;
@@ -10,6 +9,7 @@ import org.hibernate.validator.internal.engine.validationcontext.ValidatorScoped
 import org.hibernate.validator.internal.engine.valuecontext.BeanValueContext;
 import org.hibernate.validator.internal.metadata.BeanMetaDataManager;
 
+import javax.validation.Validator;
 import java.lang.reflect.Method;
 
 /**

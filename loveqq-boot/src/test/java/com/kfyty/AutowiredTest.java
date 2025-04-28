@@ -24,12 +24,12 @@ import com.kfyty.loveqq.framework.web.core.annotation.GetMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.PostMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.PutMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.RestController;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;

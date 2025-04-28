@@ -8,8 +8,9 @@ import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import jakarta.validation.Valid;
-import jakarta.validation.Validator;
+
+import javax.validation.Valid;
+import javax.validation.Validator;
 
 /**
  * 描述: 方法参数校验

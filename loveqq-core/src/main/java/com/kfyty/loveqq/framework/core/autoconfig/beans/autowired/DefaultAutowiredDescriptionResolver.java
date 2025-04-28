@@ -3,10 +3,10 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import jakarta.annotation.Resource;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;

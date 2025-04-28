@@ -3,9 +3,9 @@ package com.kfyty.loveqq.framework.boot.validator.constraints;
 import com.kfyty.loveqq.framework.boot.validator.annotation.Flexible;
 import com.kfyty.loveqq.framework.boot.validator.context.IOCContext;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
 
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import java.util.Objects;
 
 /**

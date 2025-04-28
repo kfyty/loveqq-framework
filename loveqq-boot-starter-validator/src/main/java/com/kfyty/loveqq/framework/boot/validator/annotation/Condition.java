@@ -1,9 +1,9 @@
 package com.kfyty.loveqq.framework.boot.validator.annotation;
 
 import com.kfyty.loveqq.framework.boot.validator.constraints.ConditionConstraintValidator;
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
 
+import javax.validation.Constraint;
+import javax.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;

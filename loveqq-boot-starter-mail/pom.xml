@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <jakarta.mail>2.0.3</jakarta.mail>
+        <jakarta.mail>1.6.2</jakarta.mail>
     </properties>
 
     <dependencies>
@@ -30,13 +30,13 @@
         </dependency>
 
         <dependency>
-            <groupId>jakarta.mail</groupId>
-            <artifactId>jakarta.mail-api</artifactId>
+            <groupId>javax.mail</groupId>
+            <artifactId>javax.mail-api</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.angus</groupId>
-            <artifactId>jakarta.mail</artifactId>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
             <version>${jakarta.mail}</version>
         </dependency>
     </dependencies>

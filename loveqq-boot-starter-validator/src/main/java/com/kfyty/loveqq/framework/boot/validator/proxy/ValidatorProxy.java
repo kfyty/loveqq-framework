@@ -6,7 +6,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
- * 描述: {@link jakarta.validation.Validator} 代理类
+ * 描述: {@link javax.validation.Validator} 代理类
  *
  * @author kfyty725
  * @date 2023/4/20 16:43

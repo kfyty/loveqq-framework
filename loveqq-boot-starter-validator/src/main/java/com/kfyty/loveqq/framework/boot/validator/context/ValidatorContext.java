@@ -1,10 +1,11 @@
 package com.kfyty.loveqq.framework.boot.validator.context;
 
 import com.kfyty.loveqq.framework.boot.validator.agent.ValidatorValueContextInstrumentation;
-import jakarta.validation.Validator;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.internal.engine.valuecontext.ValueContext;
+
+import javax.validation.Validator;
 
 /**
  * 描述: 检验器上下文

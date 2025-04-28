@@ -12,11 +12,11 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import org.hibernate.validator.BaseHibernateValidatorConfiguration;
 
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.lang.reflect.Proxy;
 
 /**
@@ -33,13 +33,13 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public jakarta.validation.Configuration<?> validatorConfiguration() {
+    public javax.validation.Configuration<?> validatorConfiguration() {
         return Validation.byDefaultProvider().configure();
     }
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public ValidatorFactory validatorFactory(jakarta.validation.Configuration<?> configure) {
+    public ValidatorFactory validatorFactory(javax.validation.Configuration<?> configure) {
         configure.addProperty(BaseHibernateValidatorConfiguration.FAIL_FAST, Boolean.TRUE.toString());
         return configure.buildValidatorFactory();
     }

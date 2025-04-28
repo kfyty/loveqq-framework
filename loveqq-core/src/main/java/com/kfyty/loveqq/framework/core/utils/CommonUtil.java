@@ -317,7 +317,7 @@ public abstract class CommonUtil {
             char c = target.charAt(i);
             if (c != lineChar) {
                 // 说明是不是分割符，此时仅判断首个字符是否需要大写即可
-                builder.append(firstUpper && builder.isEmpty() ? Character.toUpperCase(c) : c);
+                builder.append(firstUpper && builder.length() < 1 ? Character.toUpperCase(c) : c);
                 continue;
             }
             while (i < target.length() && (c = target.charAt(i)) == lineChar) {

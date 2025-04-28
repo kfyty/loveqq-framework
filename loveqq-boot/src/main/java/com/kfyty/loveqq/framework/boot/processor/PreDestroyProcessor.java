@@ -7,8 +7,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import jakarta.annotation.PreDestroy;
 
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -21,13 +21,13 @@ import java.lang.reflect.Modifier;
  */
 @Component
 @Order(Integer.MIN_VALUE)
-@ConditionalOnClass("jakarta.annotation.PreDestroy")
+@ConditionalOnClass("javax.annotation.PreDestroy")
 public class PreDestroyProcessor implements BeanPostProcessor {
 
     @Override
     public void postProcessBeforeDestroy(Object bean, String beanName) {
-        Class<?> sourceClass = AopUtil.getTargetClass(bean);
-        for (Method method : ReflectUtil.getMethods(sourceClass)) {
+        Class<?> targetClass = AopUtil.getTargetClass(bean);
+        for (Method method : ReflectUtil.getMethods(targetClass)) {
             if (Modifier.isStatic(method.getModifiers()) || Modifier.isFinal(method.getModifiers()) || method.getReturnType() != void.class || method.getParameterCount() != 0) {
                 continue;
             }
