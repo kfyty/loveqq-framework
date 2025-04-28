@@ -213,7 +213,7 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isBaseDataType(Class<?> clazz) {
-        if (clazz.isPrimitive()) {
+        if (clazz.isPrimitive() || clazz.isEnum()) {
             return true;
         }
         return ConverterUtil.getTypeConverters().keySet().stream().map(Pair::getValue).anyMatch(e -> e == clazz);

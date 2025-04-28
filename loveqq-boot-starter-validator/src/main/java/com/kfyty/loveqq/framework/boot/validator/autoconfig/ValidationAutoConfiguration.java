@@ -39,16 +39,15 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public ValidatorFactory validatorFactory() {
-        jakarta.validation.Configuration<?> configure = this.validatorConfiguration();
+    public ValidatorFactory validatorFactory(jakarta.validation.Configuration<?> configure) {
         configure.addProperty(BaseHibernateValidatorConfiguration.FAIL_FAST, Boolean.TRUE.toString());
         return configure.buildValidatorFactory();
     }
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public Validator validator() {
-        Validator validator = this.validatorFactory().getValidator();
+    public Validator validator(ValidatorFactory validatorFactory) {
+        Validator validator = validatorFactory.getValidator();
         return this.isProxyValidator ? this.createValidatorProxy(validator) : validator;
     }
 
@@ -62,7 +61,7 @@ public class ValidationAutoConfiguration implements ApplicationListener<ContextR
      * 为了方便无感使用，为 {@link Validator} 创建代理
      */
     protected Validator createValidatorProxy(Validator validator) {
-        if (ClassLoaderUtil.isIndexedClassLoader() && ConstantConfig.LOAD_TRANSFORMER) {
+        if (ConstantConfig.LOAD_TRANSFORMER && ClassLoaderUtil.isIndexedClassLoader()) {
             return validator;
         }
         return (Validator) Proxy.newProxyInstance(ClassLoaderUtil.classLoader(this.getClass()), new Class[]{Validator.class}, new ValidatorProxy(new ValidatorAccess(validator)));

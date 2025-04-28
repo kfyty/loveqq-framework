@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.data.korm.sql.dynamic.enjoy;
 
 import com.jfinal.template.Engine;
-import com.kfyty.database.jdbc.mapping.enjoy.EnjoyTemplateStatement;
+import com.kfyty.loveqq.framework.data.korm.mapping.enjoy.EnjoyTemplateStatement;
 import com.kfyty.loveqq.framework.data.korm.sql.dynamic.AbstractDynamicProvider;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

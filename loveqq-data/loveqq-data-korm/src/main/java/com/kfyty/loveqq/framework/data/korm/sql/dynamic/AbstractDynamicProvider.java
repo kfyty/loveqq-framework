@@ -1,9 +1,9 @@
 package com.kfyty.loveqq.framework.data.korm.sql.dynamic;
 
-import com.kfyty.database.jdbc.mapping.TemplateStatement;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.XmlUtil;
+import com.kfyty.loveqq.framework.data.korm.mapping.TemplateStatement;
 import com.kfyty.loveqq.framework.data.korm.session.Configuration;
 import lombok.Data;
 import org.w3c.dom.Element;
