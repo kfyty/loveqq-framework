@@ -16,7 +16,6 @@ import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     @Override
-    public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route) {
+    public MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route) {
         Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
         if (pair.getValue() == null) {
             throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
@@ -56,7 +55,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     @Override
-    public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route) {
+    public MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route) {
         Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
         if (pair.getValue() == null) {
             throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
@@ -73,7 +72,8 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
 
     @Override
     public void registryMethodMapping(MethodMapping mapping) {
-        this.registryMethodMapping(Collections.singletonList(mapping));
+        Routes routes = this.routesMap.computeIfAbsent(mapping.getRequestMethod(), Routes::new);
+        routes.addRoute(mapping);
     }
 
     @Override
