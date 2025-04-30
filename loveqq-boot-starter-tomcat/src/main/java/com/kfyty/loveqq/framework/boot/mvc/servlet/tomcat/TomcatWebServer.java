@@ -99,7 +99,7 @@ public class TomcatWebServer implements ServletWebServer {
         this.host = this.tomcat.getHost();
         this.config = config;
         this.dispatcherServlet = dispatcherServlet;
-        this.configTomcat();
+        this.configTomcatServer();
     }
 
     @Override
@@ -140,7 +140,7 @@ public class TomcatWebServer implements ServletWebServer {
         return this.dispatcherServlet;
     }
 
-    protected void configTomcat() {
+    protected void configTomcatServer() {
         try {
             this.host.setAutoDeploy(true);
             this.tomcat.setPort(this.getPort());

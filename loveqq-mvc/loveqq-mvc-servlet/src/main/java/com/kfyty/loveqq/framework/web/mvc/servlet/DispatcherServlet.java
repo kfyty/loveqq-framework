@@ -96,10 +96,13 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
         MethodParameter parameter = null;
-        ServerRequest serverRequest = new ServletServerRequest(request).init();
-        ServerResponse serverResponse = new ServletServerResponse(response);
+        ServletServerRequest serverRequest = new ServletServerRequest(request);
+        ServletServerResponse serverResponse = new ServletServerResponse(response);
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
+            // 初始化请求
+            serverRequest.init();
+
             // 无匹配，转发到 404
             if (methodMapping == null) {
                 this.handleReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);

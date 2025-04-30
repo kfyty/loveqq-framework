@@ -17,6 +17,7 @@ import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
 import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import reactor.netty.tcp.SslProvider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,9 +50,10 @@ public class NettyServerAutoConfig {
 
     @Bean
     @ConfigurationProperties("k.mvc.netty")
-    public NettyProperties nettyServerProperties(ResourceResolver resourceResolver) {
+    public NettyProperties nettyServerProperties(ResourceResolver resourceResolver, @Autowired(required = false) SslProvider sslProvider) {
         NettyProperties config = this.webServerProperties.copy(new NettyProperties());
         config.setResourceResolver(resourceResolver);
+        config.setSslProvider(sslProvider);
         this.collectAndConfigFilter(config);
         return config;
     }

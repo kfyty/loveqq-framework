@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -219,6 +221,19 @@ public class NettyWebServer implements ServerWebServer {
         if (this.config.getSslProvider() != null) {
             this.server = this.server.secure(this.config.getSslProvider(), this.config.getRedirectHttpToHttps());
         }
+        if (this.config.getLocation() != null || this.config.getMaxFileSize() != null || this.config.getMaxInMemorySize() != null) {
+            this.server = this.server.httpFormDecoder(e -> {
+                if (this.config.getLocation() != null) {
+                    e.baseDirectory(Paths.get(this.config.getLocation()));
+                }
+                if (this.config.getMaxFileSize() != null) {
+                    e.maxSize(this.config.getMaxFileSize());
+                }
+                if (this.config.getMaxInMemorySize() != null) {
+                    e.maxInMemorySize(this.config.getMaxInMemorySize());
+                }
+            });
+        }
         if (this.config.getServerConfigure() != null) {
             this.config.getServerConfigure().accept(this.server);
         }
@@ -299,12 +314,12 @@ public class NettyWebServer implements ServerWebServer {
                         .collectList()
                         .switchIfEmpty(Mono.just(emptyList()))
                         .flatMap(formData -> Mono.from(this.processRequest(request, response, EMPTY_INPUT_STREAM, formData)).doFinally(s -> formData.stream().filter(e -> e instanceof MultipartFile).forEach(IOUtil::close)))
-                        .onErrorResume(ex -> response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send());
+                        .onErrorResume(new OnErrorResume(response));
             }
             return Mono.from(request.receive().asInputStream())
                     .switchIfEmpty(Mono.just(EMPTY_INPUT_STREAM))
                     .flatMap(body -> Mono.from(this.processRequest(request, response, body, emptyList())).doFinally(s -> close(body)))
-                    .onErrorResume(ex -> response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send());
+                    .onErrorResume(new OnErrorResume(response));
         });
     }
 
@@ -322,6 +337,18 @@ public class NettyWebServer implements ServerWebServer {
         };
 
         return new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), requestProcessorSupplier).doFilter(request, response);
+    }
+
+    @Slf4j
+    @RequiredArgsConstructor
+    protected static class OnErrorResume implements Function<Throwable, Mono<Void>> {
+        private final HttpServerResponse response;
+
+        @Override
+        public Mono<Void> apply(Throwable throwable) {
+            log.error("Netty server request error.", throwable);
+            return response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send();
+        }
     }
 
     @RequiredArgsConstructor
@@ -405,7 +432,7 @@ public class NettyWebServer implements ServerWebServer {
         }
         FileUpload upload = (FileUpload) form;
         Lazy<InputStream> lazyInputStream = new Lazy<>(newInputStream(form));
-        return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.getMaxSize(), lazyInputStream));
+        return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.length(), lazyInputStream));
     }
 
     public static byte[] getBytes(HttpData data) {
@@ -436,6 +463,16 @@ public class NettyWebServer implements ServerWebServer {
         }
     }
 
+    /**
+     * 构建输入流提供者
+     * <p>
+     * 如果在内存中则先复制到字节数组，否则该订阅流程结束后会被释放，后续获取不到
+     * <p>
+     * 如果是文件则重命名，否则也会被释放，后续获取不到
+     *
+     * @param upload 上传数据
+     * @return 输入流提供者
+     */
     public static Supplier<InputStream> newInputStream(HttpData upload) {
         if (upload.isInMemory()) {
             byte[] bytes = getBytes(upload);
