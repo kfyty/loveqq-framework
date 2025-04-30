@@ -53,7 +53,8 @@ public class WebServletMvcAutoConfig {
     public MultipartConfigElement multipartConfig(WebServerProperties serverProperties,
                                                   @Value("${k.mvc.multipart.maxRequestSize:-1}") int maxRequestSize,
                                                   @Value("${k.mvc.multipart.fileSizeThreshold:0}") int fileSizeThreshold) {
-        return new MultipartConfigElement(serverProperties.getLocation(), serverProperties.getMaxFileSize(), maxRequestSize, fileSizeThreshold);
+        Long maxSize = serverProperties.getMaxFileSize() == null ? Long.valueOf(-1L) : serverProperties.getMaxFileSize();
+        return new MultipartConfigElement(serverProperties.getLocation(), maxSize, maxRequestSize, fileSizeThreshold);
     }
 
     @Bean

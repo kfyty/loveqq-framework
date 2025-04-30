@@ -476,6 +476,7 @@ public abstract class ReflectUtil {
 
     public static boolean isSuperMethod(Method superMethod, Method method) {
         return !Modifier.isPrivate(superMethod.getModifiers()) &&
+                superMethod.isBridge() == method.isBridge() &&
                 superMethod.getName().equals(method.getName()) &&
                 Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
     }
