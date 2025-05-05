@@ -347,6 +347,9 @@ public class NettyWebServer implements ServerWebServer {
         @Override
         public Mono<Void> apply(Throwable throwable) {
             log.error("Netty server request error.", throwable);
+            if (response.hasSentHeaders()) {
+                return response.then();
+            }
             return response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send();
         }
     }
