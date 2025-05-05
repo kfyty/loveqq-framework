@@ -8,12 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -39,6 +33,26 @@ public class SseEventStream {
     public static final byte[] MESSAGE_SEPARATOR = "\n\n".getBytes(UTF_8);
 
     /**
+     * 事件字节
+     */
+    public static final byte[] EVENT_BYTES = "event:".getBytes(UTF_8);
+
+    /**
+     * id 字节
+     */
+    public static final byte[] ID_BYTES = "id:".getBytes(UTF_8);
+
+    /**
+     * 重试字节
+     */
+    public static final byte[] RETRY_BYTES = "retry:".getBytes(UTF_8);
+
+    /**
+     * 数据字节
+     */
+    public static final byte[] DATA_BYTES = "data:".getBytes(UTF_8);
+
+    /**
      * 事件名称
      */
     private String event;
@@ -60,15 +74,15 @@ public class SseEventStream {
 
     public ByteBuf build() {
         ByteBuf buffer = Unpooled.buffer();
-        Mapping.from(this.event).whenNotNull(e -> buffer.writeBytes("event:".getBytes(UTF_8)).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
-        Mapping.from(this.id).whenNotNull(e -> buffer.writeBytes("id:".getBytes(UTF_8)).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
-        Mapping.from(this.retry).whenNotNull(e -> buffer.writeBytes("retry:".getBytes(UTF_8)).writeBytes(String.valueOf(e).getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
-        if (this.data instanceof CharSequence) {
-            return buffer.writeBytes("data:".getBytes(UTF_8)).writeBytes(this.data.toString().getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
+        Mapping.from(this.event).whenNotNull(e -> buffer.writeBytes(EVENT_BYTES).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
+        Mapping.from(this.id).whenNotNull(e -> buffer.writeBytes(ID_BYTES).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
+        Mapping.from(this.retry).whenNotNull(e -> buffer.writeBytes(RETRY_BYTES).writeBytes(String.valueOf(e).getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
+        if (this.data instanceof Number || this.data instanceof CharSequence) {
+            return buffer.writeBytes(DATA_BYTES).writeBytes(this.data.toString().getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
         }
         if (this.data instanceof byte[]) {
-            return buffer.writeBytes("data:".getBytes(UTF_8)).writeBytes((byte[]) this.data).writeBytes(MESSAGE_SEPARATOR);
+            return buffer.writeBytes(DATA_BYTES).writeBytes((byte[]) this.data).writeBytes(MESSAGE_SEPARATOR);
         }
-        throw new IllegalArgumentException("The sse data must be String/byte[]");
+        throw new IllegalArgumentException("The sse data must be Number/String/byte[]");
     }
 }
