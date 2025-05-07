@@ -14,7 +14,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.Strategy.DEFAULT;
 
@@ -67,7 +66,7 @@ public class RequestMappingAnnotationHandler implements RequestMappingHandler {
         methodMapping.setProduces(annotation.produces());
         if (!methodMapping.isEventStream()) {
             ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
-            if (responseBody == null && Objects.equals(annotation.produces(), RequestMapping.DEFAULT_PRODUCES)) {
+            if (responseBody == null && RequestMapping.DEFAULT_PRODUCES.equals(annotation.produces())) {
                 // 如果方法上没有，并且是默认的，则查找类上的注解
                 responseBody = AnnotationUtil.findAnnotation(controllerClass, ResponseBody.class);
             }

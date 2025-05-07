@@ -3,11 +3,15 @@ package com.kfyty.loveqq.framework.web.core.handler;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import com.kfyty.loveqq.framework.web.core.annotation.ControllerAdvice;
+import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
@@ -20,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
-import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 控制器异常处理器
@@ -69,7 +72,8 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                 for (Class<?> exceptionClass : exceptionClasses) {
                     if (Throwable.class.isAssignableFrom(exceptionClass)) {
                         Method targetMethod = AopUtil.getInterfaceMethod(targetClass, method);
-                        this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, new MethodParameter(target, targetMethod));
+                        MethodParameter methodParameter = new MethodParameter(target, targetMethod);
+                        this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, methodParameter.metadata(obtainContentType(methodParameter)));
                     }
                 }
             }
@@ -93,18 +97,20 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     }
 
     @Override
-    public Object handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+    public Pair<MethodParameter, Object> handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
         MethodParameter adviceMethod = this.findControllerExceptionAdvice(request, response, mapping, unwrap(throwable));
         if (adviceMethod == null) {
             throw throwable;
         }
-        return ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs());
+        return new Pair<>(adviceMethod, ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs()));
     }
 
     public MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
         Class<? extends Throwable> throwableClass = throwable.getClass();
-        MethodParameter exceptionHandler = ofNullable(this.exceptionHandlerMap.get(throwableClass))
-                .orElseGet(() -> this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwableClass)).map(Map.Entry::getValue).findFirst().orElse(null));
+        MethodParameter exceptionHandler = this.exceptionHandlerMap.get(throwableClass);
+        if (exceptionHandler == null) {
+            exceptionHandler = this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwableClass)).findFirst().map(Map.Entry::getValue).orElse(null);
+        }
         if (exceptionHandler == null) {
             return null;
         }
@@ -129,6 +135,37 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                 continue;
             }
         }
-        return new MethodParameter(exceptionHandler.getSource(), exceptionHandler.getMethod(), exceptionArgs);
+
+        MethodMapping cloned = mapping.clone();
+        MethodParameter handler = exceptionHandler.clone();
+
+        handler.setMethodArgs(exceptionArgs);
+
+        if (handler.getMetadata() != null) {
+            cloned.setProduces(handler.getMetadata().toString());
+        }
+
+        return handler.metadata(cloned);
+    }
+
+    protected String obtainContentType(MethodParameter exceptionHandler) {
+        String contentType = null;
+
+        ControllerAdvice controllerAdvice = AnnotationUtil.findAnnotation(exceptionHandler.getSource(), ControllerAdvice.class);
+        if (controllerAdvice != null) {
+            contentType = controllerAdvice.produces();
+        }
+
+        if (controllerAdvice == null || RequestMapping.DEFAULT_PRODUCES.equals(controllerAdvice.produces())) {
+            ResponseBody annotation = AnnotationUtil.findAnnotation(exceptionHandler.getMethod(), ResponseBody.class);
+            if (annotation == null) {
+                annotation = AnnotationUtil.findAnnotation(exceptionHandler.getSource(), ResponseBody.class);
+            }
+            if (annotation != null) {
+                contentType = annotation.contentType();
+            }
+        }
+
+        return contentType;
     }
 }

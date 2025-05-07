@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.web.core.annotation;
 
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.handler.AnnotatedExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.ControllerAdviceExceptionHandlerRegistry;
 
@@ -16,21 +16,22 @@ import java.lang.annotation.Target;
  * 全局异常处理
  * 如果自定义处理，可以返回 null，获取线程上下文的请求响应对应自行处理
  *
- * @see Controller
+ * @see RestController
  * @see ControllerAdviceExceptionHandlerRegistry
  * @see AnnotatedExceptionHandler
  */
-@Component
 @Documented
+@ResponseBody
+@ControllerAdvice
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ControllerAdvice {
+public @interface RestControllerAdvice {
     /**
      * 指定 bean name
      *
      * @return bean name
      */
-    @AliasFor(annotation = Component.class)
+    @AliasFor(annotation = ControllerAdvice.class)
     String value() default "";
 
     /**
@@ -38,6 +39,7 @@ public @interface ControllerAdvice {
      *
      * @return 基础包名
      */
+    @AliasFor(annotation = ControllerAdvice.class)
     String[] basePackages() default {};
 
     /**
@@ -45,6 +47,7 @@ public @interface ControllerAdvice {
      *
      * @return 基础 class
      */
+    @AliasFor(annotation = ControllerAdvice.class)
     Class<?>[] basePackageClasses() default {};
 
     /**
@@ -52,6 +55,7 @@ public @interface ControllerAdvice {
      *
      * @return 默认 {@link Controller}
      */
+    @AliasFor(annotation = ControllerAdvice.class)
     Class<? extends Annotation>[] annotations() default Controller.class;
 
     /**
@@ -59,5 +63,6 @@ public @interface ControllerAdvice {
      *
      * @return content-type
      */
+    @AliasFor(annotation = ControllerAdvice.class)
     String produces() default RequestMapping.DEFAULT_PRODUCES;
 }

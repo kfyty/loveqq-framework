@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
@@ -24,6 +25,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.util.function.Tuple2;
 
 import java.lang.reflect.Parameter;
 import java.util.concurrent.CompletionStage;
@@ -74,11 +76,11 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .filterWhen(p -> this.processPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
+                .onErrorResume(e -> this.handleException(request, response, methodMapping, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
                 .doFinally(s -> this.processCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
     }
 
-    @SuppressWarnings("unchecked")
     protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
         Supplier<?> supplier = () -> {
             ServerRequest prevRequest = RequestContextHolder.set(request);
@@ -90,9 +92,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 ResponseContextHolder.set(prevResponse);
             }
         };
-        return Mono.fromSupplier(supplier)
-                .flatMap(e -> this.adapterReturnValue(request, response, returnType, mapping, e))
-                .onErrorResume(e -> this.handleException(request, response, returnType, mapping, e));
+        return Mono.fromSupplier(supplier).flatMap(e -> this.adapterReturnValue(request, response, returnType, mapping, e));
     }
 
     @Override
@@ -106,11 +106,10 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         return super.resolveInternalParameter(parameter, request, response);
     }
 
-    @SuppressWarnings("rawtypes")
-    protected Mono handleException(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Throwable throwable) {
+    protected Mono<? extends Tuple2<?, MethodParameter>> handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
         try {
-            Object handled = super.handleException(request, response, mapping, throwable);
-            return this.adapterReturnValue(request, response, returnType, mapping, handled);
+            Pair<MethodParameter, Object> handled = super.obtainExceptionHandleValue(request, response, mapping, throwable);
+            return this.adapterReturnValue(request, response, handled.getKey(), mapping, handled.getValue()).zipWith(Mono.just(handled.getKey()));
         } catch (Throwable e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }

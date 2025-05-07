@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.core;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
@@ -179,7 +180,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected Object handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+    protected Pair<MethodParameter, Object> obtainExceptionHandleValue(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
         for (ExceptionHandler exceptionHandler : this.exceptionHandlers) {
             if (exceptionHandler.canHandle(mapping, throwable)) {
                 return exceptionHandler.handle(request, response, mapping, throwable);
@@ -198,7 +199,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
                 return this.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
             }
         }
-        throw new IllegalArgumentException("Can't resolve return value, there is no suitable return value processor available.");
+        throw new IllegalArgumentException("The return value and Content-Type doesn't support yet, please configure a HandlerMethodReturnValueProcessor to handle return value.");
     }
 
     /**

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 描述: nio 工具
@@ -69,6 +70,16 @@ public abstract class NIOUtil {
             buffer.writeInt(number.intValue());
         }
         return buffer;
+    }
+
+    /**
+     * 字符串转换为字节缓冲
+     *
+     * @param str 字符串
+     * @return 字节缓冲
+     */
+    public static ByteBuf from(CharSequence str) {
+        return from(str.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     /**

@@ -37,14 +37,8 @@ public class ResponseBodyEmitter {
         if (data instanceof ByteBuf) {
             return (ByteBuf) data;
         }
-        if (data instanceof Boolean) {
-            return NIOUtil.from((Boolean) data);
-        }
-        if (data instanceof Number) {
-            return NIOUtil.from((Number) data);
-        }
-        if (data instanceof CharSequence) {
-            return NIOUtil.from(data.toString().getBytes(StandardCharsets.UTF_8));
+        if (data instanceof Boolean || data instanceof Number || data instanceof CharSequence) {
+            return NIOUtil.from(data.toString());
         }
         if (data instanceof byte[]) {
             return NIOUtil.from((byte[]) data);
