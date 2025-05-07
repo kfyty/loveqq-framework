@@ -21,12 +21,16 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
             return false;
         }
         Object controller = returnType.getSource();
-        String contentType = ((MethodMapping) returnType.getMetadata()).getProduces();
-        if (contentType == null) {
+        MethodMapping metadata = (MethodMapping) returnType.getMetadata();
+        if (metadata.getProduces() == null) {
             return false;
         }
+        if (metadata.getMappingMethod() != returnType.getMethod()) {                                                    // 此时是异常处理器链路，使用原控制器方法
+            boolean isResponseBody = hasAnnotation(metadata.getMappingMethod(), ResponseBody.class) || hasAnnotation(metadata.getMappingMethod().getDeclaringClass(), ResponseBody.class);
+            return isResponseBody && this.supportsContentType(metadata.getProduces());
+        }
         boolean isResponseBody = hasAnnotation(returnType.getMethod(), ResponseBody.class) || hasAnnotation(controller != null ? controller.getClass() : returnType.getMethod().getDeclaringClass(), ResponseBody.class);
-        return isResponseBody && this.supportsContentType(contentType);
+        return isResponseBody && this.supportsContentType(metadata.getProduces());
     }
 
     protected abstract boolean supportsContentType(String contentType);

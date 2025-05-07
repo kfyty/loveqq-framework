@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.core.handler;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
@@ -20,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
-import static java.util.Optional.ofNullable;
 
 /**
  * 描述: 控制器异常处理器
@@ -93,18 +93,20 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     }
 
     @Override
-    public Object handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+    public Pair<MethodParameter, Object> handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
         MethodParameter adviceMethod = this.findControllerExceptionAdvice(request, response, mapping, unwrap(throwable));
         if (adviceMethod == null) {
             throw throwable;
         }
-        return ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs());
+        return new Pair<>(adviceMethod, ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs()));
     }
 
     public MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
         Class<? extends Throwable> throwableClass = throwable.getClass();
-        MethodParameter exceptionHandler = ofNullable(this.exceptionHandlerMap.get(throwableClass))
-                .orElseGet(() -> this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwableClass)).map(Map.Entry::getValue).findFirst().orElse(null));
+        MethodParameter exceptionHandler = this.exceptionHandlerMap.get(throwableClass);
+        if (exceptionHandler == null) {
+            exceptionHandler = this.exceptionHandlerMap.entrySet().stream().filter(e -> e.getKey().isAssignableFrom(throwableClass)).findFirst().map(Map.Entry::getValue).orElse(null);
+        }
         if (exceptionHandler == null) {
             return null;
         }
@@ -129,6 +131,6 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                 continue;
             }
         }
-        return new MethodParameter(exceptionHandler.getSource(), exceptionHandler.getMethod(), exceptionArgs);
+        return new MethodParameter(exceptionHandler.getSource(), exceptionHandler.getMethod(), exceptionArgs).metadata(mapping);
     }
 }
