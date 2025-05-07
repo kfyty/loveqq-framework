@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.method;
 
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +21,7 @@ import java.util.function.Function;
  */
 @Data
 @AllArgsConstructor
-public class MethodParameter {
+public class MethodParameter implements Cloneable {
     /**
      * 方法所在实例
      */
@@ -185,5 +186,14 @@ public class MethodParameter {
     public MethodParameter metadata(Object metadata) {
         this.metadata = metadata;
         return this;
+    }
+
+    @Override
+    public MethodParameter clone() {
+        try {
+            return (MethodParameter) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new ResolvableException(e);
+        }
     }
 }

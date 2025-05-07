@@ -77,7 +77,7 @@ public class SseEventStream {
         Mapping.from(this.event).whenNotNull(e -> buffer.writeBytes(EVENT_BYTES).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
         Mapping.from(this.id).whenNotNull(e -> buffer.writeBytes(ID_BYTES).writeBytes(e.getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
         Mapping.from(this.retry).whenNotNull(e -> buffer.writeBytes(RETRY_BYTES).writeBytes(String.valueOf(e).getBytes(UTF_8)).writeBytes(LINE_SEPARATOR));
-        if (this.data instanceof Number || this.data instanceof CharSequence) {
+        if (this.data instanceof Number || this.data instanceof Boolean || this.data instanceof CharSequence) {
             return buffer.writeBytes(DATA_BYTES).writeBytes(this.data.toString().getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
         }
         if (this.data instanceof byte[]) {
