@@ -17,12 +17,12 @@ public class RequestContextHolder extends com.kfyty.loveqq.framework.web.core.re
      */
     public static final String REQUEST_CONTEXT_ATTRIBUTE = RequestContextHolder.class.getName() + ".REQUEST_CONTEXT_ATTRIBUTE";
 
-    public static HttpServerRequest getRequest() {
-        return (HttpServerRequest) get().getRawRequest();
-    }
-
     public static ServerRequest get(ContextView contextView) {
         return contextView.get(REQUEST_CONTEXT_ATTRIBUTE);
+    }
+
+    public static HttpServerRequest getRequest() {
+        return (HttpServerRequest) get().getRawRequest();
     }
 
     public static HttpServerRequest getRequest(ContextView contextView) {

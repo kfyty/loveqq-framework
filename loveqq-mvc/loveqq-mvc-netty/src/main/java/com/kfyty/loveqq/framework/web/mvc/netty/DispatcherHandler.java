@@ -107,11 +107,16 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     protected Mono<? extends Tuple2<?, MethodParameter>> handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
+        ServerRequest prevRequest = RequestContextHolder.set(request);
+        ServerResponse prevResponse = ResponseContextHolder.set(response);
         try {
             Pair<MethodParameter, Object> handled = super.obtainExceptionHandleValue(request, response, mapping, throwable);
             return this.adapterReturnValue(request, response, handled.getKey(), mapping, handled.getValue()).zipWith(Mono.just(handled.getKey()));
         } catch (Throwable e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
+        } finally {
+            RequestContextHolder.set(prevRequest);
+            ResponseContextHolder.set(prevResponse);
         }
     }
 

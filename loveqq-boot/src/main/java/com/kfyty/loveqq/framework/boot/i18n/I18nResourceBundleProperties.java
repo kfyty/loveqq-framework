@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.i18n.I18nResourceBundle;
+import com.kfyty.loveqq.framework.core.i18n.LocaleResolver;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.Data;
 
@@ -35,11 +36,16 @@ public class I18nResourceBundleProperties {
 
     @Bean
     @ConditionalOnMissingBean
-    public I18nResourceBundle i18nResourceBundle() {
+    public LocaleResolver defaultLocaleResolver() {
+        return new DefaultLocaleResolver(this.defaultLocale);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public I18nResourceBundle defaultI18nResourceBundle(LocaleResolver localeResolver) {
         if (CommonUtil.empty(this.resources)) {
-            return new DefaultI18nResourceBundle(Locale.getDefault(), Collections.emptyList());
+            return new DefaultI18nResourceBundle(localeResolver, Collections.emptyList());
         }
-        Locale locale = this.defaultLocale != null ? this.defaultLocale : Locale.getDefault();
-        return new DefaultI18nResourceBundle(locale, this.resources);
+        return new DefaultI18nResourceBundle(localeResolver, this.resources);
     }
 }
