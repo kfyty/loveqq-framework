@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 
+import static com.kfyty.loveqq.framework.core.utils.NIOUtil.from;
+
 /**
  * 描述: reactor 实现
  *
@@ -66,6 +68,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
      * @param isSse    是否是 sse
      * @return 响应值
      */
+    @SuppressWarnings("unchecked")
     static Publisher<Void> writeReturnValue(Object retValue, HttpServerResponse response, boolean isSse) {
         if (retValue == null) {
             return Mono.empty();
@@ -73,20 +76,23 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
         }
-        if (retValue instanceof CharSequence) {
-            return response.sendString(Mono.just(retValue.toString()));
+        if (retValue instanceof CharSequence str) {
+            return response.send(Mono.just(from(str)), e -> isSse);
+        }
+        if (retValue instanceof ByteBuf byteBuf) {
+            return response.send(Mono.just(byteBuf), e -> isSse);
+        }
+        if (retValue instanceof SseEventStream sse) {
+            return response.send(Mono.just(sse.build()), e -> isSse);
+        }
+        if (retValue instanceof Publisher<?> publisher) {
+            return response.send((Publisher<? extends ByteBuf>) publisher, e -> isSse);
+        }
+        if (retValue instanceof byte[] bytes) {
+            return response.send(Mono.just(from(bytes)), e -> isSse);
         }
         if (retValue instanceof InputStream) {
             return response.sendByteArray(Mono.fromSupplier(() -> IOUtil.read((InputStream) retValue)));
-        }
-        if (retValue instanceof ByteBuf) {
-            return response.send(Mono.just((ByteBuf) retValue), e -> isSse);
-        }
-        if (retValue instanceof SseEventStream) {
-            return response.send(Mono.just(((SseEventStream) retValue).build()), e -> isSse);
-        }
-        if (retValue instanceof byte[]) {
-            return response.sendByteArray(Mono.just((byte[]) retValue));
         }
         if (retValue instanceof Path) {
             return response.sendFile((Path) retValue);

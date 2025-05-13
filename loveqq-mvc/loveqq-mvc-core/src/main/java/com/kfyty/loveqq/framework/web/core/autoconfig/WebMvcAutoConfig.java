@@ -47,7 +47,7 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
     @Bean
     @ConfigurationProperties("k.mvc.cors")
     @ConditionalOnProperty(prefix = "k.mvc.cors", value = "allowOrigin", matchIfNonNull = true)
-    public CorsConfiguration corsConfiguration() {
+    public CorsConfiguration defaultCorsConfiguration() {
         return new CorsConfiguration();
     }
 

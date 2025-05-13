@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.mapping;
 
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -27,7 +28,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRA
 @Data
 @Slf4j
 @NoArgsConstructor
-public class MethodMapping {
+public class MethodMapping implements Cloneable {
     /**
      * URL
      */
@@ -68,23 +69,16 @@ public class MethodMapping {
      */
     private Lazy<Object> controller;
 
-    public static MethodMapping create(String url, RequestMethod requestMethod, Lazy<Object> controller, Method mappingMethod) {
-        MethodMapping methodMapping = new MethodMapping();
-        methodMapping.setController(controller);
-        methodMapping.setMappingMethod(mappingMethod);
-        methodMapping.setRequestMethod(requestMethod);
-        methodMapping.setUrl(url);
-        methodMapping.setPaths(CommonUtil.split(url, "[/]").toArray(EMPTY_STRING_ARRAY));
-        resolveRestfulVariableIfNecessary(methodMapping);
-        return methodMapping;
-    }
-
     public Integer getLength() {
         return this.paths.length;
     }
 
     public boolean isEventStream() {
         return this.produces != null && this.produces.contains("text/event-stream");
+    }
+
+    public Object getController() {
+        return this.controller.get();
     }
 
     public Integer getRestfulMappingIndex(String path) {
@@ -99,12 +93,28 @@ public class MethodMapping {
         throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
     }
 
-    public Object getController() {
-        return this.controller.get();
-    }
-
     public MethodParameter buildMethodParameter(Object[] parameters) {
         return new MethodParameter(this.getController(), this.mappingMethod, parameters);
+    }
+
+    @Override
+    public MethodMapping clone() {
+        try {
+            return (MethodMapping) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new ResolvableException(e);
+        }
+    }
+
+    public static MethodMapping create(String url, RequestMethod requestMethod, Lazy<Object> controller, Method mappingMethod) {
+        MethodMapping methodMapping = new MethodMapping();
+        methodMapping.setController(controller);
+        methodMapping.setMappingMethod(mappingMethod);
+        methodMapping.setRequestMethod(requestMethod);
+        methodMapping.setUrl(url);
+        methodMapping.setPaths(CommonUtil.split(url, "[/]").toArray(EMPTY_STRING_ARRAY));
+        resolveRestfulVariableIfNecessary(methodMapping);
+        return methodMapping;
     }
 
     @SuppressWarnings("unchecked")

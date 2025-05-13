@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.mvc.servlet;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
@@ -129,7 +130,7 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
         } catch (Throwable e) {
             exception = e;
             log.error("process request error: {}", e.getMessage(), e);
-            this.handleException(serverRequest, serverResponse, methodMapping, parameter, e);
+            this.handleException(serverRequest, serverResponse, methodMapping, e);
         } finally {
             if (methodMapping != null) {
                 this.processCompletionInterceptor(serverRequest, serverResponse, methodMapping, exception);
@@ -148,12 +149,10 @@ public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServl
         return super.resolveInternalParameter(parameter, request, response);
     }
 
-    protected void handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, MethodParameter parameter, Throwable throwable) throws ServletException {
+    protected void handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws ServletException {
         try {
-            Object handled = super.handleException(request, response, mapping, throwable);
-            if (handled != null) {
-                this.handleReturnValue(handled, parameter, request, response);
-            }
+            Pair<MethodParameter, Object> handled = super.obtainExceptionHandleValue(request, response, mapping, throwable);
+            this.handleReturnValue(handled.getValue(), handled.getKey(), request, response);
         } catch (Throwable e) {
             throw e instanceof ServletException ? (ServletException) e : new ServletException(unwrap(e));
         }
