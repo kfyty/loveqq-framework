@@ -51,6 +51,7 @@ public @interface Cacheable {
 
     /**
      * 返回 null 时，是否放入缓存
+     * <b>响应式缓存不支持此属性</b>
      *
      * @return true/false
      */
