@@ -70,10 +70,10 @@ public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
 
     protected void preClear(String cacheClearName, CacheClear cacheClear) {
         if (cacheClear != null && cacheClear.preClear()) {
-            if (cacheClear.preClearTimeout() <= 0) {
+            if (cacheClear.delay() <= 0) {
                 this.cache.clear(cacheClearName);
             } else {
-                this.executorService.schedule(() -> this.cache.clear(cacheClearName), cacheClear.preClearTimeout(), TimeUnit.MILLISECONDS);
+                this.executorService.schedule(() -> this.cache.clear(cacheClearName), cacheClear.delay(), TimeUnit.MILLISECONDS);
             }
         }
     }
