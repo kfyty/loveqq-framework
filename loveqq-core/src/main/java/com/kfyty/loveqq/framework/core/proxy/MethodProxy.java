@@ -83,7 +83,7 @@ public class MethodProxy {
         if (annotation == null) {
             return false;
         }
-        if (this.getClass().getClassLoader() instanceof JarIndexClassLoader) {
+        if (target.getClass().getClassLoader() instanceof JarIndexClassLoader) {
             return !annotation.instrument() || (!LOAD_TRANSFORMER || target.getClass().getSuperclass() != Object.class);
         }
         return true;

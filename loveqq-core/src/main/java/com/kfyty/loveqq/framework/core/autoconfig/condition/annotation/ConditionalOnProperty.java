@@ -63,7 +63,7 @@ public @interface ConditionalOnProperty {
      *
      * @return 默认 false
      */
-    boolean matchIfNonEmpty() default false;
+    boolean matchIfNotEmpty() default false;
 
     /**
      * 属性条件容器

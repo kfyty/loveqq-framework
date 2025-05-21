@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @Component
 @ConfigurationProperties("k.datasource")
-@ConditionalOnProperty(value = "k.datasource", matchIfNonEmpty = true)
+@ConditionalOnProperty(value = "k.datasource", matchIfNotEmpty = true)
 public class DataSourceProperties {
     /**
      * 用户名
