@@ -25,7 +25,7 @@ public class OnPropertyCondition implements Condition {
         String propertyKey = this.obtainPropertyKey(conditional);
         String propertyValue = propertyContext.getProperty(propertyKey);
         if (propertyValue == null || propertyValue.isEmpty()) {
-            if (conditional.matchIfNonEmpty()) {
+            if (conditional.matchIfNotEmpty()) {
                 return !propertyContext.searchMapProperties(propertyKey).isEmpty();
             }
             return conditional.matchIfMissing();
