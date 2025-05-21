@@ -55,7 +55,7 @@ public class DefaultFilterChain implements FilterChain {
     @Override
     public Mono<Void> doFilter(ServerRequest request, ServerResponse response) {
         if (this.filters == null || this.index >= this.filters.size()) {
-            return Mono.from(this.handler.get());
+            return Mono.defer(() -> Mono.from(this.handler.get()));
         }
         Filter filter = this.filters.get(index++);
         if (filter instanceof WsFilter) {

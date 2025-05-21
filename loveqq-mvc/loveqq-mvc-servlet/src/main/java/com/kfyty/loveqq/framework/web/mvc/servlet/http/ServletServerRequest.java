@@ -56,6 +56,11 @@ public class ServletServerRequest implements ServerRequest {
     }
 
     @Override
+    public String getHost() {
+        return this.request.getServerName();
+    }
+
+    @Override
     public Integer getServerPort() {
         return this.request.getServerPort();
     }

@@ -77,6 +77,11 @@ public class NettyServerRequest implements ServerRequest {
     }
 
     @Override
+    public String getHost() {
+        return this.request.hostName();
+    }
+
+    @Override
     public Integer getServerPort() {
         return this.request.hostPort();
     }

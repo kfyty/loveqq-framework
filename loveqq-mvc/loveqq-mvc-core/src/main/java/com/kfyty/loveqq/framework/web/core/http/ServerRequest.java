@@ -25,6 +25,13 @@ public interface ServerRequest {
     String getScheme();
 
     /**
+     * 获取客户端 host
+     *
+     * @return host
+     */
+    String getHost();
+
+    /**
      * 获取服务器端口
      *
      * @return port

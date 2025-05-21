@@ -20,7 +20,7 @@ import java.util.Map;
 @Data
 @Component
 @ConfigurationProperties("k.nacos.discovery")
-@ConditionalOnProperty(value = "k.nacos.discovery", matchIfNonEmpty = true)
+@ConditionalOnProperty(value = "k.nacos.discovery", matchIfNotEmpty = true)
 public class NacosDiscoveryProperties implements InitializingBean {
     /**
      * service name to registry.
