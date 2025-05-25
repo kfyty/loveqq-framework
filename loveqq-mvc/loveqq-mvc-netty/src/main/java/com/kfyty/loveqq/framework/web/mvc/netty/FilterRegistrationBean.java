@@ -1,14 +1,15 @@
-package com.kfyty.loveqq.framework.web.mvc.netty.filter;
+package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
+import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
- * 描述: 过滤器注册
+ * 描述: netty 过滤器注册
  *
  * @author kfyty725
  * @date 2021/5/28 14:49
@@ -24,6 +25,6 @@ public class FilterRegistrationBean extends RegistrationBean<FilterRegistrationB
     private String filterName = CommonUtil.EMPTY_STRING;
 
     {
-        addUrlPattern("/*");
+        addUrlPattern("/**");
     }
 }

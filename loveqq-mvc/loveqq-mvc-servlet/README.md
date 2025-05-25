@@ -3,7 +3,7 @@
 ### 通用接口
 * servlet web 服务器：com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer
 * 请求分发器：com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet
-* 内置跨域过滤器：com.kfyty.loveqq.framework.web.mvc.servlet.filter.cors.CorsFilter
+* 内置跨域过滤器：com.kfyty.loveqq.framework.web.core.cors.CorsFilter
 * 请求/响应上下文过滤器：com.kfyty.loveqq.framework.web.mvc.servlet.filter.RequestResponseContextHolderFilter
 * 统一抽象 http 请求 servlet 实现：com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerRequest
 * 统一抽象 http 响应 servlet 实现：com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerResponse

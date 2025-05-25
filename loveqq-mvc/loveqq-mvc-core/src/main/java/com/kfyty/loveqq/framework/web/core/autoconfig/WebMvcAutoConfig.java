@@ -8,11 +8,14 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProper
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.annotation.Controller;
 import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
+import com.kfyty.loveqq.framework.web.core.cors.CorsFilter;
+import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
@@ -49,6 +52,13 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
     @ConditionalOnProperty(prefix = "k.mvc.cors", value = "allowOrigin", matchIfNonNull = true)
     public CorsConfiguration defaultCorsConfiguration() {
         return new CorsConfiguration();
+    }
+
+    @Bean
+    @ConditionalOnBean(CorsConfiguration.class)
+    @ConditionalOnMissingBean(CorsFilter.class)
+    public Filter defaultCorsFilter(CorsConfiguration configuration) {
+        return new CorsFilter(configuration);
     }
 
     @Override

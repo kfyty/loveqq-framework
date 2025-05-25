@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.http;
 
+import com.kfyty.loveqq.framework.core.utils.NIOUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
@@ -93,7 +94,7 @@ public class NettyServerResponse implements ServerResponse {
 
     @Override
     public void flush() throws IOException {
-        // nothing，on OutputStream.close will flush all buffer
+        this.outputStream.flush();
     }
 
     @Override
@@ -105,9 +106,19 @@ public class NettyServerResponse implements ServerResponse {
     private class ReactorNettyByteArrayOutputStream extends ByteArrayOutputStream {
 
         @Override
+        public void flush() throws IOException {
+            ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
+            NettyServerResponse.this.response.send(Mono.just(NIOUtil.from(outputStream.toByteArray())), e -> true).then().subscribe();
+            outputStream.reset();
+        }
+
+        @Override
         public void close() throws IOException {
             ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
-            NettyServerResponse.this.response.sendByteArray(Mono.just(outputStream.toByteArray())).then().subscribe();
+            byte[] bytes = outputStream.toByteArray();
+            if (bytes.length > 0) {
+                NettyServerResponse.this.response.sendByteArray(Mono.just(bytes)).then().subscribe();
+            }
             outputStream.reset();
         }
     }

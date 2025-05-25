@@ -69,6 +69,7 @@
         <asm.version>9.6</asm.version>
         <javassist.version>3.30.2-GA</javassist.version>
         <netty.version>4.1.115.Final</netty.version>
+        <reactive.streams.version>1.0.4</reactive.streams.version>
         <reactor.core.version>3.6.0</reactor.core.version>
         <reactor.netty.version>1.2.1</reactor.netty.version>
         <ognl.version>3.4.5</ognl.version>

@@ -3,9 +3,9 @@
 ### 通用接口
 * 非 servlet web 服务器：com.kfyty.loveqq.framework.web.mvc.netty.ServerWebServer
 * 请求分发器：com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler
-* 过滤器：com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter
-* ws 过滤器：com.kfyty.loveqq.framework.web.mvc.netty.filter.ws.WsFilter
-* 内置跨域过滤器：com.kfyty.loveqq.framework.web.mvc.netty.filter.cors.CorsFilter
+* 过滤器：com.kfyty.loveqq.framework.web.core.filter.Filter
+* ws 过滤器：com.kfyty.loveqq.framework.web.core.filter.ws.WsFilter
+* 内置跨域过滤器：com.kfyty.loveqq.framework.web.core.cors.CorsFilter
 * ws session：com.kfyty.loveqq.framework.web.mvc.netty.ws.Session
 * ws 消息处理器：com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler
 * 统一抽象 http 请求 netty 实现：com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerRequest

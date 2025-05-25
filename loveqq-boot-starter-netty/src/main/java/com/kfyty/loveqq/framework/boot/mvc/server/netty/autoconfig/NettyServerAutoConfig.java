@@ -14,8 +14,8 @@ import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
-import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.core.filter.Filter;
+import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
 import reactor.netty.tcp.SslProvider;
 
