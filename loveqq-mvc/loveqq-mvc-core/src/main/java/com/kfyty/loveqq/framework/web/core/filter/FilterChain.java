@@ -1,8 +1,8 @@
-package com.kfyty.loveqq.framework.web.mvc.netty.filter;
+package com.kfyty.loveqq.framework.web.core.filter;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import reactor.core.publisher.Mono;
+import org.reactivestreams.Publisher;
 
 /**
  * 描述: 过滤器链
@@ -18,5 +18,5 @@ public interface FilterChain {
      * @param request  请求
      * @param response 响应
      */
-    Mono<Void> doFilter(ServerRequest request, ServerResponse response);
+    Publisher<Void> doFilter(ServerRequest request, ServerResponse response);
 }

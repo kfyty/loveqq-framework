@@ -1,10 +1,10 @@
-package com.kfyty.loveqq.framework.web.mvc.netty.filter.ws;
+package com.kfyty.loveqq.framework.web.core.filter.ws;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.mvc.netty.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.filter.FilterChain;
-import reactor.core.publisher.Mono;
+import com.kfyty.loveqq.framework.web.core.filter.Filter;
+import com.kfyty.loveqq.framework.web.core.filter.FilterChain;
+import org.reactivestreams.Publisher;
 
 /**
  * 描述: netty websocket 过滤器
@@ -20,7 +20,7 @@ public interface WsFilter extends Filter {
      * @param request 请求
      * @param chain   过滤器链
      */
-    Mono<Void> doFilter(ServerRequest request, FilterChain chain);
+    Publisher<Void> doFilter(ServerRequest request, FilterChain chain);
 
     /**
      * 适配 websocket 过滤器
@@ -30,7 +30,7 @@ public interface WsFilter extends Filter {
      * @param chain    过滤器链
      */
     @Override
-    default Mono<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
+    default Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
         if (isWebSocket(request)) {
             return this.doFilter(request, chain);
         }

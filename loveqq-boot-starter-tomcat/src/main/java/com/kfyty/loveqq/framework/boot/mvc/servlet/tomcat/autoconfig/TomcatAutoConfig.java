@@ -10,19 +10,28 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
+import com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder;
+import com.kfyty.loveqq.framework.web.core.request.support.ResponseContextHolder;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
 import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletRequestListener;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebListener;
+import lombok.RequiredArgsConstructor;
 import org.apache.catalina.LifecycleListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EventListener;
@@ -85,8 +94,16 @@ public class TomcatAutoConfig {
         for (Object filter : filters) {
             if (filter instanceof FilterRegistrationBean) {
                 config.addWebFilter((FilterRegistrationBean) filter);
-            } else {
+            } else if (filter instanceof Filter) {
                 config.addWebFilter((Filter) filter);
+            } else {
+                com.kfyty.loveqq.framework.web.core.filter.Filter _filter_ = (com.kfyty.loveqq.framework.web.core.filter.Filter) filter;
+                RegistrationBean<FilterRegistrationBean> registrationBean = new FilterRegistrationBean()
+                        .setFilter(new FilterAdapter(_filter_))
+                        .setDisplayName(filter.getClass().getName())
+                        .setDisplayName(filter.getClass().getName())
+                        .setUrlPatterns(Arrays.asList(_filter_.getPattern()));
+                config.addWebFilter((FilterRegistrationBean) registrationBean);
             }
         }
     }
@@ -110,10 +127,27 @@ public class TomcatAutoConfig {
         beans.addAll(beansWithAnnotation);
         beans.addAll(beansWithRegistration);
 
+        if (filterClass == Filter.class) {
+            beans.addAll(this.applicationContext.getBeanOfType(com.kfyty.loveqq.framework.web.core.filter.Filter.class).values());
+        }
+
         if (!beansWithAnnotation.isEmpty() && !beansWithRegistration.isEmpty()) {
             return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
         }
 
         return beans;
+    }
+
+    @RequiredArgsConstructor
+    private static class FilterAdapter implements Filter {
+        private final com.kfyty.loveqq.framework.web.core.filter.Filter filter;
+
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+            boolean _continue_ = this.filter.doFilter(RequestContextHolder.get(), ResponseContextHolder.get());
+            if (_continue_) {
+                chain.doFilter(request, response);
+            }
+        }
     }
 }

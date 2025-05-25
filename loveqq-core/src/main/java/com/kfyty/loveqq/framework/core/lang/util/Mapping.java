@@ -183,6 +183,19 @@ public class Mapping<T> implements Cloneable, Serializable {
     }
 
     /**
+     * 测试当前值，符合时执行映射
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    public <R> Mapping<R> when(Predicate<T> test, Function<T, R> mapping) {
+        if (test.test(this.value)) {
+            return map(mapping);
+        }
+        return from(null);
+    }
+
+    /**
      * 非空时当前值扁平化映射为另一个值
      *
      * @param mapping 映射关系

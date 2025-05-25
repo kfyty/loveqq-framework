@@ -7,9 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
-import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
@@ -17,8 +15,6 @@ import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumen
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
-import com.kfyty.loveqq.framework.web.mvc.servlet.filter.cors.CorsFilter;
-import jakarta.servlet.Filter;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.WebFilter;
@@ -55,13 +51,6 @@ public class WebServletMvcAutoConfig {
                                                   @Value("${k.mvc.multipart.fileSizeThreshold:0}") int fileSizeThreshold) {
         Long maxSize = serverProperties.getMaxFileSize() == null ? Long.valueOf(-1L) : serverProperties.getMaxFileSize();
         return new MultipartConfigElement(serverProperties.getLocation(), maxSize, maxRequestSize, fileSizeThreshold);
-    }
-
-    @Bean
-    @ConditionalOnBean(CorsConfiguration.class)
-    @ConditionalOnMissingBean(CorsFilter.class)
-    public Filter defaultCorsFilter(CorsConfiguration configuration) {
-        return new CorsFilter(configuration);
     }
 
     @Bean(resolveNested = false, independent = true)
