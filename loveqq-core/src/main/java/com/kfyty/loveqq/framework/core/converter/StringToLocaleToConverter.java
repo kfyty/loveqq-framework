@@ -15,6 +15,6 @@ public class StringToLocaleToConverter implements Converter<String, Locale> {
 
     @Override
     public Locale apply(String source) {
-        return CommonUtil.empty(source) ? null : Locale.forLanguageTag(source);
+        return CommonUtil.empty(source) ? null : new Locale(source);
     }
 }

@@ -40,8 +40,9 @@ public @interface CacheClear {
 
     /**
      * 前置删除是否需要延迟，合理的延迟可以避免数据不一致问题
+     * 大于 0 时，即延时双删
      *
      * @return 默认 0，即时删除
      */
-    int preClearTimeout() default 0;
+    int delay() default 0;
 }

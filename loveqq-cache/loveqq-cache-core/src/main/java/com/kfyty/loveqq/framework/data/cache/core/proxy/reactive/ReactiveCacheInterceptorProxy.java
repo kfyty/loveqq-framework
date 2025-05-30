@@ -6,7 +6,6 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.OgnlUtil;
 import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
-import com.kfyty.loveqq.framework.data.cache.core.NullValue;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import com.kfyty.loveqq.framework.data.cache.core.proxy.AbstractCacheInterceptorProxy;
@@ -104,10 +103,10 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
 
     protected Mono<Void> preClear(String cacheClearName, CacheClear cacheClear) {
         if (cacheClear != null && cacheClear.preClear()) {
-            if (cacheClear.preClearTimeout() <= 0) {
+            if (cacheClear.delay() <= 0) {
                 return this.getReactiveCache().clearAsync(cacheClearName);
             } else {
-                this.executorService.schedule(() -> this.getReactiveCache().clearAsync(cacheClearName).subscribe(), cacheClear.preClearTimeout(), TimeUnit.MILLISECONDS);
+                this.executorService.schedule(() -> this.getReactiveCache().clearAsync(cacheClearName).subscribe(), cacheClear.delay(), TimeUnit.MILLISECONDS);
                 return Mono.empty();
             }
         }
@@ -142,19 +141,15 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         }
 
         protected Mono<Void> processCacheable(String cacheName, Cacheable cacheable, Object retValue, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-            if (cacheable == null || retValue == null && !cacheable.putIfNull()) {
+            if (cacheable == null || retValue == null) {
                 return Mono.empty();
             }
             if (CommonUtil.notEmpty(cacheable.condition()) && !OgnlUtil.getBoolean(cacheable.condition(), context)) {
                 return Mono.empty();
             }
-            if (retValue == null) {
-                retValue = NullValue.INSTANCE;
-            }
-            final Object value = retValue;
             final ReactiveCache reactiveCache = getReactiveCache();
             return reactiveCache.putIfAbsentAsync(cacheName, retValue, cacheable.ttl(), cacheable.unit())
-                    .flatMap(prev -> prev == null || Objects.equals(prev, value) ? Mono.empty() : reactiveCache.clearAsync(cacheName));
+                    .flatMap(prev -> prev == null || Objects.equals(prev, retValue) ? Mono.empty() : reactiveCache.clearAsync(cacheName));
         }
 
         protected Mono<Void> processCacheClear(String cacheName, CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {

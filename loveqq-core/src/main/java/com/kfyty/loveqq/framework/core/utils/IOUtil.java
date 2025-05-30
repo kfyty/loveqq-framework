@@ -108,6 +108,9 @@ public abstract class IOUtil {
      * @return url
      */
     public static URL newNestedJarURL(String jarFilePath, String resource) {
+        if (jarFilePath.charAt(0) == '/') {
+            return newURL("jar:file:" + jarFilePath + "!/" + resource);
+        }
         return newURL("jar:file:/" + jarFilePath + "!/" + resource);
     }
 

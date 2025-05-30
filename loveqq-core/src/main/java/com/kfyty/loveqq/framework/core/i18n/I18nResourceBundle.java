@@ -17,26 +17,36 @@ public interface I18nResourceBundle {
      * @param args 参数
      * @return i18n message
      */
-    String getMessage(String code, Object[] args);
-
-    /**
-     * 获取国际化翻译后的信息
-     *
-     * @param code   code
-     * @param args   参数
-     * @param locale {@link Locale}
-     * @return i18n message
-     */
-    String getMessage(String code, Object[] args, Locale locale);
+    String getMessage(String code, Object... args);
 
     /**
      * 获取国际化翻译后的信息
      *
      * @param code           code
+     * @param defaultMessage 默认消息
      * @param args           参数
-     * @param defaultMessage 默认的消息
-     * @param locale         {@link Locale}
      * @return i18n message
      */
-    String getMessage(String code, Object[] args, String defaultMessage, Locale locale);
+    String getMessage(String code, String defaultMessage, Object... args);
+
+    /**
+     * 获取国际化翻译后的信息
+     *
+     * @param code   code
+     * @param locale {@link Locale}
+     * @param args   参数
+     * @return i18n message
+     */
+    String getMessage(String code, Locale locale, Object... args);
+
+    /**
+     * 获取国际化翻译后的信息
+     *
+     * @param code           code
+     * @param defaultMessage 默认的消息
+     * @param locale         {@link Locale}
+     * @param args           参数
+     * @return i18n message
+     */
+    String getMessage(String code, String defaultMessage, Locale locale, Object... args);
 }

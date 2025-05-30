@@ -250,3 +250,29 @@ build {
     dependsOn buildJarIndex
 }
 ```
+
+### docker
+
+创建 Dockerfile
+```dockerfile
+FROM docker.m.daocloud.io/openjdk:17
+
+ENV TZ=Asia/Shanghai
+
+WORKDIR /app/demo
+
+EXPOSE 9090
+
+COPY ./target/demo-1.0-SNAPSHOT.jar /app/demo/demo-1.0-SNAPSHOT.jar
+COPY ./target/boot-lib /app/demo/boot-lib
+
+ENTRYPOINT ["java", "--add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED", "-jar", "demo-1.0-SNAPSHOT.jar"]
+
+# -t 指定镜像名称:标签
+# -f 指定 Dockerfile, 如果改名的话
+# . 表示 Dockerfile 在当前目录
+# docker build -t demo:1.0 -f Dockerfile .
+
+# -p 表示端口映射，将 9090(容器对外端口) 转发到 8080(容器内端口即应用实际的被docker管理的端口)
+# docker run -p 9090:8080 demo:1.0
+```

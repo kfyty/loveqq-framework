@@ -93,7 +93,7 @@ public abstract class PropertiesUtil {
         if (CommonUtil.notEmpty(imports)) {
             final Consumer<Properties> beforeToUse = before.andThen(p -> BEFORE.accept(properties, p));
             for (String config : imports.split(",")) {
-                load(
+                PropertiesUtil.load(
                         config,
                         classLoader,
                         beforeToUse,

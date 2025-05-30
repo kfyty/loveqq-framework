@@ -303,8 +303,7 @@ public class NettyWebServer implements ServerWebServer {
 
             // 预检请求
             if (request.method() == HttpMethod.OPTIONS) {
-                return Mono.from(this.processRequest(request, response, EMPTY_INPUT_STREAM, emptyList()))
-                        .onErrorResume(ex -> response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR).send());
+                return Mono.from(this.processRequest(request, response, EMPTY_INPUT_STREAM, emptyList())).onErrorResume(new OnErrorResume(response));
             }
 
             // 接收数据后执行，否则拿不到数据，reactor-netty 限制必须为 POST
