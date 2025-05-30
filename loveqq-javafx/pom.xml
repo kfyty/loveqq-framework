@@ -6,11 +6,11 @@
     <parent>
         <groupId>com.kfyty</groupId>
         <artifactId>loveqq-framework</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2</version>
     </parent>
 
     <artifactId>loveqq-javafx</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <packaging>jar</packaging>
 
     <properties>
