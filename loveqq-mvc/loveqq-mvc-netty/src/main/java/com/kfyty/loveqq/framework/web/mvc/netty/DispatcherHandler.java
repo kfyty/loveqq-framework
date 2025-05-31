@@ -71,14 +71,14 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         AtomicReference<Throwable> throwableReference = new AtomicReference<>();
         return Mono.just(methodMapping)
                 .doOnNext(mapping -> this.prepareRequestResponse(mapping, request, response))
-                .filterWhen(mapping -> this.processPreInterceptorAsync(request, response, mapping))
+                .filterWhen(mapping -> this.applyPreInterceptorAsync(request, response, mapping))
                 .map(mapping -> this.prepareMethodParameter(request, response, mapping))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
-                .filterWhen(p -> this.processPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
+                .filterWhen(p -> this.applyPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
                 .onErrorResume(e -> this.handleException(request, response, methodMapping, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
-                .doFinally(s -> this.processCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
+                .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
     }
 
     protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
