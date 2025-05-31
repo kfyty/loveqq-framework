@@ -209,9 +209,6 @@ public class NettyServerRequest implements ServerRequest {
         if (index < Integer.MAX_VALUE) {
             uri = uri.substring(0, index);
         }
-        if (uri.isEmpty()) {
-            return uri;
-        }
-        return uri.charAt(0) == '/' ? uri : '/' + uri;
+        return CommonUtil.formatURI(uri);
     }
 }

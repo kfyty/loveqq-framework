@@ -3,7 +3,9 @@ package com.kfyty.loveqq.framework.web.core;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
@@ -59,6 +61,11 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     protected String suffix = CommonUtil.EMPTY_STRING;
 
     /**
+     * 路径匹配器
+     */
+    protected PatternMatcher patternMatcher = new AntPathMatcher();
+
+    /**
      * 请求匹配器
      */
     protected RequestMappingMatcher requestMappingMatcher = new DefaultRequestMappingMatcher();
@@ -111,24 +118,28 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return (T) this;
     }
 
-    protected boolean processPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) {
+    protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
-            if (!interceptor.preHandle(request, response, handler)) {
+            if (this.shouldApplyInterceptor(request, response, interceptor) && !interceptor.preHandle(request, response, handler)) {
                 return false;
             }
         }
         return true;
     }
 
-    protected void processPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
+    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
-            interceptor.postHandle(request, response, handler, value);
+            if (this.shouldApplyInterceptor(request, response, interceptor)) {
+                interceptor.postHandle(request, response, handler, value);
+            }
         }
     }
 
-    protected void processCompletionInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable e) {
+    protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable e) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
-            interceptor.afterCompletion(request, response, handler, e);
+            if (this.shouldApplyInterceptor(request, response, interceptor)) {
+                interceptor.afterCompletion(request, response, handler, e);
+            }
         }
     }
 
@@ -214,5 +225,33 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
         returnValueProcessor.handleReturnValue(retValue, returnType, container);
         return null;
+    }
+
+    /**
+     * 判断是否可以应用拦截器
+     *
+     * @param request     请求
+     * @param response    响应
+     * @param interceptor 拦截器
+     * @return true or false
+     */
+    protected boolean shouldApplyInterceptor(ServerRequest request, ServerResponse response, HandlerInterceptor interceptor) {
+        final String requestURI = request.getRequestURI();
+        if (interceptor.excludes() != null) {
+            for (String exclude : interceptor.excludes()) {
+                if (this.patternMatcher.matches(exclude, requestURI)) {
+                    return false;
+                }
+            }
+        }
+        if (interceptor.includes() != null) {
+            for (String include : interceptor.includes()) {
+                if (this.patternMatcher.matches(include, requestURI)) {
+                    return true;
+                }
+            }
+            return false;                                                   // 配置了包含规则，但是没有匹配的，不可以应用
+        }
+        return true;
     }
 }
