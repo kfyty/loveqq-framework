@@ -1,8 +1,5 @@
 package com.kfyty.loveqq.framework.web.core.cors;
 
-import com.kfyty.loveqq.framework.core.utils.IOC;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
@@ -17,31 +14,11 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 public class CorsFilter implements Filter {
-    /**
-     * servlet web server class
-     */
-    private static final Class<?> SERVLET_CLASS = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
-
-    private final boolean isServletWeb;
     private final CorsConfiguration configuration;
 
-    public CorsFilter(CorsConfiguration configuration) {
-        this(SERVLET_CLASS != null &&
-                        SERVLET_CLASS.isAssignableFrom(IOC.getBeanFactory().getBeanDefinitions(WebServer.class).values().iterator().next().getBeanType()),
-                configuration);
-    }
-
     @Override
-    public String[] getPattern() {
-        if (this.isServletWeb) {
-            return new String[]{"/*"};
-        }
-        return Filter.super.getPattern();
-    }
-
-    @Override
-    public boolean doFilter(ServerRequest request, ServerResponse response) {
+    public Continue doFilter(ServerRequest request, ServerResponse response) {
         this.configuration.apply(request, response);
-        return true;
+        return Continue.TRUE;
     }
 }

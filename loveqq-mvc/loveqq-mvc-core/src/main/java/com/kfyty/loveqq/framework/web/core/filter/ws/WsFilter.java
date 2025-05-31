@@ -31,9 +31,6 @@ public interface WsFilter extends Filter {
      */
     @Override
     default Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
-        if (isWebSocket(request)) {
-            return this.doFilter(request, chain);
-        }
-        return chain.doFilter(request, response);
+        return this.doFilter(request, chain);
     }
 }

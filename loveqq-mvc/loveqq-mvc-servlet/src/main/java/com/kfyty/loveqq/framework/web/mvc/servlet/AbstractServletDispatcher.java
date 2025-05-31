@@ -22,7 +22,7 @@ import java.util.ResourceBundle;
  * @date 2024/7/7 9:04
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractDispatcherServlet<T extends AbstractDispatcherServlet<T>> extends AbstractDispatcher<T> implements Servlet, ServletConfig {
+public abstract class AbstractServletDispatcher<T extends AbstractServletDispatcher<T>> extends AbstractDispatcher<T> implements Servlet, ServletConfig {
     private static final String LSTRING_FILE = "jakarta.servlet.LocalStrings";
     private static final ResourceBundle lStrings = ResourceBundle.getBundle(LSTRING_FILE);
 

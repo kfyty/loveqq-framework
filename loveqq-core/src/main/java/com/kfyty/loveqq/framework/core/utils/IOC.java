@@ -16,11 +16,41 @@ import lombok.Getter;
  * @email kfyty725@hotmail.com
  */
 public abstract class IOC {
+    /**
+     * servlet web server class
+     */
+    private static final Class<?> SERVLET_WEB_SERVER_CLASS = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
+
+    /**
+     * true if servlet based web server
+     */
+    private static Boolean isServletWeb;
+
+    /**
+     * bean factory
+     */
     @Getter
     private static BeanFactory beanFactory;
 
+    /**
+     * 设置 bean 工厂
+     *
+     * @param beanFactory bean 工厂
+     */
     public static void setBeanFactory(BeanFactory beanFactory) {
         IOC.beanFactory = beanFactory;
+    }
+
+    /**
+     * whether servlet based web server
+     *
+     * @return true if servlet based web server
+     */
+    public static boolean isServletWeb() {
+        if (isServletWeb == null) {
+            isServletWeb = SERVLET_WEB_SERVER_CLASS != null && !getBeanFactory().getBeanDefinitions(SERVLET_WEB_SERVER_CLASS).isEmpty();
+        }
+        return isServletWeb;
     }
 
     /**
