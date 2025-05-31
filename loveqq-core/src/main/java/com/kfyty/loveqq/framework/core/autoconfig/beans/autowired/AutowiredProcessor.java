@@ -165,20 +165,26 @@ public class AutowiredProcessor {
      */
     public Object[] resolveAutowired(Object bean, Method method, AutowiredDescription description, Function<Parameter, AutowiredDescription> parameterAutowiredDescriptionResolver) {
         int index = 0;
+        boolean shouldInvoke = false;
         Object[] parameters = new Object[method.getParameterCount()];
         for (Parameter parameter : method.getParameters()) {
             Value annotation = findAnnotation(parameter, Value.class);
             if (annotation != null) {
                 parameters[index++] = GenericBeanDefinition.resolvePlaceholderValue(annotation.value(), annotation.bind(), parameter.getParameterizedType());
+                shouldInvoke = true;
                 continue;
             }
             SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), parameter);
             AutowiredDescription paramDescription = ofNullable(parameterAutowiredDescriptionResolver.apply(parameter)).orElse(description);
             Object targetBean = this.doResolveBean(simpleGeneric, paramDescription, parameter.getType());
             parameters[index++] = targetBean;
+            shouldInvoke |= targetBean != null;
         }
-        ReflectUtil.invokeMethod(bean, method, parameters);
-        return LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", parameters, bean), parameters);
+        if (shouldInvoke) {
+            ReflectUtil.invokeMethod(bean, method, parameters);
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("autowired bean: {} -> {}", parameters, bean), parameters);
+        }
+        return parameters;
     }
 
     /**
@@ -327,7 +333,7 @@ public class AutowiredProcessor {
             } else if (isGeneric) {
                 try {
                     this.prepareResolving(targetBeanName, targetBeanDefinitions, true);
-                    this.context.registerBeanReference(entry.getValue());                       // 泛型先注册 bean 引用，下一步再注册完整的 bean，避免循环依赖
+                    this.context.registerBeanReference(entry.getValue());                                   // 泛型先注册 bean 引用，下一步再注册完整的 bean，避免循环依赖
                 } finally {
                     this.removeResolving(targetBeanName, targetBeanDefinitions, true);
                 }
@@ -337,10 +343,9 @@ public class AutowiredProcessor {
             try {
                 this.prepareResolving(targetBeanName, targetBeanDefinitions, isGeneric);
                 if (isGeneric) {
+                    beanOfType.clear();                                                                     // 先清空，保证按顺序注入
                     for (Map.Entry<String, BeanDefinition> entry : targetBeanDefinitions.entrySet()) {
-                        if (!beanOfType.containsKey(entry.getKey())) {
-                            beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue(), AutowiredDescription.isLazied(autowired)));
-                        }
+                        beanOfType.put(entry.getKey(), this.context.registerBean(entry.getValue(), AutowiredDescription.isLazied(autowired)));
                     }
                 } else {
                     BeanDefinition beanDefinition = targetBeanDefinitions.size() != 1 ? null : targetBeanDefinitions.values().iterator().next();

@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.filter.internal;
 
+import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.filter.FilterChain;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
@@ -17,23 +18,23 @@ import java.util.function.Function;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class FilterTransformer implements Function<Boolean, Mono<Void>> {
+public class FilterTransformer implements Function<Filter.Continue, Mono<Void>> {
     private final ServerRequest request;
     private final ServerResponse response;
     private final FilterChain filterChain;
 
     @Override
-    public Mono<Void> apply(Boolean _continue_) {
-        if (!_continue_) {
-            return Mono.empty();
+    public Mono<Void> apply(Filter.Continue _continue_) {
+        if (!_continue_._continue_()) {
+            return Mono.<Void>empty().doFinally(s -> _continue_.finally_run());
         }
 
         Publisher<Void> publisher = filterChain.doFilter(request, response);
 
         if (publisher instanceof Mono<Void> mono) {
-            return mono;
+            return mono.doFinally(s -> _continue_.finally_run());
         }
 
-        return Mono.from(publisher);
+        return Mono.from(publisher).doFinally(s -> _continue_.finally_run());
     }
 }

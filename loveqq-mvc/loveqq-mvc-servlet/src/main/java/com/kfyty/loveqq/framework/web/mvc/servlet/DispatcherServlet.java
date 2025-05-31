@@ -34,7 +34,7 @@ import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
  */
 @Slf4j
 @Getter
-public class DispatcherServlet extends AbstractDispatcherServlet<DispatcherServlet> {
+public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServlet> {
     /**
      * BeanFactory 属性 key
      */

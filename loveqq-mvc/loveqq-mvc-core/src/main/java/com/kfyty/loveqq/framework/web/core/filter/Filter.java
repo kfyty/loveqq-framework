@@ -1,8 +1,10 @@
 package com.kfyty.loveqq.framework.web.core.filter;
 
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.web.core.filter.internal.FilterTransformer;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -16,11 +18,13 @@ import reactor.core.publisher.Mono;
 public interface Filter {
     /**
      * 返回匹配路径
-     * 如果是基于 servlet，需要重新该方法返回 /* 形式
      *
      * @return 匹配路径
      */
     default String[] getPattern() {
+        if (IOC.isServletWeb()) {
+            return new String[]{"/*"};
+        }
         return new String[]{"/**"};
     }
 
@@ -51,9 +55,47 @@ public interface Filter {
      *
      * @param request  请求
      * @param response 响应
-     * @return true if continue filter
+     * @return continue
      */
-    default boolean doFilter(ServerRequest request, ServerResponse response) {
-        return true;
+    default Continue doFilter(ServerRequest request, ServerResponse response) {
+        return Continue.TRUE;
+    }
+
+    /**
+     * 主要是适配 {@link this#doFilter(ServerRequest, ServerResponse)} 无法应用 finally 逻辑
+     */
+    @RequiredArgsConstructor
+    class Continue {
+        public static final Continue TRUE = ofTrue();
+        public static final Continue FALSE = ofFalse();
+
+        private final boolean _continue_;
+        private final Runnable _finally_;
+
+        public boolean _continue_() {
+            return _continue_;
+        }
+
+        public void finally_run() {
+            if (_finally_ != null) {
+                _finally_.run();
+            }
+        }
+
+        public static Continue ofTrue() {
+            return new Continue(true, null);
+        }
+
+        public static Continue ofTrue(Runnable _finally_) {
+            return new Continue(true, _finally_);
+        }
+
+        public static Continue ofFalse() {
+            return new Continue(false, null);
+        }
+
+        public static Continue ofFalse(Runnable _finally_) {
+            return new Continue(false, _finally_);
+        }
     }
 }

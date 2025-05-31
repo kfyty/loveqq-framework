@@ -294,7 +294,7 @@ public class TomcatWebServer implements ServletWebServer {
             FilterDef filterDef = new FilterDef();
             filterDef.setFilter(registrationBean.getFilter());
             filterDef.setFilterClass(registrationBean.getFilter().getClass().getName());
-            filterDef.setFilterName(registrationBean.getFilter().getClass().getSimpleName());
+            filterDef.setFilterName(CommonUtil.notEmpty(registrationBean.getFilterName()) ? registrationBean.getFilterName() : registrationBean.getFilter().getClass().getSimpleName());
             filterDef.setAsyncSupported(Boolean.toString(registrationBean.isAsyncSupported()));
             filterDef.setDisplayName(registrationBean.getDisplayName());
             filterDef.setDescription(registrationBean.getDescription());

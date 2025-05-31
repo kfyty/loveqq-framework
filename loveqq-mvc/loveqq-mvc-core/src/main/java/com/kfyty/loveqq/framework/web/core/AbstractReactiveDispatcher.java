@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.web.core;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.interceptor.ReactiveHandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import lombok.Data;
@@ -35,25 +36,48 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
 
     protected Mono<Boolean> processPreInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.just(true) : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).preHandleAsync(request, response, handler);
+            return this.interceptorChains.isEmpty() ? Mono.just(true) : toReactiveInterceptor(this.interceptorChains.get(index)).preHandleAsync(request, response, handler);
         }
-        ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
         return interceptor.preHandleAsync(request, response, handler).filterWhen(e -> this.processPreInterceptorAsync(request, response, handler, index + 1));
     }
 
     protected Mono<Void> processPostInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Object value, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.empty() : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).postHandleAsync(request, response, handler, value);
+            return this.interceptorChains.isEmpty() ? Mono.empty() : toReactiveInterceptor(this.interceptorChains.get(index)).postHandleAsync(request, response, handler, value);
         }
-        ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
         return interceptor.postHandleAsync(request, response, handler, value).then(this.processPostInterceptorAsync(request, response, handler, value, index + 1));
     }
 
     protected Mono<Void> processCompletionInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex, int index) {
         if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.empty() : ((ReactiveHandlerInterceptor) this.interceptorChains.get(index)).afterCompletionAsync(request, response, handler, ex);
+            return this.interceptorChains.isEmpty() ? Mono.empty() : toReactiveInterceptor(this.interceptorChains.get(index)).afterCompletionAsync(request, response, handler, ex);
         }
-        ReactiveHandlerInterceptor interceptor = (ReactiveHandlerInterceptor) this.interceptorChains.get(index);
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
         return interceptor.afterCompletionAsync(request, response, handler, ex).then(this.processCompletionInterceptorAsync(request, response, handler, ex, index + 1));
+    }
+
+    protected ReactiveHandlerInterceptor toReactiveInterceptor(HandlerInterceptor interceptor) {
+        if (interceptor instanceof ReactiveHandlerInterceptor reactiveHandlerInterceptor) {
+            return reactiveHandlerInterceptor;
+        }
+        return new ReactiveHandlerInterceptor() {
+
+            @Override
+            public boolean preHandle(ServerRequest request, ServerResponse response, MethodMapping handler) {
+                return interceptor.preHandle(request, response, handler);
+            }
+
+            @Override
+            public void postHandle(ServerRequest request, ServerResponse response, MethodMapping handler, Object retValue) {
+                interceptor.postHandle(request, response, handler, retValue);
+            }
+
+            @Override
+            public void afterCompletion(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) {
+                interceptor.afterCompletion(request, response, handler, ex);
+            }
+        };
     }
 }

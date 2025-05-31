@@ -100,7 +100,7 @@ public class TomcatAutoConfig {
                 com.kfyty.loveqq.framework.web.core.filter.Filter _filter_ = (com.kfyty.loveqq.framework.web.core.filter.Filter) filter;
                 RegistrationBean<FilterRegistrationBean> registrationBean = new FilterRegistrationBean()
                         .setFilter(new FilterAdapter(_filter_))
-                        .setDisplayName(filter.getClass().getName())
+                        .setFilterName(filter.getClass().getName())
                         .setDisplayName(filter.getClass().getName())
                         .setUrlPatterns(Arrays.asList(_filter_.getPattern()));
                 config.addWebFilter((FilterRegistrationBean) registrationBean);
@@ -131,11 +131,11 @@ public class TomcatAutoConfig {
             beans.addAll(this.applicationContext.getBeanOfType(com.kfyty.loveqq.framework.web.core.filter.Filter.class).values());
         }
 
-        if (!beansWithAnnotation.isEmpty() && !beansWithRegistration.isEmpty()) {
-            return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+        if (beans.isEmpty()) {
+            return beans;
         }
 
-        return beans;
+        return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
     }
 
     @RequiredArgsConstructor
@@ -144,9 +144,13 @@ public class TomcatAutoConfig {
 
         @Override
         public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-            boolean _continue_ = this.filter.doFilter(RequestContextHolder.get(), ResponseContextHolder.get());
-            if (_continue_) {
-                chain.doFilter(request, response);
+            com.kfyty.loveqq.framework.web.core.filter.Filter.Continue _continue_ = this.filter.doFilter(RequestContextHolder.get(), ResponseContextHolder.get());
+            try {
+                if (_continue_._continue_()) {
+                    chain.doFilter(request, response);
+                }
+            } finally {
+                _continue_.finally_run();
             }
         }
     }
