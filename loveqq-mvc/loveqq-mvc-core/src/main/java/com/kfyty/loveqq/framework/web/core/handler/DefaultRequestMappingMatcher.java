@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  * @date 2021/6/4 10:05
  * @email kfyty725@hotmail.com
  */
+@RequiredArgsConstructor
 public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     /**
      * 路径匹配
@@ -41,8 +43,7 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     private final Map<RequestMethod, Routes> routesMap;
 
     public DefaultRequestMappingMatcher() {
-        this.patternMatcher = new AntPathMatcher();
-        this.routesMap = new ConcurrentHashMap<>((int) (RequestMethod.values().length / .075 + 1));
+        this(new AntPathMatcher(), new ConcurrentHashMap<>((int) (RequestMethod.values().length / .075 + 1)));
     }
 
     @Override
