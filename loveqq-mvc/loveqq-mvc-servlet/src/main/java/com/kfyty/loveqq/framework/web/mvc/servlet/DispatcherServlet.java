@@ -114,7 +114,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
             LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched URI mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
 
             // 应用前置拦截器
-            if (!this.processPreInterceptor(serverRequest, serverResponse, methodMapping)) {
+            if (!this.applyPreInterceptor(serverRequest, serverResponse, methodMapping)) {
                 return;
             }
 
@@ -123,7 +123,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
             Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), parameter.getMethodArgs());
 
             // 应用后置处理器并处理返回值
-            this.processPostInterceptor(serverRequest, serverResponse, methodMapping, retValue);
+            this.applyPostInterceptor(serverRequest, serverResponse, methodMapping, retValue);
             if (retValue != null) {
                 this.handleReturnValue(retValue, parameter, serverRequest, serverResponse);
             }
@@ -133,7 +133,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
             this.handleException(serverRequest, serverResponse, methodMapping, e);
         } finally {
             if (methodMapping != null) {
-                this.processCompletionInterceptor(serverRequest, serverResponse, methodMapping, exception);
+                this.applyCompletionInterceptor(serverRequest, serverResponse, methodMapping, exception);
             }
         }
     }

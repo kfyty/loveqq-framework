@@ -10,6 +10,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * 描述: 响应式基础请求分发实现
  *
@@ -22,40 +25,43 @@ import reactor.core.publisher.Mono;
 @EqualsAndHashCode(callSuper = true)
 public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispatcher<T>> extends AbstractDispatcher<T> {
 
-    protected Mono<Boolean> processPreInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler) {
-        return this.processPreInterceptorAsync(request, response, handler, 0);
+    protected Mono<Boolean> applyPreInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler) {
+        List<HandlerInterceptor> chains = this.interceptorChains.stream().filter(e -> this.shouldApplyInterceptor(request, response, e)).collect(Collectors.toList());
+        return this.applyPreInterceptorAsync(chains, request, response, handler, 0);
     }
 
-    protected Mono<Void> processPostInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
-        return this.processPostInterceptorAsync(request, response, handler, value, 0);
+    protected Mono<Void> applyPostInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
+        List<HandlerInterceptor> chains = this.interceptorChains.stream().filter(e -> this.shouldApplyInterceptor(request, response, e)).collect(Collectors.toList());
+        return this.applyPostInterceptorAsync(chains, request, response, handler, value, 0);
     }
 
-    protected Mono<Void> processCompletionInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) {
-        return this.processCompletionInterceptorAsync(request, response, handler, ex, 0);
+    protected Mono<Void> applyCompletionInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) {
+        List<HandlerInterceptor> chains = this.interceptorChains.stream().filter(e -> this.shouldApplyInterceptor(request, response, e)).collect(Collectors.toList());
+        return this.applyCompletionInterceptorAsync(chains, request, response, handler, ex, 0);
     }
 
-    protected Mono<Boolean> processPreInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, int index) {
-        if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.just(true) : toReactiveInterceptor(this.interceptorChains.get(index)).preHandleAsync(request, response, handler);
+    protected Mono<Boolean> applyPreInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, MethodMapping handler, int index) {
+        if (index >= chains.size() - 1) {
+            return chains.isEmpty() ? Mono.just(true) : toReactiveInterceptor(chains.get(index)).preHandleAsync(request, response, handler);
         }
-        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
-        return interceptor.preHandleAsync(request, response, handler).filterWhen(e -> this.processPreInterceptorAsync(request, response, handler, index + 1));
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(chains.get(index));
+        return interceptor.preHandleAsync(request, response, handler).filterWhen(e -> this.applyPreInterceptorAsync(chains, request, response, handler, index + 1));
     }
 
-    protected Mono<Void> processPostInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Object value, int index) {
-        if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.empty() : toReactiveInterceptor(this.interceptorChains.get(index)).postHandleAsync(request, response, handler, value);
+    protected Mono<Void> applyPostInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, MethodMapping handler, Object value, int index) {
+        if (index >= chains.size() - 1) {
+            return chains.isEmpty() ? Mono.empty() : toReactiveInterceptor(chains.get(index)).postHandleAsync(request, response, handler, value);
         }
-        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
-        return interceptor.postHandleAsync(request, response, handler, value).then(this.processPostInterceptorAsync(request, response, handler, value, index + 1));
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(chains.get(index));
+        return interceptor.postHandleAsync(request, response, handler, value).then(this.applyPostInterceptorAsync(chains, request, response, handler, value, index + 1));
     }
 
-    protected Mono<Void> processCompletionInterceptorAsync(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex, int index) {
-        if (index >= this.interceptorChains.size() - 1) {
-            return this.interceptorChains.isEmpty() ? Mono.empty() : toReactiveInterceptor(this.interceptorChains.get(index)).afterCompletionAsync(request, response, handler, ex);
+    protected Mono<Void> applyCompletionInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex, int index) {
+        if (index >= chains.size() - 1) {
+            return chains.isEmpty() ? Mono.empty() : toReactiveInterceptor(chains.get(index)).afterCompletionAsync(request, response, handler, ex);
         }
-        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(this.interceptorChains.get(index));
-        return interceptor.afterCompletionAsync(request, response, handler, ex).then(this.processCompletionInterceptorAsync(request, response, handler, ex, index + 1));
+        ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(chains.get(index));
+        return interceptor.afterCompletionAsync(request, response, handler, ex).then(this.applyCompletionInterceptorAsync(chains, request, response, handler, ex, index + 1));
     }
 
     protected ReactiveHandlerInterceptor toReactiveInterceptor(HandlerInterceptor interceptor) {
