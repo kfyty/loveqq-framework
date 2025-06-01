@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>loveqq-sdk-reactive-http</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>sdk 响应式异步实现</description>
 
     <properties>

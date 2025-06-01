@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-sdk-core</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq sdk core</description>
 
     <dependencies>
         <dependency>

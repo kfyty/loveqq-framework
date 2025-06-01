@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-tomcat</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq tomcat web server</description>
 
     <properties>
         <tomcat.version>11.0.3</tomcat.version>

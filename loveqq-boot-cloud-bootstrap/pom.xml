@@ -11,6 +11,7 @@
 
     <artifactId>loveqq-boot-cloud-bootstrap</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>
         微服务启动引导
         由于微服务需要从配置中心获取配置后再启动，特别是依赖配置文件的自动配置，因此配置中心相关的自动配置需要最先被应用。

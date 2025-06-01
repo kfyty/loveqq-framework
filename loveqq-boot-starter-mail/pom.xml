@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-mail</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq mail 模块</description>
 
     <properties>
         <jakarta.mail>2.0.3</jakarta.mail>

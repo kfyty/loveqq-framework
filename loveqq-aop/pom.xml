@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-aop</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq aop 模块</description>
 
     <dependencies>
         <dependency>

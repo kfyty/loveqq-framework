@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-data-codegen</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq 代码生成器模块</description>
 
     <dependencies>
         <dependency>

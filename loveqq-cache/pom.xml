@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-cache</artifactId>
     <packaging>pom</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq cache</description>
 
     <modules>
         <module>loveqq-cache-core</module>

@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-redisson</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq redisson 模块</description>
 
     <dependencies>
         <dependency>
