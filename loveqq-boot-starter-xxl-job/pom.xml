@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-xxl-job</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq xxl-job 模块</description>
 
     <properties>
         <xxl.job.version>2.4.2</xxl.job.version>

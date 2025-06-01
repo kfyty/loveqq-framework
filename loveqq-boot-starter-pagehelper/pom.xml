@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-pagehelper</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq pagehelper 模块</description>
 
     <properties>
         <pagehelper.version>6.1.0</pagehelper.version>

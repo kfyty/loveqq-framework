@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-data-korm</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq korm 模块</description>
 
     <dependencies>
         <!-- mapper 模板 -->

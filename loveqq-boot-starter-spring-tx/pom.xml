@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-spring-tx</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq 事务模块</description>
 
     <properties>
         <spring.tx.version>5.3.39</spring.tx.version>

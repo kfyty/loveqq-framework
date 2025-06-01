@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-config-nacos</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>nacos 配置服务</description>
 
     <properties>

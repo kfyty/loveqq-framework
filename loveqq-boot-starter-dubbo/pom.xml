@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-dubbo</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>rpc dubbo starter</description>
 
     <properties>

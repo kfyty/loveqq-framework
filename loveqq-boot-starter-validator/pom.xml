@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-validator</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq 校验器模块</description>
 
     <dependencies>
         <dependency>

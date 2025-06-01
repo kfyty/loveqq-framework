@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-discovery-nacos</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>nacos 服务发现</description>
 
     <properties>

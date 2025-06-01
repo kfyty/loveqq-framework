@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-quartz</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq 定时器模块</description>
 
     <properties>
         <quartz.version>2.5.0</quartz.version>
