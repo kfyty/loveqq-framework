@@ -63,6 +63,11 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     protected static final String DEFAULT_PROPERTIES_LOCATION = "application.properties";
 
     /**
+     * 刷新的属性前缀 key
+     */
+    protected static final String REFRESH_PROPERTY_PREFIX = "k.config.refreshed";
+
+    /**
      * ConfigurableApplicationContext
      */
     protected ConfigurableApplicationContext applicationContext;
@@ -164,6 +169,15 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     }
 
     @Override
+    public void setRefreshProperty(String key, String value) {
+        System.setProperty(REFRESH_PROPERTY_PREFIX + '.' + key, value);
+
+        this.setProperty(key, value);
+
+        this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
+    }
+
+    @Override
     public void removeProperty(String key) {
         this.propertySources.remove(key);
     }
@@ -255,6 +269,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
         this.propertySources.clear();
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     protected Map<String, String> loadSystemProperties() {
         // 命令行变量
         Map<String, String> properties = loadCommandLineProperties(this.applicationContext.getCommandLineArgs(), "--");
@@ -264,6 +279,12 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
             properties.putAll((Map) System.getProperties());
             properties.putAll(System.getenv());
         }
+
+        // 刷新的属性
+        final String prefix = REFRESH_PROPERTY_PREFIX + '.';
+        final int prefixPos = prefix.length();
+        Map<String, String> refreshedProperties = System.getProperties().entrySet().stream().filter(e -> e.getKey().toString().startsWith(prefix)).collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
+        refreshedProperties.forEach((k, v) -> properties.put(k.substring(prefixPos), v));
 
         this.propertySources.putAll(properties);
 

@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.env;
 
+import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +70,15 @@ public interface PropertyContext extends AutoCloseable, Cloneable {
      * @param replace 如果存在是否替换
      */
     void setProperty(String key, String value, boolean replace);
+
+    /**
+     * 设置刷新属性，该属性在 {@link ApplicationContext#refresh()} 时不会被清空
+     * 调用该方法会触发 {@link com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent} 事件
+     *
+     * @param key   属性 key
+     * @param value 属性 value
+     */
+    void setRefreshProperty(String key, String value);
 
     /**
      * 移除属性
