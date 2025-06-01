@@ -159,7 +159,7 @@ public class NettyWebServer implements ServerWebServer {
         if (!this.started) {
             this.started = true;
             this.disposableServer = this.server.bindNow();
-            new Thread(new DaemonServerTask()).start();
+            new DaemonServerTask().start();
             log.info("Netty started on port({})", this.getPort());
         }
     }
@@ -168,7 +168,9 @@ public class NettyWebServer implements ServerWebServer {
     public void stop() {
         if (this.started) {
             this.started = false;
-            this.disposableServer.disposeNow();
+            if (this.disposableServer != null) {
+                this.disposableServer.disposeNow();
+            }
         }
     }
 
@@ -422,9 +424,23 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     protected class DaemonServerTask implements Runnable {
+        /**
+         * 守护线程是否已启动
+         */
+        private volatile boolean started;
+
+        public void start() {
+            Thread daemon = new Thread(this);
+            daemon.setDaemon(false);
+            daemon.start();
+
+            // wait daemon start
+            while (!started) ;
+        }
 
         @Override
         public void run() {
+            this.started = true;
             while (isStart()) {
                 CommonUtil.sleep(200);
             }
