@@ -90,11 +90,6 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
                 window.setScene(this.createScene(component));
             }
 
-            if (fxmlLoader.getController() instanceof AbstractController) {
-                AbstractController controller = (AbstractController) fxmlLoader.getController();
-                controller.setWindow(window);
-            }
-
             return window;
         } catch (IOException e) {
             throw new ResolvableException("failed load FXML component: " + this.path, e);
