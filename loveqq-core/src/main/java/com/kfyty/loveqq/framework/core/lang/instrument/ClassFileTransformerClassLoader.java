@@ -35,16 +35,8 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
         super(urls, parent);
     }
 
-    public ClassFileTransformerClassLoader(String name, URL[] urls, ClassLoader parent) {
-        super(name, urls, parent);
-    }
-
     public ClassFileTransformerClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
-    }
-
-    public ClassFileTransformerClassLoader(String name, URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
-        super(name, urls, parent, factory);
     }
 
     /**

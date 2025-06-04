@@ -7,7 +7,6 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.ResponseBodyEmitter;
 import io.netty.buffer.ByteBuf;
-import org.reactivestreams.FlowAdapters;
 import org.reactivestreams.Publisher;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,7 +35,7 @@ public class JSONResponseBodyEmitterHandlerMethodReturnValueProcessor extends JS
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         ResponseBodyEmitter emitter = (ResponseBodyEmitter) returnValue;
-        Publisher<ByteBuf> publisher = FlowAdapters.toPublisher(emitter.toPublisher());
+        Publisher<ByteBuf> publisher = emitter.toPublisher();
         if (emitter.getTimeout() > 0) {
             this.scheduledExecutorService.schedule(emitter::completeWithTimeout, emitter.getTimeout(), TimeUnit.MILLISECONDS);
         }

@@ -23,7 +23,7 @@ public class MethodInterceptorChain extends MethodInvocationInterceptor {
      */
     public static final Comparator<MethodInterceptorChainPoint> METHOD_INTERCEPTOR_CHAIN_POINT_COMPARATOR = Comparator
             .comparing((MethodInterceptorChainPoint e) -> e instanceof InternalPriority ? Order.HIGHEST_PRECEDENCE : Order.LOWEST_PRECEDENCE)
-            .thenComparing(BeanUtil::getBeanOrder)
+            .thenComparing((MethodInterceptorChainPoint e) -> BeanUtil.getBeanOrder(e))
             .thenComparing(e -> e.getClass().getName());
 
     /**

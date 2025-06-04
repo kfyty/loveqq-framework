@@ -112,7 +112,7 @@ public abstract class SQLParametersResolveUtil {
         }
 
         // 更新 SQL
-        if (!builder.isEmpty()) {
+        if (builder.length() > 0) {
             value.set(builder.toString());
         }
 

@@ -77,7 +77,7 @@ public class ViewModelBindUtil {
         // 已经是代理，但可能不是上面创建的代理，添加拦截点
         MethodInterceptorChain chain = AopUtil.getProxyInterceptorChain(modelValue);
         Optional<MethodInterceptorChainPoint> anyChainPoint = chain.getChainPoints().stream().filter(e -> e instanceof ViewModelBindProxy).findAny();
-        if (anyChainPoint.isEmpty()) {
+        if (!anyChainPoint.isPresent()) {
             chain.addInterceptorPoint(proxy);
         } else {
             proxy = (ViewModelBindProxy) anyChainPoint.get();

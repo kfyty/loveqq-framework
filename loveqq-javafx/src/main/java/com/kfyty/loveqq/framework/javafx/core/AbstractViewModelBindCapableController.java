@@ -79,8 +79,8 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
      */
     public DataBinder getDataBinder() {
         DataBinder binder = this.dataBinder.clone();
-        if (binder instanceof DefaultDataBinder dataBinder) {
-            dataBinder.setIgnoreInvalidFields(true);
+        if (binder instanceof DefaultDataBinder) {
+            ((DefaultDataBinder) binder).setIgnoreInvalidFields(true);
         }
         return binder;
     }
@@ -164,18 +164,22 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
 
         view.addListener(viewBindEventHandler);
 
-        if (view instanceof ObjectProperty<?> objectProperty) {
+        if (view instanceof ObjectProperty<?>) {
+            ObjectProperty<?> objectProperty = (ObjectProperty<?>) view;
             Object value = objectProperty.getValue();
             if (value instanceof ObservableArray<?>) {
                 throw new UnsupportedOperationException("array bind doesn't support yet: " + bindPath);
             }
-            if (value instanceof ObservableList<?> observableList) {
+            if (value instanceof ObservableList<?>) {
+                ObservableList<?> observableList = (ObservableList<?>) value;
                 observableList.addListener((ListChangeListener<Object>) c -> viewBindEventHandler.changed(view, c.getList(), c.getList()));
             }
-            if (value instanceof ObservableSet<?> observableSet) {
+            if (value instanceof ObservableSet<?>) {
+                ObservableSet<?> observableSet = (ObservableSet<?>) value;
                 observableSet.addListener((SetChangeListener<Object>) c -> viewBindEventHandler.changed(view, c.getSet(), c.getSet()));
             }
-            if (value instanceof ObservableMap<?, ?> observableMap) {
+            if (value instanceof ObservableMap<?, ?>) {
+                ObservableMap<?, ?> observableMap = (ObservableMap<?, ?>) value;
                 observableMap.addListener((MapChangeListener<Object, Object>) c -> viewBindEventHandler.changed(view, c.getMap(), c.getMap()));
             }
         }
@@ -221,8 +225,8 @@ public abstract class AbstractViewModelBindCapableController implements LifeCycl
                     this.dataBinder.bind(new Instance(this.controller), virtual);
                 }
             } catch (Throwable e) {
-                if (this.controller instanceof LifeCycleController lifeCycleController) {
-                    lifeCycleController.onModelBindCause(observable, this.bindPath, newValue, e);
+                if (this.controller instanceof LifeCycleController) {
+                    ((LifeCycleController) this.controller).onModelBindCause(observable, this.bindPath, newValue, e);
                     return;
                 }
                 throw e;

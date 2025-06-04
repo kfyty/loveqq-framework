@@ -130,8 +130,8 @@ public abstract class CommonUtil {
     /* ------------------------------------------ 集合操作 ------------------------------------------ */
 
     public static boolean empty(Object obj) {
-        if (obj instanceof CharSequence cs) {
-            return cs.isEmpty();
+        if (obj instanceof CharSequence) {
+            return ((CharSequence) obj).length() == 0;
         }
         return size(obj) < 1;
     }
@@ -147,14 +147,14 @@ public abstract class CommonUtil {
         if (obj.getClass().isArray()) {
             return Array.getLength(obj);
         }
-        if (obj instanceof Collection<?> c) {
-            return c.size();
+        if (obj instanceof Collection<?>) {
+            return ((Collection<?>) obj).size();
         }
-        if (obj instanceof Map<?, ?> m) {
-            return m.size();
+        if (obj instanceof Map<?, ?>) {
+            return ((Map<?, ?>) obj).size();
         }
-        if (obj instanceof Optional<?> o) {
-            return o.isPresent() ? 1 : 0;
+        if (obj instanceof Optional<?>) {
+            return ((Optional<?>) obj).isPresent() ? 1 : 0;
         }
         return 1;
     }
@@ -317,7 +317,7 @@ public abstract class CommonUtil {
             char c = target.charAt(i);
             if (c != lineChar) {
                 // 说明是不是分割符，此时仅判断首个字符是否需要大写即可
-                builder.append(firstUpper && builder.isEmpty() ? Character.toUpperCase(c) : c);
+                builder.append(firstUpper && builder.length() == 0 ? Character.toUpperCase(c) : c);
                 continue;
             }
             while (i < target.length() && (c = target.charAt(i)) == lineChar) {
@@ -325,7 +325,7 @@ public abstract class CommonUtil {
             }
             if (i < target.length()) {
                 // 说明是分隔符后的非分隔符字符，此时如果是第一个则应根据 firstUpper 写入，否则应写入大写
-                builder.append(builder.isEmpty() && !firstUpper ? c : Character.toUpperCase(c));
+                builder.append(builder.length() == 0 && !firstUpper ? c : Character.toUpperCase(c));
             }
         }
         return builder.toString();

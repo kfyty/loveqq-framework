@@ -127,7 +127,7 @@ public class SqlSession implements InvocationHandler {
         try {
             Transaction transaction = this.getTransaction();
             if (notEmpty(this.configuration.getInterceptorMethodChain())) {
-                MethodParameter method = new MethodParameter(mapperMethod, params.values().toArray(MethodParameter[]::new));
+                MethodParameter method = new MethodParameter(mapperMethod, params.values().toArray(new MethodParameter[0]));
                 return this.invokeInterceptorChain(method, annotation.get(), sqlParams, returnType);
             }
             if (annotation.get().annotationType() == Query.class || annotation.get().annotationType() == SubQuery.class) {

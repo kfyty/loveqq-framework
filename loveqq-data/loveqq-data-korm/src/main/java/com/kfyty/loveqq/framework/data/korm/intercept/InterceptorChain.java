@@ -131,7 +131,7 @@ public class InterceptorChain implements AutoCloseable {
     protected PreparedStatement preparePreparedStatement() {
         if (this.preparedStatement == null) {
             try {
-                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(MethodParameter[]::new));
+                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(new MethodParameter[0]));
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }

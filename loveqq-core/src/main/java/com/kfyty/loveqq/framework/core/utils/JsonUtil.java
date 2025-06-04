@@ -123,7 +123,7 @@ public abstract class JsonUtil {
     }
 
     public static <T> T toObject(Map<?, ?> map, Type type) {
-        return toObject(map, new TypeReference<>() {
+        return toObject(map, new TypeReference<T>() {
 
             @Override
             public Type getType() {
@@ -147,7 +147,7 @@ public abstract class JsonUtil {
     }
 
     public static <T> T toObject(CharSequence json, Type type) {
-        return toObject(json, new TypeReference<>() {
+        return toObject(json, new TypeReference<T>() {
 
             @Override
             public Type getType() {

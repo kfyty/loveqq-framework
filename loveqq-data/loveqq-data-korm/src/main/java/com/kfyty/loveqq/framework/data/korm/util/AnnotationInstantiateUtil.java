@@ -113,7 +113,7 @@ public abstract class AnnotationInstantiateUtil {
 
             @Override
             public If[] _if() {
-                return ifs.toArray(If[]::new);
+                return ifs.toArray(new If[0]);
             }
 
             @Override

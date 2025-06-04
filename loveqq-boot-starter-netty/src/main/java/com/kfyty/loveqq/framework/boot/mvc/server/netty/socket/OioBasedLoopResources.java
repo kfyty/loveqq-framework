@@ -1,11 +1,7 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty.socket;
 
-import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
 import io.netty.channel.Channel;
-import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ThreadPerChannelEventLoop;
-import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
@@ -19,7 +15,6 @@ import reactor.netty.ReactorNetty;
 import reactor.netty.resources.LoopResources;
 
 import java.time.Duration;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -112,13 +107,7 @@ public class OioBasedLoopResources implements LoopResources {
         if (this.bossGroup == null) {
             synchronized (this) {
                 if (this.bossGroup == null) {
-                    this.bossGroup = new OioEventLoopGroup(0, Executors.newFixedThreadPool(IO_SELECT_COUNT, new NamedThreadFactory("reactor-select"))) {
-
-                        @Override
-                        public EventLoop next() {
-                            return new ThreadPerChannelEventLoop(this);
-                        }
-                    };
+                    throw new UnsupportedOperationException("virtual thread");
                 }
             }
         }
@@ -129,13 +118,7 @@ public class OioBasedLoopResources implements LoopResources {
         if (this.workGroup == null) {
             synchronized (this) {
                 if (this.workGroup == null) {
-                    this.workGroup = new OioEventLoopGroup(0, Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("reactor-handler-", 0).factory())) {
-
-                        @Override
-                        public EventLoop next() {
-                            return new ThreadPerChannelEventLoop(this);
-                        }
-                    };
+                    throw new UnsupportedOperationException("virtual thread");
                 }
             }
         }

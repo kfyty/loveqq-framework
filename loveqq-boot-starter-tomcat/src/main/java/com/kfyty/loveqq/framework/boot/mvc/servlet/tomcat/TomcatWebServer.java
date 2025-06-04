@@ -55,7 +55,6 @@ import java.util.Collections;
 import java.util.EventListener;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -159,7 +158,8 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         ProtocolHandler protocolHandler = connector.getProtocolHandler();
-        if (protocolHandler instanceof AbstractProtocol<?> protocol) {
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            AbstractProtocol<?> protocol = (AbstractProtocol<?>) protocolHandler;
             Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
             Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
             Mapping.from(this.config.getMaxConnections()).whenNotNull(protocol::setMaxConnections);
@@ -168,7 +168,7 @@ public class TomcatWebServer implements ServletWebServer {
             Mapping.from(this.config.getTcpNoDelay()).whenNotNull(protocol::setTcpNoDelay);
         }
         if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
+            throw new UnsupportedOperationException("virtual thread");
         }
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
@@ -371,7 +371,7 @@ public class TomcatWebServer implements ServletWebServer {
             for (ServletRegistrationBean webServlet : this.tomcatConfig.getWebServlets()) {
                 String name = webServlet.getName() != null ? webServlet.getName() : webServlet.getServlet().getClass().getName();
                 ServletRegistration.Dynamic dynamic = context.addServlet(name, webServlet.getServlet());
-                dynamic.addMapping(webServlet.getUrlPatterns().toArray(String[]::new));
+                dynamic.addMapping(webServlet.getUrlPatterns().toArray(new String[0]));
                 dynamic.setLoadOnStartup(webServlet.getLoadOnStartup());
                 dynamic.setAsyncSupported(webServlet.isAsyncSupported());
                 dynamic.setInitParameters(webServlet.getInitParam().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Pair::getKey, Pair::getValue)));

@@ -144,7 +144,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @Override
     public URL[] getURLs() {
         URL[] urLs = super.getURLs();
-        return urLs.length > 0 ? urLs : this.jarIndex.getJarURLs().toArray(URL[]::new);
+        return urLs.length > 0 ? urLs : this.jarIndex.getJarURLs().toArray(new URL[0]);
     }
 
     /**

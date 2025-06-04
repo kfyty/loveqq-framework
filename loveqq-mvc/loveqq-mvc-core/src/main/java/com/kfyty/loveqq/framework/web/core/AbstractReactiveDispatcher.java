@@ -65,8 +65,8 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
     }
 
     protected ReactiveHandlerInterceptor toReactiveInterceptor(HandlerInterceptor interceptor) {
-        if (interceptor instanceof ReactiveHandlerInterceptor reactiveHandlerInterceptor) {
-            return reactiveHandlerInterceptor;
+        if (interceptor instanceof ReactiveHandlerInterceptor) {
+            return (ReactiveHandlerInterceptor) interceptor;
         }
         return new ReactiveHandlerInterceptor() {
 

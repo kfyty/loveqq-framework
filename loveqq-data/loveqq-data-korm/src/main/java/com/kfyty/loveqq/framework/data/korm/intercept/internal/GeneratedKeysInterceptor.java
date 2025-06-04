@@ -51,7 +51,7 @@ public class GeneratedKeysInterceptor implements Interceptor {
         }
         try {
             Connection connection = TransactionHolder.currentTransaction().getConnection();
-            chain.setPreparedStatement(JdbcUtil.getPreparedStatement(connection, sql.get(), (c, s) -> JdbcUtil.preparedStatement(c, s, Statement.RETURN_GENERATED_KEYS), parameters.toArray(MethodParameter[]::new)));
+            chain.setPreparedStatement(JdbcUtil.getPreparedStatement(connection, sql.get(), (c, s) -> JdbcUtil.preparedStatement(c, s, Statement.RETURN_GENERATED_KEYS), parameters.toArray(new MethodParameter[0])));
             return chain.proceed();
         } catch (SQLException e) {
             throw new ExecuteInterceptorException(e);

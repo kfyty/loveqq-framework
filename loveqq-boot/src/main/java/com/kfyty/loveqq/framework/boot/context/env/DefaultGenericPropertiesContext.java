@@ -69,7 +69,8 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     @SuppressWarnings("unchecked")
     public <T> T getProperty(String key, SimpleGeneric targetType, T defaultValue) {
         Type resolveType = targetType.getResolveType();
-        if (resolveType instanceof Class<?> clazz) {
+        if (resolveType instanceof Class<?>) {
+            Class<?> clazz = (Class<?>) resolveType;
             if (!clazz.isArray() && !Map.class.isAssignableFrom(clazz)) {
                 if (ReflectUtil.isBaseDataType(clazz)) {
                     return this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);

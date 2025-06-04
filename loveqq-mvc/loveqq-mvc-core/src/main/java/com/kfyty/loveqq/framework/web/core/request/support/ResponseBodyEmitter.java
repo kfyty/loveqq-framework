@@ -7,12 +7,14 @@ import com.kfyty.loveqq.framework.web.core.exception.AsyncTimeoutException;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -83,7 +85,7 @@ public class ResponseBodyEmitter {
     /**
      * 订阅者
      */
-    protected Flow.Subscriber<? super ByteBuf> s;
+    protected Subscriber<? super ByteBuf> s;
 
     /**
      * 数据转换器
@@ -227,7 +229,7 @@ public class ResponseBodyEmitter {
         return this;
     }
 
-    public Flow.Publisher<ByteBuf> toPublisher() {
+    public Publisher<ByteBuf> toPublisher() {
         return new ResponseBodyEmitterPublisher();
     }
 
@@ -244,17 +246,17 @@ public class ResponseBodyEmitter {
     }
 
     @RequiredArgsConstructor
-    private class ResponseBodyEmitterPublisher implements Flow.Publisher<ByteBuf> {
+    private class ResponseBodyEmitterPublisher implements Publisher<ByteBuf> {
 
         @Override
-        public void subscribe(Flow.Subscriber<? super ByteBuf> s) {
+        public void subscribe(Subscriber<? super ByteBuf> s) {
             ResponseBodyEmitter.this.s = s;
             s.onSubscribe(new ResponseBodyEmitterSubscription());
         }
     }
 
     @RequiredArgsConstructor
-    private class ResponseBodyEmitterSubscription implements Flow.Subscription {
+    private class ResponseBodyEmitterSubscription implements Subscription {
 
         @Override
         public void request(long n) {
