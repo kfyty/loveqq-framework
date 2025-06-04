@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.EventListener;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -168,7 +169,7 @@ public class TomcatWebServer implements ServletWebServer {
             Mapping.from(this.config.getTcpNoDelay()).whenNotNull(protocol::setTcpNoDelay);
         }
         if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            throw new UnsupportedOperationException("virtual thread");
+            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
         }
         tomcat.getService().addConnector(connector);
         tomcat.setConnector(connector);
