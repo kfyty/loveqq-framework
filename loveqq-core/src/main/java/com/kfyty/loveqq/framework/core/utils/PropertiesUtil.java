@@ -113,7 +113,8 @@ public abstract class PropertiesUtil {
      * @param properties 属性配置
      */
     public static void processPlaceholder(Properties properties) {
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+        Properties copy = (Properties) properties.clone();
+        for (Map.Entry<Object, Object> entry : copy.entrySet()) {
             String value = entry.getValue().toString();
             String resolved = PlaceholdersUtil.resolve(value, properties);
             properties.setProperty(entry.getKey().toString(), resolved);
