@@ -11,6 +11,7 @@
 
     <artifactId>loveqq-cache-core</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>cache 核心</description>
 
     <dependencies>

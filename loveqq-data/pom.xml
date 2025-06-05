@@ -16,6 +16,8 @@
 
     <artifactId>loveqq-data</artifactId>
     <packaging>pom</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq data</description>
 
     <dependencies>
         <dependency>

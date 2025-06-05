@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-mvc-servlet</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq mvc servlet based</description>
 
     <dependencies>
         <dependency>

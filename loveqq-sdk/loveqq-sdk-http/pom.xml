@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>loveqq-sdk-http</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>sdk 同步实现</description>
 
     <dependencies>

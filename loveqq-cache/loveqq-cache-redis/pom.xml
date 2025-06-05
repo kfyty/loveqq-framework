@@ -11,6 +11,7 @@
 
     <artifactId>loveqq-cache-redis</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>cache redis 实现</description>
 
     <dependencies>

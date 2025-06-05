@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-mybatis</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq mybatis 模块</description>
 
     <dependencies>
         <dependency>

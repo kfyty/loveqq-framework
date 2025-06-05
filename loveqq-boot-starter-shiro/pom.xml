@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-shiro</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq shiro 模块</description>
 
     <properties>
         <shiro.version>1.13.0</shiro.version>

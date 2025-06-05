@@ -11,6 +11,7 @@
 
     <artifactId>loveqq-boot-starter-test</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
     <description>loveqq 框架单元测试集成</description>
 
     <dependencies>

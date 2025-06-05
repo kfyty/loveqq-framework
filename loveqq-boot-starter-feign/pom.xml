@@ -11,6 +11,7 @@
 
     <artifactId>loveqq-boot-starter-feign</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
 
     <properties>
         <feign.version>13.5</feign.version>

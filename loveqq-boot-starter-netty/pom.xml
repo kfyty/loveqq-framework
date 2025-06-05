@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-netty</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq netty web server</description>
 
     <dependencies>
         <dependency>

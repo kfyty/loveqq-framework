@@ -10,6 +10,9 @@
     </parent>
 
     <artifactId>loveqq-boot-starter-thymeleaf</artifactId>
+    <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq thymeleaf 模块</description>
 
     <properties>
         <ognl.version>3.3.5</ognl.version>

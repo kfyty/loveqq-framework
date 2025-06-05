@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-rocketmq</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq rocketmq 模块</description>
 
     <properties>
         <rocketemq.version>5.0.7</rocketemq.version>

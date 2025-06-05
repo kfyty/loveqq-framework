@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-boot-starter-uid-generator</artifactId>
     <packaging>jar</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq uid 模块</description>
 
     <properties>
         <uid.generator.loveqq.branch.version>1.0.0</uid.generator.loveqq.branch.version>

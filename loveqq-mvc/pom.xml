@@ -11,6 +11,8 @@
 
     <artifactId>loveqq-mvc</artifactId>
     <packaging>pom</packaging>
+    <name>${project.artifactId}</name>
+    <description>loveqq mvc</description>
 
     <modules>
         <module>loveqq-mvc-core</module>
