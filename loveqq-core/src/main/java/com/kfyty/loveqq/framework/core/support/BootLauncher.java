@@ -71,8 +71,8 @@ public class BootLauncher {
         JarIndex jarIndex = new JarIndex(mainJarPath, jarIndexStream);
         JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, Thread.currentThread().getContextClassLoader());
 
-        this.setContextClassLoader(jarIndexClassLoader);
-        this.invokeMainClass(manifest.getMainAttributes().getValue(START_CLASS_KEY), args);
+        setContextClassLoader(jarIndexClassLoader);
+        invokeMainClass(manifest.getMainAttributes().getValue(START_CLASS_KEY), args);
     }
 
     /**
@@ -80,7 +80,7 @@ public class BootLauncher {
      *
      * @param classLoader classloader
      */
-    public void setContextClassLoader(ClassLoader classLoader) {
+    public static void setContextClassLoader(ClassLoader classLoader) {
         Thread.currentThread().setContextClassLoader(classLoader);
     }
 
@@ -91,7 +91,7 @@ public class BootLauncher {
      * @param args          命令行参数
      * @throws Throwable 启动异常
      */
-    public void invokeMainClass(String mainClassName, String[] args) throws Throwable {
+    public static void invokeMainClass(String mainClassName, String[] args) throws Throwable {
         try {
             Class<?> mainClass = Class.forName(mainClassName, false, Thread.currentThread().getContextClassLoader());
             Method mainMethod = mainClass.getDeclaredMethod("main", String[].class);
