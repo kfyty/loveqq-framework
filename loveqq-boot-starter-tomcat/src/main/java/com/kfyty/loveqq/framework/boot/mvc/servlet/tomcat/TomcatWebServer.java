@@ -37,13 +37,11 @@ import org.apache.catalina.webresources.StandardRoot;
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
 import org.apache.jasper.servlet.JasperInitializer;
-import org.apache.naming.ContextBindings;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
-import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -183,8 +181,8 @@ public class TomcatWebServer implements ServletWebServer {
         context.addServletContainerInitializer(new DispatcherServletConfigInitializer(this.config, this.dispatcherServlet), Collections.emptySet());
         context.addApplicationListener(WsContextListener.class.getName());
         context.addLifecycleListener(new Tomcat.FixContextListener());
-        this.prepareContainerListener(context);
         this.bindContextClassLoader(context);
+        this.prepareContainerListener(context);
         this.skipTldScanning(context);
         this.prepareResources(context);
         this.prepareDefaultServlet(context, this.config.getStaticPattern());
@@ -232,13 +230,8 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     private void bindContextClassLoader(Context context) {
-        try {
-            ClassLoader classLoader = ClassLoaderUtil.classLoader(this.getClass());
-            context.setParentClassLoader(classLoader);
-            ContextBindings.bindClassLoader(context, context.getNamingToken(), classLoader);
-        } catch (NamingException ex) {
-            // Naming is not enabled. Continue
-        }
+        ClassLoader classLoader = ClassLoaderUtil.classLoader(this.getClass());
+        context.setParentClassLoader(classLoader);
     }
 
     private void skipTldScanning(Context context) {
