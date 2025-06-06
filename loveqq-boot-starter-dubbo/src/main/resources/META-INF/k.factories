@@ -3,4 +3,5 @@ com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescriptionR
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboProperties,\
     com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboServiceRegistry,\
-    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboAutoConfiguration
+    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboAutoConfiguration,\
+    com.kfyty.loveqq.framework.boot.dubbo.autoconfig.DubboAutoConfiguration$DubboDestroyBean

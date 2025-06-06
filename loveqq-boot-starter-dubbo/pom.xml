@@ -19,7 +19,7 @@
         <bcpkix.jdk18on.version>1.78.1</bcpkix.jdk18on.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <micrometer.registry.prometheus>1.12.11</micrometer.registry.prometheus>
-        <dubbo.version>3.3.1</dubbo.version>
+        <dubbo.version>3.3.4</dubbo.version>
     </properties>
 
     <dependencies>
@@ -57,28 +57,37 @@
             <version>${netty.version}</version>
         </dependency>
 
+        <!-- 下面的依赖是第一个版本无法启动，但后来又好了，设置为 provider，如仍然报错可自行引入 -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
             <version>${grpc.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
             <version>${bcpkix.jdk18on.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_pushgateway</artifactId>
             <version>${prometheus.simpleclient.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>${micrometer.registry.prometheus}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>
