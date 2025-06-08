@@ -67,9 +67,13 @@ public class DefaultMultipartFile implements MultipartFile {
     }
 
     @Override
-    public void transferTo(File dest) throws Exception {
+    public void transferTo(File dest) throws IOException {
         if (dest.exists() && !dest.delete()) {
             throw new IOException("Destination file [" + dest.getAbsolutePath() + "] already exists and could not be deleted !");
+        }
+        File parentDir = dest.getParentFile();
+        if (!parentDir.exists() && !parentDir.mkdirs()) {
+            throw new IOException("Destination file [" + dest.getAbsolutePath() + "] create directory failed !");
         }
         try (InputStream in = this.getInputStream()) {
             IOUtil.copy(in, IOUtil.newOutputStream(dest));

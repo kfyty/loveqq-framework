@@ -77,7 +77,7 @@ public interface MultipartFile extends AutoCloseable {
      *
      * @param dest 目标文件
      */
-    void transferTo(File dest) throws Exception;
+    void transferTo(File dest) throws IOException;
 
     /**
      * 写入到指定路径
