@@ -57,7 +57,7 @@ import java.util.function.Supplier;
  * @author Sam Brannen
  * @author Colin Sampaleanu
  * @author Rob Harrop
- * @since 1.1.2
+ * @since 1.1.3-M1
  */
 public abstract class Assert {
 
