@@ -1,8 +1,10 @@
 package com.kfyty.loveqq.framework.boot.context;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,8 +23,18 @@ public class ContextRefresher {
      * @param context 上下文
      */
     public static void refresh(ApplicationContext context) {
+        refresh(context, 200);
+    }
+    
+    /**
+     * 刷新上下文
+     *
+     * @param context 上下文
+     * @param delay 延迟刷新毫秒数
+     */
+    public static void refresh(ApplicationContext context, int delay) {
         // start daemon
-        RefreshContextDaemon daemon = new RefreshContextDaemon(context.getClass().getClassLoader());
+        RefreshContextDaemon daemon = new RefreshContextDaemon(context.getClass().getClassLoader(), delay);
         daemon.start();
 
         // start refresh
@@ -39,8 +51,14 @@ public class ContextRefresher {
     public static void refresh(RefreshContextDaemon daemon, ApplicationContext context) {
         new Thread(() -> {
             try {
+                // 等待一秒，让响应能够返回
+                CommonUtil.sleep(daemon.getDelay());
+
                 // 设置线程上下文
                 BootLauncher.setContextClassLoader(context.getClass().getClassLoader());
+
+                // 清空缓存
+                FactoriesLoader.clearCache();
 
                 // 执行刷新
                 context.refresh();
@@ -61,6 +79,12 @@ public class ContextRefresher {
          * 上下文的 classloader
          */
         private final ClassLoader classLoader;
+
+        /**
+         * 延迟刷新毫秒数
+         */
+        @Getter
+        private final int delay;
 
         /**
          * 快开始守护时间
@@ -96,7 +120,7 @@ public class ContextRefresher {
                 CommonUtil.sleep(20);
             }
 
-            log.info("Refresh application context finished in {} ms", (System.currentTimeMillis() - this.start));
+            log.info("Refresh application context finished in {} ms", (System.currentTimeMillis() - this.start - this.delay));
         }
     }
 }

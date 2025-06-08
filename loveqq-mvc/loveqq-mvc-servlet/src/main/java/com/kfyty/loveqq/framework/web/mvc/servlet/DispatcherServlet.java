@@ -12,8 +12,6 @@ import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerResponse;
-import com.kfyty.loveqq.framework.web.mvc.servlet.request.support.RequestContextHolder;
-import com.kfyty.loveqq.framework.web.mvc.servlet.request.support.ResponseContextHolder;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -99,8 +97,8 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
         MethodParameter parameter = null;
-        ServletServerRequest serverRequest = (ServletServerRequest) RequestContextHolder.get();
-        ServletServerResponse serverResponse = (ServletServerResponse) ResponseContextHolder.get();
+        ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
+        ServletServerResponse serverResponse = new ServletServerResponse(response);
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
             // 初始化请求

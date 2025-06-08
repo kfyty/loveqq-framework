@@ -175,7 +175,7 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     public boolean isMatchComponent(Class<?> beanClass) {
         if (this.componentMatchers.isEmpty()) {
-            this.componentMatchers.add(new DefaultComponentMatcher());
+            this.addComponentMatcher(new DefaultComponentMatcher());
         }
         for (ComponentMatcher componentMatcher : this.componentMatchers) {
             if (componentMatcher.isMatch(beanClass, this.includeFilters, this.excludeFilters)) {

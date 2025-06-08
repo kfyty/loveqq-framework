@@ -122,8 +122,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param packageName 包名
      * @param jarFile     jar 文件
      */
-    public void addJarIndexMapping(String packageName, JarFile jarFile) {
-        this.addJarIndexMapping(packageName, jarFile.getName());
+    public void addJarIndex(String packageName, JarFile jarFile) {
+        this.jarIndex.addJarIndex(packageName, jarFile);
     }
 
     /**
@@ -132,8 +132,27 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param packageName 包名
      * @param jarFilePath jar 文件绝对路径
      */
-    public void addJarIndexMapping(String packageName, String jarFilePath) {
+    public void addJarIndex(String packageName, String jarFilePath) {
         this.jarIndex.addJarIndex(packageName, jarFilePath);
+    }
+
+    /**
+     * 动态移除 jar index
+     * <b>注意：JarFile 必须是 {@link #addJarIndex(List)} 时的同名实例对象，否则无法移除</b>
+     *
+     * @param jarFiles jar 文件
+     */
+    public void removeJarIndex(List<JarFile> jarFiles) {
+        this.jarIndex.removeJarIndex(jarFiles);
+    }
+
+    /**
+     * 动态移除 jar index
+     *
+     * @param packageName 包名，该包名下的所有 jar 都将被移除
+     */
+    public void removeJarIndex(String packageName) {
+        this.jarIndex.removeJarIndex(packageName);
     }
 
     /**
@@ -143,8 +162,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     public URL[] getURLs() {
-        URL[] urLs = super.getURLs();
-        return urLs.length > 0 ? urLs : this.jarIndex.getJarURLs().toArray(URL[]::new);
+        return this.jarIndex.getJarURLs();
     }
 
     /**
