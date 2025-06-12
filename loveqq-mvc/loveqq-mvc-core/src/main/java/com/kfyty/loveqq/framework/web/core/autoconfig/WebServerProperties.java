@@ -34,6 +34,16 @@ public class WebServerProperties {
     protected Integer maxThreads;
 
     /**
+     * 是否启用压缩
+     */
+    protected Boolean compress;
+
+    /**
+     * 最小启动压缩字节大小
+     */
+    protected Integer minCompressionSize;
+
+    /**
      * 端口
      */
     protected int port;
@@ -88,9 +98,11 @@ public class WebServerProperties {
     public <T extends WebServerProperties> T copy(T subClass) {
         subClass.setVirtualThread(this.virtualThread);
         subClass.setMaxThreads(this.maxThreads);
+        subClass.setCompress(this.compress);
+        subClass.setMinCompressionSize(this.minCompressionSize);
+        subClass.setPort(this.port);
         subClass.setLocation(this.location);
         subClass.setMaxFileSize(this.maxFileSize);
-        subClass.setPort(this.port);
         subClass.setResources(this.resources);
         if (subClass.getPrimarySource() == null) {
             subClass.setPrimarySource(this.primarySource);
