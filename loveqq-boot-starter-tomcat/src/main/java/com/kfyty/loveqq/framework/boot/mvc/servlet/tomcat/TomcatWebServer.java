@@ -36,12 +36,15 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
+import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.naming.ContextBindings;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.apache.tomcat.util.scan.StandardJarScanFilter;
 import org.apache.tomcat.websocket.server.WsContextListener;
 
+import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -64,11 +67,16 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@RequiredArgsConstructor
 public class TomcatWebServer implements ServletWebServer {
-    private final Tomcat tomcat;
-
+    /**
+     * 是否已启动
+     */
     private volatile boolean started;
+
+    /**
+     * tomcat 实例
+     */
+    private Tomcat tomcat;
 
     @Setter
     @Getter
@@ -93,8 +101,6 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     public TomcatWebServer(TomcatProperties config, DispatcherServlet dispatcherServlet) {
-        this.tomcat = new Tomcat();
-        this.host = this.tomcat.getHost();
         this.config = config;
         this.dispatcherServlet = dispatcherServlet;
         this.configTomcatServer();
@@ -140,6 +146,8 @@ public class TomcatWebServer implements ServletWebServer {
 
     protected void configTomcatServer() {
         try {
+            this.tomcat = new Tomcat();
+            this.host = this.tomcat.getHost();
             this.host.setAutoDeploy(true);
             this.tomcat.setPort(this.getPort());
             this.tomcat.setBaseDir(this.createTempDir("tomcat").getAbsolutePath());
@@ -157,6 +165,12 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         ProtocolHandler protocolHandler = connector.getProtocolHandler();
+        if (protocolHandler instanceof AbstractHttp11Protocol<?> protocol) {
+            this.configCompression(protocol);
+        }
+        if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
+            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
+        }
         if (protocolHandler instanceof AbstractProtocol<?> protocol) {
             Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
             Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
@@ -165,11 +179,11 @@ public class TomcatWebServer implements ServletWebServer {
             Mapping.from(this.config.getKeepAliveTimeout()).whenNotNull(protocol::setKeepAliveTimeout);
             Mapping.from(this.config.getTcpNoDelay()).whenNotNull(protocol::setTcpNoDelay);
         }
-        if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
+        if (this.config.getConnectorConfigure() != null) {
+            this.config.getConnectorConfigure().accept(connector);
         }
-        tomcat.getService().addConnector(connector);
-        tomcat.setConnector(connector);
+        this.tomcat.getService().addConnector(connector);
+        this.tomcat.setConnector(connector);
     }
 
     private void prepareContext() throws Exception {
@@ -230,8 +244,22 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     private void bindContextClassLoader(Context context) {
-        ClassLoader classLoader = ClassLoaderUtil.classLoader(this.getClass());
-        context.setParentClassLoader(classLoader);
+        try {
+            ClassLoader classLoader = ClassLoaderUtil.classLoader(this.getClass());
+            context.setParentClassLoader(classLoader);
+            ContextBindings.bindClassLoader(context, context.getNamingToken(), classLoader);
+        } catch (NamingException ex) {
+            // Naming is not enabled. Continue
+        }
+    }
+
+    private void configCompression(AbstractHttp11Protocol<?> protocol) {
+        if (this.config.getCompress() != null && this.config.getCompress()) {
+            protocol.setCompression("on");
+            if (this.config.getMinCompressionSize() != null) {
+                protocol.setCompressionMinSize(this.config.getMinCompressionSize());
+            }
+        }
     }
 
     private void skipTldScanning(Context context) {

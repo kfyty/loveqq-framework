@@ -59,7 +59,8 @@ public class ClassPathJarResourceSet extends JarResourceSet {
             if (jarEntry == null || jarFile == null) {
                 return super.createArchiveResource(jarEntry, webAppPath, manifest);
             }
-            return new JarResource(this, webAppPath, "file:/" + jarFile.getName(), jarEntry) {
+            String baseUrl = "file:" + (jarFile.getName().charAt(0) == '/' ? jarFile.getName() : '/' + jarFile.getName());
+            return new JarResource(this, webAppPath, baseUrl, jarEntry) {
 
                 @Override
                 protected JarInputStreamWrapper getJarInputStreamWrapper() {

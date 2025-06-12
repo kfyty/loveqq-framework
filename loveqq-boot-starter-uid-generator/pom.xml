@@ -15,7 +15,7 @@
     <description>loveqq uid 模块</description>
 
     <properties>
-        <uid.generator.loveqq.branch.version>1.0.0</uid.generator.loveqq.branch.version>
+        <loveqq.uid.generator.version>1.0.0</loveqq.uid.generator.version>
     </properties>
 
     <dependencies>
@@ -26,13 +26,17 @@
         </dependency>
 
         <dependency>
-            <groupId>com.baidu.fsg</groupId>
-            <artifactId>uid-generator</artifactId>
-            <version>${uid.generator.loveqq.branch.version}</version>
+            <groupId>com.kfyty</groupId>
+            <artifactId>baidu.fsg.uid-generator</artifactId>
+            <version>${loveqq.uid.generator.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context-indexer</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

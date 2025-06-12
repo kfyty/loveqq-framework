@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -50,38 +51,53 @@ public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint,
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         Async annotation = AnnotationUtil.findAnnotation(methodProxy.getTargetMethod(), Async.class);
+
         if (annotation == null) {
             return chain.proceed(methodProxy);
         }
+
         Object executor = this.context.getBean(CommonUtil.notEmpty(annotation.value()) ? annotation.value() : DEFAULT_THREAD_POOL_EXECUTOR);
+
         if (!(executor instanceof ExecutorService)) {
             throw new IllegalStateException("The target executor is not an instance of ExecutorService: " + executor);
         }
-        Callable<?> task = () -> {
+
+        final Callable<?> task = () -> {
             try {
                 Object retValue = chain.proceed(methodProxy);
+                if (retValue instanceof CompletionStage<?> stage) {
+                    retValue = stage.toCompletableFuture();
+                }
                 return retValue instanceof Future ? ((Future<?>) retValue).get(Integer.MAX_VALUE, TimeUnit.SECONDS) : null;
             } catch (Throwable throwable) {
                 log.error("execute async method error: {}", throwable.getMessage(), throwable);
                 throw new AsyncMethodException(throwable);
             }
         };
+
         return this.doExecuteAsync((ExecutorService) executor, methodProxy.getMethod(), task);
     }
 
-    protected Object doExecuteAsync(ExecutorService executor, Method method, Callable<?> task) {
-        if (!method.getReturnType().equals(void.class) && !method.getReturnType().equals(Void.class) && !Future.class.isAssignableFrom(method.getReturnType())) {
-            throw new IllegalStateException("Async method return type must be void/Void/Future: " + method);
+    protected Object doExecuteAsync(ExecutorService executor, Method method, final Callable<?> task) {
+        if (!method.getReturnType().equals(void.class) &&
+                !method.getReturnType().equals(Void.class) &&
+                !Future.class.isAssignableFrom(method.getReturnType()) &&
+                !CompletionStage.class.isAssignableFrom(method.getReturnType())) {
+            throw new IllegalStateException("Async method return type must be void/Void/Future/CompletionStage: " + method);
         }
-        if (CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
+
+        if (Future.class.isAssignableFrom(method.getReturnType()) || CompletionStage.class.isAssignableFrom(method.getReturnType())) {
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return task.call();
-                } catch (Exception e) {
+                } catch (AsyncMethodException e) {
+                    throw e;
+                } catch (Throwable e) {
                     throw new AsyncMethodException(ExceptionUtil.unwrap(e));
                 }
             }, executor);
         }
+
         return executor.submit(task);
     }
 }
