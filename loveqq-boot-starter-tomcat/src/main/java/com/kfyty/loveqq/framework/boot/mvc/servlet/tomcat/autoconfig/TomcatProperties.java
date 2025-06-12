@@ -19,12 +19,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.catalina.LifecycleListener;
+import org.apache.catalina.connector.Connector;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EventListener;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -122,6 +124,11 @@ public class TomcatProperties extends WebServerProperties {
      * 监听器
      */
     private List<EventListener> webListeners;
+
+    /**
+     * 连接器自定义
+     */
+    private Consumer<Connector> connectorConfigure;
 
     public TomcatProperties() {
         this(TomcatProperties.class, new MultipartConfigElement(""));
