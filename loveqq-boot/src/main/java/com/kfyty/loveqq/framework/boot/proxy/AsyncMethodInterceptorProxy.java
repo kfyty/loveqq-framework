@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THREAD_POOL_EXECUTOR;
 
 /**
- * 描述: async 注解代理，优先级必须设为最高，否则若其他拦截代理使用了 ThreadLocal 会失效
+ * 描述: {@link Async}/{@link Async.Await} 注解代理，优先级必须设为最高，否则若其他拦截代理使用了 ThreadLocal 会失效
  * <p>
  * 原则上代理顺序应如下：
  * <p>
@@ -44,22 +45,70 @@ import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoC
 @RequiredArgsConstructor
 public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint, InternalPriority {
     /**
+     * 静态 {@link Async.Await} 上下文引用
+     */
+    private static final ThreadLocal<Boolean> AWAIT = new ThreadLocal<>();
+
+    /**
      * 应用上下文
      */
     private final ApplicationContext context;
 
+    public static Boolean isAwait() {
+        Boolean await = AWAIT.get();
+        return await != null && await;
+    }
+
+    public static Boolean setAwait(Boolean await) {
+        Boolean prev = AWAIT.get();
+        AWAIT.set(await);
+        return prev;
+    }
+
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
-        Async annotation = AnnotationUtil.findAnnotation(methodProxy.getTargetMethod(), Async.class);
+        Method targetMethod = methodProxy.getTargetMethod();
+        Async async = AnnotationUtil.findAnnotation(targetMethod, Async.class);
+        Async.Await await = AnnotationUtil.findAnnotation(targetMethod, Async.Await.class);
 
-        if (annotation == null) {
-            return chain.proceed(methodProxy);
+        if (await == null) {
+            return proceed(async, methodProxy, chain);
         }
 
-        Object executor = this.context.getBean(CommonUtil.notEmpty(annotation.value()) ? annotation.value() : DEFAULT_THREAD_POOL_EXECUTOR);
+        Boolean prev = setAwait(await.value());
+        try {
+            return proceed(async, methodProxy, chain);
+        } finally {
+            setAwait(prev);
+        }
+    }
+
+    protected Object proceed(Async async, MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
+        if (async == null) {
+            Object proceed = chain.proceed(methodProxy);
+            if (isAwait()) {
+                if (proceed instanceof Future<?> future) {
+                    return CompletableFuture.completedFuture(CompletableFutureUtil.get(future));
+                }
+                if (proceed instanceof CompletionStage<?> stage) {
+                    return CompletableFuture.completedFuture(CompletableFutureUtil.get(stage.toCompletableFuture()));
+                }
+            }
+            return proceed;
+        }
+
+        Class<?> returnType = methodProxy.getMethod().getReturnType();
+        Object executor = this.context.getBean(CommonUtil.notEmpty(async.value()) ? async.value() : DEFAULT_THREAD_POOL_EXECUTOR);
 
         if (!(executor instanceof ExecutorService)) {
             throw new IllegalStateException("The target executor is not an instance of ExecutorService: " + executor);
+        }
+
+        if (!returnType.equals(void.class) &&
+                !returnType.equals(Void.class) &&
+                !Future.class.isAssignableFrom(returnType) &&
+                !CompletionStage.class.isAssignableFrom(returnType)) {
+            throw new IllegalStateException("Async method return type must be void/Void/Future/CompletionStage: " + methodProxy.getMethod());
         }
 
         final Callable<?> task = () -> {
@@ -75,18 +124,19 @@ public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint,
             }
         };
 
-        return this.doExecuteAsync((ExecutorService) executor, methodProxy.getMethod(), task);
-    }
-
-    protected Object doExecuteAsync(ExecutorService executor, Method method, final Callable<?> task) {
-        if (!method.getReturnType().equals(void.class) &&
-                !method.getReturnType().equals(Void.class) &&
-                !Future.class.isAssignableFrom(method.getReturnType()) &&
-                !CompletionStage.class.isAssignableFrom(method.getReturnType())) {
-            throw new IllegalStateException("Async method return type must be void/Void/Future/CompletionStage: " + method);
+        // 线程上下文中存在 Await，则直接同步调用
+        if (isAwait()) {
+            if (Future.class.isAssignableFrom(returnType) || CompletionStage.class.isAssignableFrom(returnType)) {
+                return CompletableFuture.completedFuture(task.call());
+            }
+            return task.call();
         }
 
-        if (Future.class.isAssignableFrom(method.getReturnType()) || CompletionStage.class.isAssignableFrom(method.getReturnType())) {
+        return this.doExecuteAsync((ExecutorService) executor, returnType, task);
+    }
+
+    protected Object doExecuteAsync(ExecutorService executor, Class<?> returnType, final Callable<?> task) {
+        if (Future.class.isAssignableFrom(returnType) || CompletionStage.class.isAssignableFrom(returnType)) {
             return CompletableFuture.supplyAsync(() -> {
                 try {
                     return task.call();
