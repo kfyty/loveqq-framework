@@ -165,14 +165,7 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         ProtocolHandler protocolHandler = connector.getProtocolHandler();
-        if (protocolHandler instanceof AbstractHttp11Protocol<?>) {
-            this.configCompression((AbstractHttp11Protocol<?>) protocolHandler);
-        }
-        if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
-        }
-        if (protocolHandler instanceof AbstractProtocol<?>) {
-            AbstractProtocol<?> protocol = (AbstractProtocol<?>) protocolHandler;
+        if (protocolHandler instanceof AbstractProtocol<?> protocol) {
             Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
             Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
             Mapping.from(this.config.getMaxConnections()).whenNotNull(protocol::setMaxConnections);
