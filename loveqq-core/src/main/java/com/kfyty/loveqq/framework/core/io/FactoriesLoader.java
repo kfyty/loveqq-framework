@@ -90,4 +90,9 @@ public abstract class FactoriesLoader {
             throw new ResolvableException("unable to load resource from location [" + urlResourceLocation + "]", e);
         }
     }
+
+    public static void clearCache() {
+        loadedCache.clear();
+        factoriesCache.clear();
+    }
 }

@@ -46,9 +46,19 @@ public class JarIndex {
     private final String mainJarPath;
 
     /**
+     * ide 启动类路径
+     */
+    private final List<String> classpath;
+
+    /**
      * jar index of package mapping to jars
      */
     private final Map<String, List<String>> jarIndex;
+
+    /**
+     * jar index 包含的全部的 URL
+     */
+    private URL[] urls;
 
     /**
      * 构造器
@@ -59,6 +69,22 @@ public class JarIndex {
      */
     public JarIndex(String mainJarPath, InputStream jarIndex) {
         this.mainJarPath = mainJarPath;
+        this.classpath = null;
+        this.jarIndex = new ConcurrentSkipListMap<>();
+        this.loadJarIndex(mainJarPath, jarIndex);
+    }
+
+    /**
+     * 构造器，主要是支持 ide 启动
+     *
+     * @param mainJarPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
+     * @param jarIndex    jar index 数据流
+     * @param classpath   类路径，ide 启动支持
+     */
+    @Deprecated
+    public JarIndex(String mainJarPath, InputStream jarIndex, List<String> classpath) {
+        this.mainJarPath = mainJarPath;
+        this.classpath = classpath;
         this.jarIndex = new ConcurrentSkipListMap<>();
         this.loadJarIndex(mainJarPath, jarIndex);
     }
@@ -77,8 +103,8 @@ public class JarIndex {
      *
      * @return jar urls
      */
-    public List<URL> getJarURLs() {
-        return this.jarIndex.values().stream().flatMap(Collection::stream).map(this::getJarURL).collect(Collectors.toList());
+    public URL[] getJarURLs() {
+        return this.urls;
     }
 
     /**
@@ -109,7 +135,12 @@ public class JarIndex {
     @SuppressWarnings("deprecation")
     @SneakyThrows(MalformedURLException.class)
     public URL getJarURL(String jarFilePath) {
-        return new URL("file", "", -1, '/' + jarFilePath);                                         // 必须使用 file 协议，否则读取不到 resources
+        String path = jarFilePath.charAt(0) == '/' ? jarFilePath : '/' + jarFilePath;
+        if (jarFilePath.endsWith(".jar")) {
+            return new URL("file", "", -1, path);                                                     // 必须使用 file 协议，否则读取不到 resources
+        }
+        String filePath = path.charAt(path.length() - 1) == File.separatorChar ? path : path + File.separatorChar;
+        return new URL("file", "", -1, filePath.replace(File.separatorChar, '/'));             // 必须转换为 '/'，否则 toURI 语法错误
     }
 
     /**
@@ -145,6 +176,43 @@ public class JarIndex {
      */
     public void addJarIndex(String packageName, String jarFilePath) {
         this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFilePath);
+        this.rebuildURLs();
+    }
+
+    /**
+     * 动态移除 jar index
+     *
+     * @param jarFiles jar 文件
+     */
+    public void removeJarIndex(List<JarFile> jarFiles) {
+        Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
+        for (JarFile jarFile : jarFiles) {
+            BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
+        }
+        for (Map.Entry<String, Set<String>> entry : indexContainer.entrySet()) {
+            for (String _package_ : entry.getValue()) {
+                List<String> jars = this.jarIndex.get(_package_);
+                if (jars != null && !jars.isEmpty()) {
+                    if (!jars.remove(entry.getKey())) {
+                        System.err.println("remove jar index failed, please check jar file name.");
+                    }
+                    if (jars.isEmpty()) {
+                        this.jarIndex.remove(_package_);
+                    }
+                }
+            }
+        }
+        this.rebuildURLs();
+    }
+
+    /**
+     * 动态移除 jar index
+     *
+     * @param packageName 包名，该包名下的所有 jar 都将被移除
+     */
+    public void removeJarIndex(String packageName) {
+        this.jarIndex.remove(packageName);
+        this.rebuildURLs();
     }
 
     /**
@@ -178,6 +246,7 @@ public class JarIndex {
                 this.loadJarIndex(parentPath, line, reader);
             }
         }
+        this.rebuildURLs();
     }
 
     protected void loadJarIndex(String parentPath, String currentLine, BufferedReader reader) throws IOException {
@@ -192,7 +261,15 @@ public class JarIndex {
             if (currentLine.isEmpty() || currentLine.equals("\n") || currentLine.equals("\r\n")) {
                 return;                                                                                                 // 当前 jar 索引处理完毕
             }
-            this.addJarIndex(currentLine.intern(), jarFile.intern());
+            this.jarIndex.computeIfAbsent(currentLine.intern(), k -> new LinkedList<>()).add(jarFile.intern());
         }
+    }
+
+    protected void rebuildURLs() {
+        List<URL> urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(this::getJarURL).collect(Collectors.toList());
+        if (this.isExploded()) {
+            this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(this::getJarURL).forEach(urls::add);
+        }
+        this.urls = urls.toArray(new URL[0]);
     }
 }

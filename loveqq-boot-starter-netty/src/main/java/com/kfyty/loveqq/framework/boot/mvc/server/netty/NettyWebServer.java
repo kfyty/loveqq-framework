@@ -45,6 +45,7 @@ import reactor.netty.ConnectionObserver;
 import reactor.netty.DisposableServer;
 import reactor.netty.ReactorNetty;
 import reactor.netty.http.HttpOperations;
+import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -159,7 +160,7 @@ public class NettyWebServer implements ServerWebServer {
         if (!this.started) {
             this.started = true;
             this.disposableServer = this.server.bindNow();
-            new Thread(new DaemonServerTask()).start();
+            new DaemonServerTask().start();
             log.info("Netty started on port({})", this.getPort());
         }
     }
@@ -168,7 +169,8 @@ public class NettyWebServer implements ServerWebServer {
     public void stop() {
         if (this.started) {
             this.started = false;
-            this.disposableServer.disposeNow();
+            this.disposableServer.disposeNow();                                                                         // shouldn't be null, otherwise has unknown error
+            HttpResources.disposeLoopsAndConnections();                                                                 // actual close server resources
         }
     }
 
@@ -201,7 +203,7 @@ public class NettyWebServer implements ServerWebServer {
                 .forwarded(this.config.getForwarded())
                 .accessLog(this.config.getAccessLog());
         if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            this.server = this.server.runOn(new OioBasedLoopResources());
+            this.server = this.server.runOn(HttpResources.set(new OioBasedLoopResources()));
         }
         if (this.config.getIdleTimeout() != null) {
             this.server = this.server.idleTimeout(this.config.getIdleTimeout());
@@ -422,9 +424,23 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     protected class DaemonServerTask implements Runnable {
+        /**
+         * 守护线程是否已启动
+         */
+        private volatile boolean started;
+
+        public void start() {
+            Thread daemon = new Thread(this);
+            daemon.setDaemon(false);
+            daemon.start();
+
+            // wait daemon start
+            while (!started) ;
+        }
 
         @Override
         public void run() {
+            this.started = true;
             while (isStart()) {
                 CommonUtil.sleep(200);
             }

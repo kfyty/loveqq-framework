@@ -97,7 +97,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
         MethodParameter parameter = null;
-        ServletServerRequest serverRequest = new ServletServerRequest(request);
+        ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
         ServletServerResponse serverResponse = new ServletServerResponse(response);
         MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {

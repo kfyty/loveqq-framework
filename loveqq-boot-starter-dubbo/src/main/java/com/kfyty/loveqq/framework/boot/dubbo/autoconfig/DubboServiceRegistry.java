@@ -78,7 +78,8 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
                     .addPropertyValue("ref", ref)
                     .addPropertyValue("interfaceName", interfaceClass.getName())
                     .addPropertyValue("interfaceClass", (Object) interfaceClass)
-                    .addPropertyValue("interfaceClassLoader", interfaceClass.getClassLoader());
+                    .addPropertyValue("interfaceClassLoader", interfaceClass.getClassLoader())
+                    .setDestroyMethod("unexport");
             beanDefinitions.add(builder.getBeanDefinition());
         }
         return beanDefinitions;

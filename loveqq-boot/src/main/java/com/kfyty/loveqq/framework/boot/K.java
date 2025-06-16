@@ -134,6 +134,7 @@ public class K {
      * @return 类加载器
      */
     @SneakyThrows(Exception.class)
+    @SuppressWarnings("deprecation")
     public static JarIndexClassLoader getIndexedClassloader(Class<?> clazz) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if (isIndexedClassLoader(contextClassLoader)) {
@@ -143,8 +144,8 @@ public class K {
         List<String> classPath = urls.stream().map(PathUtil::getPath).map(Path::toString).collect(Collectors.toList());
         String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
         Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
-        JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
-        return new JarIndexClassLoader(jarIndex, urls.toArray(new URL[0]), contextClassLoader);
+        JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)), classPath);
+        return new JarIndexClassLoader(jarIndex, contextClassLoader);
     }
 
     /**
