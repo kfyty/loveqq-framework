@@ -8,6 +8,10 @@ import java.lang.annotation.Target;
 
 /**
  * 默认返回 json 数据
+ *
+ * @author kfyty725
+ * @date 2021/5/22 14:25
+ * @email kfyty725@hotmail.com
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

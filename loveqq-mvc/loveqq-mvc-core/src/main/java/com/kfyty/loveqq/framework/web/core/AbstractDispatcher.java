@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
+import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
@@ -185,9 +186,11 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
                 }
             }
             return null;
-        } catch (Exception e) {
+        } catch (MissingRequestParameterException e) {
+            throw e;
+        } catch (Throwable e) {
             Parameter parameter = methodParameter.getParameter();
-            throw new MethodArgumentResolveException(parameter, "method parameter resolve failed: " + parameter.getName(), e);
+            throw new MethodArgumentResolveException(parameter, "Method parameter resolve failed: " + parameter.getName(), e);
         }
     }
 
