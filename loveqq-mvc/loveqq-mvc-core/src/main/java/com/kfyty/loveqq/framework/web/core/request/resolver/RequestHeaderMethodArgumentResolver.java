@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestHeader;
+import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
@@ -26,8 +27,18 @@ public class RequestHeaderMethodArgumentResolver extends AbstractHandlerMethodAr
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
-        String parameterName = parameter.getParameterName(findAnnotation(parameter.getParameter(), RequestHeader.class), RequestHeader::value);
+        RequestHeader annotation = findAnnotation(parameter.getParameter(), RequestHeader.class);
+        String parameterName = parameter.getParameterName(annotation, RequestHeader::value);
         String header = request.getHeader(parameterName);
-        return header == null ? null : this.createDataBinder(parameterName, header).getPropertyContext().getProperty(parameterName, parameter.getParameterGeneric());
+        if (header == null) {
+            if (annotation.defaultValue().isEmpty()) {
+                if (annotation.required()) {
+                    throw new MissingRequestParameterException("Require request parameter '" + parameterName + "' is not present.");
+                }
+                return null;
+            }
+            header = annotation.defaultValue();
+        }
+        return this.createDataBinder(parameterName, header).getPropertyContext().getProperty(parameterName, parameter.getParameterGeneric());
     }
 }

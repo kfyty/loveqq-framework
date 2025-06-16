@@ -17,9 +17,12 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -62,7 +65,7 @@ public abstract class AnnotationUtil {
     @SuppressWarnings("unchecked")
     public static <T extends Annotation, R extends Annotation> R clone(T annotation, Class<R> annotationType) {
         Map<String, Object> values = getAnnotationValues(annotation);
-        AnnotationInvocationHandler handler = new AnnotationInvocationHandler(annotationType, new HashMap<>(values));
+        AnnotationInvocationHandler handler = new AnnotationInvocationHandler(annotationType, new LinkedHashMap<>(values));
         return (R) Proxy.newProxyInstance(annotation.getClass().getClassLoader(), new Class<?>[]{annotationType}, handler);
     }
 
@@ -175,8 +178,7 @@ public abstract class AnnotationUtil {
                 }
             }
             // 构造器
-            else if (element instanceof Constructor<?>) {
-                Constructor<?> constructor = (Constructor<?>) element;
+            else if (element instanceof Constructor<?> constructor) {
                 Class<?> declaringClass = constructor.getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperConstructor(constructor));
@@ -185,8 +187,7 @@ public abstract class AnnotationUtil {
                 }
             }
             // 方法
-            else if (element instanceof Method) {
-                Method method = (Method) element;
+            else if (element instanceof Method method) {
                 Class<?> declaringClass = method.getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperMethod((Method) element));
@@ -195,8 +196,7 @@ public abstract class AnnotationUtil {
                 }
             }
             // 参数
-            else if (element instanceof Parameter) {
-                Parameter parameter = (Parameter) element;
+            else if (element instanceof Parameter parameter) {
                 Class<?> declaringClass = parameter.getDeclaringExecutable().getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperParameters((Parameter) element));
@@ -218,7 +218,10 @@ public abstract class AnnotationUtil {
      * @return 解析后的注解
      */
     public static List<Annotation> resolveAnnotation(List<Annotation> annotations) {
-        return resolveAnnotation(annotations, 1);
+        Set<Annotation> resolved = new HashSet<>();
+        List<Annotation> retValue = resolveAnnotation(annotations, 1, resolved);
+        resolved.clear();
+        return retValue;
     }
 
     /**
@@ -228,7 +231,7 @@ public abstract class AnnotationUtil {
      * @param depth       嵌套注解解析深度
      * @return 解析后的注解
      */
-    public static List<Annotation> resolveAnnotation(List<Annotation> annotations, int depth) {
+    public static List<Annotation> resolveAnnotation(List<Annotation> annotations, int depth, Set<Annotation> resolved) {
         for (int i = annotations.size() - 1; i > -1; i--) {
             Annotation annotation = annotations.get(i);
             // 元注解不处理
@@ -236,6 +239,9 @@ public abstract class AnnotationUtil {
                 annotations.remove(i);
                 continue;
             }
+
+            // 添加到已解析
+            resolved.add(annotation);
 
             // 处理别名注解
             Method[] methods = ReflectUtil.getMethods(annotation.annotationType());
@@ -247,10 +253,12 @@ public abstract class AnnotationUtil {
                     String alias = CommonUtil.empty(aliasFor.value()) ? method.getName() : aliasFor.value();
                     Annotation aliasAnnotation = aliasFor.annotation() == Annotation.class ? annotation : nestedAnnotationMap.get(aliasFor.annotation());
 
-                    // 非自身注解需要深克隆，因为非自身注解是公用的元数据
+                    // 指定别名的注解需要添加到注解自身
                     if (aliasAnnotation == null) {
                         throw new IllegalArgumentException("The annotation of " + annotation.annotationType() + " must be annotated with " + aliasFor.annotation() + ", when AliasFor exists.");
                     }
+
+                    // 非自身注解需要深克隆，因为非自身注解是公用的元数据
                     if (aliasAnnotation != annotation && !(Proxy.getInvocationHandler(aliasAnnotation) instanceof AnnotationInvocationHandler)) {
                         nestedAnnotationMap.put(aliasFor.annotation(), aliasAnnotation = clone(aliasAnnotation));
                     }
@@ -265,9 +273,10 @@ public abstract class AnnotationUtil {
                 }
             }
 
-            // 解析嵌套的注解
+            // 解析嵌套的注解，已去重，该逻辑变更为兜底逻辑
             if (depth < ANNOTATION_RESOLVE_DEPTH) {
-                annotations.addAll(resolveAnnotation(new ArrayList<>(nestedAnnotationMap.values()), depth + 1));
+                List<Annotation> nested = nestedAnnotationMap.values().stream().filter(e -> !resolved.contains(e)).collect(Collectors.toList());
+                annotations.addAll(resolveAnnotation(nested, depth + 1, resolved));
             }
         }
         return annotations;

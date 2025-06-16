@@ -92,6 +92,7 @@ public class AnnotationTest {
         BootApplication clone = AnnotationUtil.clone(annotation);
         Assertions.assertEquals(annotation, clone);
         Assertions.assertEquals(clone, annotation);
+        Assertions.assertEquals(clone.hashCode(), annotation.hashCode());                                               // 要求 hash code 也相同
     }
 
     @Test
