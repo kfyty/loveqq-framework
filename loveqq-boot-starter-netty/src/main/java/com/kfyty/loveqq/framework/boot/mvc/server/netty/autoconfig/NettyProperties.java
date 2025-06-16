@@ -40,11 +40,6 @@ public class NettyProperties extends WebServerProperties {
     private Boolean enableClient;
 
     /**
-     * 是否启用压缩
-     */
-    private Boolean compress;
-
-    /**
      * 是否启用转发
      */
     private Boolean forwarded;
