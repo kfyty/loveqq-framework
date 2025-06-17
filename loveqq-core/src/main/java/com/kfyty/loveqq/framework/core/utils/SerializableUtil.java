@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +22,7 @@ public abstract class SerializableUtil {
 
     public static byte[] serialize(Object o) {
         Objects.requireNonNull(o);
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(IOUtil.DEFAULT_BUFFER_SIZE);
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(o);
             objectOutputStream.flush();

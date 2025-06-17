@@ -1,12 +1,16 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.request.resolver;
 
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
-import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -14,6 +18,7 @@ import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerResponse;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -91,15 +96,71 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
         if (retValue instanceof byte[] bytes) {
             return response.send(Mono.just(from(bytes)), e -> isSse);
         }
-        if (retValue instanceof InputStream) {
-            return response.sendByteArray(Mono.fromSupplier(() -> IOUtil.read((InputStream) retValue)));
+        if (retValue instanceof InputStream stream) {
+            return response.send(new InputStreamByteBufPublisher(stream), e -> isSse);
         }
-        if (retValue instanceof Path) {
-            return response.sendFile((Path) retValue);
+        if (retValue instanceof File file) {
+            return response.sendFile(file.toPath());
         }
-        if (retValue instanceof File) {
-            return response.sendFile(((File) retValue).toPath());
+        if (retValue instanceof Path path) {
+            return response.sendFile(path);
         }
-        throw new IllegalArgumentException("The return value must be String/byte[]/Path/File");
+        throw new IllegalArgumentException("The return value must be CharSequence/SseEventStream/byte[]/ByteBuf/InputStream/Path/File");
+    }
+
+    @RequiredArgsConstructor
+    class InputStreamByteBufPublisher implements Publisher<ByteBuf> {
+        /**
+         * 输入流
+         */
+        private final InputStream stream;
+
+        /**
+         * 订阅者
+         */
+        private Subscriber<? super ByteBuf> s;
+
+        @Override
+        public void subscribe(Subscriber<? super ByteBuf> s) {
+            this.s = s;
+            this.s.onSubscribe(new InputStreamByteBufSubscription());
+        }
+
+        protected class InputStreamByteBufSubscription implements Subscription {
+            /**
+             * 是否取消
+             */
+            private boolean cancelled = false;
+
+            @Override
+            public void request(long n) {
+                try {
+                    this.doSend();
+                    InputStreamByteBufPublisher.this.s.onComplete();
+                } catch (Throwable e) {
+                    this.cancel();
+                    InputStreamByteBufPublisher.this.s.onError(e);
+                }
+            }
+
+            @Override
+            public void cancel() {
+                this.cancelled = true;
+            }
+
+            protected void doSend() throws IOException {
+                try (InputStream stream = InputStreamByteBufPublisher.this.stream) {
+                    int n = -1;
+                    byte[] bytes = new byte[Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, stream.available())];
+                    while ((n = stream.read(bytes)) != -1) {
+                        if (this.cancelled) {
+                            break;
+                        } else {
+                            s.onNext(Unpooled.wrappedBuffer(bytes, 0, n));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
