@@ -38,6 +38,11 @@ public interface ConstantConfig {
     int ANNOTATION_RESOLVE_DEPTH = Integer.parseInt(System.getProperty("k.annotation.depth", "99"));
 
     /**
+     * {@link com.kfyty.loveqq.framework.core.utils.IOUtil} 读取流缓冲区大小
+     */
+    int IO_STREAM_READ_BUFFER_SIZE = Integer.parseInt(System.getProperty("k.config.io-buffer-size", "4096"));
+
+    /**
      * 临时文件夹位置
      */
     String TEMP_PATH = System.getProperty("java.io.tmpdir");

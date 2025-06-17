@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
@@ -43,11 +44,6 @@ import static java.util.Objects.requireNonNull;
  */
 @Slf4j
 public abstract class IOUtil {
-    /**
-     * 默认的缓冲区大小
-     */
-    public static final int DEFAULT_BUFFER_SIZE = 4096;
-
     /**
      * 返回一个新的监听服务
      *
@@ -160,7 +156,7 @@ public abstract class IOUtil {
      * @return 输出流
      */
     public static <T extends OutputStream> T copy(InputStream in, T out) {
-        return copy(in, out, DEFAULT_BUFFER_SIZE);
+        return copy(in, out, ConstantConfig.IO_STREAM_READ_BUFFER_SIZE);
     }
 
     /**

@@ -6,13 +6,13 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -69,18 +69,6 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
     @SuppressWarnings("unchecked")
     public <T> T getProperty(String key, SimpleGeneric targetType, T defaultValue) {
         Type resolveType = targetType.getResolveType();
-        if (resolveType instanceof Class<?> clazz) {
-            if (!clazz.isArray() && !Map.class.isAssignableFrom(clazz)) {
-                if (ReflectUtil.isBaseDataType(clazz)) {
-                    return this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
-                }
-                if (this.propertySources.keySet().stream().anyMatch(e -> e.startsWith(key))) {
-                    Object instance = ReflectUtil.newInstance(QualifierGeneric.getRawType(resolveType));
-                    return (T) this.dataBinder.bind(new Instance(instance), key).getTarget();
-                }
-                return null;
-            }
-        }
 
         if (resolveType instanceof TypeVariable<?>) {
             Class<?> clazz = targetType.getFirst().get();
@@ -98,7 +86,24 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             return (T) this.bindCollectionProperties(key, targetType);
         }
 
-        throw new ResolvableException("Complex generic are not supported: " + targetType);
+        final Class<?> clazz;
+        if (resolveType instanceof Class<?> c) {
+            clazz = c;
+        } else if (resolveType instanceof ParameterizedType) {
+            clazz = targetType.getRawType();
+        } else {
+            throw new ResolvableException("Complex generic are not supported: " + targetType);
+        }
+
+        if (ReflectUtil.isBaseDataType(clazz)) {
+            return this.getProperty(key, (Class<T>) targetType.getSimpleType(), defaultValue);
+        }
+        if (this.propertySources.keySet().stream().anyMatch(e -> e.startsWith(key))) {
+            Object instance = ReflectUtil.newInstance(clazz);
+            return (T) this.dataBinder.bind(new Instance(instance, targetType), key).getTarget();
+        }
+
+        return null;
     }
 
     @Override
@@ -116,12 +121,12 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      * @return map
      */
     @SuppressWarnings("unchecked")
-    public Map<String, Object> bindMapProperties(String key, SimpleGeneric targetType) {
+    public Map<Object, Object> bindMapProperties(String key, SimpleGeneric targetType) {
         Class<?> valueType = targetType.getMapValueType().get();
         SimpleGeneric nestedType = valueType.isArray()
                 ? (SimpleGeneric) new SimpleGeneric(targetType.getSourceType(), targetType.getSecond().get()).resolve()
                 : (SimpleGeneric) targetType.getNestedSecond();
-        return convertAndBind(key, (Map<String, Object>) newInstance(targetType.getRawType()), valueType, targetType, nestedType);
+        return convertAndBind(key, (Map<Object, Object>) newInstance(targetType.getRawType()), valueType, targetType, nestedType);
     }
 
     /**
@@ -214,14 +219,15 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
      * @param nestedTargetType 嵌套的泛型
      * @return 绑定结果
      */
-    public Map<String, Object> convertAndBind(String prefix, Map<String, Object> target, Class<?> valueType, SimpleGeneric targetType, SimpleGeneric nestedTargetType) {
+    public Map<Object, Object> convertAndBind(String prefix, Map<Object, Object> target, Class<?> valueType, SimpleGeneric targetType, SimpleGeneric nestedTargetType) {
         String replace = prefix + ".";
+        Class<?> mapKeyType = targetType.getMapKeyType().get();
         Set<String> bind = new HashSet<>(4);
         boolean isBaseType = valueType == Object.class || ReflectUtil.isBaseDataType(valueType);
         Map<String, String> properties = this.searchMapProperties(prefix);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (isBaseType) {
-                target.put(entry.getKey().replace(replace, ""), convert(entry.getValue(), valueType));
+                target.put(convert(entry.getKey().replace(replace, ""), mapKeyType), convert(entry.getValue(), valueType));
                 continue;
             }
 
@@ -233,7 +239,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
                 if (key.matches(".+\\[[0-9]+]")) {
                     key = key.replaceAll("\\[[0-9]+]", "");
                 }
-                target.put(key, this.getProperty(prefix + "." + key, nestedTargetType));
+                target.put(convert(key, mapKeyType), this.getProperty(prefix + "." + key, nestedTargetType));
                 continue;
             }
 
@@ -241,7 +247,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
             if (!bind.contains(bindKey)) {
                 Instance instance = new Instance(newInstance(valueType), (SimpleGeneric) targetType.getGenericInfo().get(targetType.getSecond()));
                 this.dataBinder.bind(instance, bindKey);
-                target.put(key, instance.getTarget());
+                target.put(convert(key, mapKeyType), instance.getTarget());
                 bind.add(bindKey);
             }
         }

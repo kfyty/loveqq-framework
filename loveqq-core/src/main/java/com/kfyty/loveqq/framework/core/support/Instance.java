@@ -52,13 +52,18 @@ public class Instance {
 
     public SimpleGeneric buildTargetGeneric(Field targetField) {
         if (this.sourceGeneric != null) {
-            return SimpleGeneric.from(this.sourceGeneric.getSourceType(), targetField);
+            SimpleGeneric target = SimpleGeneric.from(this.sourceGeneric.getRawType(), targetField);
+            return resolveActualGeneric(this.sourceGeneric, target);
         }
         if (this.sourceField == null) {
             return SimpleGeneric.from(targetField);
         }
         SimpleGeneric source = SimpleGeneric.from(sourceField);
         SimpleGeneric target = SimpleGeneric.from(targetField);
+        return resolveActualGeneric(source, target);
+    }
+
+    protected static SimpleGeneric resolveActualGeneric(SimpleGeneric source, SimpleGeneric target) {
         if (target.getResolveType() instanceof TypeVariable<?>) {
             List<Generic> sourceIndex = new ArrayList<>(source.getGenericInfo().keySet());
             List<Pair<Generic, QualifierGeneric>> cache = target.getGenericInfo().entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue())).collect(Collectors.toCollection(LinkedList::new));

@@ -17,6 +17,9 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.removePrefix;
  * @email kfyty725@hotmail.com
  */
 public class DefaultResourceResolver implements ResourceResolver {
+    /**
+     * 静态资源默认前缀
+     */
     private static final String STATIC_PATH_PREFIX = "/static";
 
     @Override
@@ -33,8 +36,7 @@ public class DefaultResourceResolver implements ResourceResolver {
     @SneakyThrows(MalformedURLException.class)
     public URL resolveNative(String uri, Pair<String, String> nativeMapping) {
         String relatePath = removePrefix(nativeMapping.getKey(), uri);
-        String realPath = nativeMapping.getValue() + relatePath;
-        File file = new File(realPath);
+        File file = new File(nativeMapping.getValue(), relatePath);
         return file.exists() ? file.toURI().toURL() : null;
     }
 }
