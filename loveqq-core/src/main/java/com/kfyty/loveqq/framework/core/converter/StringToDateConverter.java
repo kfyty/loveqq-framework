@@ -22,10 +22,27 @@ public class StringToDateConverter implements Converter<String, Date> {
         if (CommonUtil.empty(source)) {
             return null;
         }
-        try {
-            return !source.contains("-") ? new Date(Long.parseLong(source)) : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(source);
-        } catch (ParseException e) {
+        if (StringToLocalDateTimeConverter.DIGIT.matcher(source).matches()) {
+            return new Date(Long.parseLong(source));
+        }
+        if (source.length() == 10) {
             return new SimpleDateFormat("yyyy-MM-dd").parse(source);
         }
+        if (source.charAt(2) == ':') {
+            if (source.lastIndexOf('.') > -1) {
+                new SimpleDateFormat("HH:mm:ss.SSS").parse(source);
+            }
+            return new SimpleDateFormat("HH:mm:ss").parse(source);
+        }
+        if (source.charAt(10) == ' ') {
+            if (source.lastIndexOf('.') > -1) {
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(source);
+            }
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(source);
+        }
+        if (source.lastIndexOf('.') > -1) {
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(source);
+        }
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(source);
     }
 }

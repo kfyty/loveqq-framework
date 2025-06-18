@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.exception.DataBindException;
+import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -85,7 +86,7 @@ public class DefaultDataBinder implements DataBinder {
             if (this.propertyContext.getProperties().keySet().stream().anyMatch(e -> e.startsWith(key))) {
                 Object fieldInstance = ofNullable(ReflectUtil.getFieldValue(target.getTarget(), field)).orElseGet(() -> newInstance(hasNested.getValue()));
                 ReflectUtil.setFieldValue(target.getTarget(), field, fieldInstance);
-                this.bind(new Instance(AopUtil.getTarget(fieldInstance), field), key, ignoreInvalidFields, ignoreUnknownFields);
+                this.bind(new Instance(AopUtil.getTarget(fieldInstance), field, simpleGeneric), key, ignoreInvalidFields, ignoreUnknownFields);
             }
             return target;
         }
@@ -128,8 +129,11 @@ public class DefaultDataBinder implements DataBinder {
             return new Pair<>(true, field.getType());
         }
         Type resolveType = simpleGeneric.getResolveType();
-        if (resolveType instanceof TypeVariable<?> && !simpleGeneric.getFirst().isTypeVariable() && hasAnnotation(simpleGeneric.getFirst().get(), NestedConfigurationProperty.class)) {
-            return new Pair<>(true, simpleGeneric.getFirst().get());
+        if (resolveType instanceof TypeVariable<?>) {
+            Generic generic = simpleGeneric.getFirst();
+            if (!generic.isTypeVariable() && hasAnnotation(generic.get(), NestedConfigurationProperty.class)) {
+                return new Pair<>(true, generic.get());
+            }
         }
         if (resolveType instanceof Class<?> && hasAnnotation(resolveType, NestedConfigurationProperty.class)) {
             return new Pair<>(true, (Class<?>) simpleGeneric.getResolveType());
