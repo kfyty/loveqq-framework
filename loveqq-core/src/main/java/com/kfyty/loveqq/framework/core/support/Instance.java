@@ -7,11 +7,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.kfyty.loveqq.framework.core.generic.QualifierGeneric.resolveTypeVariableIndex;
 
 /**
  * 描述: 实例包装
@@ -73,9 +76,16 @@ public class Instance {
                     target.getGenericInfo().put(entry.getKey(), entry.getValue());
                     continue;
                 }
-                int index = QualifierGeneric.resolveTypeVariableIndex((TypeVariable<?>) target.getResolveType(), target.getSourceType());
-                Generic generic = sourceIndex.get(index);
-                target.getGenericInfo().put(generic, source.getNested(generic));
+                final int index = resolveTypeVariableIndex((TypeVariable<?>) target.getResolveType(), target.getSourceType());
+                final Generic generic = sourceIndex.get(index);
+                final QualifierGeneric nested = source.getNested(generic);
+                if (nested != null && source.getResolveType() instanceof ParameterizedType parameterizedType) {
+                    target.setActualResolveType(parameterizedType.getActualTypeArguments()[index], generic.get());
+                    target.getGenericInfo().putAll(nested.getGenericInfo());
+                } else {
+                    target.setActualResolveType(target.getResolveType(), generic.get());
+                    target.getGenericInfo().put(generic, nested);
+                }
             }
         }
         return target;

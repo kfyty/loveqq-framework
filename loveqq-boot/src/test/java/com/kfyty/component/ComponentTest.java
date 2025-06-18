@@ -186,6 +186,11 @@ class PropertiesConfig implements InitializingBean {
 
     private Map<Long, Pair<Long, String>> pairInMap;
 
+    private Pair<Long, List<Integer>>[] pairArr;
+
+    private Pair<Long, Pair<Map<Long, Integer>, List<Long>>> pairPair;
+    private Pair<Long, Pair<List<Long>, Map<Long, String>>> pairPair2;
+
     private Pair<String, List<String>> listPair;
 
     public PropertiesConfig(@Value("${k.prop.ip}") String ip) {
@@ -221,6 +226,14 @@ class PropertiesConfig implements InitializingBean {
         Assertions.assertEquals(this.pairInList.get(0).getValue(), "pairInList");
         Assertions.assertEquals(this.pairInMap.get(1L).getKey(), 1L);
         Assertions.assertEquals(this.pairInMap.get(1L).getValue(), "pairInMap");
+        Assertions.assertEquals(this.pairArr[0].getKey(), 1L);
+        Assertions.assertEquals(this.pairArr[0].getValue(), Arrays.asList(1, 2));
+        Assertions.assertEquals(this.pairPair.getKey(), 1L);
+        Assertions.assertEquals(this.pairPair.getValue().getKey().get(1L), 10);
+        Assertions.assertEquals(this.pairPair.getValue().getValue(), Arrays.asList(1L, 2L));
+        Assertions.assertEquals(this.pairPair2.getKey(), 1L);
+        Assertions.assertEquals(this.pairPair2.getValue().getKey(), Collections.singletonList(1L));
+        Assertions.assertEquals(this.pairPair2.getValue().getValue().get(1L), "test");
     }
 
     @Data
