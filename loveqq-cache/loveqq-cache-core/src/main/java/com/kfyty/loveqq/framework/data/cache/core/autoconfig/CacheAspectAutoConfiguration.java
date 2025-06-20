@@ -26,7 +26,7 @@ public class CacheAspectAutoConfiguration implements Ordered {
     @Autowired(required = false)
     private ReactiveCacheInterceptorProxy reactiveCacheInterceptorProxy;
 
-    @Pointcut("@annotation(com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable) || @annotation(com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear)")
+    @Pointcut("@annotation(com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable) || @annotation(com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClean)")
     public void pointcut() {
 
     }
