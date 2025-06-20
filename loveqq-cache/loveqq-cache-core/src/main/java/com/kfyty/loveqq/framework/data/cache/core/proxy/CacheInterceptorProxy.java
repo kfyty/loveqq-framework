@@ -7,7 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.OgnlUtil;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
 import com.kfyty.loveqq.framework.data.cache.core.NullValue;
-import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
+import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClean;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import org.aspectj.lang.ProceedingJoinPoint;
 
@@ -35,7 +35,7 @@ public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
     public Object around(String cacheableName,
                          String cacheClearName,
                          Cacheable cacheable,
-                         CacheClear cacheClear,
+                         CacheClean cacheClean,
                          Lazy<Map<String, Object>> context,
                          Method method,
                          ProceedingJoinPoint pjp) throws Throwable {
@@ -48,13 +48,13 @@ public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
         }
 
         // 前置清理
-        this.preClear(cacheClearName, cacheClear);
+        this.preClear(cacheClearName, cacheClean);
 
         // 执行目标方法
         Object retValue = pjp.proceed();
 
         // 放入或删除缓存
-        if (cacheable == null && cacheClear == null) {
+        if (cacheable == null && cacheClean == null) {
             return retValue;
         }
 
@@ -63,17 +63,17 @@ public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
 
         // 缓存处理
         this.processCacheable(cacheableName, cacheable, retValue, method, pjp, context.get());
-        this.processCacheClear(cacheClearName, cacheClear, method, pjp, context.get());
+        this.processCacheClear(cacheClearName, cacheClean, method, pjp, context.get());
 
         return retValue;
     }
 
-    protected void preClear(String cacheClearName, CacheClear cacheClear) {
-        if (cacheClear != null && cacheClear.preClear()) {
-            if (cacheClear.delay() <= 0) {
+    protected void preClear(String cacheClearName, CacheClean cacheClean) {
+        if (cacheClean != null && cacheClean.preClear()) {
+            if (cacheClean.delay() <= 0) {
                 this.cache.clear(cacheClearName);
             } else {
-                this.executorService.schedule(() -> this.cache.clear(cacheClearName), cacheClear.delay(), TimeUnit.MILLISECONDS);
+                this.executorService.schedule(() -> this.cache.clear(cacheClearName), cacheClean.delay(), TimeUnit.MILLISECONDS);
             }
         }
     }
@@ -94,11 +94,11 @@ public class CacheInterceptorProxy extends AbstractCacheInterceptorProxy {
         }
     }
 
-    protected void processCacheClear(String cacheName, CacheClear cacheClear, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
-        if (cacheClear == null) {
+    protected void processCacheClear(String cacheName, CacheClean cacheClean, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+        if (cacheClean == null) {
             return;
         }
-        if (CommonUtil.notEmpty(cacheClear.condition()) && !OgnlUtil.getBoolean(cacheClear.condition(), context)) {
+        if (CommonUtil.notEmpty(cacheClean.condition()) && !OgnlUtil.getBoolean(cacheClean.condition(), context)) {
             return;
         }
         this.cache.clear(cacheName);

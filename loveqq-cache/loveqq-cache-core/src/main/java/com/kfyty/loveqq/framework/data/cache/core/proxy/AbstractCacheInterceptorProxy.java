@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
-import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClear;
+import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClean;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.Cacheable;
 import com.kfyty.loveqq.framework.data.cache.core.reactive.ReactiveCache;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -66,16 +66,16 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
         final Method method = ((MethodSignature) pjp.getStaticPart().getSignature()).getMethod();
         final Lazy<Map<String, Object>> context = new Lazy<>(() -> this.buildContext(null, method, pjp.getArgs(), pjp.getTarget()));
         final Cacheable cacheable = AnnotationUtil.findAnnotation(method, Cacheable.class);
-        final CacheClear cacheClear = AnnotationUtil.findAnnotation(method, CacheClear.class);
+        final CacheClean cacheClean = AnnotationUtil.findAnnotation(method, CacheClean.class);
         final String cacheableName = cacheable == null ? null : notEmpty(cacheable.value()) ? ofNullable(compute(cacheable.value(), context.get())).orElse(cacheable.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
-        final String cacheClearName = cacheClear == null ? null : notEmpty(cacheClear.value()) ? ofNullable(compute(cacheClear.value(), context.get())).orElse(cacheClear.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
-        return this.around(cacheableName, cacheClearName, cacheable, cacheClear, context, method, pjp);
+        final String cacheClearName = cacheClean == null ? null : notEmpty(cacheClean.value()) ? ofNullable(compute(cacheClean.value(), context.get())).orElse(cacheClean.value()) : this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget());
+        return this.around(cacheableName, cacheClearName, cacheable, cacheClean, context, method, pjp);
     }
 
     protected abstract Object around(String cacheableName,
                                      String cacheClearName,
                                      Cacheable cacheable,
-                                     CacheClear cacheClear,
+                                     CacheClean cacheClean,
                                      Lazy<Map<String, Object>> context,
                                      Method method,
                                      ProceedingJoinPoint pjp) throws Throwable;

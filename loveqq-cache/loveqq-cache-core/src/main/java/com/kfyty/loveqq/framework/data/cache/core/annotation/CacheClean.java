@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CacheClear {
+public @interface CacheClean {
     /**
      * 缓存名称，可使用 ognl 表达式，注意：此时表达式的 retVal 属性不可用
      *
