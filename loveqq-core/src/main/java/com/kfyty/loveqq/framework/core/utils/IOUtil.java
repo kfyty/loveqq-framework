@@ -12,6 +12,8 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,9 +34,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.TEMP_PATH;
-import static java.util.Objects.requireNonNull;
 
 /**
  * 描述: io 工具
@@ -149,6 +155,49 @@ public abstract class IOUtil {
     }
 
     /**
+     * 复制 zip
+     *
+     * @param in      输入
+     * @param out     输出
+     * @param ignored 忽略的文件
+     * @return 输出
+     */
+    public static <T extends ZipOutputStream> T copy(ZipInputStream in, T out, String... ignored) {
+        try {
+            ZipEntry entry = null;
+            boolean alreadyWriteManifest = false;
+            loop:
+            while ((entry = in.getNextEntry()) != null) {
+                // 忽略的不复制
+                for (String ig : ignored) {
+                    if (entry.getName().equals(ig)) {
+                        continue loop;
+                    }
+                }
+
+                // 复制
+                out.putNextEntry(entry);
+                copy(in, out, ConstantConfig.IO_STREAM_READ_BUFFER_SIZE);
+                out.closeEntry();
+
+                // 记录 META-INF/MANIFEST.MF 是否已复制
+                if (!alreadyWriteManifest && entry.getName().equals("META-INF/MANIFEST.MF")) {
+                    alreadyWriteManifest = true;
+                }
+            }
+            if (!alreadyWriteManifest && in instanceof JarInputStream jarInputStream) {
+                out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
+                jarInputStream.getManifest().write(out);
+                out.closeEntry();
+            }
+            out.flush();
+            return out;
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
      * 将输入流复制到输出流
      *
      * @param in  输入流
@@ -156,6 +205,15 @@ public abstract class IOUtil {
      * @return 输出流
      */
     public static <T extends OutputStream> T copy(InputStream in, T out) {
+        if (in instanceof FileInputStream fis && out instanceof FileOutputStream fos) {
+            try (FileChannel inChannel = fis.getChannel();
+                 FileChannel outChannel = fos.getChannel()) {
+                NIOUtil.copy(inChannel, outChannel);
+                return out;
+            } catch (IOException e) {
+                throw ExceptionUtil.wrap(e);
+            }
+        }
         return copy(in, out, ConstantConfig.IO_STREAM_READ_BUFFER_SIZE);
     }
 
@@ -172,7 +230,7 @@ public abstract class IOUtil {
             int n = -1;
             byte[] bytes = new byte[Math.max(buffer, in.available())];
             while ((n = in.read(bytes)) != -1) {
-                write(out, bytes, 0, n);
+                out.write(bytes, 0, n);
             }
             out.flush();
             return out;
@@ -237,6 +295,33 @@ public abstract class IOUtil {
     }
 
     /**
+     * 重命名文件
+     *
+     * @param file   文件
+     * @param rename 新名称，仅传文件名即可，无需路径
+     */
+    public static File rename(File file, String rename) {
+        File renameFile = new File(file.getParent(), rename);
+        return rename(file, renameFile, true);
+    }
+
+    /**
+     * 重命名文件
+     *
+     * @param file   文件
+     * @param rename 新名称
+     */
+    public static File rename(File file, File rename, boolean deleteIfExists) {
+        if (deleteIfExists && rename.exists() && !rename.delete()) {
+            throw new ResolvableException("rename file failed, can't delete exists file: " + rename.getAbsolutePath());
+        }
+        if (!file.renameTo(rename)) {
+            throw new ResolvableException("rename file failed: " + file.getAbsolutePath() + " to " + rename.getAbsolutePath());
+        }
+        return rename;
+    }
+
+    /**
      * 将输入流写入临时文件，并设置程序退出时删除
      *
      * @param inputStream 输入流
@@ -257,7 +342,7 @@ public abstract class IOUtil {
      */
     public static File writeTo(InputStream inputStream, File file) {
         if (inputStream != null) {
-            copy(inputStream, newOutputStream(requireNonNull(file)));
+            copy(inputStream, newFileOutputStream(file));
         }
         return file;
     }
@@ -299,6 +384,34 @@ public abstract class IOUtil {
     public static OutputStream newOutputStream(File file) {
         try {
             return Files.newOutputStream(file.toPath());
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
+     * 从文件返回一个输入流
+     *
+     * @param file 文件
+     * @return 输入流
+     */
+    public static InputStream newFileInputStream(File file) {
+        try {
+            return new FileInputStream(file);
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
+     * 从文件返回一个输出流
+     *
+     * @param file 文件
+     * @return 输出流
+     */
+    public static FileOutputStream newFileOutputStream(File file) {
+        try {
+            return new FileOutputStream(file);
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }

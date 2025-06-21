@@ -56,6 +56,10 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
+        if (mapping.isStreamJson()) {
+            response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
+            response.setHeader(HttpHeaderNames.TRANSFER_ENCODING.toString(), "chunked");
+        }
         if (mapping.isEventStream()) {
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
@@ -125,7 +129,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         try {
             Object processedReturnValue = super.handleReturnValue(retValue, parameter, request, response);
             HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
-            return writeReturnValue(processedReturnValue, serverResponse, this.isEventStream(response.getContentType()));
+            return writeReturnValue(processedReturnValue, serverResponse, this.shouldFlush(response.getContentType()));
         } catch (Exception e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }
@@ -150,7 +154,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             return (Mono<?>) invoked;
         }
         if (invoked instanceof Flux<?>) {
-            if (mapping.isEventStream()) {
+            if (mapping.isStreamJson() || mapping.isEventStream()) {
                 return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
             return ((Flux<?>) invoked).collectList();

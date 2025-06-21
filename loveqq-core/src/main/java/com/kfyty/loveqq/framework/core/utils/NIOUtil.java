@@ -4,9 +4,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -18,6 +20,25 @@ import java.nio.charset.StandardCharsets;
  */
 @Slf4j
 public abstract class NIOUtil {
+    /**
+     * 复制数据
+     *
+     * @param in  输入
+     * @param out 输出
+     * @return 复制的字节数
+     */
+    public static long copy(FileChannel in, FileChannel out) {
+        try {
+            long pos = in.position();
+            long transferred = in.transferTo(pos, Long.MAX_VALUE, out);
+            long newPos = pos + transferred;
+            in.position(newPos);
+            return transferred;
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
     /**
      * 读取输入流到字节数组
      *

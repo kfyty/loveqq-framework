@@ -175,13 +175,6 @@ public class Main {
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <addClasspath>true</addClasspath>
-                    </manifest>
-                </archive>
-            </configuration>
         </plugin>
     </plugins>
 </build>
@@ -227,7 +220,7 @@ tasks.register('copyDependencies', Copy) {
 
 // 构建 jar index
 tasks.register('buildJarIndex', JavaExec) {
-    mainClass = 'com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask'
+    mainClass = 'com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask'
     classpath = configurations.runtimeClasspath
     args "-OUTPUT_DIRECTORY=$project.buildDir/libs"
     args "-OUTPUT_JAR=$project.name-$project.version" + '.jar'

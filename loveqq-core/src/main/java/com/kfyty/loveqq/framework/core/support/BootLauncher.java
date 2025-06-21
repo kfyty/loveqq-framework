@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.support;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import com.kfyty.loveqq.framework.core.support.jar.JarManifest;
@@ -13,9 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -109,17 +110,21 @@ public class BootLauncher {
      */
     @SneakyThrows(URISyntaxException.class)
     protected JarManifest resolveMainJarManifest() throws IOException {
-        for (URL url : FactoriesLoader.loadURLResource(JAR_MANIFEST_LOCATION)) {
-            Manifest manifest = new Manifest(url.openStream());
-            String startClass = manifest.getMainAttributes().getValue(START_CLASS_KEY);
-            if (startClass != null && !startClass.isEmpty()) {
-                if (url.getProtocol().equals("file")) {
-                    return new JarManifest(manifest, Paths.get(url.toURI()).getParent().getParent().toUri().toURL());
+        Enumeration<URL> urls = this.getClass().getClassLoader().getResources(JAR_MANIFEST_LOCATION);
+        while (urls.hasMoreElements()) {
+            URL url = urls.nextElement();
+            try (InputStream in = url.openStream()) {
+                Manifest manifest = new Manifest(in);
+                String startClass = manifest.getMainAttributes().getValue(START_CLASS_KEY);
+                if (startClass != null && !startClass.isEmpty()) {
+                    if (url.getProtocol().equals("file")) {
+                        return new JarManifest(manifest, Paths.get(url.toURI()).getParent().getParent().toUri().toURL());
+                    }
+                    return new JarManifest(manifest, new URI(url.getFile().replace("!/" + JAR_MANIFEST_LOCATION, "")).toURL());
                 }
-                return new JarManifest(manifest, new URL(url.getFile().replace("!/" + JAR_MANIFEST_LOCATION, "")));
             }
         }
-        throw new ResolvableException("Start-Class does not exists in manifest");
+        throw new ResolvableException("Start-Class doesn't exists in manifest.");
     }
 
     /**

@@ -181,7 +181,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        if (this == bean || bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
+        if (this == bean || bean instanceof BeanFactoryPreProcessor bfp && !bfp.allowAutowired()) {
             return;
         }
         if (this.autowiredCapableSupport == null) {
