@@ -91,8 +91,19 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      */
     protected List<ExceptionHandler> exceptionHandlers = new ArrayList<>(4);
 
-    public boolean isEventStream(String contentType) {
-        return contentType != null && contentType.contains("text/event-stream");
+    /**
+     * 是否应该逐步刷新到客户端
+     *
+     * @param contentType 响应类型
+     * @return true/false
+     */
+    public boolean shouldFlush(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        return contentType.contains("text/event-stream") ||
+                contentType.contains("application/stream+json") ||
+                contentType.contains("application/x-ndjson");
     }
 
     @SuppressWarnings("unchecked")

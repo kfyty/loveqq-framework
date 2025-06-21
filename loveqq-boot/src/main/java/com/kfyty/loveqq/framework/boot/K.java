@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
 import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
-import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
+import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.AllArgsConstructor;

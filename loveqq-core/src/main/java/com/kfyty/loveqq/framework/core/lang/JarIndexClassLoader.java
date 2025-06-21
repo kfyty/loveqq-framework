@@ -294,8 +294,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> findJarClass(String name, List<String> jarFiles) throws ClassNotFoundException {
         String jarClassPath = name.replace('.', '/') + ".class";
         for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
-            JarFile jarFile = new JarFile(i.next());
-            try (InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
+            try (JarFile jarFile = new JarFile(i.next());
+                 InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
                 if (inputStream != null) {
                     if (DEPENDENCY_CHECK && i.hasNext()) {
                         this.logMatchedMoreJarFiles(jarClassPath, jarFile, jarFiles);

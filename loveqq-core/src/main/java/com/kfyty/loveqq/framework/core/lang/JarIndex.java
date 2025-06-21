@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.core.lang;
 
-import com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask;
+import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
@@ -68,10 +68,7 @@ public class JarIndex {
      * @param jarIndex    jar index 数据流
      */
     public JarIndex(String mainJarPath, InputStream jarIndex) {
-        this.mainJarPath = mainJarPath;
-        this.classpath = null;
-        this.jarIndex = new ConcurrentSkipListMap<>();
-        this.loadJarIndex(mainJarPath, jarIndex);
+        this(mainJarPath, jarIndex, null);
     }
 
     /**
@@ -132,7 +129,6 @@ public class JarIndex {
      * @param jarFilePath Jar file path
      * @return jar file url
      */
-    @SuppressWarnings("deprecation")
     @SneakyThrows(MalformedURLException.class)
     public URL getJarURL(String jarFilePath) {
         String path = jarFilePath.charAt(0) == '/' ? jarFilePath : '/' + jarFilePath;
@@ -148,11 +144,13 @@ public class JarIndex {
      *
      * @param jarFiles jar 文件集合
      */
-    @SneakyThrows(Exception.class)
+    @SneakyThrows(IOException.class)
     public void addJarIndex(List<JarFile> jarFiles) {
         Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
         for (JarFile jarFile : jarFiles) {
-            BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
+            try (JarFile jar = jarFile) {
+                BuildJarIndexAntTask.scanJarIndex(jar.getName(), jar, indexContainer);
+            }
         }
         String index = BuildJarIndexAntTask.buildJarIndex(indexContainer);
         this.loadJarIndex(this.mainJarPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
@@ -240,10 +238,19 @@ public class JarIndex {
     @SneakyThrows(IOException.class)
     protected void loadJarIndex(String mainJarPath, InputStream jarIndex) {
         String line = null;
+        boolean mainJarResolved = this.isExploded() || !this.jarIndex.isEmpty();
         String parentPath = Paths.get(mainJarPath).getParent().toString();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(jarIndex))) {
             while ((line = reader.readLine()) != null) {
-                this.loadJarIndex(parentPath, line, reader);
+                if (mainJarResolved) {
+                    this.loadJarIndex(parentPath, line, reader);
+                } else {
+                    if (line.equals(BuildJarIndexAntTask.MAIN_JAR_NAME)) {
+                        line = mainJarPath;
+                        mainJarResolved = true;
+                    }
+                    this.loadJarIndex(parentPath, line, reader);
+                }
             }
         }
         this.rebuildURLs();

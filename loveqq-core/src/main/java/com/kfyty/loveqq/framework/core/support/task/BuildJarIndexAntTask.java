@@ -1,15 +1,13 @@
-package com.kfyty.loveqq.framework.core.lang.task;
+package com.kfyty.loveqq.framework.core.support.task;
 
-import com.kfyty.loveqq.framework.core.lang.JarIndex;
-import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
+import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,10 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.newInputStream;
+import static com.kfyty.loveqq.framework.core.utils.IOUtil.newOutputStream;
+import static com.kfyty.loveqq.framework.core.utils.IOUtil.rename;
 
 /**
  * 描述: 构建 jar 索引 ant 任务
@@ -47,25 +48,40 @@ public class BuildJarIndexAntTask {
     public static final String OUTPUT_DEFAULT_JAR = "OUTPUT_DEFAULT_JAR";
 
     /**
+     * 启动 jar 名称
+     */
+    public static final String MAIN_JAR_NAME = "__main__bootstrap__.jar";
+
+    /**
      * 由 maven-antrun-plugin 调用
      *
      * @param args 由 maven-antrun-plugin 传参
      */
     public static void main(String[] args) throws Exception {
         Map<String, String> properties = loadCommandLineProperties(args, "-");
+        JarFile jarFile = obtainJarFile(properties);
+        writeJarIndex(buildJarIndex(scanJarIndex(jarFile)), jarFile);
+        System.out.println("[INFO] Build jar index succeed");
+    }
+
+    /**
+     * 解析构建的 JarFile
+     *
+     * @param properties ant task 传递的命令行变量
+     * @return JarFile
+     */
+    public static JarFile obtainJarFile(Map<String, String> properties) throws IOException {
         File file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_JAR));
         if (!file.exists()) {
             file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR));
             if (!file.exists()) {
                 file = new File(properties.get(OUTPUT_DIRECTORY), properties.get(OUTPUT_DEFAULT_JAR).replace(".jar", "-SNAPSHOT.jar"));
             }
-            if (!file.exists()) {
-                throw new IllegalArgumentException("The OUTPUT_JAR parameter error, please set project.build.finalName and rebuild.");
-            }
         }
-        JarFile jarFile = new JarFile(file);
-        writeJarIndex(buildJarIndex(scanJarIndex(jarFile)), jarFile);
-        System.out.println("[INFO] Build jar index succeed");
+        if (!file.exists()) {
+            throw new IllegalArgumentException("The " + OUTPUT_JAR + " parameter error, please set project.build.finalName and rebuild.");
+        }
+        return new JarFile(file);
     }
 
     /**
@@ -107,13 +123,16 @@ public class BuildJarIndexAntTask {
             if (relativePath.endsWith(".jar")) {
                 try (JarFile jarFile = new JarFile(new File(parentPath, relativePath.replace("%20", " ")))) {
                     scanJarIndex(relativePath, jarFile, indexContainer);
+                    if (mainJar != null) {
+                        System.out.println("[INFO] Scanned jar index: " + jarFile.getName());
+                    }
                 }
             }
         }
         if (mainJar == null) {
             return indexContainer;
         }
-        return scanJarIndex(new File(mainJar.getName()).getName(), mainJar, indexContainer);
+        return scanJarIndex(MAIN_JAR_NAME, mainJar, indexContainer);
     }
 
     /**
@@ -176,24 +195,19 @@ public class BuildJarIndexAntTask {
      *
      * @param jarIndex jar.idx
      * @param jarFile  目标 jar 文件
-     * @return 原始 jar file
      */
-    public static JarFile writeJarIndex(String jarIndex, JarFile jarFile) throws IOException {
-        // 同时读取和写入，复制一份
-        JarFile copy = new JarFile(IOUtil.writeToTemp(newInputStream(new File(jarFile.getName()))));
-        try (JarOutputStream jarOut = new JarOutputStream(Files.newOutputStream(Paths.get(jarFile.getName())))) {
-            for (JarEntry jarEntry : new EnumerationIterator<>(copy.entries())) {
-                if (!jarEntry.getName().contains(JarIndex.JAR_INDEX_FILE_NAME)) {
-                    jarOut.putNextEntry(jarEntry);
-                    IOUtil.copy(copy.getInputStream(jarEntry), jarOut);
-                    jarOut.closeEntry();
-                }
-            }
+    public static void writeJarIndex(String jarIndex, JarFile jarFile) throws IOException {
+        // 原文件重命名，重新写入一份新的
+        jarFile.close();
+        File rename = rename(new File(jarFile.getName()), new File(jarFile.getName() + ".original"), true);
+        try (JarInputStream jarIn = new JarInputStream(newInputStream(rename));
+             JarOutputStream jarOut = new JarOutputStream(newOutputStream(new File(jarFile.getName())))) {
+            IOUtil.copy(jarIn, jarOut, BootLauncher.JAR_INDEX_LOCATION);
             jarOut.putNextEntry(new JarEntry(BootLauncher.JAR_INDEX_LOCATION));
             jarOut.write(jarIndex.getBytes(StandardCharsets.UTF_8));
             jarOut.closeEntry();
             jarOut.flush();
+            jarOut.finish();
         }
-        return copy;
     }
 }

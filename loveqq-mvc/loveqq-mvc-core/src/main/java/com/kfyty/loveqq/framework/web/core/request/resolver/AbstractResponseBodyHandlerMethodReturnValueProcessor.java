@@ -20,12 +20,11 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         if (returnType == null) {
             return false;
         }
-        Object controller = returnType.getSource();
         String contentType = ((MethodMapping) returnType.getMetadata()).getProduces();
         if (contentType == null) {
             return false;
         }
-        boolean isResponseBody = hasAnnotation(returnType.getMethod(), ResponseBody.class) || hasAnnotation(controller != null ? controller.getClass() : returnType.getMethod().getDeclaringClass(), ResponseBody.class);
+        boolean isResponseBody = hasAnnotation(returnType.getMethod(), ResponseBody.class) || hasAnnotation(returnType.getMethod().getDeclaringClass(), ResponseBody.class);
         return isResponseBody && this.supportsContentType(contentType);
     }
 

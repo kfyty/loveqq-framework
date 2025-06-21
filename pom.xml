@@ -502,6 +502,7 @@
                         --add-opens=java.base/java.io=ALL-UNNAMED
                         --add-opens=java.base/java.nio=ALL-UNNAMED
                         --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
                         --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
                         --add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED
                         --add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED
@@ -517,6 +518,24 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${jar.plugin.version}</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addClasspath>true</addClasspath>
+                                <classpathPrefix>${boot-lib-output}/</classpathPrefix>
+                                <mainClass>${boot-main-class}</mainClass>
+                            </manifest>
+                            <manifestEntries>
+                                <Start-Class>${boot-start-class}</Start-Class>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>${antrun.plugin.version}</version>
                     <executions>
@@ -527,7 +546,7 @@
                             </goals>
                             <configuration>
                                 <target>
-                                    <java classname="com.kfyty.loveqq.framework.core.lang.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
+                                    <java classname="com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
                                         <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
                                         <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
                                         <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
@@ -574,25 +593,6 @@
                             </goals>
                         </execution>
                     </executions>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${jar.plugin.version}</version>
-                    <configuration>
-                        <archive>
-                            <manifest>
-                                <!-- 框架不需要添加，子类打包时需要添加 -->
-                                <!-- <addClasspath>true</addClasspath> -->
-                                <classpathPrefix>${boot-lib-output}/</classpathPrefix>
-                                <mainClass>${boot-main-class}</mainClass>
-                            </manifest>
-                            <manifestEntries>
-                                <Start-Class>${boot-start-class}</Start-Class>
-                            </manifestEntries>
-                        </archive>
-                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
