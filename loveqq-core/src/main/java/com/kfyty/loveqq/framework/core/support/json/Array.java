@@ -279,7 +279,13 @@ public class Array extends AbstractList<Object> implements JSONAware {
 
     @Override
     public boolean equals(Object o) {
-        return this.decorate.equals(o);
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof Array array) {
+            return this.decorate.equals(array.decorate);
+        }
+        return false;
     }
 
     @Override

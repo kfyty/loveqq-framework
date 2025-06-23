@@ -16,6 +16,7 @@ import java.lang.annotation.Target;
  * @date 2022/5/25 22:36
  * @email kfyty725@hotmail.com
  * @see DataBinder
+ * @see com.kfyty.loveqq.framework.boot.processor.ConfigurationPropertiesBeanPostProcessor
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

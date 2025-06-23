@@ -18,6 +18,11 @@ import lombok.Data;
 @ConditionalOnProperty(value = "k.datasource", matchIfNotEmpty = true)
 public class DataSourceProperties {
     /**
+     * 数据源类型，即 class 的全限定名称
+     */
+    private String type;
+
+    /**
      * 用户名
      */
     private String username;

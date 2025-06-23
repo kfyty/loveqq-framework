@@ -33,8 +33,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -263,6 +265,35 @@ public abstract class IOUtil {
         try {
             out.write(bytes, start, limit);
             return out;
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    /**
+     * 写入 jar 新条目
+     * 调用该方法会调用 {@link JarFile#close()} 方法
+     *
+     * @param entry   条目名称
+     * @param bytes   条目数据
+     * @param jarFile jar 文件
+     */
+    public static void writeJarEntry(String entry, byte[] bytes, JarFile jarFile) {
+        try {
+            // 先关闭，否则无法重命名
+            jarFile.close();
+
+            // 原文件重命名，重新写入一份新的
+            File rename = rename(new File(jarFile.getName()), new File(jarFile.getName() + ".original"), true);
+            try (JarInputStream jarIn = new JarInputStream(newInputStream(rename));
+                 JarOutputStream jarOut = new JarOutputStream(newOutputStream(new File(jarFile.getName())))) {
+                IOUtil.copy(jarIn, jarOut, entry);
+                jarOut.putNextEntry(new JarEntry(entry));
+                jarOut.write(bytes);
+                jarOut.closeEntry();
+                jarOut.flush();
+                jarOut.finish();
+            }
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }

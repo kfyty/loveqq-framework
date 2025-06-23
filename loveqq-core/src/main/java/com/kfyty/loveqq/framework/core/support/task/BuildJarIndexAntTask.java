@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.core.support.task;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,13 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
-import java.util.jar.JarOutputStream;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
-import static com.kfyty.loveqq.framework.core.utils.IOUtil.newInputStream;
-import static com.kfyty.loveqq.framework.core.utils.IOUtil.newOutputStream;
-import static com.kfyty.loveqq.framework.core.utils.IOUtil.rename;
+import static com.kfyty.loveqq.framework.core.utils.IOUtil.writeJarEntry;
 
 /**
  * 描述: 构建 jar 索引 ant 任务
@@ -60,7 +55,8 @@ public class BuildJarIndexAntTask {
     public static void main(String[] args) throws Exception {
         Map<String, String> properties = loadCommandLineProperties(args, "-");
         JarFile jarFile = obtainJarFile(properties);
-        writeJarIndex(buildJarIndex(scanJarIndex(jarFile)), jarFile);
+        String jarIndex = buildJarIndex(scanJarIndex(jarFile));
+        writeJarEntry(BootLauncher.JAR_INDEX_LOCATION, jarIndex.getBytes(StandardCharsets.UTF_8), jarFile);
         System.out.println("[INFO] Build jar index succeed");
     }
 
@@ -188,26 +184,5 @@ public class BuildJarIndexAntTask {
             indexList.append("\r\n");
         }
         return indexList.toString();
-    }
-
-    /**
-     * 写入 jar.idx 文件到 jar
-     *
-     * @param jarIndex jar.idx
-     * @param jarFile  目标 jar 文件
-     */
-    public static void writeJarIndex(String jarIndex, JarFile jarFile) throws IOException {
-        // 原文件重命名，重新写入一份新的
-        jarFile.close();
-        File rename = rename(new File(jarFile.getName()), new File(jarFile.getName() + ".original"), true);
-        try (JarInputStream jarIn = new JarInputStream(newInputStream(rename));
-             JarOutputStream jarOut = new JarOutputStream(newOutputStream(new File(jarFile.getName())))) {
-            IOUtil.copy(jarIn, jarOut, BootLauncher.JAR_INDEX_LOCATION);
-            jarOut.putNextEntry(new JarEntry(BootLauncher.JAR_INDEX_LOCATION));
-            jarOut.write(jarIndex.getBytes(StandardCharsets.UTF_8));
-            jarOut.closeEntry();
-            jarOut.flush();
-            jarOut.finish();
-        }
     }
 }

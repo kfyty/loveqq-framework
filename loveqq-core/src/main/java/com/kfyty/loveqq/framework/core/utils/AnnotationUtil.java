@@ -82,9 +82,13 @@ public abstract class AnnotationUtil {
         getAnnotationValues(annotation).put(annotationField, value);
     }
 
+    public static <T extends Annotation> T[] flatRepeatableAnnotation(AnnotatedElement element, Class<T> annotationType) {
+        return flatRepeatableAnnotation(findAnnotations(element), annotationType);
+    }
+
     @SuppressWarnings("unchecked")
-    public static <T extends Annotation> T[] flatRepeatableAnnotation(Annotation[] annotations, Class<T> clazz) {
-        return flatRepeatableAnnotation(annotations, e -> e.annotationType() == clazz, value -> (T[]) Array.newInstance(clazz, value));
+    public static <T extends Annotation> T[] flatRepeatableAnnotation(Annotation[] annotations, Class<T> annotationType) {
+        return flatRepeatableAnnotation(annotations, e -> e.annotationType() == annotationType, value -> (T[]) Array.newInstance(annotationType, value));
     }
 
     public static <T extends Annotation> T[] flatRepeatableAnnotation(Annotation[] annotations, Predicate<Annotation> test, IntFunction<T[]> supplier) {
