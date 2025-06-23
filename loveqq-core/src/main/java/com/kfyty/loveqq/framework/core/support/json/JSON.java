@@ -264,7 +264,13 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
 
     @Override
     public boolean equals(Object o) {
-        return this.decorate.equals(o);
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof JSON json) {
+            return this.decorate.equals(json.decorate);
+        }
+        return false;
     }
 
     @Override

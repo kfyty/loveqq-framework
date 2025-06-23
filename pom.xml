@@ -133,7 +133,9 @@
 
         <boot-lib-output>boot-lib</boot-lib-output>
         <boot-main-class>com.kfyty.loveqq.framework.core.support.BootLauncher</boot-main-class>
-        <boot-start-class></boot-start-class>
+
+        <!-- 用户启动类，这里注释掉是因为 ant 插件需要判断该配置，仅需用户启动类存在时，才需要构建 jar index -->
+        <!-- <boot-start-class></boot-start-class> -->
     </properties>
 
     <dependencies>
@@ -512,6 +514,63 @@
                     </argLine>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${antrun.plugin.version}</version>
+                <executions>
+                    <!-- 构建配置元数据任务，在 verify 阶段后执行，因为用户一般使用打包阶段，该阶段自然不会执行(执行了也没什么问题) -->
+                    <execution>
+                        <id>build configuration metadata</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target name="metadata">
+                                <java fork="true"
+                                      classname="com.kfyty.loveqq.framework.core.support.task.BuildConfigurationMetadataAntTask"
+                                      classpathref="maven.compile.classpath">
+                                    <arg value="-OUTPUT_TYPE=${project.packaging}" />
+                                    <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
+                                    <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
+                                    <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
+                                    <jvmarg value="--add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <!-- 构建 jar index，下面 if 属性是指仅用户启动类存在时才构建 jar index，如此框架 jar 包自然不会构建 -->
+                    <execution>
+                        <id>build jar index</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target name="jar_index" if="boot-start-class">
+                                <java classname="com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask"
+                                      classpathref="maven.compile.classpath">
+                                    <arg value="-OUTPUT_TYPE=${project.packaging}" />
+                                    <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
+                                    <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
+                                    <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                        <version>${ant.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
 
         <pluginManagement>
@@ -532,37 +591,6 @@
                             </manifestEntries>
                         </archive>
                     </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>${antrun.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>run</goal>
-                            </goals>
-                            <configuration>
-                                <target>
-                                    <java classname="com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask" classpathref="maven.compile.classpath">
-                                        <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
-                                        <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
-                                        <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
-                                    </java>
-                                </target>
-                            </configuration>
-                        </execution>
-                    </executions>
-
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.ant</groupId>
-                            <artifactId>ant</artifactId>
-                            <version>${ant.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
 
                 <plugin>
