@@ -6,14 +6,17 @@
 </h1>
 
 # loveqq-framework
-    轻量级 ioc/aop 框架，比 spring 更强大的条件推断；抽象出 mvc 模式，提供嵌入式 reactor-netty、tomcat 服务器；
-    提供 javafx mvvm 框架，可实现模型-数据的双向绑定；提供动态数据源配置支持；提供注解式缓存支持；
+    全新轻量级 ioc/aop 框架，更小，更快，更更大。
+    该框架基本实现自我配置，具有更强大的复杂的条件bean注册推断。
+    提供抽象 mvc 模式，统一命令式/响应式编程风格，包含过滤器、拦截器等，提供嵌入式 reactor-netty、tomcat 服务器。
+    提供 javafx mvvm 框架，可实现模型-数据的双向绑定，父子窗口生命周期绑定及监听。
+    提供动态数据源配置支持；提供注解式缓存支持。
     已集成 
-        aspect、reactor-netty、tomcat、nacos、feign、mybatis、spring-tx、jsr303-valid、
+        aspectj、reactor-netty、tomcat、nacos、feign、mybatis、spring-tx、jsr303-valid、
         logback、jakarta-mail、quartz、xxl-job、pagehelper、redisson、shiro、thymeleaf、
-        datasource-auto-config、baidu-uid-generator 等常用组件；
-    默认提供 jar 包瘦身方式打包，支持 jarindex 启动，启动速度更快；
-    已提供 Ruoyi-for-loveqq 版本，替换到 spring 及其全部 starter，开箱即用。
+        mybatis-flex、sa-token、baidu-uid-generator 等常用组件。
+    默认提供 jar 包瘦身方式打包，支持 jar-index 启动，启动速度更快。
+    已提供 Ruoyi-for-loveqq 版本，替换掉了 spring 及其全部 starter，开箱即用。
 
 ## loveqq-core
 项目核心，包含一些通用工具类、jar index 启动引导、泛型推断工具、jdbc 访问工具、bean 封装工具、包读取工具、json 转换工具以及自动配置接口、自动配置注解等

@@ -14,5 +14,5 @@ public interface ApiPostProcessor {
      * @param api      api
      * @param response 响应结果
      */
-    void postProcessor(AbstractConfigurableApi<?, ?> api, ApiResponse response);
+    void postProcessor(AbstractCoreApi<?, ?> api, ApiResponse response);
 }

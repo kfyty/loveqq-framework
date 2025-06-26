@@ -91,7 +91,7 @@ public abstract class BeanUtil {
     /**
      * 从 class 以及 Autowired 注解中解析 bean name
      *
-     * @param clazz         class
+     * @param clazz            class
      * @param possibleBeanName 可能的自动注入名称
      * @return bean name
      */
@@ -253,9 +253,13 @@ public abstract class BeanUtil {
      * @param fieldValTest 属性过滤器
      * @return Map
      */
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> copyProperties(Object obj, BiPredicate<Field, Object> fieldValTest) {
         if (obj == null) {
             return Collections.emptyMap();
+        }
+        if (obj instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
         }
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {

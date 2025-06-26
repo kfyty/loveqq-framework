@@ -7,7 +7,6 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,22 @@ import static java.util.Optional.ofNullable;
  * @date 2021/11/15 9:01
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements HttpRequest<T> {
+public abstract class AbstractHttpRequest<T extends AbstractHttpRequest<T>> implements HttpRequest<T> {
+    /**
+     * 请求 url，可用 {@link #requestPath()} 重写
+     */
+    protected String url;
+
+    /**
+     * 设置 content-type
+     */
+    protected String contentType;
+
+    /**
+     * 请求方法
+     */
+    protected String method;
+
     /**
      * 连接超时时间，毫秒
      */
@@ -82,6 +96,24 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     protected ProxySelector proxySelector;
 
     @SuppressWarnings("unchecked")
+    public T requestPath(String url) {
+        this.url = url;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T contentType(String contentType) {
+        this.contentType = contentType;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T method(String method) {
+        this.method = method;
+        return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
     public T setConnectTimeout(int connectTimeout) {
         if (connectTimeout > 0) {
             this.connectTimeout = connectTimeout;
@@ -115,11 +147,11 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     }
 
     public T addHeader(String key, String value) {
-        return this.addParameter(key, value, this.headers, () -> this.headers = new HashMap<>());
+        return this.addParameter(key, value, this.headers, () -> this.headers = new LinkedHashMap<>());
     }
 
     public T addFormData(String key, Object value) {
-        return this.addParameter(key, value, this.formData, () -> this.formData = new HashMap<>());
+        return this.addParameter(key, value, this.formData, () -> this.formData = new LinkedHashMap<>());
     }
 
     @SuppressWarnings("unchecked")
@@ -167,6 +199,21 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     }
 
     @Override
+    public String requestPath() {
+        return this.url;
+    }
+
+    @Override
+    public String contentType() {
+        return ofNullable(this.contentType).orElseGet(HttpRequest.super::contentType);
+    }
+
+    @Override
+    public String method() {
+        return ofNullable(this.method).orElseGet(HttpRequest.super::method);
+    }
+
+    @Override
     public int connectTimeout() {
         return ofNullable(this.connectTimeout).orElseGet(HttpRequest.super::connectTimeout);
     }
@@ -204,9 +251,8 @@ public abstract class AbstractHttpRequest<T extends HttpRequest<T>> implements H
     @Override
     public String requestURL() {
         String url = processPlaceholder(this.requestPath(), ofNullable(this.path).orElseGet(Collections::emptyMap));
-        boolean hasParameter = url.contains("?");
         String parameters = this.queryParameters().entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining("&"));
-        return hasParameter ? url + '&' + parameters : url + '?' + parameters;
+        return url.lastIndexOf('?') > -1 ? url + '&' + parameters : url + '?' + parameters;
     }
 
     @SuppressWarnings("unchecked")

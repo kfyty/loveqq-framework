@@ -10,6 +10,29 @@ import reactor.core.publisher.Mono;
  * @email kfyty725@hotmail.com
  */
 public interface ReactiveHttpRequestExecutor extends HttpRequestExecutor {
+
+    @Override
+    default byte[] execute(HttpRequest<?> api) {
+        return this.executeAsync(api).block();
+    }
+
+    @Override
+    default HttpResponse exchange(HttpRequest<?> api) {
+        return this.exchangeAsync(api).block();
+    }
+
+    @Override
+    default HttpResponse exchange(HttpRequest<?> api, boolean validStatusCode) {
+        return this.exchangeAsync(api, validStatusCode).block();
+    }
+
+    /**
+     * @see this#execute(HttpRequest)
+     */
+    default Mono<byte[]> executeAsync(HttpRequest<?> api) {
+        return this.exchangeAsync(api).map(HttpResponse::body);
+    }
+
     /**
      * @see this#exchange(HttpRequest)
      */
@@ -21,11 +44,4 @@ public interface ReactiveHttpRequestExecutor extends HttpRequestExecutor {
      * @see this#exchange(HttpRequest, boolean)
      */
     Mono<HttpResponse> exchangeAsync(HttpRequest<?> api, boolean validStatusCode);
-
-    /**
-     * @see this#execute(HttpRequest)
-     */
-    default Mono<byte[]> executeAsync(HttpRequest<?> api) {
-        return this.exchangeAsync(api).map(HttpResponse::body);
-    }
 }

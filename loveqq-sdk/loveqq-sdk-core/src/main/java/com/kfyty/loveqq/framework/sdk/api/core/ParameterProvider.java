@@ -14,5 +14,5 @@ public interface ParameterProvider {
      * @param api 本次应用的 api
      * @return 参数值
      */
-    Object provide(AbstractConfigurableApi<?, ?> api);
+    Object provide(AbstractCoreApi<?, ?> api);
 }

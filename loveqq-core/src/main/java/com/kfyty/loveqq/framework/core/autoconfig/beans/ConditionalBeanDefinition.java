@@ -239,16 +239,19 @@ public class ConditionalBeanDefinition implements BeanDefinition {
      *
      * @param beanDefinition bean 定义
      */
-    private void resolveConditionDeclare(BeanDefinition beanDefinition) {
+    protected void resolveConditionDeclare(BeanDefinition beanDefinition) {
         AnnotatedElement annotatedElement = beanDefinition.isMethodBean()
-                ? beanDefinition.getBeanMethod() : beanDefinition instanceof FactoryBeanDefinition
-                ? ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
+                ? beanDefinition.getBeanMethod()
+                : beanDefinition instanceof FactoryBeanDefinition fbd ? fbd.getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
+
+        // 需要元数据，所以不能直接获取 Conditional 注解
         List<Annotation> annotations = flatRepeatableAnnotation(findAnnotations(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class)));
 
         for (Annotation annotation : annotations) {
             this.conditionDeclares.add(this.buildConditionDeclare(annotation));
         }
 
+        // 直接注解了 Conditional 支持
         Conditional conditional = AnnotationUtil.findAnnotation(annotatedElement, Conditional.class);
         if (conditional != null && this.conditionDeclares.stream().noneMatch(e -> e.getConditional() == conditional)) {
             this.conditionDeclares.add(new ConditionDeclare(conditional, conditional, unmodifiableList(Arrays.stream(conditional.value()).map(ReflectUtil::newInstance).collect(Collectors.toList()))));
@@ -261,7 +264,7 @@ public class ConditionalBeanDefinition implements BeanDefinition {
      * @param annotation 条件注解
      * @return 条件
      */
-    private ConditionDeclare buildConditionDeclare(Annotation annotation) {
+    protected ConditionDeclare buildConditionDeclare(Annotation annotation) {
         Conditional conditional = AnnotationUtil.findAnnotation(annotation.annotationType(), Conditional.class);
         List<Condition> conditions = Arrays.stream(conditional.value()).map(ReflectUtil::newInstance).collect(Collectors.toList());
         return new ConditionDeclare(conditional, annotation, unmodifiableList(conditions));

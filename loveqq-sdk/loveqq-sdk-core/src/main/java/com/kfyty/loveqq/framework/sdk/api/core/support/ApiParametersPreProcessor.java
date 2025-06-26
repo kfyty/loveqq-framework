@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.sdk.api.core.support;
 
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import com.kfyty.loveqq.framework.sdk.api.core.AbstractConfigurableApi;
+import com.kfyty.loveqq.framework.sdk.api.core.AbstractCoreApi;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiPreProcessor;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterConverter;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterProvider;
@@ -21,9 +21,13 @@ import java.util.function.Supplier;
  * @email kfyty725@hotmail.com
  */
 public class ApiParametersPreProcessor implements ApiPreProcessor {
+    /**
+     * 默认实例
+     */
+    public static final ApiPreProcessor INSTANCE = new ApiParametersPreProcessor();
 
     @Override
-    public void preProcessor(AbstractConfigurableApi<?, ?> api) {
+    public void preProcessor(AbstractCoreApi<?, ?> api) {
         for (Field field : ReflectUtil.getFields(api.getClass())) {
             if (!AnnotationUtil.hasAnnotation(field, Parameter.class)) {
                 continue;
@@ -67,10 +71,10 @@ public class ApiParametersPreProcessor implements ApiPreProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private Supplier<Object> getParameterProviderSupplier(AbstractConfigurableApi<?, ?> api, Field field, Object value) {
+    private Supplier<Object> getParameterProviderSupplier(AbstractCoreApi<?, ?> api, Field field, Object value) {
         return () -> {
             ParameterProviderRegistry registry = api.getConfiguration().getParameterProviderRegistry();
-            ParameterProvider provider = registry.getParameterProvider((Class<? extends AbstractConfigurableApi<?, ?>>) api.getClass(), field.getName());
+            ParameterProvider provider = registry.getParameterProvider((Class<? extends AbstractCoreApi<?, ?>>) api.getClass(), field.getName());
             Object providerValue = provider == null ? null : provider.provide(api);
             if (value == null && providerValue != null) {
                 ReflectUtil.setFieldValue(api, field, providerValue);

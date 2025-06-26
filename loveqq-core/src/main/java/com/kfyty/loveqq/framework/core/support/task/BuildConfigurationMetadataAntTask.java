@@ -51,7 +51,9 @@ public class BuildConfigurationMetadataAntTask {
         }
         JarFile jarFile = BuildJarIndexAntTask.obtainJarFile(properties);
         JSON metadata = buildConfigurationMetadata(jarFile);
-        writeJarEntry(METADATA_LOCATION, metadata.toString().getBytes(StandardCharsets.UTF_8), jarFile);
+        if (!metadata.isEmpty()) {
+            writeJarEntry(METADATA_LOCATION, metadata.toString().getBytes(StandardCharsets.UTF_8), jarFile);
+        }
         System.out.println("Build configuration metadata succeed: " + jarFile.getName());
     }
 
