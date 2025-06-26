@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.sdk.api.core;
 
-import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.sdk.api.core.config.ApiConfiguration;
@@ -22,7 +21,7 @@ import static java.util.Optional.ofNullable;
  * @date 2021/11/11 14:10
  * @email kfyty725@hotmail.com
  */
-public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends ApiResponse> extends AbstractHttpRequest<T> implements Api<T, R> {
+public abstract class AbstractCoreApi<T extends AbstractCoreApi<T, R>, R extends ApiResponse> extends AbstractHttpRequest<T> implements Api<T, R> {
     /**
      * 适用于当前 api 的配置
      */
@@ -52,8 +51,8 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
      * @return this
      */
     public ApiConfiguration cloneConfig() {
-        this.configuration = BeanUtil.copyProperties(this.getConfiguration(), new ApiConfiguration());
-        return this.getConfiguration();
+        this.configuration = this.configuration.clone();
+        return this.configuration;
     }
 
     /**
@@ -64,6 +63,15 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
     @SuppressWarnings("unchecked")
     public Class<R> resolveResponseGeneric() {
         return (Class<R>) ReflectUtil.getSuperGeneric(this.getClass(), 1);
+    }
+
+    @Override
+    public String requestPath() {
+        String baseUrl = this.getBaseUrl();
+        if (baseUrl == null) {
+            return super.requestPath();
+        }
+        return baseUrl + super.requestPath();
     }
 
     @Override
@@ -87,7 +95,7 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
     @Override
     public void postProcessor(R response) {
         if (response == null) {
-            throw new ApiException("response body is empty !");
+            throw new ApiException("Response body is empty !");
         }
         List<ApiPostProcessor> apiPostProcessors = this.getConfiguration().getApiPostProcessors();
         if (CommonUtil.notEmpty(apiPostProcessors)) {
@@ -118,8 +126,11 @@ public abstract class AbstractConfigurableApi<T extends Api<T, R>, R extends Api
     }
 
     protected R exchangeInternal(HttpResponse response, R retValue) {
-        if (retValue instanceof HttpResponseAware) {
-            ((HttpResponseAware) retValue).setHttpResponse(response);
+        if (this instanceof HttpResponseAware aware) {
+            aware.setHttpResponse(response);
+        }
+        if (retValue instanceof HttpResponseAware aware) {
+            aware.setHttpResponse(response);
         }
         return retValue;
     }

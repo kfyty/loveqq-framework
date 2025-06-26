@@ -31,7 +31,7 @@ public abstract class ParameterUtil {
         Object providerValue = null;
         if (parameter.require() && value == null && CommonUtil.empty(parameter.defaultValue())) {
             if (provider == null || (providerValue = provider.get()) == null) {
-                throw new ApiException(format("the field '%s' cannot be empty !", parameter.value()));
+                throw new ApiException(format("The field '%s' can't be empty.", parameter.value()));
             }
         }
         if (value != null) {

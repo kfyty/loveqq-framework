@@ -19,6 +19,18 @@ public interface HttpRequestExecutor {
     HttpResponse wrapResponse(Object response);
 
     /**
+     * 执行一个 http 请求，并返回二进制 body
+     *
+     * @param api http 请求
+     * @return body
+     */
+    default byte[] execute(HttpRequest<?> api) {
+        try (HttpResponse response = this.exchange(api)) {
+            return response.body();
+        }
+    }
+
+    /**
      * 返回 http 响应
      *
      * @return response
@@ -35,16 +47,4 @@ public interface HttpRequestExecutor {
      * @return response
      */
     HttpResponse exchange(HttpRequest<?> api, boolean validStatusCode);
-
-    /**
-     * 执行一个 http 请求，并返回二进制 body
-     *
-     * @param api http 请求
-     * @return body
-     */
-    default byte[] execute(HttpRequest<?> api) {
-        try (HttpResponse response = this.exchange(api)) {
-            return response.body();
-        }
-    }
 }

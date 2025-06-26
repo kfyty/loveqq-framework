@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiPostProcessorExcepti
  * @author kfyty725
  * @date 2021/11/12 17:29
  * @email kfyty725@hotmail.com
- * @see AbstractConfigurableApi#postProcessor(ApiResponse)
+ * @see AbstractCoreApi#postProcessor(ApiResponse)
  */
 public interface RequestFailedHandler {
     /**
@@ -18,5 +18,5 @@ public interface RequestFailedHandler {
      * @param api      请求失败的 api
      * @param response 失败的响应
      */
-    void onFailed(AbstractConfigurableApi<?, ?> api, ApiResponse response) throws ApiPostProcessorException;
+    void onFailed(AbstractCoreApi<?, ?> api, ApiResponse response) throws ApiPostProcessorException;
 }

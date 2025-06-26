@@ -23,6 +23,7 @@ import static java.net.Proxy.NO_PROXY;
 public interface HttpRequest<T extends HttpRequest<T>> {
     /**
      * 返回请求路径，可包含路径变量
+     * 实际的请求地址为: {@link this#requestURL()}
      *
      * @return URL
      */

@@ -1,9 +1,9 @@
 package com.kfyty.loveqq.framework.sdk.api.core.support;
 
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterConverter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class CommaDelimiterParameterConverter implements ParameterConverter<Object, String> {
+    /**
+     * 默认实例
+     */
+    public static final ParameterConverter<Object, String> INSTANCE = new CommaDelimiterParameterConverter();
 
     @Override
     public String doConvert(Object parameter) {
-        if (!(parameter instanceof Collection)) {
-            log.warn("parameter conversion failed, the parameter is not a collection type: {}", parameter);
-            return parameter.toString();
-        }
-        return ((Collection<?>) parameter).stream().map(Object::toString).collect(Collectors.joining(","));
+        return CommonUtil.toList(parameter).stream().map(Object::toString).collect(Collectors.joining(","));
     }
 }

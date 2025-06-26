@@ -34,9 +34,19 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Slf4j
 public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpRequestExecutor {
     /**
+     * 默认实例
+     */
+    public static final ReactiveHttpRequestExecutor INSTANCE = new ReactiveHttpClientHttpRequestExecutor();
+
+    /**
      * {@link HttpClient}
      */
-    protected static final Map<Integer, HttpClient> HTTP_CLIENT_CACHE = new ConcurrentHashMap<>();
+    protected static final Map<Integer, HttpClient> HTTP_CLIENT_CACHE;
+
+    static {
+        HTTP_CLIENT_CACHE = new ConcurrentHashMap<>();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> HTTP_CLIENT_CACHE.values().forEach(HttpClient::close)));
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -45,15 +55,10 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
     }
 
     @Override
-    public HttpResponse exchange(HttpRequest<?> api, boolean validStatusCode) {
-        return this.exchangeAsync(api, validStatusCode).block();
-    }
-
-    @Override
     public Mono<HttpResponse> exchangeAsync(HttpRequest<?> api, boolean validStatusCode) {
         return Mono.fromCompletionStage(() -> {
             long start = System.currentTimeMillis();
-            HttpClient client = this.findHttpClient(api);
+            HttpClient client = this.obtainHttpClient(api);
             return client
                     .sendAsync(this.buildHttpRequest(api), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
                     .thenApplyAsync(this::wrapResponse)
@@ -69,7 +74,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
         });
     }
 
-    protected HttpClient findHttpClient(HttpRequest<?> api) {
+    protected HttpClient obtainHttpClient(HttpRequest<?> api) {
         return HTTP_CLIENT_CACHE.computeIfAbsent(api.connectTimeout(), k -> {
             HttpClient.Builder builder = HttpClient.newBuilder()
                     .version(HttpClient.Version.HTTP_2)

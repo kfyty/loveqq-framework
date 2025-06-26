@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.sdk.api.core.support;
 
-import com.kfyty.loveqq.framework.sdk.api.core.AbstractConfigurableApi;
+import com.kfyty.loveqq.framework.sdk.api.core.AbstractCoreApi;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiResponse;
 import com.kfyty.loveqq.framework.sdk.api.core.RequestFailedHandler;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiPostProcessorException;
@@ -15,9 +15,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ThrowExceptionRequestFailedHandler implements RequestFailedHandler {
+    /**
+     * 默认实例
+     */
+    public static final RequestFailedHandler INSTANCE = new ThrowExceptionRequestFailedHandler();
 
     @Override
-    public void onFailed(AbstractConfigurableApi<?, ?> api, ApiResponse response) throws ApiPostProcessorException {
+    public void onFailed(AbstractCoreApi<?, ?> api, ApiResponse response) throws ApiPostProcessorException {
         throw new ApiPostProcessorException(response.getCode(), response.getDesc());
     }
 }

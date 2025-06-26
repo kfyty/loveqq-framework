@@ -69,7 +69,7 @@ public @interface Parameter {
     boolean cookie() default false;
 
     /**
-     * 是否为 payload 参数，如果是，请求时直接发送该数据
+     * 是否为 payload 参数，如果是，请求时直接发送该数据，并忽略其他所有非查询数据
      * 注意：payload 为 true 的参数只能有一个
      *
      * @return 默认 false

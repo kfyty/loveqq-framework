@@ -14,7 +14,7 @@ public abstract class VirtualThreadExecutorHolder {
     /**
      * 单例
      */
-    private static final ExecutorService INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("thread-handler-", 0).factory());
+    private static final ExecutorService INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
 
     /**
      * 获取实例
