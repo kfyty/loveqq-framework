@@ -1,6 +1,8 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
+import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
@@ -21,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -47,6 +50,7 @@ public class JarIndex {
 
     /**
      * ide 启动类路径
+     * 仅 ide 启动时有值
      */
     private final List<String> classpath;
 
@@ -59,6 +63,11 @@ public class JarIndex {
      * jar index 包含的全部的 URL
      */
     private URL[] urls;
+
+    /**
+     * jar file cache
+     */
+    private Map<String, JarFile> jarFiles;
 
     /**
      * 构造器
@@ -83,6 +92,7 @@ public class JarIndex {
         this.mainJarPath = mainJarPath;
         this.classpath = classpath;
         this.jarIndex = new ConcurrentSkipListMap<>();
+        this.jarFiles = new ConcurrentHashMap<>();
         this.loadJarIndex(mainJarPath, jarIndex);
     }
 
@@ -102,6 +112,25 @@ public class JarIndex {
      */
     public URL[] getJarURLs() {
         return this.urls;
+    }
+
+    /**
+     * 获取 jar file
+     *
+     * @param jarName jar file name
+     * @return jar file
+     */
+    public JarFile getJarFile(String jarName) throws IOException {
+        if (this.jarFiles == null) {
+            return new CloseableJarFile(jarName);
+        }
+        return this.jarFiles.computeIfAbsent(jarName, k -> {
+            try {
+                return new CloseableJarFile(k);
+            } catch (IOException e) {
+                throw ExceptionUtil.wrap(e);
+            }
+        });
     }
 
     /**
@@ -230,6 +259,19 @@ public class JarIndex {
     }
 
     /**
+     * 关闭所有开启的 jar file，并不再使用缓存
+     */
+    public void closeJarFile() {
+        synchronized (this) {
+            for (JarFile value : this.jarFiles.values()) {
+                IOUtil.close(value);
+            }
+            this.jarFiles.clear();
+            this.jarFiles = null;
+        }
+    }
+
+    /**
      * 读取 jar index
      *
      * @param mainJarPath 启动类所在路径
@@ -278,5 +320,40 @@ public class JarIndex {
             this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(this::getJarURL).forEach(urls::add);
         }
         this.urls = urls.toArray(new URL[0]);
+    }
+
+    protected class CloseableJarFile extends JarFile {
+
+        public CloseableJarFile(String name) throws IOException {
+            super(name);
+        }
+
+        public CloseableJarFile(String name, boolean verify) throws IOException {
+            super(name, verify);
+        }
+
+        public CloseableJarFile(File file) throws IOException {
+            super(file);
+        }
+
+        public CloseableJarFile(File file, boolean verify) throws IOException {
+            super(file, verify);
+        }
+
+        /**
+         * 当缓存不存在时，则关闭资源
+         */
+        @Override
+        public void close() throws IOException {
+            if (JarIndex.this.jarFiles == null) {
+                super.close();
+                return;
+            }
+            synchronized (this) {
+                if (JarIndex.this.jarFiles == null) {
+                    super.close();
+                }
+            }
+        }
     }
 }

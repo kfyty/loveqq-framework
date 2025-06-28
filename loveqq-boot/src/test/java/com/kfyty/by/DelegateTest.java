@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.By;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,9 @@ public class DelegateTest implements CommandLineRunner {
     public void run(String... args) throws Exception {
         this.sub.test(1);
         this.delegate.test(1);
+
+        // 校验类加载器是否正常
+        JarIndexClassLoader cl = (JarIndexClassLoader) Thread.currentThread().getContextClassLoader();
     }
 
     @Test
