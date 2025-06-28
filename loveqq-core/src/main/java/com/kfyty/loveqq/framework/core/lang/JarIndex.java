@@ -47,6 +47,7 @@ public class JarIndex {
 
     /**
      * ide 启动类路径
+     * 仅 ide 启动时有值
      */
     private final List<String> classpath;
 
@@ -111,32 +112,6 @@ public class JarIndex {
      */
     public Map<String, List<String>> getJarIndex() {
         return Collections.unmodifiableMap(this.jarIndex);
-    }
-
-    /**
-     * 根据 JarFile 构建一个 URL
-     *
-     * @param jarFile Jar file
-     * @return jar file url
-     */
-    public URL getJarURL(JarFile jarFile) {
-        return this.getJarURL(jarFile.getName());
-    }
-
-    /**
-     * 根据 JarFile 构建一个 URL
-     *
-     * @param jarFilePath Jar file path
-     * @return jar file url
-     */
-    @SneakyThrows(MalformedURLException.class)
-    public URL getJarURL(String jarFilePath) {
-        String path = jarFilePath.charAt(0) == '/' ? jarFilePath : '/' + jarFilePath;
-        if (jarFilePath.endsWith(".jar")) {
-            return new URL("file", "", -1, path);                                                     // 必须使用 file 协议，否则读取不到 resources
-        }
-        String filePath = path.charAt(path.length() - 1) == File.separatorChar ? path : path + File.separatorChar;
-        return new URL("file", "", -1, filePath.replace(File.separatorChar, '/'));             // 必须转换为 '/'，否则 toURI 语法错误
     }
 
     /**
@@ -230,6 +205,32 @@ public class JarIndex {
     }
 
     /**
+     * 根据 JarFile 构建一个 URL
+     *
+     * @param jarFile Jar file
+     * @return jar file url
+     */
+    public static URL getJarURL(JarFile jarFile) {
+        return getJarURL(jarFile.getName());
+    }
+
+    /**
+     * 根据 JarFile 构建一个 URL
+     *
+     * @param jarFilePath Jar file path
+     * @return jar file url
+     */
+    @SneakyThrows(MalformedURLException.class)
+    public static URL getJarURL(String jarFilePath) {
+        String path = jarFilePath.charAt(0) == '/' ? jarFilePath : '/' + jarFilePath;
+        if (jarFilePath.endsWith(".jar")) {
+            return new URL("file", "", -1, path);                                                     // 必须使用 file 协议，否则读取不到 resources
+        }
+        String filePath = path.charAt(path.length() - 1) == File.separatorChar ? path : path + File.separatorChar;
+        return new URL("file", "", -1, filePath.replace(File.separatorChar, '/'));             // 必须转换为 '/'，否则 toURI 语法错误
+    }
+
+    /**
      * 读取 jar index
      *
      * @param mainJarPath 启动类所在路径
@@ -273,9 +274,9 @@ public class JarIndex {
     }
 
     protected void rebuildURLs() {
-        List<URL> urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(this::getJarURL).collect(Collectors.toList());
+        List<URL> urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(JarIndex::getJarURL).collect(Collectors.toList());
         if (this.isExploded()) {
-            this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(this::getJarURL).forEach(urls::add);
+            this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(JarIndex::getJarURL).forEach(urls::add);
         }
         this.urls = urls.toArray(new URL[0]);
     }

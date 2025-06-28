@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.boot.autoconfig;
 
 import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
+import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.lang.VirtualThreadCallableDecorator;
@@ -9,6 +10,7 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.DecorateScheduledExe
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
 import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
@@ -28,7 +30,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.CPU_CORE;
  */
 @Slf4j
 @Component
-public class ThreadPoolExecutorAutoConfig {
+public class ThreadPoolExecutorAutoConfig implements DestroyBean {
     /**
      * 默认线程池名称
      */
@@ -41,10 +43,11 @@ public class ThreadPoolExecutorAutoConfig {
 
     /**
      * 默认的线程池
+     * 虚拟线程池是单例模式，所以这里不设置销毁方法，而是 {@link #destroy()} 处理
      *
      * @return 线程池
      */
-    @Bean(value = DEFAULT_THREAD_POOL_EXECUTOR, destroyMethod = "shutdown", resolveNested = false, independent = true)
+    @Bean(value = DEFAULT_THREAD_POOL_EXECUTOR, resolveNested = false, independent = true)
     public ExecutorService defaultThreadPoolExecutor() {
         if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             return VirtualThreadExecutorHolder.getInstance();
@@ -93,5 +96,13 @@ public class ThreadPoolExecutorAutoConfig {
                 bean.setThreadFactory(new NamedThreadFactory(name));
             }
         };
+    }
+
+    @Override
+    public void destroy() {
+        if (!CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
+            ExecutorService executorService = IOC.getBean(DEFAULT_THREAD_POOL_EXECUTOR);
+            executorService.shutdown();
+        }
     }
 }

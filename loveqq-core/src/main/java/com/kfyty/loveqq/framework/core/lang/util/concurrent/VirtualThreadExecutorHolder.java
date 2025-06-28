@@ -14,7 +14,15 @@ public abstract class VirtualThreadExecutorHolder {
     /**
      * 单例
      */
-    private static final ExecutorService INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
+    private static final ExecutorService INSTANCE;
+
+    /**
+     * 单例静态初始化
+     */
+    static {
+        INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
+        Runtime.getRuntime().addShutdownHook(new Thread(INSTANCE::shutdown));
+    }
 
     /**
      * 获取实例

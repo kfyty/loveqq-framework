@@ -153,7 +153,12 @@ public abstract class IOUtil {
      * @return 字节数组
      */
     public static byte[] read(InputStream in) {
-        return copy(in, new ByteArrayOutputStream()).toByteArray();
+        try {
+            int init = Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, in.available());
+            return copy(in, new ByteArrayOutputStream(init)).toByteArray();
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
     }
 
     /**

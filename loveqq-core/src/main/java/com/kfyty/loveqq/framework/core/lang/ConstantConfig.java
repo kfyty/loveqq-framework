@@ -40,7 +40,7 @@ public interface ConstantConfig {
     /**
      * {@link com.kfyty.loveqq.framework.core.utils.IOUtil} 读取流缓冲区大小
      */
-    int IO_STREAM_READ_BUFFER_SIZE = Integer.parseInt(System.getProperty("k.config.io-buffer-size", "4096"));
+    int IO_STREAM_READ_BUFFER_SIZE = Integer.parseInt(System.getProperty("k.config.io-buffer-size", "16384"));
 
     /**
      * 临时文件夹位置

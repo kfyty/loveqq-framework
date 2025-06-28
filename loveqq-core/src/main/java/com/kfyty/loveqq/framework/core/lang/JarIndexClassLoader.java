@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
+import com.kfyty.loveqq.framework.core.support.jar.JarFile;
+import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.Getter;
@@ -14,15 +16,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLStreamHandlerFactory;
-import java.nio.file.Paths;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
@@ -56,18 +58,25 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     protected final JarIndex jarIndex;
 
+    /**
+     * jar file cache
+     * 应用启动期间使用，避免频繁的创建 {@link JarFile} 对象
+     * 启动完成后应调用 {@link #closeJarFileCache()} 关闭
+     */
+    protected Map<String, JarFile> jarFileCache;
+
     public JarIndexClassLoader(JarIndex jarIndex, ClassLoader parent) {
         this(jarIndex, new URL[0], parent);
     }
 
     public JarIndexClassLoader(JarIndex jarIndex, URL[] urls, ClassLoader parent) {
-        super(urls, parent);
-        this.jarIndex = jarIndex;
+        this(jarIndex, urls, parent, null);
     }
 
     public JarIndexClassLoader(JarIndex jarIndex, URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
         this.jarIndex = jarIndex;
+        this.jarFileCache = new ConcurrentHashMap<>();
     }
 
     /**
@@ -86,7 +95,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @return true or false
      */
     public boolean isThisClass(String name) {
-        return "com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader".equals(name) || "com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader".equals(name);
+        return name.endsWith(".JarIndexClassLoader") || name.endsWith(".ClassFileTransformerClassLoader") || name.endsWith(".core.lang.JarIndex");
     }
 
     /**
@@ -108,11 +117,43 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 获取 jar file
+     *
+     * @param jarName jar file name
+     * @return jar file
+     */
+    public JarFile getJarFile(String jarName) throws IOException {
+        if (this.jarFileCache == null) {
+            return new CachedJarFile(jarName);
+        }
+        return this.jarFileCache.computeIfAbsent(jarName, k -> {
+            try {
+                return new CachedJarFile(k);
+            } catch (IOException e) {
+                throw ExceptionUtil.wrap(e);
+            }
+        });
+    }
+
+    /**
+     * 关闭所有开启的 jar file，并不再使用缓存
+     */
+    public void closeJarFileCache() {
+        synchronized (this) {
+            for (JarFile value : this.jarFileCache.values()) {
+                IOUtil.close(value);
+            }
+            this.jarFileCache.clear();
+            this.jarFileCache = null;
+        }
+    }
+
+    /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
      * @param jarFiles jar 文件集合
      */
-    public void addJarIndex(List<JarFile> jarFiles) {
+    public void addJarIndex(List<java.util.jar.JarFile> jarFiles) {
         this.jarIndex.addJarIndex(jarFiles);
     }
 
@@ -122,7 +163,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param packageName 包名
      * @param jarFile     jar 文件
      */
-    public void addJarIndex(String packageName, JarFile jarFile) {
+    public void addJarIndex(String packageName, java.util.jar.JarFile jarFile) {
         this.jarIndex.addJarIndex(packageName, jarFile);
     }
 
@@ -142,7 +183,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      *
      * @param jarFiles jar 文件
      */
-    public void removeJarIndex(List<JarFile> jarFiles) {
+    public void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
         this.jarIndex.removeJarIndex(jarFiles);
     }
 
@@ -198,7 +239,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         }
         try {
             for (String jarFile : jarFiles) {
-                try (JarFile file = IOUtil.newJarFile(jarFile)) {
+                try (java.util.jar.JarFile file = IOUtil.newJarFile(jarFile)) {
                     if (file.getJarEntry(name) != null) {
                         return newNestedJarURL(jarFile, name);
                     }
@@ -249,17 +290,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (name.startsWith("java.") || this.isThisClass(name)) {
+        if (name.startsWith("java.") || isThisClass(name)) {
             return super.loadClass(name, resolve);                                                                      // 自身需要走父类，否则会出现强转异常
         }
         synchronized (name.intern()) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
+                String className = name.replace('.', '/');
+                String classPath = className + ".class";
                 if (this.isExploded()) {
-                    loadedClass = this.findExplodedClass(name);
+                    loadedClass = this.findExplodedClass(name, className, classPath);
                 }
                 if (loadedClass == null) {
-                    loadedClass = this.findJarClass(name, this.jarIndex.getJarFiles(name));
+                    loadedClass = this.findJarClass(name, className, classPath, this.jarIndex.getJarFiles(name));
                 }
             }
             if (loadedClass != null) {
@@ -286,24 +329,24 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
      * 从 jar index 中查找 class
      *
-     * @param name     要查找的 class
-     * @param jarFiles jar index 匹配到的 jar 文件
+     * @param name      要查找的 class, eg: java.util.List
+     * @param className class name, eg: java/util/List
+     * @param classPath class path, eg: java/util/List.class
+     * @param jarFiles  jar index 匹配到的 jar 文件
      * @return class
      */
     @SneakyThrows(IOException.class)
-    protected Class<?> findJarClass(String name, List<String> jarFiles) throws ClassNotFoundException {
-        String jarClassPath = name.replace('.', '/') + ".class";
+    protected Class<?> findJarClass(String name, String className, String classPath, List<String> jarFiles) throws ClassNotFoundException {
         for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
-            try (JarFile jarFile = new JarFile(i.next());
-                 InputStream inputStream = jarFile.getInputStream(new JarEntry(jarClassPath))) {
+            try (JarFile jarFile = this.getJarFile(i.next());
+                 InputStream inputStream = jarFile.getInputStream(new JarEntry(classPath))) {
                 if (inputStream != null) {
                     if (DEPENDENCY_CHECK && i.hasNext()) {
-                        this.logMatchedMoreJarFiles(jarClassPath, jarFile, jarFiles);
+                        this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
                     }
-                    URL jarURL = this.jarIndex.getJarURL(jarFile);
-                    byte[] classBytes = this.transform(name, this.read(inputStream));
-                    this.definePackageIfNecessary(name, jarURL, jarFile.getManifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarURL, (CodeSigner[]) null));
+                    byte[] classBytes = this.transform(className, this.read(inputStream));
+                    this.definePackageIfNecessary(name, jarFile.getUrl(), jarFile.getManifest());
+                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), (CodeSigner[]) null));
                 }
             }
         }
@@ -314,21 +357,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * 从文件夹中查找 class
      * 从 ide 中直接启动时支持
      *
-     * @param name 要查找的 class
+     * @param name      要查找的 class, eg: java.util.List
+     * @param className class name, eg: java/util/List
+     * @param classPath class path, eg: java/util/List.class
      * @return class
      */
     @SneakyThrows(IOException.class)
-    protected Class<?> findExplodedClass(String name) throws ClassNotFoundException {
-        String jarClassPath = name.replace('.', '/') + ".class";
-        List<URL> resources = this.findExplodedResources(jarClassPath);
-        if (!resources.isEmpty()) {
-            File classFile = new File(PathUtil.getPath(resources.get(0)).toString(), jarClassPath);
+    protected Class<?> findExplodedClass(String name, String className, String classPath) throws ClassNotFoundException {
+        List<URL> resources = this.findExplodedResources(classPath);
+        for (URL resource : resources) {
+            File classFile = new File(PathUtil.getPath(resource).toString(), classPath);
             if (classFile.exists()) {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
-                    URL classURL = Paths.get(this.jarIndex.getMainJarPath()).toUri().toURL();
-                    byte[] classBytes = this.transform(name, this.read(inputStream));
-                    this.definePackageIfNecessary(name, classURL, new Manifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(classURL, (CodeSigner[]) null));
+                    byte[] classBytes = this.transform(className, this.read(inputStream));
+                    this.definePackageIfNecessary(name, resource, new Manifest());
+                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
                 }
             }
         }
@@ -342,7 +385,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @return 资源所在的 url
      */
     protected List<URL> findExplodedResources(String resources) {
-        List<URL> urls = new ArrayList<>();
+        List<URL> urls = new LinkedList<>();
         for (URL url : this.getURLs()) {
             if (!url.getFile().endsWith(".jar")) {
                 if (new File(PathUtil.getPath(url).toString(), resources).exists()) {
@@ -362,11 +405,11 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param jarFiles    匹配的 jar files
      */
     @SneakyThrows(IOException.class)
-    protected void logMatchedMoreJarFiles(String name, JarFile usedJarFile, List<String> jarFiles) {
+    protected void printMatchedMoreJarFiles(String name, JarFile usedJarFile, List<String> jarFiles) {
         boolean matchedMore = false;
         StringBuilder builder = new StringBuilder("More than one jar file found of class: " + name);
         for (String jarPath : jarFiles) {
-            try (JarFile jarFile = new JarFile(jarPath)) {
+            try (JarFile jarFile = this.getJarFile(jarPath)) {
                 if (jarFile.getJarEntry(name) != null) {
                     boolean same = jarFile.getName().equals(usedJarFile.getName());
                     builder.append("\r\n    at: [")
@@ -405,19 +448,56 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
     /**
      * 读取数据到字节数组
-     * 不使用 {@link IOUtil#read(InputStream)}，避免加载过多 class
      *
      * @param in 输入流
      * @return 字节数组
      */
     protected byte[] read(InputStream in) throws IOException {
         int n = -1;
-        byte[] buffer = new byte[Math.max(4096, in.available())];
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream(in.available())) {
-            while ((n = in.read(buffer)) != -1) {
-                out.write(buffer, 0, n);
+        byte[] buffer = new byte[Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, in.available())];
+        ByteArrayOutputStream out = new ByteArrayOutputStream(buffer.length);
+        while ((n = in.read(buffer)) != -1) {
+            out.write(buffer, 0, n);
+        }
+        return out.toByteArray();
+    }
+
+    /**
+     * 缓存的 jar file
+     * 可根据 {@link #jarFileCache} 决定是否关闭资源
+     */
+    protected class CachedJarFile extends JarFile {
+
+        public CachedJarFile(String name) throws IOException {
+            super(name);
+        }
+
+        public CachedJarFile(String name, boolean verify) throws IOException {
+            super(name, verify);
+        }
+
+        public CachedJarFile(File file, boolean verify) throws IOException {
+            super(file, verify);
+        }
+
+        public CachedJarFile(File file) throws IOException {
+            super(file);
+        }
+
+        /**
+         * 当缓存不存在时，则关闭资源
+         */
+        @Override
+        public void close() throws IOException {
+            if (jarFileCache == null) {
+                super.close();
+                return;
             }
-            return out.toByteArray();
+            synchronized (JarIndexClassLoader.this) {
+                if (jarFileCache == null) {
+                    super.close();
+                }
+            }
         }
     }
 }
