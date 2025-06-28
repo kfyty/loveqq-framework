@@ -56,13 +56,15 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
 
     /**
      * 执行自定义字节码逻辑
+     *
+     * @param className  class name, eg: java/util/List
+     * @param classBytes class byte code
      */
     protected byte[] transform(String className, byte[] classBytes) throws ClassNotFoundException {
         if (!ConstantConfig.LOAD_TRANSFORMER) {
             return classBytes;
         }
         try {
-            className = className.replace('.', '/');
             List<ClassFileTransformer> classFileTransformers = this.obtainClassFileTransformer();
             for (ClassFileTransformer classFileTransformer : classFileTransformers) {
                 byte[] changed = classFileTransformer.transform(this, className, null, null, classBytes);
