@@ -118,6 +118,16 @@ public class NacosDiscoveryProperties implements InitializingBean {
     private String logName;
 
     /**
+     * nacos.common.processors config
+     */
+    private Integer commonProcessors = 2;
+
+    /**
+     * nacos-grpc-client-executor config
+     */
+    private GrpcClientPool grpcClientPool = new GrpcClientPool();
+
+    /**
      * extra metadata to register.
      */
     private Map<String, String> metadata = new HashMap<>(4);
@@ -140,5 +150,15 @@ public class NacosDiscoveryProperties implements InitializingBean {
         for (Map.Entry<String, NacosDiscoveryProperties> entry : this.discoveries.entrySet()) {
             entry.getValue().getMetadata().put(PreservedMetadataKeys.REGISTER_SOURCE, "loveqq_cloud");
         }
+
+        System.setProperty("nacos.common.processors", this.commonProcessors.toString());
+        System.setProperty("nacos.remote.client.grpc.pool.core.size", this.grpcClientPool.getCore().toString());
+        System.setProperty("nacos.remote.client.grpc.pool.max.size", this.grpcClientPool.getMaximum().toString());
+    }
+
+    @Data
+    public static class GrpcClientPool {
+        private Integer core = 2;
+        private Integer maximum = 4;
     }
 }
