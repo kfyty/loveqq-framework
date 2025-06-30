@@ -193,8 +193,8 @@ public abstract class JsonUtil {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(Object o) {
-        if (o.getClass() == String.class) {
-            return (Map<String, Object>) toObject((String) o, LinkedHashMap.class);
+        if (o instanceof CharSequence cs) {
+            return (Map<String, Object>) toObject(cs, LinkedHashMap.class);
         }
         return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
     }

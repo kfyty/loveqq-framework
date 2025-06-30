@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +26,7 @@ import java.util.function.Function;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class JSON extends AbstractMap<String, Object> implements JSONAware {
+public class JSON implements Map<String, Object>, JSONAware {
     /**
      * 包装
      */
@@ -150,11 +149,16 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
     }
 
     public JSON getJSON(String key) {
-        return getJSON(this.decorate.get(key), "Not JSON for key: " + key);
+        return this.getJSON(this.decorate.get(key), "Not JSON for key: " + key);
     }
 
     public Array getArray(String key) {
-        return getArray(this.decorate.get(key), "Not Array for key: " + key);
+        return this.getArray(this.decorate.get(key), "Not Array for key: " + key);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.decorate.isEmpty();
     }
 
     @Override
@@ -175,6 +179,11 @@ public class JSON extends AbstractMap<String, Object> implements JSONAware {
     @Override
     public Object get(Object key) {
         return this.decorate.get(key);
+    }
+
+    @Override
+    public Object getOrDefault(Object key, Object defaultValue) {
+        return this.decorate.getOrDefault(key, defaultValue);
     }
 
     @Override

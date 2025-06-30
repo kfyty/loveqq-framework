@@ -11,7 +11,6 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -32,7 +31,7 @@ import java.util.stream.Stream;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class Array extends AbstractList<Object> implements JSONAware {
+public class Array implements List<Object>, JSONAware {
     /**
      * 包装
      */
@@ -155,11 +154,86 @@ public class Array extends AbstractList<Object> implements JSONAware {
     }
 
     public JSON getJSON(int index) {
-        return getJSON(this.decorate.get(index), "Not JSON for index: " + index);
+        return this.getJSON(this.decorate.get(index), "Not JSON for index: " + index);
     }
 
     public Array getArray(int index) {
-        return getArray(this.decorate.get(index), "Not Array for index: " + index);
+        return this.getArray(this.decorate.get(index), "Not Array for index: " + index);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.decorate.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return this.decorate.contains(o);
+    }
+
+    @Override
+    public boolean add(Object instance) {
+        return this.decorate.add(instance);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return this.decorate.containsAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return this.decorate.retainAll(c);
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        return this.decorate.indexOf(o);
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        return this.decorate.lastIndexOf(o);
+    }
+
+    @Override
+    public List<Object> subList(int fromIndex, int toIndex) {
+        return this.decorate.subList(fromIndex, toIndex);
+    }
+
+    @Override
+    public void addFirst(Object instance) {
+        this.decorate.addFirst(instance);
+    }
+
+    @Override
+    public void addLast(Object instance) {
+        this.decorate.addLast(instance);
+    }
+
+    @Override
+    public Object getFirst() {
+        return this.decorate.getFirst();
+    }
+
+    @Override
+    public Object getLast() {
+        return this.decorate.getLast();
+    }
+
+    @Override
+    public Object removeFirst() {
+        return this.decorate.removeFirst();
+    }
+
+    @Override
+    public Object removeLast() {
+        return this.decorate.removeLast();
+    }
+
+    @Override
+    public List<Object> reversed() {
+        return this.decorate.reversed();
     }
 
     @Override
@@ -208,6 +282,11 @@ public class Array extends AbstractList<Object> implements JSONAware {
     }
 
     @Override
+    public <T> T[] toArray(IntFunction<T[]> generator) {
+        return this.decorate.toArray(generator);
+    }
+
+    @Override
     public void replaceAll(UnaryOperator<Object> operator) {
         this.decorate.replaceAll(operator);
     }
@@ -220,11 +299,6 @@ public class Array extends AbstractList<Object> implements JSONAware {
     @Override
     public Spliterator<Object> spliterator() {
         return this.decorate.spliterator();
-    }
-
-    @Override
-    public <T> T[] toArray(IntFunction<T[]> generator) {
-        return this.decorate.toArray(generator);
     }
 
     @Override
