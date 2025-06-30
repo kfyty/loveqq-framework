@@ -155,7 +155,7 @@ public abstract class IOUtil {
     public static byte[] read(InputStream in) {
         try {
             int init = Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, in.available());
-            return copy(in, new ByteArrayOutputStream(init)).toByteArray();
+            return copy(in, new ByteArrayOutputStream(init), init).toByteArray();
         } catch (IOException e) {
             throw ExceptionUtil.wrap(e);
         }

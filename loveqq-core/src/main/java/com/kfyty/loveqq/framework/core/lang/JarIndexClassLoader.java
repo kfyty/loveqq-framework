@@ -18,6 +18,7 @@ import java.net.URL;
 import java.net.URLStreamHandlerFactory;
 import java.security.CodeSigner;
 import java.security.CodeSource;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -453,13 +454,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @return 字节数组
      */
     protected byte[] read(InputStream in) throws IOException {
+        // 确定缓冲区大小
         int n = -1;
-        byte[] buffer = new byte[Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, in.available())];
-        ByteArrayOutputStream out = new ByteArrayOutputStream(buffer.length);
+        int available = in.available();
+        byte[] buffer = new byte[available > 0 ? available : ConstantConfig.IO_STREAM_READ_BUFFER_SIZE];
+
+        // 开始读取
+        available = 0;
+        FastByteArrayOutputStream out = new FastByteArrayOutputStream(buffer.length);
         while ((n = in.read(buffer)) != -1) {
             out.write(buffer, 0, n);
+            available += n;
         }
-        return out.toByteArray();
+        return out.toByteArray(available);
     }
 
     /**
@@ -498,6 +505,33 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                     super.close();
                 }
             }
+        }
+    }
+
+    /**
+     * 快速字节输出流，主要用于类加载，避免字节数组的复制
+     */
+    protected static class FastByteArrayOutputStream extends ByteArrayOutputStream {
+
+        public FastByteArrayOutputStream() {
+        }
+
+        public FastByteArrayOutputStream(int size) {
+            super(size);
+        }
+
+        /**
+         * 当请求字节数组大小与缓冲区大小一致时，直接返回，而不复制
+         * 在类加载时很有用，因为类加载一般可以预知字节数组的大小
+         *
+         * @param targetSize 请求的字节数组大小
+         * @return 字节数组
+         */
+        public byte[] toByteArray(int targetSize) {
+            if (targetSize == buf.length) {
+                return buf;
+            }
+            return Arrays.copyOf(buf, count);
         }
     }
 }
