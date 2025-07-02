@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
 import com.kfyty.loveqq.framework.data.cache.core.DefaultCacheKeyFactory;
@@ -39,12 +40,18 @@ public class CacheAutoConfiguration {
     }
 
     @Bean(resolveNested = false, independent = true)
-    public CacheInterceptorProxy cacheInterceptorProxy(Cache cache, CacheKeyFactory cacheKeyFactory, @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
-        return new CacheInterceptorProxy(cache, cacheKeyFactory, executorService);
+    public CacheInterceptorProxy cacheInterceptorProxy(PropertyContext propertyContext,
+                                                       Cache cache,
+                                                       CacheKeyFactory cacheKeyFactory,
+                                                       @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
+        return new CacheInterceptorProxy(propertyContext, cache, cacheKeyFactory, executorService);
     }
 
     @Bean(resolveNested = false, independent = true)
-    public ReactiveCacheInterceptorProxy reactiveCacheInterceptorProxy(ReactiveCache cache, CacheKeyFactory cacheKeyFactory, @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
-        return new ReactiveCacheInterceptorProxy(cache, cacheKeyFactory, executorService);
+    public ReactiveCacheInterceptorProxy reactiveCacheInterceptorProxy(PropertyContext propertyContext,
+                                                                       ReactiveCache cache,
+                                                                       CacheKeyFactory cacheKeyFactory,
+                                                                       @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
+        return new ReactiveCacheInterceptorProxy(propertyContext, cache, cacheKeyFactory, executorService);
     }
 }

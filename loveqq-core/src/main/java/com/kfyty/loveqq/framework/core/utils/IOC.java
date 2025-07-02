@@ -17,11 +17,6 @@ import lombok.Getter;
  */
 public abstract class IOC {
     /**
-     * servlet web server class
-     */
-    private static final Class<?> SERVLET_WEB_SERVER_CLASS = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
-
-    /**
      * true if servlet based web server
      */
     private static Boolean isServletWeb;
@@ -48,7 +43,8 @@ public abstract class IOC {
      */
     public static boolean isServletWeb() {
         if (isServletWeb == null) {
-            isServletWeb = SERVLET_WEB_SERVER_CLASS != null && !getBeanFactory().getBeanDefinitions(SERVLET_WEB_SERVER_CLASS).isEmpty();
+            Class<?> servletServerClass = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
+            isServletWeb = servletServerClass != null && !beanFactory.getBeanDefinitions(servletServerClass).isEmpty();
         }
         return isServletWeb;
     }
@@ -92,7 +88,7 @@ public abstract class IOC {
      *
      * @return 资源解析器
      */
-    public static PathMatchingResourcePatternResolver getResourceResolve() {
+    public static PathMatchingResourcePatternResolver getResourceResolver() {
         return getBean(PathMatchingResourcePatternResolver.class);
     }
 
@@ -102,8 +98,8 @@ public abstract class IOC {
      * @return 应用上下文
      */
     public static ApplicationContext getApplicationContext() {
-        if (beanFactory instanceof ApplicationContext) {
-            return (ApplicationContext) beanFactory;
+        if (beanFactory instanceof ApplicationContext context) {
+            return context;
         }
         throw new IllegalStateException("The bean factory doesn't instance of ApplicationContext.");
     }
@@ -114,8 +110,8 @@ public abstract class IOC {
      * @return 可配置的应用上下文
      */
     public static ConfigurableApplicationContext getConfigurableApplicationContext() {
-        if (beanFactory instanceof ConfigurableApplicationContext) {
-            return (ConfigurableApplicationContext) beanFactory;
+        if (beanFactory instanceof ConfigurableApplicationContext context) {
+            return context;
         }
         throw new IllegalStateException("The bean factory doesn't instance of ConfigurableApplicationContext.");
     }

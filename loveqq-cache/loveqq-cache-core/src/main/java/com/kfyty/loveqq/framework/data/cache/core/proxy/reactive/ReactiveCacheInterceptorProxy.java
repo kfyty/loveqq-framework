@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.data.cache.core.proxy.reactive;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
@@ -33,14 +34,14 @@ import java.util.function.Function;
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy {
 
-    public ReactiveCacheInterceptorProxy(ReactiveCache cache, CacheKeyFactory cacheKeyFactory, ScheduledExecutorService executorService) {
-        super(cache, cacheKeyFactory, executorService);
+    public ReactiveCacheInterceptorProxy(PropertyContext propertyContext, ReactiveCache cache, CacheKeyFactory cacheKeyFactory, ScheduledExecutorService executorService) {
+        super(propertyContext, cache, cacheKeyFactory, executorService);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "ReactiveStreamsUnusedPublisher"})
     public Object around(String cacheableName,
-                         String cacheClearName,
+                         String cacheCleanName,
                          Cacheable cacheable,
                          CacheClean cacheClean,
                          Lazy<Map<String, Object>> context,
@@ -48,17 +49,17 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
                          ProceedingJoinPoint pjp) throws Throwable {
         final boolean isMono = Mono.class.isAssignableFrom(method.getReturnType());
         if (cacheable == null) {
-            return this.proceed(isMono, cacheableName, cacheClearName, cacheable, cacheClean, context, method, pjp);
+            return this.proceed(isMono, cacheableName, cacheCleanName, cacheable, cacheClean, context, method, pjp);
         }
         if (isMono) {
             return this.getReactiveCache()
                     .getAsync(cacheableName)
-                    .switchIfEmpty(Mono.defer(() -> (Mono<?>) this.proceed(true, cacheableName, cacheClearName, cacheable, cacheClean, context, method, pjp)));
+                    .switchIfEmpty(Mono.defer(() -> (Mono<?>) this.proceed(true, cacheableName, cacheCleanName, cacheable, cacheClean, context, method, pjp)));
         }
         return this.getReactiveCache()
                 .getAsync(cacheableName)
                 .flatMapMany(e -> Flux.fromIterable((Iterable<?>) e))
-                .switchIfEmpty(Flux.defer(() -> this.proceed(false, cacheableName, cacheClearName, cacheable, cacheClean, context, method, pjp)));
+                .switchIfEmpty(Flux.defer(() -> this.proceed(false, cacheableName, cacheCleanName, cacheable, cacheClean, context, method, pjp)));
     }
 
     /**
@@ -67,18 +68,18 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
     @SuppressWarnings("rawtypes")
     protected Publisher proceed(final boolean isMono,
                                 String cacheableName,
-                                String cacheClearName,
+                                String cacheCleanName,
                                 Cacheable cacheable,
                                 CacheClean cacheClean,
                                 Lazy<Map<String, Object>> context,
                                 Method method,
                                 ProceedingJoinPoint pjp) {
         if (isMono) {
-            return this.preClear(cacheClearName, cacheClean)
+            return this.preClean(cacheCleanName, cacheClean)
                     .then(invokeJoinPoint(pjp))
                     .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp));
         }
-        return this.preClear(cacheClearName, cacheClean)
+        return this.preClean(cacheCleanName, cacheClean)
                 .thenMany(invokeJoinPointFlux(pjp))
                 .collectList()
                 .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp))
@@ -101,8 +102,8 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         }
     }
 
-    protected Mono<Void> preClear(String cacheClearName, CacheClean cacheClean) {
-        if (cacheClean != null && cacheClean.preClear()) {
+    protected Mono<Void> preClean(String cacheClearName, CacheClean cacheClean) {
+        if (cacheClean != null && cacheClean.preClean()) {
             if (cacheClean.delay() <= 0) {
                 return this.getReactiveCache().clearAsync(cacheClearName);
             } else {
@@ -136,7 +137,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
             }
             context.put(OGNL_RETURN_VALUE_KEY, value);
             return this.processCacheable(cacheableName, cacheable, value, method, pjp, context)
-                    .then(this.processCacheClear(cacheClearName, cacheClean, method, pjp, context))
+                    .then(this.processCacheClean(cacheClearName, cacheClean, method, pjp, context))
                     .thenReturn(value);
         }
 
@@ -152,7 +153,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
                     .flatMap(prev -> prev == null || Objects.equals(prev, retValue) ? Mono.empty() : reactiveCache.clearAsync(cacheName));
         }
 
-        protected Mono<Void> processCacheClear(String cacheName, CacheClean cacheClean, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
+        protected Mono<Void> processCacheClean(String cacheName, CacheClean cacheClean, Method method, ProceedingJoinPoint pjp, Map<String, Object> context) {
             if (cacheClean == null) {
                 return Mono.empty();
             }
