@@ -7,6 +7,8 @@ import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -31,13 +33,21 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         try (OutputStream out = container.getResponse().getOutputStream()) {
-            if (returnValue instanceof byte[]) {
-                out.write((byte[]) returnValue);
+            if (returnValue instanceof byte[] bytes) {
+                out.write(bytes);
                 return;
             }
-            if (returnValue instanceof InputStream) {
-                IOUtil.copy((InputStream) returnValue, out);
-                return;
+            if (returnValue instanceof File file) {
+                try (InputStream fis = new FileInputStream(file)) {
+                    IOUtil.copy(fis, out);
+                    return;
+                }
+            }
+            if (returnValue instanceof InputStream stream) {
+                try (InputStream in = stream) {
+                    IOUtil.copy(in, out);
+                    return;
+                }
             }
             throw new UnsupportedOperationException("binary: " + returnValue.getClass());
         }

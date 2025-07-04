@@ -5,10 +5,15 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.filter.reactor.DefaultFilterChain;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
+import com.kfyty.loveqq.framework.web.core.request.support.FileRandomAccessStream;
+import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
 import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerResponse;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor;
@@ -101,7 +106,7 @@ public class ResourcesHandler implements ConnectionObserver {
         String contentType = URLConnection.getFileNameMap().getContentTypeFor(url.getFile());
         if (contentType != null) {
             if (!contentType.contains("charset")) {
-                contentType += ";charset=utf-8";
+                contentType += "; charset=utf-8";
             }
             response.header(HttpHeaderNames.CONTENT_TYPE, contentType);
         }
@@ -110,8 +115,13 @@ public class ResourcesHandler implements ConnectionObserver {
         ServerRequest serverRequest = new NettyServerRequest(request).init(CommonUtil.EMPTY_INPUT_STREAM, Collections.emptyList());
         ServerResponse serverResponse = new NettyServerResponse(response);
 
+        // 范围请求头预处理
+        RandomAccessStream stream = url.getProtocol().equals("file") ? new FileRandomAccessStream(contentType, PathUtil.getPath(url).toFile()) : new RandomAccessStream.InputStreamRandomAccessAdapter(contentType, IOUtil.newInputStream(url));
+        List<AcceptRange> ranges = AbstractResponseBodyHandlerMethodReturnValueProcessor.prepareRandomAccessStream(serverRequest, serverResponse, stream);
+        serverRequest.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
+
         // 构建发布者
-        ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher(IOUtil.newInputStream(url));
+        ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher(serverRequest, serverResponse, stream);
 
         // 订阅处理请求
         new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), () -> response.send(publisher))

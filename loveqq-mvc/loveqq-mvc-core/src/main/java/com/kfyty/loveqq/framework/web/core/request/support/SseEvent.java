@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SseEventStream {
+public class SseEvent {
     /**
      * 消息行分隔符
      */
