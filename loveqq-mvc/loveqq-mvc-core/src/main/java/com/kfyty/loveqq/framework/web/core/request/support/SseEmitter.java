@@ -17,7 +17,7 @@ public class SseEmitter extends ResponseBodyEmitter {
      * 默认转换器
      * 可进行设置
      */
-    public static Function<Object, ByteBuf> DEFAULT_CONVERTER = data -> data instanceof SseEventStream ? ((SseEventStream) data).build() : SseEventStream.builder().data(data).build().build();
+    public static Function<Object, ByteBuf> DEFAULT_CONVERTER = data -> data instanceof SseEvent ? ((SseEvent) data).build() : SseEvent.builder().data(data).build().build();
 
     public SseEmitter() {
         super();

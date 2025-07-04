@@ -17,7 +17,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
 
 /**
  * 描述: {@link SseEmitter} 响应支持
- * 该处理器优先级在 {@link SseEventStreamResponseBodyHandlerMethodReturnValueProcessor} 之上
+ * 该处理器优先级在 {@link SseEventResponseBodyHandlerMethodReturnValueProcessor} 之上
  *
  * @author kfyty725
  * @date 2021/6/10 11:29
@@ -25,9 +25,9 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
  */
 @Component
 @Order(HIGHEST_PRECEDENCE >> 1)
-public class SseEmitterResponseBodyHandlerMethodReturnValueProcessor extends SseEventStreamResponseBodyHandlerMethodReturnValueProcessor {
+public class SseEmitterResponseBodyHandlerMethodReturnValueProcessor extends SseEventResponseBodyHandlerMethodReturnValueProcessor {
     @Autowired("defaultScheduledThreadPoolExecutor")
-    private ScheduledExecutorService scheduledExecutorService;
+    protected ScheduledExecutorService scheduledExecutorService;
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {

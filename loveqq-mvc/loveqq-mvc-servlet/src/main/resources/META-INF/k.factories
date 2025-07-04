@@ -6,5 +6,6 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.TextResponseBodyHandlerMethodReturnValueProcessor,\
     com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.JSONResponseBodyHandlerMethodReturnValueProcessor,\
     com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.BinaryResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.RandomAccessStreamResponseBodyHandlerMethodReturnValueProcessor,\
     com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.SessionAttributeMethodArgumentResolver,\
     com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver.StringValueHandlerMethodReturnValueProcessor

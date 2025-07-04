@@ -1,10 +1,14 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.request.resolver;
 
-import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
-import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
+import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
+import com.kfyty.loveqq.framework.web.core.request.support.SseEvent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +23,8 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.List;
 
 import static com.kfyty.loveqq.framework.core.utils.NIOUtil.from;
 
@@ -48,8 +52,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
     default void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         Object processedReturnValue = this.transformReturnValue(returnValue, returnType, container);
         if (processedReturnValue != null) {
-            HttpServerResponse serverResponse = (HttpServerResponse) container.getResponse().getRawResponse();
-            Mono.from(writeReturnValue(processedReturnValue, serverResponse, false)).subscribe();
+            Mono.from(writeReturnValue(processedReturnValue, container.getRequest(), container.getResponse(), false)).subscribe();
             log.warn("reactor return value processor should not invoke this implements: {}", this);
         }
     }
@@ -68,36 +71,38 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
     /**
      * 写出返回值到响应
      *
-     * @param retValue 返回值
-     * @param response 响应
-     * @param isSse    是否是 sse
+     * @param retValue       返回值
+     * @param serverRequest  请求
+     * @param serverResponse 响应
+     * @param isSse          是否是 sse
      * @return 响应值
      */
     @SuppressWarnings("unchecked")
-    static Publisher<Void> writeReturnValue(Object retValue, HttpServerResponse response, boolean isSse) {
+    static Publisher<Void> writeReturnValue(Object retValue, ServerRequest serverRequest, ServerResponse serverResponse, boolean isSse) {
         if (retValue == null) {
             return Mono.empty();
         }
+        HttpServerResponse response = (HttpServerResponse) serverResponse.getRawResponse();
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
         }
         if (retValue instanceof CharSequence str) {
             return response.send(Mono.just(from(str)), e -> isSse);
         }
-        if (retValue instanceof ByteBuf byteBuf) {
-            return response.send(Mono.just(byteBuf), e -> isSse);
-        }
-        if (retValue instanceof SseEventStream sse) {
+        if (retValue instanceof SseEvent sse) {
             return response.send(Mono.just(sse.build()), e -> isSse);
         }
         if (retValue instanceof Publisher<?> publisher) {
             return response.send((Publisher<? extends ByteBuf>) publisher, e -> isSse);
         }
+        if (retValue instanceof RandomAccessStream stream) {
+            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, stream), e -> stream.refresh());
+        }
         if (retValue instanceof byte[] bytes) {
             return response.send(Mono.just(from(bytes)), e -> isSse);
         }
-        if (retValue instanceof InputStream stream) {
-            return response.send(new InputStreamByteBufPublisher(stream), e -> isSse);
+        if (retValue instanceof ByteBuf byteBuf) {
+            return response.send(Mono.just(byteBuf), e -> isSse);
         }
         if (retValue instanceof File file) {
             return response.sendFile(file.toPath());
@@ -105,15 +110,28 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
         if (retValue instanceof Path path) {
             return response.sendFile(path);
         }
-        throw new IllegalArgumentException("The return value must be CharSequence/SseEventStream/byte[]/ByteBuf/InputStream/Path/File");
+        throw new IllegalArgumentException("The return value must be CharSequence/SseEvent/byte[]/ByteBuf/RandomAccessStream/File/Path.");
     }
 
+    /**
+     * 输入流发布者
+     */
     @RequiredArgsConstructor
     class InputStreamByteBufPublisher implements Publisher<ByteBuf> {
         /**
+         * 请求
+         */
+        private final ServerRequest request;
+
+        /**
+         * 响应
+         */
+        private final ServerResponse response;
+
+        /**
          * 输入流
          */
-        private final InputStream stream;
+        private final RandomAccessStream stream;
 
         /**
          * 订阅者
@@ -148,16 +166,27 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
                 this.cancelled = true;
             }
 
+            @SuppressWarnings("unchecked")
             protected void doSend() throws IOException {
-                try (InputStream stream = InputStreamByteBufPublisher.this.stream) {
-                    int n = -1;
-                    byte[] bytes = new byte[Math.max(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE, stream.available())];
-                    while ((n = stream.read(bytes)) != -1) {
-                        if (this.cancelled) {
-                            break;
-                        } else {
-                            s.onNext(Unpooled.wrappedBuffer(bytes, 0, n));
-                        }
+                List<AcceptRange> ranges = (List<AcceptRange>) request.getAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE);
+                try (RandomAccessStream stream = InputStreamByteBufPublisher.this.stream) {
+                    AbstractResponseBodyHandlerMethodReturnValueProcessor.doHandleRandomAccessStreamReturnValue(
+                            stream,
+                            ranges,
+                            (n, bytes) -> {
+                                if (this.cancelled) {
+                                    return false;
+                                } else {
+                                    s.onNext(Unpooled.wrappedBuffer(bytes, 0, n));
+                                    return true;
+                                }
+                            }
+                    );
+                } catch (IOException ex) {
+                    if (this.cancelled) {
+                        // ignore is cancelled
+                    } else {
+                        throw ex;
                     }
                 }
             }

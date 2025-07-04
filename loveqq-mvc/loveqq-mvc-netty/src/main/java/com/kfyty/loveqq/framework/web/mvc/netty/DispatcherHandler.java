@@ -128,8 +128,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter parameter, ServerRequest request, ServerResponse response) {
         try {
             Object processedReturnValue = super.handleReturnValue(retValue, parameter, request, response);
-            HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
-            return writeReturnValue(processedReturnValue, serverResponse, this.shouldFlush(response.getContentType()));
+            return writeReturnValue(processedReturnValue, request, response, this.shouldFlush(response.getContentType()));
         } catch (Exception e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }
