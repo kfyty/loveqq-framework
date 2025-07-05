@@ -71,6 +71,9 @@ public class AcceptRange {
                 result.add(new AcceptRange(Long.parseLong(split[0]), Long.parseLong(split[1])));
             }
         }
+        if (result.size() < 2) {
+            return result;
+        }
         return result.stream().sorted(Comparator.comparing(AcceptRange::getPos)).collect(Collectors.toList());
     }
 }

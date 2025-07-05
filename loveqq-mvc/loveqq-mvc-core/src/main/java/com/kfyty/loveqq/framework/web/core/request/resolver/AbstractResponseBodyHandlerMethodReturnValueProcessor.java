@@ -105,22 +105,22 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         // 开始处理数据
         boolean multipart = ranges.size() > 1;
         for (AcceptRange range : ranges) {
-            // 初始化临时变量
-            int read = 0;
-            long total = 0L;
-            byte[] bytes = new byte[Math.min(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE << 4, (int) range.getLength())];
-
             // 多范围支持
             if (multipart) {
                 String boundary = System.lineSeparator() +
-                        "--" + MULTIPART_BOUNDARY +
-                        "Content-Type: " + stream.contentType() +
-                        "Content-Range: " + String.format("bytes %d-%d/%d", range.getPos(), range.getLast(), stream.length());
+                        "--" + MULTIPART_BOUNDARY + System.lineSeparator() +
+                        "Content-Type: " + stream.contentType() + System.lineSeparator() +
+                        "Content-Range: " + String.format("bytes %d-%d/%d", range.getPos(), range.getLast(), stream.length()) + System.lineSeparator();
                 byte[] boundaryBytes = boundary.getBytes(StandardCharsets.UTF_8);
                 if (!byteConsumer.apply(boundaryBytes.length, boundaryBytes)) {
                     return;
                 }
             }
+
+            // 初始化临时变量
+            int read = 0;
+            long total = 0L;
+            byte[] bytes = new byte[Math.min(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE << 4, (int) range.getLength())];
 
             // 开始从指定位置读取
             stream.seed(range.getPos());
@@ -135,7 +135,7 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         }
 
         if (multipart) {
-            String boundary = System.lineSeparator() + "--" + MULTIPART_BOUNDARY + "--";
+            String boundary = System.lineSeparator() + "--" + MULTIPART_BOUNDARY + "--" + System.lineSeparator();
             byte[] boundaryBytes = boundary.getBytes(StandardCharsets.UTF_8);
             byteConsumer.apply(boundaryBytes.length, boundaryBytes);
         }

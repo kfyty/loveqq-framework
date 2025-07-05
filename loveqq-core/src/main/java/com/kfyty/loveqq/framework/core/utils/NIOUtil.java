@@ -110,8 +110,16 @@ public abstract class NIOUtil {
      * @return 字节缓冲
      */
     public static ByteBuf from(byte[] bytes) {
-        ByteBuf buffer = Unpooled.buffer();
-        buffer.writeBytes(bytes);
-        return buffer;
+        return from(bytes, 0, bytes.length);
+    }
+
+    /**
+     * 字节数组转换为字节缓冲
+     *
+     * @param bytes 字节数组
+     * @return 字节缓冲
+     */
+    public static ByteBuf from(byte[] bytes, int offset, int length) {
+        return Unpooled.wrappedBuffer(bytes, offset, length);
     }
 }
