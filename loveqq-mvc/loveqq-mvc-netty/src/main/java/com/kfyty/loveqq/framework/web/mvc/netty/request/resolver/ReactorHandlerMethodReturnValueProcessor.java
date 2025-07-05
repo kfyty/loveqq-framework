@@ -17,6 +17,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerResponse;
@@ -96,7 +97,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
             return response.send((Publisher<? extends ByteBuf>) publisher, e -> isSse);
         }
         if (retValue instanceof RandomAccessStream stream) {
-            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, stream), e -> stream.refresh());
+            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, stream).onBackpressureBuffer(), e -> stream.refresh());
         }
         if (retValue instanceof byte[] bytes) {
             return response.send(Mono.just(from(bytes)), e -> isSse);
@@ -144,17 +145,46 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
             this.s.onSubscribe(new InputStreamByteBufSubscription());
         }
 
+        /**
+         * 增加背压支持
+         * 最大支持 {@link Integer#MAX_VALUE} 缓冲容量
+         *
+         * @return 背压支持的发布者
+         */
+        public Flux<ByteBuf> onBackpressureBuffer() {
+            return this.onBackpressureBuffer(Integer.MAX_VALUE);
+        }
+
+        /**
+         * 增加背压支持
+         *
+         * @param maxSize 背压最大缓冲容量
+         * @return 背压支持的发布者
+         */
+        public Flux<ByteBuf> onBackpressureBuffer(int maxSize) {
+            return Flux.from(this).onBackpressureBuffer(maxSize);
+        }
+
         protected class InputStreamByteBufSubscription implements Subscription {
+            /**
+             * 是否开始
+             */
+            private volatile boolean started = false;
+
             /**
              * 是否取消
              */
-            private boolean cancelled = false;
+            private volatile boolean cancelled = false;
 
             @Override
             public void request(long n) {
+                if (this.started) {
+                    return;
+                }
                 try {
-                    this.doSend();
-                    InputStreamByteBufPublisher.this.s.onComplete();
+                    if (this.startRead()) {
+                        InputStreamByteBufPublisher.this.s.onComplete();
+                    }
                 } catch (Throwable e) {
                     this.cancel();
                     InputStreamByteBufPublisher.this.s.onError(e);
@@ -166,8 +196,22 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
                 this.cancelled = true;
             }
 
+            protected boolean startRead() throws IOException {
+                if (this.started) {
+                    return false;
+                }
+                synchronized (this) {
+                    if (this.started) {
+                        return false;
+                    }
+                    this.started = true;
+                }
+                this.doStartRead();
+                return true;
+            }
+
             @SuppressWarnings("unchecked")
-            protected void doSend() throws IOException {
+            protected void doStartRead() throws IOException {
                 List<AcceptRange> ranges = (List<AcceptRange>) request.getAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE);
                 try (RandomAccessStream stream = InputStreamByteBufPublisher.this.stream) {
                     AbstractResponseBodyHandlerMethodReturnValueProcessor.doHandleRandomAccessStreamReturnValue(
