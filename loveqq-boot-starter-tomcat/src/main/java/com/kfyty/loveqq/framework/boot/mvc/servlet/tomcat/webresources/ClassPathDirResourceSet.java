@@ -20,6 +20,7 @@ import java.util.Objects;
 public class ClassPathDirResourceSet extends DirResourceSet {
 
     public ClassPathDirResourceSet() {
+        super();
     }
 
     public ClassPathDirResourceSet(WebResourceRoot root, String webAppMount, String base, String internalPath) {

@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
 
@@ -50,6 +51,19 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
     protected abstract boolean supportsContentType(String contentType);
 
     /**
+     * 设置 content-length
+     *
+     * @param request  请求
+     * @param response 响应
+     * @param length   长度
+     * @return true if not head method and can write response
+     */
+    public static boolean setContentLength(ServerRequest request, ServerResponse response, long length) {
+        response.setHeader("Content-Length", String.valueOf(length));
+        return RequestMethod.matchRequestMethod(request.getMethod()) != RequestMethod.HEAD;
+    }
+
+    /**
      * 准备写出随机读写流
      *
      * @param request  请求
@@ -83,7 +97,18 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         }
         // 需要设置新的 content-type
         else {
+            // 计算 content-length
+            long length = 0L;
+            for (AcceptRange range : ranges) {
+                length += buildMultipartBoundary(stream, range, false).length;
+                length += range.getLength();
+            }
+            length += buildMultipartBoundary(stream, null, true).length;
+
+            // 写入响应头
             response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
+            response.setHeader("Content-Length", String.valueOf(length));
+
             // 写数据在后续逻辑完成
         }
         return ranges;
@@ -107,11 +132,7 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         for (AcceptRange range : ranges) {
             // 多范围支持
             if (multipart) {
-                String boundary = System.lineSeparator() +
-                        "--" + MULTIPART_BOUNDARY + System.lineSeparator() +
-                        "Content-Type: " + stream.contentType() + System.lineSeparator() +
-                        "Content-Range: " + String.format("bytes %d-%d/%d", range.getPos(), range.getLast(), stream.length()) + System.lineSeparator();
-                byte[] boundaryBytes = boundary.getBytes(StandardCharsets.UTF_8);
+                byte[] boundaryBytes = buildMultipartBoundary(stream, range, false);
                 if (!byteConsumer.apply(boundaryBytes.length, boundaryBytes)) {
                     return;
                 }
@@ -135,9 +156,21 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         }
 
         if (multipart) {
-            String boundary = System.lineSeparator() + "--" + MULTIPART_BOUNDARY + "--" + System.lineSeparator();
-            byte[] boundaryBytes = boundary.getBytes(StandardCharsets.UTF_8);
+            byte[] boundaryBytes = buildMultipartBoundary(stream, null, true);
             byteConsumer.apply(boundaryBytes.length, boundaryBytes);
         }
+    }
+
+    public static byte[] buildMultipartBoundary(RandomAccessStream stream, AcceptRange range, boolean finish) {
+        if (finish) {
+            String boundary = System.lineSeparator() + "--" + MULTIPART_BOUNDARY + "--" + System.lineSeparator();
+            return boundary.getBytes(StandardCharsets.UTF_8);
+        }
+        String boundary = System.lineSeparator() +
+                "--" + MULTIPART_BOUNDARY + System.lineSeparator() +
+                "Content-Type: " + stream.contentType() + System.lineSeparator() +
+                "Content-Range: " + String.format("bytes %d-%d/%d", range.getPos(), range.getLast(), stream.length()) + System.lineSeparator() +
+                System.lineSeparator();
+        return boundary.getBytes(StandardCharsets.UTF_8);
     }
 }

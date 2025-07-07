@@ -140,12 +140,14 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * 关闭所有开启的 jar file，并不再使用缓存
      */
     public void closeJarFileCache() {
-        synchronized (this) {
-            for (JarFile value : this.jarFileCache.values()) {
-                IOUtil.close(value);
+        if (this.jarFileCache != null) {
+            synchronized (this) {
+                for (JarFile value : this.jarFileCache.values()) {
+                    IOUtil.close(value);
+                }
+                this.jarFileCache.clear();
+                this.jarFileCache = null;
             }
-            this.jarFileCache.clear();
-            this.jarFileCache = null;
         }
     }
 

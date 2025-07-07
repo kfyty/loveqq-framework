@@ -75,7 +75,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
         super.init(config);
         Mapping.from(config.getInitParameter(PREFIX_PARAM_NAME)).whenNotNull(this::setPrefix);
         Mapping.from(config.getInitParameter(SUFFIX_PARAM_NAME)).whenNotNull(this::setSuffix);
-        log.info("Initialize loveqq DispatcherServlet succeed.");
+        log.info("Initialize loveqq-framework DispatcherServlet succeed.");
     }
 
     @Override
@@ -99,7 +99,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
         MethodParameter parameter = null;
         ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
         ServletServerResponse serverResponse = new ServletServerResponse(response);
-        MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
+        MethodMapping methodMapping = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
             // 初始化请求
             serverRequest.init();
@@ -110,6 +110,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
                 return;
             }
 
+            // 预处理
             this.preparedRequestResponse(methodMapping, request, response);
             LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched URI mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
 

@@ -10,6 +10,7 @@ import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.filter.reactor.DefaultFilterChain;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.FileRandomAccessStream;
@@ -118,9 +119,15 @@ public class ResourcesHandler implements ConnectionObserver {
         // 范围请求头预处理
         RandomAccessStream stream = url.getProtocol().equals("file") ? new FileRandomAccessStream(contentType, PathUtil.getPath(url).toFile()) : new RandomAccessStream.InputStreamRandomAccessAdapter(contentType, IOUtil.newInputStream(url));
         List<AcceptRange> ranges = AbstractResponseBodyHandlerMethodReturnValueProcessor.prepareRandomAccessStream(serverRequest, serverResponse, stream);
-        serverRequest.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
+
+        // 预检请求不发送实际数据
+        if (RequestMethod.matchRequestMethod(serverRequest.getMethod()) == RequestMethod.HEAD) {
+            new DefaultFilterChain(this.patternMatcher, unmodifiableList(this.filters), response::send).doFilter(serverRequest, serverResponse).subscribe(operations.disposeSubscriber());
+            return;
+        }
 
         // 构建发布者
+        serverRequest.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
         ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher(serverRequest, serverResponse, stream);
 
         // 订阅处理请求

@@ -26,7 +26,20 @@ public abstract class AbstractServletDispatcher<T extends AbstractServletDispatc
     private static final String LSTRING_FILE = "jakarta.servlet.LocalStrings";
     private static final ResourceBundle lStrings = ResourceBundle.getBundle(LSTRING_FILE);
 
+    /**
+     * config
+     */
     private transient ServletConfig config;
+
+    @Override
+    public ServletConfig getServletConfig() {
+        return this.config;
+    }
+
+    @Override
+    public String getServletInfo() {
+        return CommonUtil.EMPTY_STRING;
+    }
 
     @Override
     public String getServletName() {
@@ -72,16 +85,6 @@ public abstract class AbstractServletDispatcher<T extends AbstractServletDispatc
 
     public void init() throws ServletException {
 
-    }
-
-    @Override
-    public ServletConfig getServletConfig() {
-        return this.config;
-    }
-
-    @Override
-    public String getServletInfo() {
-        return CommonUtil.EMPTY_STRING;
     }
 
     @Override

@@ -10,7 +10,8 @@ import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
 
 /**
- * 描述:
+ * 描述: json 输出处理
+ * 该处理器的顺序应该比 {@link ResponseBodyEmitterHandlerMethodReturnValueProcessor} 低
  *
  * @author kfyty725
  * @date 2021/6/10 11:29
