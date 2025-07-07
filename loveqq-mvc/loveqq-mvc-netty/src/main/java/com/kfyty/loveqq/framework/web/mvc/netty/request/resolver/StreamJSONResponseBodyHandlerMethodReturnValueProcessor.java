@@ -28,6 +28,6 @@ public class StreamJSONResponseBodyHandlerMethodReturnValueProcessor extends Abs
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         String transform = returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJSONString(returnValue);
-        return transform + '\n';
+        return transform + System.lineSeparator();
     }
 }

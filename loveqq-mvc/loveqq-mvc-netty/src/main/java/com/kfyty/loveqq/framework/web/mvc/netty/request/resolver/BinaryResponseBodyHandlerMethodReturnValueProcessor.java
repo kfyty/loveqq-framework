@@ -5,10 +5,12 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
+import io.netty.buffer.ByteBuf;
 
 import java.io.File;
 import java.io.InputStream;
@@ -39,16 +41,34 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
 
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        if (returnValue instanceof byte[] || returnValue instanceof File) {
-            return returnValue;
+        ServerRequest request = container.getRequest();
+        ServerResponse response = container.getResponse();
+        if (returnValue instanceof byte[] bytes) {
+            if (setContentLength(request, response, bytes.length)) {
+                return returnValue;
+            }
+            return null;
+        }
+        if (returnValue instanceof ByteBuf byteBuf) {
+            if (setContentLength(request, response, byteBuf.readableBytes())) {
+                return returnValue;
+            }
+            return null;
+        }
+        if (returnValue instanceof File file) {
+            if (setContentLength(request, response, file.length())) {
+                return returnValue;
+            }
+            return null;
         }
         if (returnValue instanceof InputStream stream) {
             returnValue = new RandomAccessStream.InputStreamRandomAccessAdapter(stream);
         }
         if (returnValue instanceof RandomAccessStream stream) {
-            ServerRequest request = container.getRequest();
-            ServerResponse response = container.getResponse();
             List<AcceptRange> ranges = prepareRandomAccessStream(request, response, stream);
+            if (RequestMethod.matchRequestMethod(request.getMethod()) == RequestMethod.HEAD) {
+                return null;
+            }
             request.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
             return returnValue;
         }

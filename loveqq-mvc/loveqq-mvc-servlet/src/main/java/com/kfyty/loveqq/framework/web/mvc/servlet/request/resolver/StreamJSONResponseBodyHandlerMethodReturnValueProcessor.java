@@ -69,7 +69,7 @@ public class StreamJSONResponseBodyHandlerMethodReturnValueProcessor extends Abs
         public void onNext(Object instance) {
             try {
                 String transform = instance instanceof CharSequence ? instance.toString() : JsonUtil.toJSONString(instance);
-                out.write((transform + '\n').getBytes(StandardCharsets.UTF_8));
+                out.write((transform + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
                 out.flush();
             } catch (IOException e) {
                 throw new ResolvableException(e);

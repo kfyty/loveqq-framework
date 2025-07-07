@@ -6,6 +6,7 @@ import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.webresources.JarResource;
 import org.apache.catalina.webresources.JarResourceSet;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
@@ -23,9 +24,13 @@ import java.util.jar.Manifest;
  * @email kfyty725@hotmail.com
  */
 public class ClassPathJarResourceSet extends JarResourceSet {
+    /**
+     * jar file 线程缓存
+     */
     private static final ThreadLocal<JarFile> JAR_FILE = new ThreadLocal<>();
 
     public ClassPathJarResourceSet() {
+        super();
     }
 
     public ClassPathJarResourceSet(WebResourceRoot root, String webAppMount, String base, String internalPath) throws IllegalArgumentException {
@@ -42,8 +47,7 @@ public class ClassPathJarResourceSet extends JarResourceSet {
             URL url = this.getClass().getClassLoader().getResource(pathInArchive);
             if (url != null) {
                 URLConnection urlConnection = url.openConnection();
-                if (urlConnection instanceof JarURLConnection) {
-                    JarURLConnection connection = (JarURLConnection) urlConnection;
+                if (urlConnection instanceof JarURLConnection connection) {
                     archiveEntry = connection.getJarEntry();
                     JAR_FILE.set(connection.getJarFile());
                 }
@@ -59,19 +63,28 @@ public class ClassPathJarResourceSet extends JarResourceSet {
             if (jarEntry == null || jarFile == null) {
                 return super.createArchiveResource(jarEntry, webAppPath, manifest);
             }
-            String baseUrl = "file:" + (jarFile.getName().charAt(0) == '/' ? jarFile.getName() : '/' + jarFile.getName());
+            final String jarFileName = jarFile.getName().replace(File.separatorChar, '/');
+            final String baseUrl = "file:" + (jarFileName.charAt(0) == '/' ? jarFileName : '/' + jarFileName);
             return new JarResource(this, webAppPath, baseUrl, jarEntry) {
 
                 @Override
                 protected JarInputStreamWrapper getJarInputStreamWrapper() {
                     try {
                         InputStream is = jarFile.getInputStream(jarEntry);
-                        return new JarInputStreamWrapper(jarEntry, is);
+                        return new JarInputStreamWrapper(jarEntry, is) {
+
+                            @Override
+                            public void close() throws IOException {
+                                is.close();
+                                jarFile.close();
+                            }
+                        };
                     } catch (IOException e) {
                         if (this.getLog().isDebugEnabled()) {
                             this.getLog().debug(sm.getString("jarResource.getInputStreamFail", getResource().getName(), getBaseUrl()), e);
                         }
-                        closeJarFile();
+                        // 这里不调用 closeJarFile()，而是直接关闭
+                        // 因为这里的 JarFile 不是通过 openJarFile() 得到的
                         return null;
                     }
                 }

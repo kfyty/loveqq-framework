@@ -16,6 +16,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.Model;
@@ -104,6 +105,28 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return contentType.contains("text/event-stream") ||
                 contentType.contains("application/stream+json") ||
                 contentType.contains("application/x-ndjson");
+    }
+
+    /**
+     * 匹配请求路由
+     *
+     * @param method     请求方法
+     * @param requestURI 请求 uri
+     * @return 路由
+     */
+    public MethodMapping matchRoute(RequestMethod method, String requestURI) {
+        // 精确匹配
+        MethodMapping matched = this.requestMappingMatcher.matchRoute(method, requestURI);
+
+        // HEAD 方法，可能是检测，再匹配一下 GET/POST
+        if (matched == null && method == RequestMethod.HEAD) {
+            matched = this.requestMappingMatcher.matchRoute(RequestMethod.GET, requestURI);
+            if (matched == null) {
+                matched = this.requestMappingMatcher.matchRoute(RequestMethod.POST, requestURI);
+            }
+        }
+
+        return matched;
     }
 
     @SuppressWarnings("unchecked")

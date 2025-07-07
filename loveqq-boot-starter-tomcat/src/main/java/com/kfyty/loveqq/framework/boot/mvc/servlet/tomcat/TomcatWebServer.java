@@ -31,6 +31,7 @@ import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
@@ -188,6 +189,7 @@ public class TomcatWebServer implements ServletWebServer {
 
     private void prepareContext() throws Exception {
         StandardContext context = new StandardContext();
+        context.setName("DispatcherContext");
         context.setPath(this.config.getContextPath());
         context.setDocBase(this.createTempDir("tomcat-docbase").getAbsolutePath());
         context.setCreateUploadTargets(true);
@@ -199,7 +201,7 @@ public class TomcatWebServer implements ServletWebServer {
         this.prepareContainerListener(context);
         this.skipTldScanning(context);
         this.prepareResources(context);
-        this.prepareDefaultServlet(context, this.config.getStaticPattern());
+        this.prepareDefaultServlet(context, DefaultStaticServlet.class, this.config.getStaticPattern());
         this.prepareJspServlet(context);
         this.prepareWebFilter(context);
         this.prepareWebListener(context);
@@ -231,14 +233,17 @@ public class TomcatWebServer implements ServletWebServer {
     }
 
     private void prepareResourceContext() {
+        int index = 0;
         for (Pair<String, String> resource : this.config.getResources()) {
             StandardContext context = new StandardContext();
+            context.setName("ResourceContext" + index++);
             context.setPath(resource.getKey());
             context.setDocBase(resource.getValue());
             context.setReloadable(true);
             context.setFailCtxIfServletStartFails(true);
             context.addLifecycleListener(new Tomcat.FixContextListener());
-            this.prepareDefaultServlet(context, Collections.singletonList("/*"));
+            this.bindContextClassLoader(context);
+            this.prepareDefaultServlet(context, DefaultServlet.class, Collections.singletonList("/*"));
             this.host.addChild(context);
         }
     }
@@ -284,10 +289,10 @@ public class TomcatWebServer implements ServletWebServer {
         context.setResources(resources);
     }
 
-    private void prepareDefaultServlet(Context context, List<String> patterns) {
+    private void prepareDefaultServlet(Context context, Class<? extends DefaultServlet> servletClass, List<String> patterns) {
         Wrapper defaultServlet = context.createWrapper();
         defaultServlet.setName("default");
-        defaultServlet.setServletClass(DefaultStaticServlet.class.getName());
+        defaultServlet.setServletClass(servletClass.getName());
         defaultServlet.addInitParameter("debug", "0");
         defaultServlet.addInitParameter("listings", "false");
         defaultServlet.setLoadOnStartup(1);
@@ -315,9 +320,9 @@ public class TomcatWebServer implements ServletWebServer {
             FilterDef filterDef = new FilterDef();
             filterDef.setFilter(registrationBean.getFilter());
             filterDef.setFilterClass(registrationBean.getFilter().getClass().getName());
-            filterDef.setFilterName(CommonUtil.notEmpty(registrationBean.getFilterName()) ? registrationBean.getFilterName() : registrationBean.getFilter().getClass().getSimpleName());
+            filterDef.setFilterName(CommonUtil.notEmpty(registrationBean.getFilterName()) ? registrationBean.getFilterName() : registrationBean.getFilter().getClass().getName());
+            filterDef.setDisplayName(CommonUtil.notEmpty(registrationBean.getDisplayName()) ? registrationBean.getDisplayName() : registrationBean.getFilter().getClass().getSimpleName());
             filterDef.setAsyncSupported(Boolean.toString(registrationBean.isAsyncSupported()));
-            filterDef.setDisplayName(registrationBean.getDisplayName());
             filterDef.setDescription(registrationBean.getDescription());
             filterDef.setSmallIcon(registrationBean.getSmallIcon());
             filterDef.setLargeIcon(registrationBean.getLargeIcon());
@@ -356,8 +361,9 @@ public class TomcatWebServer implements ServletWebServer {
 
     private File createTempDir(String prefix) throws IOException {
         File tempDir = File.createTempFile(prefix + ".", "." + getPort());
-        tempDir.delete();
-        tempDir.mkdir();
+        if (!tempDir.delete() || !tempDir.mkdir()) {
+            throw new IOException("create temp dir failed: " + tempDir.getAbsolutePath());
+        }
         tempDir.deleteOnExit();
         return tempDir;
     }
@@ -390,7 +396,7 @@ public class TomcatWebServer implements ServletWebServer {
 
         private void prepareWebServlet(ServletContext context) {
             for (ServletRegistrationBean webServlet : this.tomcatConfig.getWebServlets()) {
-                String name = webServlet.getName() != null ? webServlet.getName() : webServlet.getServlet().getClass().getName();
+                String name = CommonUtil.notEmpty(webServlet.getName()) ? webServlet.getName() : webServlet.getServlet().getClass().getName();
                 ServletRegistration.Dynamic dynamic = context.addServlet(name, webServlet.getServlet());
                 dynamic.addMapping(webServlet.getUrlPatterns().toArray(String[]::new));
                 dynamic.setLoadOnStartup(webServlet.getLoadOnStartup());

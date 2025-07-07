@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
@@ -47,10 +48,10 @@ public class RandomAccessStreamResponseBodyHandlerMethodReturnValueProcessor ext
         try (OutputStream out = response.getOutputStream();
              RandomAccessStream stream = (RandomAccessStream) returnValue) {
             List<AcceptRange> ranges = prepareRandomAccessStream(request, response, stream);
-            doHandleRandomAccessStreamReturnValue(stream, ranges, (n, bytes) -> {
-                IOUtil.write(out, bytes, 0, n);
-                return true;
-            });
+            if (RequestMethod.matchRequestMethod(request.getMethod()) != RequestMethod.HEAD) {
+                // noinspection ConstantValue
+                doHandleRandomAccessStreamReturnValue(stream, ranges, (n, bytes) -> IOUtil.write(out, bytes, 0, n) != null);
+            }
         } catch (Throwable e) {
             Throwable ex = ExceptionUtil.unwrap(e);
             if (ex.getClass().getSimpleName().equals("ClientAbortException")) {
