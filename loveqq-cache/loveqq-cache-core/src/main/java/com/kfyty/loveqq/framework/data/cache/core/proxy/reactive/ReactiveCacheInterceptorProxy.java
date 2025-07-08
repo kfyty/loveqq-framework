@@ -77,12 +77,12 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         if (isMono) {
             return this.preClean(cacheCleanName, cacheClean)
                     .then(invokeJoinPoint(pjp))
-                    .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp));
+                    .flatMap(new CacheProcessor<>(cacheableName, cacheCleanName, cacheable, cacheClean, context.get(), method, pjp));
         }
         return this.preClean(cacheCleanName, cacheClean)
                 .thenMany(invokeJoinPointFlux(pjp))
                 .collectList()
-                .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp))
+                .flatMap(new CacheProcessor<>(cacheableName, cacheCleanName, cacheable, cacheClean, context.get(), method, pjp))
                 .flatMapIterable(e -> (Iterable<?>) e);
     }
 
@@ -118,7 +118,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
     protected class CacheProcessor<T> implements Function<T, Mono<T>> {
         protected final String cacheableName;
 
-        protected final String cacheClearName;
+        protected final String cacheCleanName;
 
         protected final Cacheable cacheable;
 
@@ -137,7 +137,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
             }
             context.put(OGNL_RETURN_VALUE_KEY, value);
             return this.processCacheable(cacheableName, cacheable, value, method, pjp, context)
-                    .then(this.processCacheClean(cacheClearName, cacheClean, method, pjp, context))
+                    .then(this.processCacheClean(cacheCleanName, cacheClean, method, pjp, context))
                     .thenReturn(value);
         }
 
