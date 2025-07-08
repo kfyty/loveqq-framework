@@ -47,6 +47,12 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
                          Lazy<Map<String, Object>> context,
                          Method method,
                          ProceedingJoinPoint pjp) throws Throwable {
+        // 非发布者，直接返回，可能出现在支持代理自调用的场景中
+        if (!Publisher.class.isAssignableFrom(method.getReturnType())) {
+            return pjp.proceed();
+        }
+
+        // 下面说明是 Mono/Flux
         final boolean isMono = Mono.class.isAssignableFrom(method.getReturnType());
         if (cacheable == null) {
             return this.proceed(isMono, cacheableName, cacheCleanName, cacheable, cacheClean, context, method, pjp);
@@ -77,12 +83,12 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
         if (isMono) {
             return this.preClean(cacheCleanName, cacheClean)
                     .then(invokeJoinPoint(pjp))
-                    .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp));
+                    .flatMap(new CacheProcessor<>(cacheableName, cacheCleanName, cacheable, cacheClean, context.get(), method, pjp));
         }
         return this.preClean(cacheCleanName, cacheClean)
                 .thenMany(invokeJoinPointFlux(pjp))
                 .collectList()
-                .flatMap(new CacheProcessor<>(cacheableName, cacheableName, cacheable, cacheClean, context.get(), method, pjp))
+                .flatMap(new CacheProcessor<>(cacheableName, cacheCleanName, cacheable, cacheClean, context.get(), method, pjp))
                 .flatMapIterable(e -> (Iterable<?>) e);
     }
 
@@ -118,7 +124,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
     protected class CacheProcessor<T> implements Function<T, Mono<T>> {
         protected final String cacheableName;
 
-        protected final String cacheClearName;
+        protected final String cacheCleanName;
 
         protected final Cacheable cacheable;
 
@@ -137,7 +143,7 @@ public class ReactiveCacheInterceptorProxy extends AbstractCacheInterceptorProxy
             }
             context.put(OGNL_RETURN_VALUE_KEY, value);
             return this.processCacheable(cacheableName, cacheable, value, method, pjp, context)
-                    .then(this.processCacheClean(cacheClearName, cacheClean, method, pjp, context))
+                    .then(this.processCacheClean(cacheCleanName, cacheClean, method, pjp, context))
                     .thenReturn(value);
         }
 

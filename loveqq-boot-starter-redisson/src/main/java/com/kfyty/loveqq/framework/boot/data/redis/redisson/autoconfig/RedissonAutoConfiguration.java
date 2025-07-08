@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
@@ -32,6 +33,9 @@ import java.util.concurrent.ExecutorService;
 @Import(config = RedissonProperties.class)
 @ConditionalOnBean(RedissonProperties.class)
 public class RedissonAutoConfiguration {
+    @Value("${k.server.virtualThread:true}")
+    private boolean isVirtual;
+
     @Autowired("defaultThreadPoolExecutor")
     private ExecutorService defaultThreadPoolExecutor;
 
@@ -53,7 +57,7 @@ public class RedissonAutoConfiguration {
         if (redissonProperties.getCodec() == null) {
             redissonProperties.setCodec(codec);
         }
-        return Redisson.create(redissonProperties.buildConfig());
+        return Redisson.create(redissonProperties.buildConfig(this.isVirtual));
     }
 
     @ConditionalOnMissingBean

@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +136,7 @@ public class NacosDiscoveryProperties implements InitializingBean {
     /**
      * 多个服务发现注册
      */
+    @ToString.Exclude
     private Map<String, NacosDiscoveryProperties> discoveries;
 
     @Override
