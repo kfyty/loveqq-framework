@@ -49,6 +49,7 @@ public class ReactiveRedisCache extends AbstractReactiveCache {
     @Override
     @SuppressWarnings("unchecked")
     protected <T> Mono<T> getInternalAsync(String name) {
-        return this.redisCache.get(name).map(e -> (T) e);
+        Mono<T> cache = (Mono<T>) this.redisCache.get(name);
+        return cache == null ? Mono.empty() : cache;
     }
 }

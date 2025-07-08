@@ -1,12 +1,16 @@
 package com.kfyty.loveqq.framework.web.core.request.support;
 
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.InputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -80,9 +84,12 @@ public class SseEvent {
         if (this.data instanceof Number || this.data instanceof Boolean || this.data instanceof CharSequence) {
             return buffer.writeBytes(DATA_BYTES).writeBytes(this.data.toString().getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
         }
-        if (this.data instanceof byte[]) {
-            return buffer.writeBytes(DATA_BYTES).writeBytes((byte[]) this.data).writeBytes(MESSAGE_SEPARATOR);
+        if (this.data instanceof byte[] bytes) {
+            return buffer.writeBytes(DATA_BYTES).writeBytes(bytes).writeBytes(MESSAGE_SEPARATOR);
         }
-        throw new IllegalArgumentException("The sse data must be Number/String/byte[]");
+        if (this.data instanceof InputStream stream) {
+            return buffer.writeBytes(DATA_BYTES).writeBytes(IOUtil.read(stream)).writeBytes(MESSAGE_SEPARATOR);
+        }
+        return buffer.writeBytes(DATA_BYTES).writeBytes(JsonUtil.toJSONString(this.data).getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
     }
 }
