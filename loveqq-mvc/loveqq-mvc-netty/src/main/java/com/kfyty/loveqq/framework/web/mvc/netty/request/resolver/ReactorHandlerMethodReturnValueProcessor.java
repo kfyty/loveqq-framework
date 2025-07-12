@@ -228,7 +228,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
                     );
                 } catch (IOException ex) {
                     if (this.cancelled) {
-                        // ignore is cancelled
+                        log.warn("InputStreamByteBufPublisher operate canceled, caused by: {}", ex.getMessage());
                     } else {
                         throw ex;
                     }

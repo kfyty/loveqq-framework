@@ -32,7 +32,7 @@ public class ScopeProxyInterceptorProxy implements MethodInterceptorChainPoint, 
             return chain.proceed(methodProxy);
         } finally {
             if (bean != null) {
-                this.scopeProxyFactory.onInvoked(this.beanDefinition, this.beanFactory, bean);
+                this.scopeProxyFactory.onInvoked(this.beanDefinition, this.beanFactory, bean, methodProxy);
             }
         }
     }
