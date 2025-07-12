@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2022/10/22 10:19
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public class SingletonScopeProxyFactory implements ScopeProxyFactory {
 
     @Override

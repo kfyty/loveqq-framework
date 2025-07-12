@@ -145,6 +145,10 @@ public abstract class AnnotationUtil {
         return Arrays.stream(findAnnotations(annotatedElement)).filter(annotationTest).toArray(Annotation[]::new);
     }
 
+    public static <T extends Annotation> T[] findAnnotations(AnnotatedElement annotatedElement, Predicate<Annotation> annotationTest, IntFunction<T[]> generator) {
+        return Arrays.stream(findAnnotations(annotatedElement)).filter(annotationTest).toArray(generator);
+    }
+
     @SuppressWarnings("unchecked")
     public static <T extends Annotation> T findAnnotation(AnnotatedElement element, Class<T> annotationClass) {
         if (element == null) {

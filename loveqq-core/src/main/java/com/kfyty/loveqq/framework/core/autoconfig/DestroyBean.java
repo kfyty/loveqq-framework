@@ -8,5 +8,10 @@ package com.kfyty.loveqq.framework.core.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface DestroyBean {
+    /**
+     * 销毁 bean
+     * <p>
+     * 在 {@link BeanPostProcessor#postProcessBeforeInitialization} 后执行
+     */
     void destroy();
 }

@@ -2,8 +2,9 @@ package com.kfyty.loveqq.framework.boot.autoconfig;
 
 import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
+import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.lang.VirtualThreadCallableDecorator;
 import com.kfyty.loveqq.framework.core.lang.VirtualThreadRunnableDecorator;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.DecorateScheduledExecutorService;
@@ -29,8 +30,8 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.CPU_CORE;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@Component
-public class ThreadPoolExecutorAutoConfig implements DestroyBean {
+@Configuration
+public class ThreadPoolExecutorAutoConfig implements InitializingBean, DestroyBean {
     /**
      * 默认线程池名称
      */
@@ -96,6 +97,14 @@ public class ThreadPoolExecutorAutoConfig implements DestroyBean {
                 bean.setThreadFactory(new NamedThreadFactory(name));
             }
         };
+    }
+
+    @Override
+    @SuppressWarnings({"resource", "ExpressionComparedToItself"})
+    public void afterPropertiesSet() {
+        if (this.defaultScheduledThreadPoolExecutor() != this.defaultScheduledThreadPoolExecutor()) {
+            throw new IllegalStateException("@Configuration configure error, please check your configuration.");
+        }
     }
 
     @Override
