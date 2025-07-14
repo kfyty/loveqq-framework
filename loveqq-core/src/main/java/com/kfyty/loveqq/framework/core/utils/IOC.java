@@ -98,8 +98,8 @@ public abstract class IOC {
      * @return 应用上下文
      */
     public static ApplicationContext getApplicationContext() {
-        if (beanFactory instanceof ApplicationContext context) {
-            return context;
+        if (beanFactory instanceof ApplicationContext) {
+            return (ApplicationContext) beanFactory;
         }
         throw new IllegalStateException("The bean factory doesn't instance of ApplicationContext.");
     }
@@ -110,8 +110,8 @@ public abstract class IOC {
      * @return 可配置的应用上下文
      */
     public static ConfigurableApplicationContext getConfigurableApplicationContext() {
-        if (beanFactory instanceof ConfigurableApplicationContext context) {
-            return context;
+        if (beanFactory instanceof ConfigurableApplicationContext) {
+            return (ConfigurableApplicationContext) beanFactory;
         }
         throw new IllegalStateException("The bean factory doesn't instance of ConfigurableApplicationContext.");
     }

@@ -175,8 +175,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         // 关闭 jar file
         if (!this.isBootstrap()) {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            if (classLoader instanceof JarIndexClassLoader cl) {
-                cl.closeJarFileCache();
+            if (classLoader instanceof JarIndexClassLoader) {
+                ((JarIndexClassLoader) classLoader).closeJarFileCache();
             }
         }
 

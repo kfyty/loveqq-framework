@@ -39,11 +39,7 @@ public class JarFile extends java.util.jar.JarFile {
     }
 
     public JarFile(File file, boolean verify, int mode) throws IOException {
-        this(file, verify, mode, java.util.jar.JarFile.baseVersion());
-    }
-
-    public JarFile(File file, boolean verify, int mode, Runtime.Version version) throws IOException {
-        super(file, verify, mode, version);
+        super(file, verify, mode);
         this.url = JarIndex.getJarURL(this);
     }
 }

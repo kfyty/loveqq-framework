@@ -84,11 +84,11 @@ public class SseEvent {
         if (this.data instanceof Number || this.data instanceof Boolean || this.data instanceof CharSequence) {
             return buffer.writeBytes(DATA_BYTES).writeBytes(this.data.toString().getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
         }
-        if (this.data instanceof byte[] bytes) {
-            return buffer.writeBytes(DATA_BYTES).writeBytes(bytes).writeBytes(MESSAGE_SEPARATOR);
+        if (this.data instanceof byte[]) {
+            return buffer.writeBytes(DATA_BYTES).writeBytes((byte[]) this.data).writeBytes(MESSAGE_SEPARATOR);
         }
-        if (this.data instanceof InputStream stream) {
-            return buffer.writeBytes(DATA_BYTES).writeBytes(IOUtil.read(stream)).writeBytes(MESSAGE_SEPARATOR);
+        if (this.data instanceof InputStream) {
+            return buffer.writeBytes(DATA_BYTES).writeBytes(IOUtil.read((InputStream) this.data)).writeBytes(MESSAGE_SEPARATOR);
         }
         return buffer.writeBytes(DATA_BYTES).writeBytes(JsonUtil.toJSONString(this.data).getBytes(UTF_8)).writeBytes(MESSAGE_SEPARATOR);
     }

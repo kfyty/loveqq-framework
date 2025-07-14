@@ -37,23 +37,23 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
         ServerRequest request = container.getRequest();
         ServerResponse response = container.getResponse();
         try (OutputStream out = response.getOutputStream()) {
-            if (returnValue instanceof byte[] bytes) {
-                if (setContentLength(request, response, bytes.length)) {
-                    out.write(bytes);
+            if (returnValue instanceof byte[]) {
+                if (setContentLength(request, response, ((byte[]) returnValue).length)) {
+                    out.write((byte[]) returnValue);
                 }
                 return;
             }
-            if (returnValue instanceof File file) {
-                if (setContentLength(request, response, file.length())) {
-                    try (InputStream fis = new FileInputStream(file)) {
+            if (returnValue instanceof File) {
+                if (setContentLength(request, response, ((File) returnValue).length())) {
+                    try (InputStream fis = new FileInputStream((File) returnValue)) {
                         IOUtil.copy(fis, out);
                     }
                 }
                 return;
             }
-            if (returnValue instanceof InputStream stream) {
-                if (setContentLength(request, response, stream.available())) {
-                    try (InputStream in = stream) {
+            if (returnValue instanceof InputStream) {
+                if (setContentLength(request, response, ((InputStream) returnValue).available())) {
+                    try (InputStream in = (InputStream) returnValue) {
                         IOUtil.copy(in, out);
                     }
                 }

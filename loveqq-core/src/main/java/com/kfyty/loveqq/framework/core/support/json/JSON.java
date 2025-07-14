@@ -276,8 +276,8 @@ public class JSON implements Map<String, Object>, JSONAware {
         if (o == this) {
             return true;
         }
-        if (o instanceof JSON json) {
-            return this.decorate.equals(json.decorate);
+        if (o instanceof JSON) {
+            return this.decorate.equals(((JSON) o).decorate);
         }
         return false;
     }

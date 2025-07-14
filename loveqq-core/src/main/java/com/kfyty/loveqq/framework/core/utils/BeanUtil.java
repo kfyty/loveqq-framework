@@ -258,8 +258,8 @@ public abstract class BeanUtil {
         if (obj == null) {
             return Collections.emptyMap();
         }
-        if (obj instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
+        if (obj instanceof Map<?, ?>) {
+            return (Map<String, Object>) obj;
         }
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {

@@ -242,7 +242,7 @@ public class ConditionalBeanDefinition implements BeanDefinition {
     protected void resolveConditionDeclare(BeanDefinition beanDefinition) {
         AnnotatedElement annotatedElement = beanDefinition.isMethodBean()
                 ? beanDefinition.getBeanMethod()
-                : beanDefinition instanceof FactoryBeanDefinition fbd ? fbd.getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
+                : beanDefinition instanceof FactoryBeanDefinition ? ((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition().getBeanType() : beanDefinition.getBeanType();
 
         // 需要元数据，所以不能直接获取 Conditional 注解
         List<Annotation> annotations = flatRepeatableAnnotation(findAnnotations(annotatedElement, e -> e.annotationType().isAnnotationPresent(Conditional.class)));

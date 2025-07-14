@@ -50,7 +50,7 @@ public class UpgradeWebSocketHandler implements BiFunction<WebsocketInbound, Web
                 .map(ByteBuf::retain)
                 .publishOn(Schedulers.parallel())
                 .doOnDiscard(ByteBuf.class, ReferenceCounted::release)
-                .subscribe(new CoreSubscriber<>() {
+                .subscribe(new CoreSubscriber<ByteBuf>() {
 
                     @Override
                     public void onSubscribe(Subscription s) {

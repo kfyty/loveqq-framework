@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -355,8 +356,8 @@ public class Array implements List<Object>, JSONAware {
         if (o == this) {
             return true;
         }
-        if (o instanceof Array array) {
-            return this.decorate.equals(array.decorate);
+        if (o instanceof Array) {
+            return this.decorate.equals(((Array) o).decorate);
         }
         return false;
     }

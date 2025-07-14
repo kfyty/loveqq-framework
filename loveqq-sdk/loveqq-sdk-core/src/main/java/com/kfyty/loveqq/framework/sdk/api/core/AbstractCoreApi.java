@@ -126,11 +126,11 @@ public abstract class AbstractCoreApi<T extends AbstractCoreApi<T, R>, R extends
     }
 
     protected R exchangeInternal(HttpResponse response, R retValue) {
-        if (this instanceof HttpResponseAware aware) {
-            aware.setHttpResponse(response);
+        if (this instanceof HttpResponseAware) {
+            ((HttpResponseAware) this).setHttpResponse(response);
         }
-        if (retValue instanceof HttpResponseAware aware) {
-            aware.setHttpResponse(response);
+        if (retValue instanceof HttpResponseAware) {
+            ((HttpResponseAware) retValue).setHttpResponse(response);
         }
         return retValue;
     }

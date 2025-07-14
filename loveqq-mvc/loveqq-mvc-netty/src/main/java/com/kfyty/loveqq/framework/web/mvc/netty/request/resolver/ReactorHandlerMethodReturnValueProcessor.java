@@ -87,29 +87,29 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
         }
-        if (retValue instanceof CharSequence str) {
-            return response.send(Mono.just(from(str)), e -> isSse);
+        if (retValue instanceof CharSequence) {
+            return response.send(Mono.just(from((CharSequence) retValue)), e -> isSse);
         }
-        if (retValue instanceof SseEvent sse) {
-            return response.send(Mono.just(sse.build()), e -> isSse);
+        if (retValue instanceof SseEvent) {
+            return response.send(Mono.just(((SseEvent) retValue).build()), e -> isSse);
         }
-        if (retValue instanceof Publisher<?> publisher) {
-            return response.send((Publisher<? extends ByteBuf>) publisher, e -> isSse);
+        if (retValue instanceof Publisher<?>) {
+            return response.send((Publisher<? extends ByteBuf>) retValue, e -> isSse);
         }
-        if (retValue instanceof RandomAccessStream stream) {
-            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, stream).onBackpressureBuffer(), e -> stream.refresh());
+        if (retValue instanceof RandomAccessStream) {
+            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, (RandomAccessStream) retValue).onBackpressureBuffer(), e -> ((RandomAccessStream) retValue).refresh());
         }
-        if (retValue instanceof byte[] bytes) {
-            return response.send(Mono.just(from(bytes)), e -> isSse);
+        if (retValue instanceof byte[]) {
+            return response.send(Mono.just(from((byte[]) retValue)), e -> isSse);
         }
-        if (retValue instanceof ByteBuf byteBuf) {
-            return response.send(Mono.just(byteBuf), e -> isSse);
+        if (retValue instanceof ByteBuf) {
+            return response.send(Mono.just((ByteBuf) retValue), e -> isSse);
         }
-        if (retValue instanceof File file) {
-            return response.sendFile(file.toPath());
+        if (retValue instanceof File) {
+            return response.sendFile(((File) retValue).toPath());
         }
-        if (retValue instanceof Path path) {
-            return response.sendFile(path);
+        if (retValue instanceof Path) {
+            return response.sendFile((Path) retValue);
         }
         throw new IllegalArgumentException("The return value must be CharSequence/SseEvent/byte[]/ByteBuf/RandomAccessStream/File/Path.");
     }

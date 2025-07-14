@@ -192,7 +192,8 @@ public abstract class IOUtil {
                     alreadyWriteManifest = true;
                 }
             }
-            if (!alreadyWriteManifest && in instanceof JarInputStream jarInputStream) {
+            if (!alreadyWriteManifest && in instanceof JarInputStream) {
+                JarInputStream jarInputStream = (JarInputStream) in;
                 out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
                 jarInputStream.getManifest().write(out);
                 out.closeEntry();
@@ -212,7 +213,9 @@ public abstract class IOUtil {
      * @return 输出流
      */
     public static <T extends OutputStream> T copy(InputStream in, T out) {
-        if (in instanceof FileInputStream fis && out instanceof FileOutputStream fos) {
+        if (in instanceof FileInputStream && out instanceof FileOutputStream) {
+            FileInputStream fis = (FileInputStream) in;
+            FileOutputStream fos = (FileOutputStream) out;
             try (FileChannel inChannel = fis.getChannel();
                  FileChannel outChannel = fos.getChannel()) {
                 NIOUtil.copy(inChannel, outChannel);
