@@ -11,6 +11,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.SerializableInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -57,6 +58,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     /**
      * 默认线程池
      */
+    @Lazy
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
     protected ExecutorService executorService;
 
