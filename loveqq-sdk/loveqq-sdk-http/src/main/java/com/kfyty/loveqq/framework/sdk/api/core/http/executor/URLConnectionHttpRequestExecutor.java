@@ -30,6 +30,10 @@ import static java.lang.String.format;
  */
 @Slf4j
 public class URLConnectionHttpRequestExecutor implements HttpRequestExecutor {
+    /**
+     * 默认实例
+     */
+    public static final HttpRequestExecutor INSTANCE = new URLConnectionHttpRequestExecutor();
 
     @Override
     public URLConnectionHttpResponse wrapResponse(Object response) {

@@ -56,6 +56,10 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
+        if (mapping.isStreamJson()) {
+            response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
+            response.setHeader(HttpHeaderNames.TRANSFER_ENCODING.toString(), "chunked");
+        }
         if (mapping.isEventStream()) {
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
@@ -64,7 +68,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
-        MethodMapping methodMapping = this.requestMappingMatcher.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
+        MethodMapping methodMapping = this.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
         if (methodMapping == null) {
             return ((HttpServerResponse) response.getRawResponse()).sendNotFound();
         }
@@ -124,8 +128,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter parameter, ServerRequest request, ServerResponse response) {
         try {
             Object processedReturnValue = super.handleReturnValue(retValue, parameter, request, response);
-            HttpServerResponse serverResponse = (HttpServerResponse) response.getRawResponse();
-            return writeReturnValue(processedReturnValue, serverResponse, this.isEventStream(response.getContentType()));
+            return writeReturnValue(processedReturnValue, request, response, this.shouldFlush(response.getContentType()));
         } catch (Exception e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
         }
@@ -150,7 +153,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             return (Mono<?>) invoked;
         }
         if (invoked instanceof Flux<?>) {
-            if (mapping.isEventStream()) {
+            if (mapping.isStreamJson() || mapping.isEventStream()) {
                 return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
             return ((Flux<?>) invoked).collectList();

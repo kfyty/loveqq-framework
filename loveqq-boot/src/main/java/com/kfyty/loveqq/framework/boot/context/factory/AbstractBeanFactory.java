@@ -109,7 +109,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     public Collection<BeanPostProcessor> getBeanPostProcessors() {
-        return Collections.unmodifiableCollection(this.beanPostProcessors.values());
+        return this.beanPostProcessors.values();
     }
 
     @Override

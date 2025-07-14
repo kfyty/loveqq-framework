@@ -1,4 +1,6 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingHandler,\
+    com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher,\
     com.kfyty.loveqq.framework.web.core.handler.ControllerAdviceExceptionHandlerRegistry,\
     com.kfyty.loveqq.framework.web.core.request.resolver.ModelMethodArgumentResolver,\
     com.kfyty.loveqq.framework.web.core.request.resolver.MapMethodArgumentResolver,\

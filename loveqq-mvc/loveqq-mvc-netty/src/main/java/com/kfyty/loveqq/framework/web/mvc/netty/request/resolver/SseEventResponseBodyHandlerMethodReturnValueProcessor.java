@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
-import com.kfyty.loveqq.framework.web.core.request.support.SseEventStream;
+import com.kfyty.loveqq.framework.web.core.request.support.SseEvent;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
 
@@ -18,7 +18,7 @@ import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHES
  */
 @Component
 @Order(HIGHEST_PRECEDENCE >> 1)
-public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends AbstractResponseBodyHandlerMethodReturnValueProcessor implements ReactorHandlerMethodReturnValueProcessor {
+public class SseEventResponseBodyHandlerMethodReturnValueProcessor extends AbstractResponseBodyHandlerMethodReturnValueProcessor implements ReactorHandlerMethodReturnValueProcessor {
 
     @Override
     protected boolean supportsContentType(String contentType) {
@@ -27,9 +27,9 @@ public class SseEventStreamResponseBodyHandlerMethodReturnValueProcessor extends
 
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        if (returnValue instanceof SseEventStream) {
+        if (returnValue instanceof SseEvent) {
             return returnValue;
         }
-        return SseEventStream.builder().data(returnValue).build();
+        return SseEvent.builder().data(returnValue).build();
     }
 }

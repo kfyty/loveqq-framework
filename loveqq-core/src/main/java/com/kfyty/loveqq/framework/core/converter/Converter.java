@@ -13,6 +13,7 @@ import java.util.List;
 public interface Converter<S, T> {
     /**
      * 支持的类型
+     * 主要用于支持基本数据类型
      *
      * @return 类型
      */

@@ -31,5 +31,11 @@
             <artifactId>loveqq-aop</artifactId>
             <version>${revision}</version>
         </dependency>
+
+        <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

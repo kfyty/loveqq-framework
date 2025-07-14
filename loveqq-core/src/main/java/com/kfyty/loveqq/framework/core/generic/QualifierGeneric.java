@@ -43,7 +43,8 @@ public class QualifierGeneric {
     protected final Class<?> sourceType;
 
     /**
-     * 解析的目标类型
+     * 需要解析的类型
+     * 这里不用 final，是因为运行中可能会修正实际类型
      *
      * @see Class#getGenericSuperclass()
      * @see Class#getGenericInterfaces()
@@ -51,14 +52,15 @@ public class QualifierGeneric {
      * @see Method#getGenericReturnType()
      * @see Parameter#getParameterizedType()
      */
-    protected final Type resolveType;
+    protected Type resolveType;
 
     /**
      * 解析类型的原始类型
+     * 这里不用 final，是因为运行中可能会修正实际类型
      *
      * @see QualifierGeneric#getRawType(Type)
      */
-    protected final Class<?> rawType;
+    protected Class<?> rawType;
 
     /**
      * 泛型类型，对于其 key，取值如下：
@@ -100,7 +102,6 @@ public class QualifierGeneric {
     public QualifierGeneric(Class<?> sourceType, Type genericType) {
         this.sourceType = sourceType;
         this.resolveType = genericType;
-        this.rawType = getRawType(genericType);
         this.genericInfo = new LinkedHashMap<>(4);
     }
 
@@ -110,10 +111,29 @@ public class QualifierGeneric {
      * @return this
      */
     public QualifierGeneric resolve() {
-        if (!this.genericInfo.isEmpty()) {
+        if (this.rawType != null) {
             return this;
         }
+        this.rawType = getRawType(this.resolveType);
         return this.resolveGenericType(this.resolveType);
+    }
+
+    /**
+     * 设置运行时真实的类型
+     * 只有 {@link this#rawType} 不确定时才能设置
+     *
+     * @param resolveType 实际的解析类型
+     * @param rawType     实际的解析类型的原始类型
+     * @return this
+     */
+    public QualifierGeneric setActualResolveType(Type resolveType, Class<?> rawType) {
+        if (this.resolveType instanceof TypeVariable<?> && this.rawType == Object.class) {
+            this.resolveType = resolveType;
+            this.rawType = rawType;
+        } else if (this.rawType != rawType) {
+            throw new IllegalArgumentException("Can't set raw type to: " + rawType);
+        }
+        return this;
     }
 
     /**

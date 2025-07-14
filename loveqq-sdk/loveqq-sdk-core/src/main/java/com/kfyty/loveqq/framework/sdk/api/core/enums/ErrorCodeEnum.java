@@ -13,6 +13,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ErrorCodeEnum implements ErrorCode {
+    /**
+     * 成功默认枚举值
+     */
     SUCCESS("0", "成功"),
     ;
 

@@ -11,6 +11,12 @@ import org.apache.catalina.servlets.DefaultServlet;
  * @email kfyty725@hotmail.com
  */
 public class DefaultStaticServlet extends DefaultServlet {
+    /**
+     * 默认构造器
+     */
+    public DefaultStaticServlet() {
+        super();
+    }
 
     @Override
     protected String getRelativePath(HttpServletRequest request, boolean allowEmptyPath) {

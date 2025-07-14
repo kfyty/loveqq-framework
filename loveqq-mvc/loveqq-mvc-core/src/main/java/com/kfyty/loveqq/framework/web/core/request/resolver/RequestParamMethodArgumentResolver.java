@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.support.Instance;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestParam;
+import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
@@ -32,14 +33,14 @@ import static java.util.stream.Collectors.toMap;
 @Component
 @Order(Integer.MAX_VALUE)
 public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
+    private static final String BASE_PACKAGE = RequestParam.class.getPackage().getName();
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if (hasAnnotation(parameter.getParameter(), RequestParam.class)) {
             return true;
         }
-        String basePackageName = RequestParam.class.getPackage().getName();
-        return Arrays.stream(findAnnotations(parameter.getParameter())).noneMatch(e -> e.annotationType().getName().startsWith(basePackageName));
+        return Arrays.stream(findAnnotations(parameter.getParameter())).noneMatch(e -> e.annotationType().getName().startsWith(BASE_PACKAGE));
     }
 
     @Override
@@ -50,6 +51,9 @@ public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArg
         // 基础数据类型
         if (isBaseDataType(parameter.getParamType())) {
             String param = request.getParameter(paramName);
+            if (param == null && annotation != null && annotation.required() && annotation.defaultValue().isEmpty()) {
+                throw new MissingRequestParameterException("Require request parameter '" + paramName + "' is not present.");
+            }
             String defaultValue = annotation == null ? CommonUtil.EMPTY_STRING : annotation.defaultValue();
             return this.createDataBinder(paramName, param != null ? param : defaultValue).getPropertyContext().getProperty(paramName, parameter.getParameterGeneric());
         }

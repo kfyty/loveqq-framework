@@ -4,9 +4,13 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
+import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -30,13 +34,29 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
 
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        try (OutputStream out = container.getResponse().getOutputStream()) {
-            if (returnValue instanceof byte[]) {
-                out.write((byte[]) returnValue);
+        ServerRequest request = container.getRequest();
+        ServerResponse response = container.getResponse();
+        try (OutputStream out = response.getOutputStream()) {
+            if (returnValue instanceof byte[] bytes) {
+                if (setContentLength(request, response, bytes.length)) {
+                    out.write(bytes);
+                }
                 return;
             }
-            if (returnValue instanceof InputStream) {
-                IOUtil.copy((InputStream) returnValue, out);
+            if (returnValue instanceof File file) {
+                if (setContentLength(request, response, file.length())) {
+                    try (InputStream fis = new FileInputStream(file)) {
+                        IOUtil.copy(fis, out);
+                    }
+                }
+                return;
+            }
+            if (returnValue instanceof InputStream stream) {
+                if (setContentLength(request, response, stream.available())) {
+                    try (InputStream in = stream) {
+                        IOUtil.copy(in, out);
+                    }
+                }
                 return;
             }
             throw new UnsupportedOperationException("binary: " + returnValue.getClass());

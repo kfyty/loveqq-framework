@@ -12,19 +12,41 @@
     <artifactId>loveqq-boot-starter-test</artifactId>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
-    <description>loveqq 框架单元测试集成</description>
+    <description>loveqq 框架单元测试集成，引入该依赖时作用域必须设置为 test</description>
 
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-boot</artifactId>
             <version>${revision}</version>
+            <scope>provided</scope>
         </dependency>
 
+        <!-- 单元测试依赖，这里再次引入的目的是要在源码中使用，父依赖的 test 作用域无法使用 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- spring-boot 依赖，目的是使 ide 识别到 springboot 环境，从而复用 spring 生态的某些插件 -->
+        <!-- 比如 application.yaml 配置文件的自动提示 -->
+        <!-- 该依赖的作用域必须是 test ，目的是禁止在源码编译环境中使用，并且不传递依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>3.5.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-jcl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

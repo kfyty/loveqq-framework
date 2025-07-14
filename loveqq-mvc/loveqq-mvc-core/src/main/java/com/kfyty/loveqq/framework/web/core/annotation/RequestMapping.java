@@ -10,6 +10,10 @@ import java.lang.annotation.Target;
 
 /**
  * 请求映射路径
+ *
+ * @author kfyty725
+ * @date 2021/5/22 14:25
+ * @email kfyty725@hotmail.com
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

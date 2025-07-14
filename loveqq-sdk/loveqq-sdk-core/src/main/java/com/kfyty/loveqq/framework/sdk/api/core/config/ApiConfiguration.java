@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.sdk.api.core.config;
 
+import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiPostProcessor;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiPreProcessor;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiSerializer;
@@ -27,7 +28,7 @@ import java.util.Objects;
  */
 @Data
 @Accessors(chain = true)
-public class ApiConfiguration {
+public class ApiConfiguration implements Cloneable {
     /**
      * 适用于全局的配置
      */
@@ -118,10 +119,19 @@ public class ApiConfiguration {
                 .setBaseUrl(baseUrl)
                 .setConnectTimeout(ApiConstants.DEFAULT_CONNECT_REQUEST_TIME_OUT)
                 .setReadTimeout(ApiConstants.DEFAULT_READ_REQUEST_TIME_OUT)
-                .addApiPreProcessor(new ApiParametersPreProcessor())
-                .addApiPostProcessor(new ApiResponseValidPostProcessor())
-                .setApiSerializer(new JacksonApiSerializer())
-                .setRequestFailedHandler(new ThrowExceptionRequestFailedHandler())
+                .addApiPreProcessor(ApiParametersPreProcessor.INSTANCE)
+                .addApiPostProcessor(ApiResponseValidPostProcessor.INSTANCE)
+                .setRequestFailedHandler(ThrowExceptionRequestFailedHandler.INSTANCE)
+                .setApiSerializer(JacksonApiSerializer.INSTANCE)
                 .setParameterProviderRegistry(new ParameterProviderRegistry());
+    }
+
+    @Override
+    public ApiConfiguration clone() {
+        try {
+            return (ApiConfiguration) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw ExceptionUtil.wrap(e);
+        }
     }
 }

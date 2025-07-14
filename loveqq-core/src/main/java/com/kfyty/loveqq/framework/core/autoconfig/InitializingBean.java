@@ -8,5 +8,10 @@ package com.kfyty.loveqq.framework.core.autoconfig;
  * @email kfyty725@hotmail.com
  */
 public interface InitializingBean {
+    /**
+     * 初始化 bean
+     * <p>
+     * 在 {@link BeanPostProcessor#postProcessBeforeDestroy} 后执行
+     */
     void afterPropertiesSet();
 }

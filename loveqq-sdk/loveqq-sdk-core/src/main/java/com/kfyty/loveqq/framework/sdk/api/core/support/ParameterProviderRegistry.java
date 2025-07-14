@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.sdk.api.core.support;
 
-import com.kfyty.loveqq.framework.sdk.api.core.AbstractConfigurableApi;
-import com.kfyty.loveqq.framework.sdk.api.core.Api;
+import com.kfyty.loveqq.framework.sdk.api.core.AbstractCoreApi;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiResponse;
 import com.kfyty.loveqq.framework.sdk.api.core.ParameterProvider;
 import com.kfyty.loveqq.framework.sdk.api.core.annotation.Parameter;
@@ -31,7 +30,7 @@ public class ParameterProviderRegistry {
      * 要排除的 api 属性参数
      * 被排除的参数不会应用提供器
      */
-    private Set<String> exclude;
+    protected Set<String> exclude;
 
     /**
      * 已经注册的参数提供器
@@ -39,7 +38,7 @@ public class ParameterProviderRegistry {
      * 也可以直接使用单独的属性名作为 key，则适用于所有 api 重名的属性
      * 如果某些 api 不需要自动提供，可以使用 {@link this#exclude} 进行排除
      */
-    private Map<String, ParameterProvider> registry;
+    protected Map<String, ParameterProvider> registry;
 
     public boolean isExclude(String parameterSpace) {
         return this.exclude != null && this.exclude.contains(parameterSpace);
@@ -52,7 +51,7 @@ public class ParameterProviderRegistry {
         return this.registry.get(parameterSpace);
     }
 
-    public ParameterProvider getParameterProvider(Class<? extends AbstractConfigurableApi<?, ?>> api, String parameter) {
+    public ParameterProvider getParameterProvider(Class<? extends AbstractCoreApi<?, ?>> api, String parameter) {
         final String parameterSpace = api.getName() + "." + parameter;
         if (this.isExclude(parameterSpace)) {
             return null;
@@ -83,8 +82,8 @@ public class ParameterProviderRegistry {
     }
 
     @SafeVarargs
-    public final <T extends Api<T, R>, R extends ApiResponse> ParameterProviderRegistry registryParameterProvider(String parameter, ParameterProvider parameterProvider, Class<? extends AbstractConfigurableApi<T, R>>... apis) {
-        for (Class<? extends AbstractConfigurableApi<T, R>> api : apis) {
+    public final <T extends AbstractCoreApi<T, R>, R extends ApiResponse> ParameterProviderRegistry registryParameterProvider(String parameter, ParameterProvider parameterProvider, Class<? extends AbstractCoreApi<T, R>>... apis) {
+        for (Class<? extends AbstractCoreApi<T, R>> api : apis) {
             final String parameterSpace = api.getName() + "." + parameter;
             this.registryParameterProvider(parameterProvider, parameterSpace);
         }

@@ -13,5 +13,5 @@ public interface ApiPreProcessor {
      *
      * @param api api
      */
-    void preProcessor(AbstractConfigurableApi<?, ?> api);
+    void preProcessor(AbstractCoreApi<?, ?> api);
 }

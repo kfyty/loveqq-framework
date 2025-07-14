@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.sdk.api.core.decorate;
 
 import com.kfyty.loveqq.framework.sdk.api.core.ApiResponse;
-import com.kfyty.loveqq.framework.sdk.api.core.ReactorApi;
+import com.kfyty.loveqq.framework.sdk.api.core.ReactiveApi;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiException;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiRetryException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class ReactiveApiRetryDecorate<T extends ReactorApi<T, R>, R extends ApiResponse> {
+public class ReactiveApiRetryDecorate<T extends ReactiveApi<T, R>, R extends ApiResponse> {
     /**
      * 重试次数
      * 默认 3 次
@@ -48,9 +48,9 @@ public class ReactiveApiRetryDecorate<T extends ReactorApi<T, R>, R extends ApiR
     /**
      * api
      */
-    private final ReactorApi<T, R> decorate;
+    private final ReactiveApi<T, R> decorate;
 
-    public ReactiveApiRetryDecorate(ReactorApi<T, R> api) {
+    public ReactiveApiRetryDecorate(ReactiveApi<T, R> api) {
         this.decorate = api;
     }
 
@@ -93,7 +93,7 @@ public class ReactiveApiRetryDecorate<T extends ReactorApi<T, R>, R extends ApiR
                 });
     }
 
-    public static <T extends ReactorApi<T, R>, R extends ApiResponse> ReactiveApiRetryDecorate<T, R> of(ReactorApi<T, R> api) {
+    public static <T extends ReactiveApi<T, R>, R extends ApiResponse> ReactiveApiRetryDecorate<T, R> of(ReactiveApi<T, R> api) {
         return new ReactiveApiRetryDecorate<>(Objects.requireNonNull(api));
     }
 }

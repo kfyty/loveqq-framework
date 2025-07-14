@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  * @date 2021/6/4 10:05
  * @email kfyty725@hotmail.com
  */
+@Component
 @RequiredArgsConstructor
 public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     /**

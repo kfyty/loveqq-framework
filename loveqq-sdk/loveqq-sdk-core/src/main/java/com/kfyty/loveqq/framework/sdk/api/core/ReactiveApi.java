@@ -9,24 +9,36 @@ import reactor.core.publisher.Mono;
  * @date 2021/11/11 13:51
  * @email kfyty725@hotmail.com
  */
-public interface ReactorApi<T extends ReactorApi<T, R>, R extends ApiResponse> extends Api<T, R> {
+public interface ReactiveApi<T extends ReactiveApi<T, R>, R extends ApiResponse> extends Api<T, R> {
+    /**
+     * 同步适配
+     */
+    @Override
+    default R exchange() {
+        return this.exchangeAsync().block();
+    }
+
+    /**
+     * 同步适配
+     */
+    @Override
+    default byte[] execute() {
+        return this.executeAsync().block();
+    }
+
     /**
      * 异步执行请求
      *
      * @see this#exchange()
      */
-    default Mono<R> exchangeAsync() {
-        return Mono.fromCallable(this::exchange);
-    }
+    Mono<R> exchangeAsync();
 
     /**
      * 异步执行请求
      *
      * @see this#execute()
      */
-    default Mono<byte[]> executeAsync() {
-        return Mono.fromCallable(this::execute);
-    }
+    Mono<byte[]> executeAsync();
 
     /**
      * 异步执行请求

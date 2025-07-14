@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.sdk.api.core.http;
 
-import com.kfyty.loveqq.framework.sdk.api.core.AbstractConfigurableApi;
+import com.kfyty.loveqq.framework.sdk.api.core.AbstractCoreApi;
 import com.kfyty.loveqq.framework.sdk.api.core.ApiResponse;
 import com.kfyty.loveqq.framework.sdk.api.core.decorate.ApiRetryDecorate;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiException;
@@ -24,7 +24,19 @@ import static java.lang.String.format;
 @Slf4j
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class AbstractApi<T extends AbstractApi<T, R>, R extends ApiResponse> extends AbstractConfigurableApi<T, R> {
+public class AbstractApi<T extends AbstractApi<T, R>, R extends ApiResponse> extends AbstractCoreApi<T, R> {
+
+    @Override
+    public byte[] execute() {
+        try {
+            this.preProcessor();
+            return this.executeInternal();
+        } catch (BaseApiException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw new ApiException(format("request api: %s failed: %s", this.requestPath(), throwable.getMessage()), throwable);
+        }
+    }
 
     @Override
     public R exchange() {
@@ -40,24 +52,16 @@ public abstract class AbstractApi<T extends AbstractApi<T, R>, R extends ApiResp
         }
     }
 
-    @Override
-    public byte[] execute() {
-        try {
-            this.preProcessor();
-            return this.executeInternal();
-        } catch (BaseApiException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throw new ApiException(format("request api: %s failed: %s", this.requestPath(), throwable.getMessage()), throwable);
-        }
-    }
-
     protected byte[] executeInternal() {
         return this.getConfiguration().getRequestExecutor().execute(this);
     }
 
     protected R exchangeInternal() {
-        try (HttpResponse response = this.getConfiguration().getRequestExecutor().exchange(this)) {
+        return this.exchangeInternal(true);
+    }
+
+    protected R exchangeInternal(boolean validStatusCode) {
+        try (HttpResponse response = this.getConfiguration().getRequestExecutor().exchange(this, validStatusCode)) {
             return this.exchangeInternal(response);
         }
     }

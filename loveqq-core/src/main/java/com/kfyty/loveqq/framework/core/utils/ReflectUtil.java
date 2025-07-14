@@ -69,6 +69,9 @@ public abstract class ReflectUtil {
      */
     private static final Function<Class<?>, Field[]> FIELDS_SUPPLIER = clazz -> {
         Field[] fields = clazz.getDeclaredFields();
+        if (fields.length == 0 && (clazz == Field.class || clazz == Method.class || clazz == Constructor.class)) {
+            return getFieldReflectData(Field.class);
+        }
         if (clazz == Object.class || clazz.getSuperclass() == null) {
             return fields;
         }
@@ -88,9 +91,10 @@ public abstract class ReflectUtil {
         if (clazz == Object.class) {
             return Arrays.stream(methods).filter(REFLECT_DATA_FILTER).toArray(Method[]::new);
         }
+        Class<?> superclass = clazz.getSuperclass();
         List<Method> methodList = new ArrayList<>(Arrays.asList(methods));
-        if (clazz.getSuperclass() != null) {
-            mergeSuperMethod(methodList, getMethods(clazz.getSuperclass()));
+        if (superclass != null) {
+            mergeSuperMethod(methodList, getMethods(superclass));
         }
         for (Class<?> interfaces : clazz.getInterfaces()) {
             mergeSuperMethod(methodList, getMethods(interfaces));
@@ -299,12 +303,12 @@ public abstract class ReflectUtil {
 
     /*----------------------------------------- 构造器/属性/方法相关方法 -----------------------------------------*/
 
-    public static void setFieldValue(Object obj, String fieldName, Object value) {
-        setFieldValue(obj, getField(obj.getClass(), fieldName), value);
+    public static void setFieldValue(Object instance, String fieldName, Object value) {
+        setFieldValue(instance, getField(instance.getClass(), fieldName), value);
     }
 
-    public static void setFieldValue(Object obj, Field field, Object value) {
-        setFieldValue(obj, field, value, true);
+    public static void setFieldValue(Object instance, Field field, Object value) {
+        setFieldValue(instance, field, value, true);
     }
 
     public static void setFieldValue(Object obj, Field field, Object value, boolean useSetter) {
@@ -324,20 +328,27 @@ public abstract class ReflectUtil {
         }
     }
 
-    public static void setFinalFieldValue(Object obj, Field field, Object value) {
+    /**
+     * 设置 final 修饰的属性值，高版本可能无效
+     *
+     * @param instance 属性所在实例
+     * @param field    属性
+     * @param value    新值
+     */
+    public static void setFinalFieldValue(Object instance, Field field, Object value) {
         int modifiers = field.getModifiers();
         Field modifiersField = ReflectUtil.getField(Field.class, "modifiers");
         setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
-        setFieldValue(obj, field, value);
+        setFieldValue(instance, field, value);
         setFieldValue(field, modifiersField, modifiers);
     }
 
-    public static Object getFieldValue(Object obj, String fieldName) {
-        return getFieldValue(obj, getField(obj.getClass(), fieldName));
+    public static Object getFieldValue(Object instance, String fieldName) {
+        return getFieldValue(instance, getField(instance.getClass(), fieldName));
     }
 
-    public static Object getFieldValue(Object obj, Field field) {
-        return getFieldValue(obj, field, true);
+    public static Object getFieldValue(Object instance, Field field) {
+        return getFieldValue(instance, field, true);
     }
 
     public static Object getFieldValue(Object obj, Field field, boolean useGetter) {
@@ -356,15 +367,15 @@ public abstract class ReflectUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T invokeMethod(Object obj, String methodName, Object... args) {
+    public static <T> T invokeMethod(Object instance, String methodName, Object... args) {
         Class<?>[] classes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
-        return (T) invokeMethod(obj, getMethod(obj.getClass(), methodName, classes), args);
+        return (T) invokeMethod(instance, getMethod(instance.getClass(), methodName, classes), args);
     }
 
-    public static Object invokeMethod(Object obj, Method method, Object... args) {
+    public static Object invokeMethod(Object instance, Method method, Object... args) {
         try {
             makeAccessible(method);
-            return method.invoke(obj, args);
+            return method.invoke(instance, args);
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
@@ -717,6 +728,21 @@ public abstract class ReflectUtil {
             }
             setFieldValue(obj, field, (obj = newInstance(field.getType())));
             clazz = field.getType();
+        }
+    }
+
+    /**
+     * 直接从 Class.class 调用本地方法获取 {@link Field} 反射数据
+     *
+     * @param clazz {@link Field} {@link Method} {@link Constructor}
+     * @return 字段
+     */
+    public static Field[] getFieldReflectData(Class<?> clazz) {
+        try {
+            Method method = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+            return (Field[]) invokeMethod(clazz, method, false);
+        } catch (NoSuchMethodException e) {
+            throw new ResolvableException(e);
         }
     }
 }

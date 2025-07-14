@@ -16,6 +16,10 @@ import java.util.Objects;
  * @email kfyty725@hotmail.com
  */
 public class JacksonApiSerializer implements ApiSerializer {
+    /**
+     * 默认实例
+     */
+    public static final ApiSerializer INSTANCE = new JacksonApiSerializer();
 
     @Override
     public byte[] serialize(ApiResponse response) {

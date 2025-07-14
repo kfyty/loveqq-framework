@@ -19,6 +19,7 @@ import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ import java.util.List;
  */
 @Configuration
 @ConditionalOnBean(ServletWebServer.class)
-@ComponentScan(includeFilter = @ComponentFilter(annotations = {WebFilter.class, WebListener.class}))
+@ComponentScan(includeFilter = @ComponentFilter(annotations = {WebFilter.class, WebListener.class, WebServlet.class}))
 public class WebServletMvcAutoConfig {
     @Autowired(required = false)
     private List<HandlerInterceptor> interceptorChain;

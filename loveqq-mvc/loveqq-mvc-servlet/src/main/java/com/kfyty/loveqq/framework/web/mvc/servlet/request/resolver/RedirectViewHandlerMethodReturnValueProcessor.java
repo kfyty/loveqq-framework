@@ -21,7 +21,7 @@ public class RedirectViewHandlerMethodReturnValueProcessor implements HandlerMet
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        return returnType == null || CharSequence.class.isAssignableFrom(returnType.getReturnType()) && returnValue.toString().startsWith("redirect:");
+        return returnValue instanceof CharSequence cs && cs.toString().startsWith("redirect:");
     }
 
     @Override

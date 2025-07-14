@@ -3,7 +3,9 @@ package com.kfyty.loveqq.framework.web.core.request.resolver;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestAttribute;
+import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 
@@ -26,6 +28,19 @@ public class RequestAttributeMethodArgumentResolver implements HandlerMethodArgu
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
-        return request.getAttribute(parameter.getParameterName(findAnnotation(parameter.getParameter(), RequestAttribute.class), RequestAttribute::value));
+        RequestAttribute annotation = findAnnotation(parameter.getParameter(), RequestAttribute.class);
+        String parameterName = parameter.getParameterName(annotation, RequestAttribute::value);
+        Object attribute = request.getAttribute(parameterName);
+        if (attribute != null) {
+            return attribute;
+        }
+        if (annotation.defaultValue().isEmpty()) {
+            if (annotation.required()) {
+                throw new MissingRequestParameterException("Require request parameter '" + parameterName + "' is not present.");
+            } else {
+                return null;
+            }
+        }
+        return ConverterUtil.convert(annotation.defaultValue(), parameter.getParamType());
     }
 }

@@ -9,6 +9,9 @@ import java.lang.annotation.Target;
 /**
  * 异常处理
  *
+ * @author kfyty725
+ * @date 2021/5/22 14:25
+ * @email kfyty725@hotmail.com
  * @see com.kfyty.loveqq.framework.web.core.handler.AnnotatedExceptionHandler
  */
 @Documented

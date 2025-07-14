@@ -15,7 +15,10 @@ import lombok.AllArgsConstructor;
  */
 @AllArgsConstructor
 public class XmlApiSerializer implements ApiSerializer {
-    private final XmlMapper xmlMapper;
+    /**
+     * {@link XmlMapper}
+     */
+    protected final XmlMapper xmlMapper;
 
     public XmlApiSerializer() {
         this(new XmlMapper());

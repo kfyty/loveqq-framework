@@ -16,6 +16,9 @@ import java.lang.annotation.Target;
  * 全局异常处理
  * 如果自定义处理，可以返回 null，获取线程上下文的请求响应对应自行处理
  *
+ * @author kfyty725
+ * @date 2021/5/22 14:25
+ * @email kfyty725@hotmail.com
  * @see Controller
  * @see ControllerAdviceExceptionHandlerRegistry
  * @see AnnotatedExceptionHandler

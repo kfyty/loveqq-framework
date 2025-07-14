@@ -16,8 +16,6 @@ import com.kfyty.loveqq.framework.web.core.annotation.Controller;
 import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.cors.CorsFilter;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
-import com.kfyty.loveqq.framework.web.core.handler.RequestMappingAnnotationHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
@@ -38,16 +36,6 @@ import java.util.Map;
 public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
     @Bean
-    public RequestMappingHandler requestMappingHandler() {
-        return new RequestMappingAnnotationHandler();
-    }
-
-    @Bean
-    public RequestMappingMatcher requestMappingMatcher() {
-        return new DefaultRequestMappingMatcher();
-    }
-
-    @Bean
     @ConfigurationProperties("k.mvc.cors")
     @ConditionalOnProperty(prefix = "k.mvc.cors", value = "allowOrigin", matchIfNonNull = true)
     public CorsConfiguration defaultCorsConfiguration() {
@@ -63,8 +51,8 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
-        RequestMappingHandler requestMappingHandler = this.requestMappingHandler();
-        RequestMappingMatcher requestMappingMatcher = this.requestMappingMatcher();
+        RequestMappingHandler requestMappingHandler = applicationContext.getBean(RequestMappingHandler.class);
+        RequestMappingMatcher requestMappingMatcher = applicationContext.getBean(RequestMappingMatcher.class);
         for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
             List<MethodMapping> methodMappings = requestMappingHandler.resolveRequestMapping(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
             requestMappingMatcher.registryMethodMapping(methodMappings);

@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * 描述:
@@ -18,6 +19,11 @@ import java.util.function.Function;
  */
 public class StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
     /**
+     * 纯数字
+     */
+    public static final Pattern DIGIT = Pattern.compile("\\d+");
+
+    /**
      * 默认实例
      */
     public static final StringToLocalDateTimeConverter INSTANCE = new StringToLocalDateTimeConverter();
@@ -27,25 +33,33 @@ public class StringToLocalDateTimeConverter implements Converter<String, LocalDa
      */
     public static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * 默认时间格式
+     */
+    public static final DateTimeFormatter SIMPLE_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
     @Override
     public LocalDateTime apply(String source) {
         if (CommonUtil.empty(source)) {
             return null;
         }
-        if (source.matches("\\d+")) {
+        if (DIGIT.matcher(source).matches()) {
             return LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(source)), ZoneId.systemDefault());
         }
         return apply(source, LocalDateTime::parse);
     }
 
     public static LocalDateTime apply(String source, Function<String, LocalDateTime> finallyResolve) {
-        if (source.length() > 10 && source.charAt(10) == 'T') {
+        if (source.length() > 10 && source.charAt(10) != ' ') {
             if (source.endsWith("Z")) {
                 return LocalDateTime.ofInstant(Instant.parse(source), ZoneOffset.UTC);
             }
             return LocalDateTime.parse(source, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         }
-        if (source.length() == 19 && source.charAt(10) == ' ') {
+        if (source.length() >= 19 && source.charAt(10) == ' ') {
+            if (source.lastIndexOf('.') > -1) {
+                return LocalDateTime.parse(source, SIMPLE_DATE_TIME_FORMATTER);
+            }
             return LocalDateTime.parse(source, DEFAULT_DATE_TIME_FORMATTER);
         }
         return finallyResolve.apply(source);

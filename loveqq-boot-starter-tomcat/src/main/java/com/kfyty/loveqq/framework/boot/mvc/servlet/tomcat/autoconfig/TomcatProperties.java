@@ -177,8 +177,8 @@ public class TomcatProperties extends WebServerProperties {
                 .setDescription(annotation != null ? annotation.description() : CommonUtil.EMPTY_STRING)
                 .setSmallIcon(annotation != null ? annotation.smallIcon() : CommonUtil.EMPTY_STRING)
                 .setLargeIcon(annotation != null ? annotation.largeIcon() : CommonUtil.EMPTY_STRING)
-                .setUrlPatterns(annotation != null ? Arrays.asList(annotation.urlPatterns()) : Collections.singletonList("/*"))
-                .setAsyncSupported(annotation != null && annotation.asyncSupported());
+                .setAsyncSupported(annotation != null && annotation.asyncSupported())
+                .setUrlPatterns(annotation != null && annotation.urlPatterns().length > 0 ? Arrays.asList(annotation.urlPatterns()) : Collections.singletonList("/*"));
         if (annotation != null) {
             filterRegistrationBean.setInitParam(Arrays.stream(annotation.initParams()).map(e -> new Pair<>(e.name(), e.value())).collect(Collectors.toList()));
         }

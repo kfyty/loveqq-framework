@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.Setter;
 import org.redisson.config.ClusterServersConfig;
@@ -100,7 +101,7 @@ public class RedissonProperties extends Config {
         return this.cluster;
     }
 
-    public Config buildConfig() {
+    public Config buildConfig(boolean isVirtual) {
         if (this.model.equals("single")) {
             this.setSingleServerConfig(this.single);
         }
@@ -122,6 +123,10 @@ public class RedissonProperties extends Config {
             ofNullable(this.master).ifPresent(e -> e.setLoadBalancer(balancer));
             ofNullable(this.replicated).ifPresent(e -> e.setLoadBalancer(balancer));
             ofNullable(this.cluster).ifPresent(e -> e.setLoadBalancer(balancer));
+        }
+        if (isVirtual && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
+            this.setExecutor(VirtualThreadExecutorHolder.getInstance());
+            this.setNettyExecutor(VirtualThreadExecutorHolder.getInstance());
         }
         return this;
     }

@@ -17,13 +17,16 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionBeanDefinitionRegistry;
+import com.kfyty.loveqq.framework.core.autoconfig.boostrap.Bootstrap;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
+import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -166,8 +169,29 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     }
 
     protected void finishRefresh() {
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
+        // 添加回调
+        Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+
+        // 关闭 jar file
+        if (!this.isBootstrap()) {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader instanceof JarIndexClassLoader cl) {
+                cl.closeJarFileCache();
+            }
+        }
+
+        // 发布刷新成功事件
         this.publishEvent(new ContextRefreshedEvent(this));
+    }
+
+    protected boolean isBootstrap() {
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            Class<?> loaded = ReflectUtil.load(element.getClassName());
+            if (Bootstrap.class.isAssignableFrom(loaded)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected void invokeBeanFactoryPreProcessor() {

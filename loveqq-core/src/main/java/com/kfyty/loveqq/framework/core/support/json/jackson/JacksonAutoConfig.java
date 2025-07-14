@@ -22,7 +22,7 @@ public class JacksonAutoConfig implements ContextOnRefresh {
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public ObjectMapper objectMapper() {
+    public ObjectMapper defaultObjectMapper() {
         return JsonUtil.configure();
     }
 

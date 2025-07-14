@@ -8,7 +8,8 @@ import lombok.Getter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class AnnotationInvocationHandler implements InvocationHandler {
     private final Map<String, Object> memberValues;
 
     public AnnotationInvocationHandler(Class<? extends Annotation> annotationType) {
-        this(annotationType, new HashMap<>(8));
+        this(annotationType, new LinkedHashMap<>(8));
     }
 
     public AnnotationInvocationHandler(Class<? extends Annotation> annotationType, Map<String, Object> memberValues) {
@@ -46,6 +47,20 @@ public class AnnotationInvocationHandler implements InvocationHandler {
         return this;
     }
 
+    /**
+     * @param proxy  the proxy instance that the method was invoked on
+     * @param method the {@code Method} instance corresponding to
+     *               the interface method invoked on the proxy instance.  The declaring
+     *               class of the {@code Method} object will be the interface that
+     *               the method was declared in, which may be a superinterface of the
+     *               proxy interface that the proxy class inherits the method through.
+     * @param args   an array of objects containing the values of the
+     *               arguments passed in the method invocation on the proxy instance,
+     *               or {@code null} if interface method takes no arguments.
+     *               Arguments of primitive types are wrapped in instances of the
+     *               appropriate primitive wrapper class, such as
+     *               {@code java.lang.Integer} or {@code java.lang.Boolean}.
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (ReflectUtil.isEquals(method)) {
@@ -63,11 +78,30 @@ public class AnnotationInvocationHandler implements InvocationHandler {
         return this.memberValues.get(method.getName());
     }
 
+    /**
+     * 计算注解的 hash code，要保证和 {@link sun.reflect.annotation.AnnotationInvocationHandler#hashCodeImpl()} 相等
+     *
+     * @return hash code
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(this.annotationType, this.memberValues);
+        int result = 0;
+        for (Map.Entry<String, Object> e : this.memberValues.entrySet()) {
+            if (e.getValue() instanceof Object[] objects) {
+                result += (127 * e.getKey().hashCode()) ^ Arrays.hashCode(objects);
+            } else {
+                result += (127 * e.getKey().hashCode()) ^ CommonUtil.hashCode(e.getValue());
+            }
+        }
+        return result;
     }
 
+    /**
+     * 比较两个注解，要保证和 {@link sun.reflect.annotation.AnnotationInvocationHandler} 相等
+     *
+     * @param obj 对象
+     * @return true/false
+     */
     @Override
     public boolean equals(Object obj) {
         if (!this.annotationType.isInstance(obj)) {
@@ -80,6 +114,11 @@ public class AnnotationInvocationHandler implements InvocationHandler {
         return Objects.equals(this.memberValues, memberValues);
     }
 
+    /**
+     * 返回字符串表示
+     *
+     * @return 字符串表示
+     */
     @Override
     public String toString() {
         String values = this.memberValues.entrySet().stream().map(e -> e.getKey() + '=' + CommonUtil.toString(e.getValue())).collect(Collectors.joining(", "));

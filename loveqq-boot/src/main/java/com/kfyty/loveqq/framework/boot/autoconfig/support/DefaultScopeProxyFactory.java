@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
+import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -32,8 +33,8 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
     }
 
     @Override
-    public void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean) {
-        this.obtainScopeProxyFactory(beanDefinition.getScope(), beanFactory).onInvoked(beanDefinition, beanFactory, bean);
+    public void onInvoked(BeanDefinition beanDefinition, BeanFactory beanFactory, Object bean, MethodProxy methodProxy) {
+        this.obtainScopeProxyFactory(beanDefinition.getScope(), beanFactory).onInvoked(beanDefinition, beanFactory, bean, methodProxy);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class DefaultScopeProxyFactory implements ScopeProxyFactory, ApplicationL
         }
         ScopeProxyFactory scopeProxyFactory = this.scopeProxyFactoryMap.get(scope);
         if (scopeProxyFactory == null) {
-            throw new BeansException("this scope doesn't supported yet: " + scope);
+            throw new BeansException("This scope doesn't supported yet: " + scope);
         }
         return scopeProxyFactory;
     }

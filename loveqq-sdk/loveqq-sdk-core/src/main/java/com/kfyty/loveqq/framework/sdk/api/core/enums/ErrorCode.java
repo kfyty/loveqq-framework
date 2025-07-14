@@ -10,13 +10,24 @@ package com.kfyty.loveqq.framework.sdk.api.core.enums;
 public interface ErrorCode {
     /**
      * 返回错误码
+     *
      * @return 错误码
      */
     String getCode();
 
     /**
      * 返回错误描述
+     *
      * @return 描述
      */
     String getDesc();
+
+    /**
+     * api 请求是否成功
+     *
+     * @return true/false
+     */
+    default boolean isSuccess() {
+        return ErrorCodeEnum.SUCCESS.getCode().equals(getCode());
+    }
 }

@@ -12,7 +12,6 @@ import com.kfyty.loveqq.framework.core.utils.AopUtil;
 
 import java.lang.reflect.AnnotatedElement;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotations;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.flatRepeatableAnnotation;
 
 /**
@@ -42,6 +41,6 @@ public class ConfigurationPropertiesBeanPostProcessor implements InstantiationAw
 
     protected ConfigurationProperties[] obtainConfigurationPropertiesAnnotation(BeanDefinition beanDefinition) {
         AnnotatedElement annotatedElement = beanDefinition.isMethodBean() ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
-        return flatRepeatableAnnotation(findAnnotations(annotatedElement), ConfigurationProperties.class);
+        return flatRepeatableAnnotation(annotatedElement, ConfigurationProperties.class);
     }
 }

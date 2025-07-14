@@ -3,7 +3,9 @@ package com.kfyty.loveqq.framework.web.mvc.servlet.request.resolver;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.SessionAttribute;
+import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
@@ -28,7 +30,18 @@ public class SessionAttributeMethodArgumentResolver implements HandlerMethodArgu
 
     @Override
     public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
-        HttpServletRequest servletRequest = (HttpServletRequest) request.getRawRequest();
-        return servletRequest.getSession().getAttribute(parameter.getParameterName(findAnnotation(parameter.getParameter(), SessionAttribute.class), SessionAttribute::value));
+        SessionAttribute annotation = findAnnotation(parameter.getParameter(), SessionAttribute.class);
+        String parameterName = parameter.getParameterName(annotation, SessionAttribute::value);
+        Object attribute = ((HttpServletRequest) request.getRawRequest()).getSession().getAttribute(parameterName);
+        if (attribute != null) {
+            return attribute;
+        }
+        if (annotation.defaultValue().isEmpty()) {
+            if (annotation.required()) {
+                throw new MissingRequestParameterException("Require request parameter '" + parameterName + "' is not present.");
+            }
+            return null;
+        }
+        return ConverterUtil.convert(annotation.defaultValue(), parameter.getParamType());
     }
 }

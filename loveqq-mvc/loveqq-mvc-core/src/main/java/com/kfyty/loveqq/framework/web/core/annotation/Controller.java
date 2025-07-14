@@ -12,6 +12,10 @@ import java.lang.annotation.Target;
 
 /**
  * 标识为一个控制器
+ *
+ * @author kfyty725
+ * @date 2021/5/22 14:25
+ * @email kfyty725@hotmail.com
  */
 @Component
 @Documented

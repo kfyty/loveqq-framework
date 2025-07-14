@@ -98,12 +98,14 @@ public class WebServerProperties {
     public <T extends WebServerProperties> T copy(T subClass) {
         subClass.setVirtualThread(this.virtualThread);
         subClass.setMaxThreads(this.maxThreads);
-        subClass.setCompress(this.compress);
         subClass.setMinCompressionSize(this.minCompressionSize);
         subClass.setPort(this.port);
         subClass.setLocation(this.location);
         subClass.setMaxFileSize(this.maxFileSize);
         subClass.setResources(this.resources);
+        if (subClass.getCompress() == null) {
+            subClass.setCompress(this.compress);
+        }
         if (subClass.getPrimarySource() == null) {
             subClass.setPrimarySource(this.primarySource);
         }
