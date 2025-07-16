@@ -16,7 +16,6 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -35,7 +34,6 @@ import static java.util.Collections.unmodifiableMap;
  * @date 2021/7/3 10:59
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
     /**
      * 条件解析上下文

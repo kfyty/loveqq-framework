@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.generic.Generic;
@@ -17,7 +18,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -48,8 +50,12 @@ import static java.util.Optional.ofNullable;
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public class AutowiredProcessor {
+    /**
+     * 日志
+     */
+    private static final Logger log = LoggerFactory.getLogger(BeanFactory.class);
+
     /**
      * 由于作用域代理/懒加载代理等，会导致 {@link Bean} 注解的 bean name 发生变化，此时解析得到的 bean name 是代理后的 bean，返回会导致堆栈溢出，
      * 因此需要设置线程上下文 bean name，当解析与请求的不一致时，能够继续执行到 bean 方法，从而获取到真实的 bean
@@ -198,9 +204,9 @@ public class AutowiredProcessor {
      */
     public Object doResolveBean(SimpleGeneric simpleGeneric, AutowiredDescription description, Class<?> requiredType) {
         String beanName = BeanUtil.getBeanName(simpleGeneric.getSimpleType(), description == null ? null : description.value());
-        Object targetBean = simpleGeneric.isGeneric(LaziedObject.class)
-                ? new Lazy<>(() -> this.doResolveBean(beanName, simpleGeneric, description))
-                : this.doResolveBean(beanName, simpleGeneric, description);
+        Object targetBean =
+                simpleGeneric.isGeneric(LaziedObject.class)
+                        ? new Lazy<>(() -> this.doResolveBean(beanName, simpleGeneric, description)) : this.doResolveBean(beanName, simpleGeneric, description);
         if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {
             targetBean = AopUtil.getTarget(targetBean);
         }
