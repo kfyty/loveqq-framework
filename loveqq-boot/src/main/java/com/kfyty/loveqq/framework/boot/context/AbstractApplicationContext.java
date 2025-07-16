@@ -11,7 +11,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.SerializableInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -26,9 +25,11 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
+import com.kfyty.loveqq.framework.core.lang.Lazy;
+import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -42,12 +43,21 @@ import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoC
  * @date 2021/7/3 11:05
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFactory implements ApplicationContext {
+    /**
+     * 销毁任务
+     */
+    protected final Runnable shutdownTask = () -> {
+        this.close();
+        if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
+            VirtualThreadExecutorHolder.getInstance().shutdown();
+        }
+    };
+
     /**
      * 销毁回调
      */
-    protected final Thread shutdownHook = new Thread(this::close, "LoveqqFrameworkShutdownHook");
+    protected final Thread shutdownHook = new Thread(this.shutdownTask, "LoveqqFrameworkShutdownHook");
 
     /**
      * 属性上下文
@@ -58,9 +68,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     /**
      * 默认线程池
      */
-    @Lazy
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
-    protected ExecutorService executorService;
+    protected Lazy<ExecutorService> executorService;
 
     /**
      * 事件订阅发布器
@@ -250,7 +259,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
         // 并发实例化剩余的单例 bean
         if (concurrentInitialize) {
-            CompletableFutureUtil.consumer(this.executorService, this.getBeanDefinitions().values(), bd -> {
+            CompletableFutureUtil.consumer(this.executorService.get(), this.getBeanDefinitions().values(), bd -> {
                 if (bd.isSingleton() && bd.isAutowireCandidate() && !bd.isLazyInit()) {
                     this.registerBean(bd);
                 }

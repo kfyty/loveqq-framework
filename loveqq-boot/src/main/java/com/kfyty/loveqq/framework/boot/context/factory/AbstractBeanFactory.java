@@ -17,6 +17,8 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMa
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -47,6 +49,11 @@ import static java.util.stream.Collectors.toMap;
  * @email kfyty725@hotmail.com
  */
 public abstract class AbstractBeanFactory implements ApplicationContextAware, BeanFactory {
+    /**
+     * 日志
+     */
+    protected static final Logger log = LoggerFactory.getLogger(BeanFactory.class);
+
     /**
      * map 工厂
      */
@@ -347,7 +354,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             BeanDefinition beanDefinition = this.doRegisterBean(name, bean);
             bean = this.getExposedBean(beanDefinition, bean);
             this.autowiredBean(name, bean);
-            return this.invokeLifecycleMethod(beanDefinition, this.getExposedBean(beanDefinition, bean));
+            return this.invokeLifecycleMethod(beanDefinition, bean);
         }
     }
 
@@ -500,18 +507,16 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             }
         }
 
-        if (bean instanceof InitializingBean) {
-            ((InitializingBean) bean).afterPropertiesSet();
+        if (bean instanceof InitializingBean initializingBean) {
+            initializingBean.afterPropertiesSet();
+            bean = this.getExposedBean(beanDefinition, bean);
         }
-
-        bean = this.getExposedBean(beanDefinition, bean);
 
         Method initMethod = beanDefinition.getInitMethod(bean);
         if (initMethod != null) {
             ReflectUtil.invokeMethod(bean, initMethod);
+            bean = this.getExposedBean(beanDefinition, bean);
         }
-
-        bean = this.getExposedBean(beanDefinition, bean);
 
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             Object newBean = beanPostProcessor.postProcessAfterInitialization(bean, beanName);
@@ -527,17 +532,29 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     protected void destroyBean(BeanDefinition beanDefinition, Object bean) {
         String beanName = beanDefinition.getBeanName();
 
-        for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
-            beanPostProcessor.postProcessBeforeDestroy(bean, beanName);
+        try {
+            for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
+                beanPostProcessor.postProcessBeforeDestroy(bean, beanName);
+            }
+        } catch (Throwable e) {
+            log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
         }
 
-        if (bean instanceof DestroyBean) {
-            ((DestroyBean) bean).destroy();
+        if (bean instanceof DestroyBean destroyBean) {
+            try {
+                destroyBean.destroy();
+            } catch (Throwable e) {
+                log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+            }
         }
 
         Method destroyMethod = beanDefinition.getDestroyMethod(bean);
         if (destroyMethod != null) {
-            ReflectUtil.invokeMethod(bean, destroyMethod);
+            try {
+                ReflectUtil.invokeMethod(bean, destroyMethod);
+            } catch (Throwable e) {
+                log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+            }
         }
 
         this.beanReference.remove(beanName);
