@@ -60,13 +60,12 @@ public abstract class JsonUtil {
         SimpleModule module = new SimpleModule("json_string_deserializer");
         module.addDeserializer(String.class, new JsonUtil.StringDeserializer());
 
-        SimpleModule timeModule = new SimpleModule("common_time_deserializer");
+        SimpleModule timeModule = new JavaTimeModule();
         timeModule.addDeserializer(LocalDateTime.class, new JsonUtil.CommonLocalDateTimeDeserializer());
 
         configure()
                 .setTimeZone(TimeZone.getDefault())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new JavaTimeModule())
                 .registerModule(module)
                 .registerModule(timeModule);
 
@@ -112,7 +111,7 @@ public abstract class JsonUtil {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static Array toJSONArray(CharSequence o) {
+    public static Array toJSONArray(Object o) {
         return new Array((List) toList(o));
     }
 
@@ -167,8 +166,14 @@ public abstract class JsonUtil {
     /*--------------------------------------------- String -> Collection ---------------------------------------------*/
 
     @SuppressWarnings("unchecked")
-    public static List<Map<String, Object>> toList(CharSequence o) {
-        return (List<Map<String, Object>>) toObject(o.toString(), ArrayList.class);
+    public static List<Map<String, Object>> toList(Object o) {
+        if (o instanceof List<?> list && (list.isEmpty() || list.get(0) instanceof Map<?, ?>)) {
+            return (List<Map<String, Object>>) list;
+        }
+        if (o instanceof CharSequence cs) {
+            return (List<Map<String, Object>>) toObject(cs, ArrayList.class);
+        }
+        return (List<Map<String, Object>>) toObject(toJSONString(o), ArrayList.class);
     }
 
     public static <T> List<T> toList(CharSequence json, Class<T> clazz) {
@@ -193,6 +198,9 @@ public abstract class JsonUtil {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(Object o) {
+        if (o instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
         if (o instanceof CharSequence cs) {
             return (Map<String, Object>) toObject(cs, LinkedHashMap.class);
         }

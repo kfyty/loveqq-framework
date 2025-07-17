@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
  * @author kfyty725
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.loveqq.framework.core.autoconfig.beans.GenericBeanDefinition
  */
 @Documented
 @Target(ElementType.TYPE)

@@ -14,7 +14,6 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -33,7 +32,6 @@ import static java.util.Optional.ofNullable;
  */
 @Slf4j
 @Getter
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class MethodBeanDefinition extends GenericBeanDefinition {
     /**
@@ -82,6 +80,21 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from bean method: {}", bean), bean);
     }
 
+    @Override
+    public String toString() {
+        return "BeanDefinition[beanName=" + beanName +
+                ", beanType=" + beanType +
+                ", scope=" + scope +
+                ", isScopeProxy=" + isScopeProxy +
+                ", isLazy=" + isLazyInit +
+                ", isLazyProxy=" + isLazyProxy +
+                ", isAutowireCandidate=" + isAutowireCandidate +
+                ", beanMethod=" + beanMethod +
+                ", initMethod=" + initMethod +
+                ", destroyMethod=" + destroyMethod +
+                ", parent=" + parentDefinition + "]";
+    }
+
     protected Object[] prepareMethodArgs() {
         int index = 0;
         AutowiredDescription methodDescription = autowiredProcessor.getResolver().resolve(this.beanMethod);
@@ -96,16 +109,6 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
             parameters[index++] = autowiredProcessor.doResolveBean(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
         }
         return parameters;
-    }
-
-    public static MethodBeanDefinition resolveMethodBeanDefinition(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof ConditionalBeanDefinition) {
-            return resolveMethodBeanDefinition(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
-        }
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            return (MethodBeanDefinition) beanDefinition;
-        }
-        return null;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

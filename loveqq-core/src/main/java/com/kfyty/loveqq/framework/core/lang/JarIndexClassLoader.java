@@ -443,7 +443,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         }
         try {
             String packageName = className.substring(0, lastDot);
-            super.definePackage(packageName, manifest, jarURL);
+            super.definePackage(packageName, manifest == null ? new Manifest() : manifest, jarURL);
         } catch (IllegalArgumentException e) {
             // ignored
         }

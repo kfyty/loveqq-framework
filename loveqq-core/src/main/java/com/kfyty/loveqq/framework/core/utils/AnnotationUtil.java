@@ -3,13 +3,14 @@ package com.kfyty.loveqq.framework.core.utils;
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 import com.kfyty.loveqq.framework.core.lang.annotation.AnnotationInvocationHandler;
 import com.kfyty.loveqq.framework.core.lang.annotation.Inherited;
-import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.loveqq.framework.core.support.Triple;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -39,13 +40,6 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 public abstract class AnnotationUtil {
-    /**
-     * 注解缓存
-     * key: 注解声明对象
-     * value: 对应存在的注解，包括解析别名后的注解，以及注解的注解
-     */
-    private static final Map<AnnotatedElement, Annotation[]> ANNOTATION_CACHE = new WeakConcurrentHashMap<>(256);
-
     /* ------------------------------------------ 基础方法 ------------------------------------------ */
 
     public static boolean isAnnotation(Class<?> clazz) {
@@ -128,8 +122,8 @@ public abstract class AnnotationUtil {
     /* ------------------------------------------ 获取注解 ------------------------------------------ */
 
     public static <T extends Annotation> T findAnnotation(Object source, Class<T> annotationClass) {
-        if (source instanceof AnnotatedElement) {
-            return findAnnotation((AnnotatedElement) source, annotationClass);
+        if (source instanceof AnnotatedElement element) {
+            return findAnnotation(element, annotationClass);
         }
         return findAnnotation(source.getClass(), annotationClass);
     }
@@ -154,10 +148,7 @@ public abstract class AnnotationUtil {
         if (element == null) {
             return null;
         }
-        Annotation[] annotations = ANNOTATION_CACHE.get(element);
-        if (annotations == null) {
-            annotations = findAnnotations(element);                                                                     // null 表示没有缓存
-        }
+        Annotation[] annotations = findAnnotations(element);
         for (Annotation annotation : annotations) {
             if (annotation.annotationType() == annotationClass) {
                 return (T) annotation;
@@ -167,9 +158,18 @@ public abstract class AnnotationUtil {
     }
 
     public static Annotation[] findAnnotations(AnnotatedElement element) {
-        if (element == null || element instanceof Class<?> && isMetaAnnotation((Class<?>) element)) {
+        // 判断是否元注解
+        if (element == null || element instanceof Class<?> clazz && isMetaAnnotation(clazz)) {
             return CommonUtil.EMPTY_ANNOTATIONS;
         }
+
+        // 先从缓存中获取
+        Triple<Field[], Method[], Annotation[]> cache = ReflectUtil.REFLECT_CACHE.get(element);
+        if (cache != null && cache.getTriple() != null) {
+            return cache.getTriple();
+        }
+
+        // 实际获取注解
         final Annotation[] resolvedAnnotations;
         final Annotation[] directAnnotations = element.getAnnotations();
         if (CommonUtil.notEmpty(directAnnotations)) {
@@ -215,7 +215,10 @@ public abstract class AnnotationUtil {
                 resolvedAnnotations = CommonUtil.EMPTY_ANNOTATIONS;
             }
         }
-        ANNOTATION_CACHE.putIfAbsent(element, resolvedAnnotations);
+
+        // 放入缓存
+        Triple<Field[], Method[], Annotation[]> triple = new Triple<>(cache == null ? null : cache.getKey(), cache == null ? null : cache.getValue(), resolvedAnnotations);
+        ReflectUtil.REFLECT_CACHE.merge(element, triple, ReflectUtil.ANNOTATION_CACHE_MERGE);
         return resolvedAnnotations;
     }
 

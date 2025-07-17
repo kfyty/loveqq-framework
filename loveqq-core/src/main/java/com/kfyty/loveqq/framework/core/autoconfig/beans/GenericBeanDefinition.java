@@ -21,7 +21,6 @@ import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
@@ -47,7 +46,6 @@ import static java.util.Optional.ofNullable;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@ToString
 @EqualsAndHashCode
 public class GenericBeanDefinition implements BeanDefinition {
     /**
@@ -68,7 +66,7 @@ public class GenericBeanDefinition implements BeanDefinition {
     /**
      * 是否启用作用域代理
      */
-    private boolean isScopeProxy;
+    protected boolean isScopeProxy;
 
     /**
      * 是否延迟初始化
@@ -330,6 +328,18 @@ public class GenericBeanDefinition implements BeanDefinition {
         this.ensureAutowiredProcessor(context);
         Object bean = ReflectUtil.newInstance(this.beanType, this.getConstructArgs());
         return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean: {}", bean), bean);
+    }
+
+    @Override
+    public String toString() {
+        return "BeanDefinition[beanName=" + beanName +
+                ", beanType=" + beanType +
+                ", scope=" + scope +
+                ", isScopeProxy=" + isScopeProxy +
+                ", isLazy=" + isLazyInit +
+                ", isLazyProxy=" + isLazyProxy +
+                ", isAutowireCandidate=" + isAutowireCandidate +
+                ", Constructor=" + constructor + "]";
     }
 
     protected void ensureConstructor() {
