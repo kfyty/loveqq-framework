@@ -5,7 +5,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -23,7 +22,6 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
  */
 @Slf4j
 @Getter
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class FactoryBeanDefinition extends GenericBeanDefinition {
     /**
@@ -82,6 +80,18 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
         }
         Object bean = factoryBean.getObject();
         return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from factory bean: {}", bean), bean);
+    }
+
+    @Override
+    public String toString() {
+        return "BeanDefinition[beanName=" + beanName +
+                ", beanType=" + beanType +
+                ", scope=" + scope +
+                ", isScopeProxy=" + isScopeProxy +
+                ", isLazy=" + isLazyInit +
+                ", isLazyProxy=" + isLazyProxy +
+                ", isAutowireCandidate=" + isAutowireCandidate +
+                ", factory=" + factoryBeanDefinition + "]";
     }
 
     public static FactoryBean<?> getFactoryBeanCache(BeanDefinition beanDefinition) {

@@ -2,9 +2,8 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -15,18 +14,28 @@ import java.util.Objects;
  * @date 2021/9/19 11:08
  * @email kfyty725@hotmail.com
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Setter
+@Getter
 @NestedConfigurationProperty
-public class Value<T> {
-    private T value;
+public class Value<V> {
+    /**
+     * value
+     */
+    private V value;
 
-    public T get() {
-        return this.getValue();
+    public Value() {
+
     }
 
-    public void set(T value) {
+    public Value(V value) {
+        this.value = value;
+    }
+
+    public V get() {
+        return this.value;
+    }
+
+    public void set(V value) {
         this.setValue(value);
     }
 
@@ -37,7 +46,7 @@ public class Value<T> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Value<?> && Objects.deepEquals(this.value, ((Value<?>) obj).value);
+        return obj instanceof Value<?> other && Objects.deepEquals(this.value, other.value);
     }
 
     @Override

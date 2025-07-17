@@ -39,7 +39,7 @@ public interface JSONAware {
             return new Array((List<Object>) CommonUtil.toList(o));
         }
         if (o instanceof CharSequence) {
-            return JsonUtil.toJSONArray((CharSequence) o);
+            return JsonUtil.toJSONArray(o);
         }
         throw new IllegalStateException(msg);
     }

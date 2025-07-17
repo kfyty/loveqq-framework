@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
  * @author kfyty725
  * @date 2021/6/12 11:28
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition
  * @see com.kfyty.loveqq.framework.boot.instrument.ConfigurationClassInstrument
  */
 @Documented
@@ -41,15 +42,15 @@ public @interface Bean {
 
     /**
      * 返回是否需要解析嵌套的 {@link com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition}
-     * 返回 false 时，将不再解析返回组件中可能的嵌套的 {@link Bean}
+     * 返回 false 时，将不再解析返回组件中可能的嵌套的 {@link Bean}，精确设置该值可提升应用启动性能
      *
      * @return true/false
      */
     boolean resolveNested() default true;
 
     /**
-     * 返回是否是一个完全独立的 bean，即不依赖其他 bean 的 bean；
-     * 此时不会进行依赖注入
+     * 返回是否是一个完全独立的 bean，即不依赖其他 bean 的 bean
+     * 此时不会进行依赖注入，精确设置该值可提升应用启动性能
      *
      * @return true/false
      */

@@ -12,7 +12,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -20,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotations;
@@ -35,7 +35,6 @@ import static java.util.Collections.unmodifiableList;
  * @email kfyty725@hotmail.com
  */
 @Getter
-@ToString(exclude = {"conditionDeclares", "registered"})
 public class ConditionalBeanDefinition implements BeanDefinition {
     /**
      * 目标 BeanDefinition
@@ -232,6 +231,32 @@ public class ConditionalBeanDefinition implements BeanDefinition {
     @Override
     public Object createInstance(ApplicationContext context) {
         return this.beanDefinition.createInstance(context);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = result * 59 + this.beanDefinition.hashCode();
+        result = result * 59 + this.conditionDeclares.hashCode();
+        return result * 59 + (this.parent == null ? 43 : this.parent.hashCode());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ConditionalBeanDefinition other)) {
+            return false;
+        }
+        return Objects.equals(this.beanDefinition, other.beanDefinition) &&
+                Objects.equals(this.parent, other.parent) &&
+                Objects.equals(this.conditionDeclares, other.conditionDeclares);
+    }
+
+    @Override
+    public String toString() {
+        return "Conditional" + this.beanDefinition.toString();
     }
 
     /**
