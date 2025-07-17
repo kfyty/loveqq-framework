@@ -6,8 +6,11 @@ import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.support.Triple;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -43,6 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -103,14 +107,48 @@ public abstract class ReflectUtil {
     };
 
     /**
-     * 所有属性缓存
+     * 属性缓存合并
      */
-    private static final Map<Class<?>, Field[]> FIELD_MAP_CACHE = new WeakConcurrentHashMap<>(256);
+    static final BiFunction<Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>> FIELD_CACHE_MERGE = (_old_, _new_) -> {
+        if (_old_.getValue() != null) {
+            _new_.setValue(_old_.getValue());
+        }
+        if (_old_.getTriple() != null) {
+            _new_.setTriple(_old_.getTriple());
+        }
+        return _new_;
+    };
 
     /**
-     * 所有方法缓存
+     * 方法缓存合并
      */
-    private static final Map<Class<?>, Method[]> METHOD_MAP_CACHE = new WeakConcurrentHashMap<>(256);
+    static final BiFunction<Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>> METHOD_CACHE_MERGE = (_old_, _new_) -> {
+        if (_old_.getKey() != null) {
+            _new_.setKey(_old_.getKey());
+        }
+        if (_old_.getTriple() != null) {
+            _new_.setTriple(_old_.getTriple());
+        }
+        return _new_;
+    };
+
+    /**
+     * 注解缓存合并
+     */
+    static final BiFunction<Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>, Triple<Field[], Method[], Annotation[]>> ANNOTATION_CACHE_MERGE = (_old_, _new_) -> {
+        if (_old_.getKey() != null) {
+            _new_.setKey(_old_.getKey());
+        }
+        if (_old_.getValue() != null) {
+            _new_.setValue(_old_.getValue());
+        }
+        return _new_;
+    };
+
+    /**
+     * 反射缓存
+     */
+    static final Map<AnnotatedElement, Triple<Field[], Method[], Annotation[]>> REFLECT_CACHE = new WeakConcurrentHashMap<>(1024);
 
     /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
@@ -452,10 +490,12 @@ public abstract class ReflectUtil {
     }
 
     public static Field[] getFields(Class<?> clazz) {
-        Field[] fields = FIELD_MAP_CACHE.get(clazz);
-        if (fields == null) {
+        Field[] fields = null;
+        Triple<Field[], Method[], Annotation[]> cache = REFLECT_CACHE.get(clazz);
+        if (cache == null || (fields = cache.getKey()) == null) {
             fields = FIELDS_SUPPLIER.apply(clazz);
-            FIELD_MAP_CACHE.putIfAbsent(clazz, fields);
+            Triple<Field[], Method[], Annotation[]> triple = new Triple<>(fields, cache == null ? null : cache.getValue(), cache == null ? null : cache.getTriple());
+            REFLECT_CACHE.merge(clazz, triple, FIELD_CACHE_MERGE);
         }
         return fields;
     }
@@ -465,10 +505,12 @@ public abstract class ReflectUtil {
     }
 
     public static Method[] getMethods(Class<?> clazz) {
-        Method[] methods = METHOD_MAP_CACHE.get(clazz);
-        if (methods == null) {
+        Method[] methods = null;
+        Triple<Field[], Method[], Annotation[]> cache = REFLECT_CACHE.get(clazz);
+        if (cache == null || (methods = cache.getValue()) == null) {
             methods = METHODS_SUPPLIER.apply(clazz);
-            METHOD_MAP_CACHE.putIfAbsent(clazz, methods);
+            Triple<Field[], Method[], Annotation[]> triple = new Triple<>(cache == null ? null : cache.getKey(), methods, cache == null ? null : cache.getTriple());
+            REFLECT_CACHE.merge(clazz, triple, METHOD_CACHE_MERGE);
         }
         return methods;
     }

@@ -438,10 +438,18 @@ public class QualifierGeneric {
     }
 
     public static int resolveTypeVariableIndex(TypeVariable<?> typeVariable, Class<?> declaration) {
+        GenericDeclaration targetDeclaration = typeVariable.getGenericDeclaration();
         TypeVariable<? extends Class<?>>[] typeParameters = declaration.getTypeParameters();
         for (int i = 0; i < typeParameters.length; i++) {
-            if (Objects.equals(typeParameters[i], typeVariable)) {
-                return i;
+            TypeVariable<? extends Class<?>> current = typeParameters[i];
+            if (Objects.equals(current.getName(), typeVariable.getName())) {
+                Class<?> currentDeclare = current.getGenericDeclaration();
+                if (Objects.equals(currentDeclare, targetDeclaration)) {
+                    return i;
+                }
+                if (targetDeclaration instanceof Class<?> parent && parent.isAssignableFrom(currentDeclare)) {
+                    return i;
+                }
             }
         }
         throw new ResolvableException("Resolve type variable failed: " + typeVariable);

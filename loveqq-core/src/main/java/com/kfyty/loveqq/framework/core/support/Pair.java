@@ -1,9 +1,9 @@
 package com.kfyty.loveqq.framework.core.support;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
-import lombok.AllArgsConstructor;
+import com.kfyty.loveqq.framework.core.lang.Value;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 /**
  * 描述: 一对值
@@ -13,17 +13,25 @@ import lombok.NoArgsConstructor;
  * @email kfyty725@hotmail.com
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @NestedConfigurationProperty
-public class Pair<K, V> {
+@EqualsAndHashCode(callSuper = true)
+public class Pair<K, V> extends Value<V> {
     /**
      * key
      */
     private K key;
 
-    /**
-     * value
-     */
-    private V value;
+    public Pair() {
+        super();
+    }
+
+    public Pair(final K key, final V value) {
+        super(value);
+        this.key = key;
+    }
+
+    @Override
+    public String toString() {
+        return "key=" + getKey() + ", value=" + getValue();
+    }
 }
