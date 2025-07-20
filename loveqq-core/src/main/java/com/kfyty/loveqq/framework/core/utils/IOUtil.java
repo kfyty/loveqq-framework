@@ -594,14 +594,14 @@ public abstract class IOUtil {
         if (closeTarget == null) {
             return;
         }
-        if (!(closeTarget instanceof AutoCloseable)) {
-            throw new ResolvableException("Can't close: " + closeTarget);
+        if (!(closeTarget instanceof AutoCloseable closeable)) {
+            throw new ResolvableException("The resource can't close: " + closeTarget);
         }
         try {
-            if (closeTarget instanceof Flushable) {
-                ((Flushable) closeTarget).flush();
+            if (closeTarget instanceof Flushable flushable) {
+                flushable.flush();
             }
-            ((AutoCloseable) closeTarget).close();
+            closeable.close();
         } catch (Exception e) {
             throw ExceptionUtil.wrap(e);
         }
