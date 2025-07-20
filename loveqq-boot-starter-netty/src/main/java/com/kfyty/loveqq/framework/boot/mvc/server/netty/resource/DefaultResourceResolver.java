@@ -37,6 +37,6 @@ public class DefaultResourceResolver implements ResourceResolver {
     public URL resolveNative(String uri, Pair<String, String> nativeMapping) {
         String relatePath = removePrefix(nativeMapping.getKey(), uri);
         File file = new File(nativeMapping.getValue(), relatePath);
-        return file.exists() ? file.toURI().toURL() : null;
+        return file.exists() && file.isFile() ? file.toURI().toURL() : null;
     }
 }

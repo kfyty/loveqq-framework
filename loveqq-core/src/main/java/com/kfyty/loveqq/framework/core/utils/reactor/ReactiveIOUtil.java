@@ -4,7 +4,6 @@ import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import reactor.core.publisher.Mono;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -14,7 +13,7 @@ import java.net.http.HttpResponse;
 import java.util.UUID;
 
 import static com.kfyty.loveqq.framework.core.support.DefaultCompleteConsumer.DEFAULT_COMPLETE_CONSUMER;
-import static java.net.http.HttpResponse.BodyHandlers.ofByteArray;
+import static java.net.http.HttpResponse.BodyHandlers.ofInputStream;
 
 /**
  * 描述: 响应式 io 工具
@@ -23,7 +22,7 @@ import static java.net.http.HttpResponse.BodyHandlers.ofByteArray;
  * @date 2023/11/15 17:50
  * @email kfyty725@hotmail.com
  */
-public abstract class ReactorIOUtil {
+public abstract class ReactiveIOUtil {
     /**
      * 默认的 HttpClient
      */
@@ -54,12 +53,12 @@ public abstract class ReactorIOUtil {
                 .map(e -> new File(e + "/" + fileName))
                 .zipWith(Mono.fromSupplier(() -> URI.create(url)))
                 .map(e -> e.mapT2(uri -> HttpRequest.newBuilder().uri(uri).build()))
-                .map(e -> e.mapT2(request -> Mono.fromCompletionStage(DEFAULT_CLIENT.sendAsync(request, ofByteArray()).whenComplete(DEFAULT_COMPLETE_CONSUMER))))
+                .map(e -> e.mapT2(request -> Mono.fromCompletionStage(DEFAULT_CLIENT.sendAsync(request, ofInputStream()).whenComplete(DEFAULT_COMPLETE_CONSUMER))))
                 .flatMap(tuple -> tuple.getT2()
                         .map(HttpResponse::body)
                         .flatMap(body -> {
                             try (BufferedOutputStream bos = new BufferedOutputStream(IOUtil.newOutputStream(tuple.getT1()))) {
-                                IOUtil.copy(new ByteArrayInputStream(body), bos);
+                                IOUtil.copy(body, bos);
                                 return Mono.just(tuple.getT1());
                             } catch (IOException ex) {
                                 return Mono.error(ex);

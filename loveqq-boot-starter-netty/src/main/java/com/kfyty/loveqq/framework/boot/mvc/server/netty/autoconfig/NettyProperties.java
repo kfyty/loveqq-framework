@@ -45,6 +45,11 @@ public class NettyProperties extends WebServerProperties {
     private Boolean forwarded;
 
     /**
+     * 转发是否严格验证
+     */
+    private Boolean forwardedStrictValidation;
+
+    /**
      * 是否启用访问日志
      */
     private Boolean accessLog;
@@ -112,6 +117,7 @@ public class NettyProperties extends WebServerProperties {
         super(primarySource);
         this.compress = false;
         this.forwarded = true;
+        this.forwardedStrictValidation = true;
         this.accessLog = false;
         this.webFilters = new LinkedList<>();
         this.addStaticPattern("/static/**");
