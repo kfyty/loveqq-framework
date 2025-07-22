@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.boot.mvc.server.netty.handler;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyProperties;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
@@ -30,7 +29,6 @@ import reactor.netty.http.server.HttpServerState;
 
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
@@ -113,7 +111,7 @@ public class ResourcesHandler implements ConnectionObserver {
         }
 
         // 构建通用请求/响应对象
-        ServerRequest serverRequest = new NettyServerRequest(request).init(CommonUtil.EMPTY_INPUT_STREAM, Collections.emptyList());
+        ServerRequest serverRequest = new NettyServerRequest(request);
         ServerResponse serverResponse = new NettyServerResponse(response);
 
         // 范围请求头预处理

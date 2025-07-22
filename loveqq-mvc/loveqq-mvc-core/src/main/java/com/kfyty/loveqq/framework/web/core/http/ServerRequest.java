@@ -197,5 +197,5 @@ public interface ServerRequest {
      *
      * @return 原始请求
      */
-    Object getRawRequest();
+    <T> T getRawRequest();
 }

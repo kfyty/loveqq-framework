@@ -77,8 +77,14 @@ public class MethodMapping implements Cloneable {
         return this.produces != null && this.produces.contains("text/event-stream");
     }
 
-    public boolean isStreamJson() {
-        return this.produces != null && (this.produces.contains("application/x-ndjson") || this.produces.contains("application/stream+json"));
+    public boolean isStream() {
+        if (this.produces == null) {
+            return false;
+        }
+        return this.produces.contains("application/octet-stream") ||
+                this.produces.contains("text/event-stream") ||
+                this.produces.contains("application/x-ndjson") ||
+                this.produces.contains("application/stream+json");
     }
 
     public Object getController() {

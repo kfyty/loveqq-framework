@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
@@ -11,6 +13,7 @@ import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.mvc.netty.exception.NettyServerException;
+import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.support.RequestContextHolder;
 import com.kfyty.loveqq.framework.web.mvc.netty.request.support.ResponseContextHolder;
@@ -28,6 +31,7 @@ import reactor.netty.http.server.HttpServerResponse;
 import reactor.util.function.Tuple2;
 
 import java.lang.reflect.Parameter;
+import java.util.Collection;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -56,7 +60,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
-        if (mapping.isStreamJson()) {
+        if (mapping.isStream()) {
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.TRANSFER_ENCODING.toString(), "chunked");
         }
@@ -76,13 +80,45 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         return Mono.just(methodMapping)
                 .doOnNext(mapping -> this.prepareRequestResponse(mapping, request, response))
                 .filterWhen(mapping -> this.applyPreInterceptorAsync(request, response, mapping))
-                .map(mapping -> this.prepareMethodParameter(request, response, mapping))
+                .flatMap(mapping -> this.prepareMethodParameterAsync(request, response, mapping))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .filterWhen(p -> this.applyPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
                 .onErrorResume(e -> this.handleException(request, response, methodMapping, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
                 .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
+    }
+
+    protected Mono<MethodParameter> prepareMethodParameterAsync(ServerRequest request, ServerResponse response, MethodMapping mapping) {
+        if (mapping.getMappingMethod().getParameterCount() == 0) {
+            return Mono.just(super.prepareMethodParameter(request, response, mapping));
+        }
+        NettyServerRequest nettyServerRequest = (NettyServerRequest) request;
+        return nettyServerRequest.receive().map(e -> super.prepareMethodParameter(e, response, mapping));
+    }
+
+    protected void cleanMethodArgumentResources(MethodParameter returnType) {
+        if (returnType.getMethodArgs() == null) {
+            return;
+        }
+
+        // 获取并设置为空，避免执行多次
+        Object[] methodArgs = returnType.getMethodArgs();
+        returnType.setMethodArgs(null);
+
+        // 清理资源
+        for (Object arg : methodArgs) {
+            if (arg instanceof AutoCloseable) {
+                IOUtil.close(arg);
+            }
+            if (arg instanceof Collection<?> || arg != null && arg.getClass().isArray()) {
+                for (Object element : CommonUtil.toList(arg)) {
+                    if (element instanceof AutoCloseable) {
+                        IOUtil.close(element);
+                    }
+                }
+            }
+        }
     }
 
     protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
@@ -96,7 +132,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 ResponseContextHolder.set(prevResponse);
             }
         };
-        return Mono.fromSupplier(supplier).flatMap(e -> this.adapterReturnValue(request, response, returnType, mapping, e));
+        return Mono.fromSupplier(supplier)
+                .flatMap(e -> this.adapterReturnValue(request, response, returnType, mapping, e))
+                .doFinally(s -> this.cleanMethodArgumentResources(returnType));
     }
 
     @Override
@@ -153,7 +191,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             return (Mono<?>) invoked;
         }
         if (invoked instanceof Flux<?>) {
-            if (mapping.isStreamJson() || mapping.isEventStream()) {
+            if (mapping.isStream()) {
                 return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
             return ((Flux<?>) invoked).collectList();

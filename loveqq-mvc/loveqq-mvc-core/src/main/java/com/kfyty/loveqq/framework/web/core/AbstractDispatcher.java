@@ -178,9 +178,17 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
+    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping mapping) {
+        // 方法参数
+        Parameter[] parameters = mapping.getMappingMethod().getParameters();
+
+        // 没有参数直接返回
+        if (parameters.length == 0) {
+            return mapping.buildMethodParameter(CommonUtil.EMPTY_OBJECT_ARRAY).metadata(mapping);
+        }
+
+        // 解析参数
         int index = 0;
-        Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
         Object[] paramValues = new Object[parameters.length];
         for (Parameter parameter : parameters) {
             Object param = this.resolveInternalParameter(parameter, request, response);
@@ -189,16 +197,16 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
                 continue;
             }
 
-            MethodParameter methodParameter = new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), parameter);
-            MethodParameter arguments = this.resolveMethodArguments(methodParameter, methodMapping, request);
+            MethodParameter methodParameter = new MethodParameter(mapping.getController(), mapping.getMappingMethod(), parameter);
+            MethodParameter arguments = this.resolveMethodArguments(methodParameter, mapping, request);
             if (arguments != null) {
                 paramValues[index++] = arguments.getValue();
                 continue;
             }
-
             throw new MethodArgumentResolveException("Can't resolve parameters, there is no suitable parameter resolver available.");
         }
-        return methodMapping.buildMethodParameter(paramValues).metadata(methodMapping);
+
+        return mapping.buildMethodParameter(paramValues).metadata(mapping);
     }
 
     protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
