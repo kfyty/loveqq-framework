@@ -59,7 +59,11 @@ public class UpgradeWebSocketHandler implements BiFunction<WebsocketInbound, Web
 
                     @Override
                     public void onNext(ByteBuf byteBuf) {
-                        webSocketHandler.onMessage(session, byteBuf);
+                        try {
+                            webSocketHandler.onMessage(session, byteBuf);
+                        } finally {
+                            byteBuf.release();
+                        }
                     }
 
                     @Override

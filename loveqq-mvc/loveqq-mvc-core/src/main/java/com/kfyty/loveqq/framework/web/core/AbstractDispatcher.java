@@ -23,6 +23,7 @@ import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,27 +179,26 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
+    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping mapping) {
         int index = 0;
-        Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
-        Object[] paramValues = new Object[parameters.length];
+        final Method method = mapping.getMappingMethod();
+        final Parameter[] parameters = method.getParameters();
+        final Object[] paramValues = new Object[parameters.length];
         for (Parameter parameter : parameters) {
             Object param = this.resolveInternalParameter(parameter, request, response);
             if (param != null) {
                 paramValues[index++] = param;
                 continue;
             }
-
-            MethodParameter methodParameter = new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), parameter);
-            MethodParameter arguments = this.resolveMethodArguments(methodParameter, methodMapping, request);
+            MethodParameter methodParameter = new MethodParameter(mapping.getController(), method, parameter);
+            MethodParameter arguments = this.resolveMethodArguments(methodParameter, mapping, request);
             if (arguments != null) {
                 paramValues[index++] = arguments.getValue();
-                continue;
+            } else {
+                throw new MethodArgumentResolveException("The parameter resolve failed, there's no suitable parameter resolver available.");
             }
-
-            throw new MethodArgumentResolveException("Can't resolve parameters, there is no suitable parameter resolver available.");
         }
-        return methodMapping.buildMethodParameter(paramValues).metadata(methodMapping);
+        return mapping.buildMethodParameter(paramValues).metadata(mapping);
     }
 
     protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {

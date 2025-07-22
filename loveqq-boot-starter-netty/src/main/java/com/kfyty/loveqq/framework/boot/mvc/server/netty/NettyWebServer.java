@@ -22,6 +22,7 @@ import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -196,7 +197,7 @@ public class NettyWebServer implements ServerWebServer {
             });
         }
         if (this.config.getServerConfigure() != null) {
-            this.config.getServerConfigure().accept(this.server);
+            this.server = this.config.getServerConfigure().apply(this.server);
         }
 
         this.server = this.prepareResourceHandler(this.server);
@@ -204,11 +205,11 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     protected HttpServer prepareResourceHandler(HttpServer server) {
-        return server.childObserve(new ResourcesHandler(this.config, this.patternMatcher, this.filters));
+        return server.childObserve(new ResourcesHandler(this.config, this.patternMatcher, Collections.unmodifiableList(this.filters)));
     }
 
     protected HttpServer prepareDispatcherHandler(HttpServer server) {
-        return server.handle(new RequestDispatcherHandler(this.patternMatcher, this.filters, this.dispatcherHandler, this.webSocketHandlerMap));
+        return server.handle(new RequestDispatcherHandler(this.patternMatcher, Collections.unmodifiableList(this.filters), this.dispatcherHandler, this.webSocketHandlerMap));
     }
 
     /**
