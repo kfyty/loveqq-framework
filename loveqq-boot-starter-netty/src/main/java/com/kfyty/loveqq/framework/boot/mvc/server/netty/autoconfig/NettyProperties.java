@@ -16,7 +16,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * 描述:
@@ -102,7 +102,7 @@ public class NettyProperties extends WebServerProperties {
     /**
      * 自定义配置
      */
-    private Consumer<HttpServer> serverConfigure;
+    private UnaryOperator<HttpServer> serverConfigure;
 
     /**
      * 过滤器

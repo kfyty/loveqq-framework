@@ -2,9 +2,16 @@ package com.kfyty.loveqq.framework.web.mvc.netty;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.CookieValue;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.PathVariable;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestAttribute;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestHeader;
+import com.kfyty.loveqq.framework.web.core.annotation.bind.SessionAttribute;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
@@ -56,7 +63,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
-        if (mapping.isStreamJson()) {
+        if (mapping.isStream()) {
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.TRANSFER_ENCODING.toString(), "chunked");
         }
@@ -76,13 +83,34 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
         return Mono.just(methodMapping)
                 .doOnNext(mapping -> this.prepareRequestResponse(mapping, request, response))
                 .filterWhen(mapping -> this.applyPreInterceptorAsync(request, response, mapping))
-                .map(mapping -> this.prepareMethodParameter(request, response, mapping))
+                .flatMap(mapping -> this.prepareMethodParameterAsync(request, response, mapping))
                 .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
                 .filterWhen(p -> this.applyPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
                 .onErrorResume(e -> this.handleException(request, response, methodMapping, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
                 .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
+    }
+
+    protected Mono<MethodParameter> prepareMethodParameterAsync(ServerRequest request, ServerResponse response, MethodMapping mapping) {
+        // 判断是否需要读取请求体
+        Parameter[] parameters = mapping.getMappingMethod().getParameters();
+        for (Parameter parameter : parameters) {
+            Class<?> parameterType = parameter.getType();
+            if (Publisher.class.isAssignableFrom(parameterType) && AnnotationUtil.hasAnnotation(parameter, RequestBody.class)) {
+                // 具有响应式请求体参数则框架不再读取请求体
+                return Mono.just(super.prepareMethodParameter(request, response, mapping));
+            }
+            if (ServerRequest.class.isAssignableFrom(parameterType) || HttpServerRequest.class.isAssignableFrom(parameterType)) {
+                continue;
+            }
+            if (AnnotationUtil.hasAnyAnnotation(parameter, PathVariable.class, CookieValue.class, RequestHeader.class, RequestAttribute.class, SessionAttribute.class)) {
+                continue;
+            }
+            // 具有读取请求体参数则框架自动读取
+            return request.receive().map(e -> super.prepareMethodParameter(e, response, mapping));
+        }
+        return Mono.just(super.prepareMethodParameter(request, response, mapping));
     }
 
     protected Mono<?> invokeMethodMapping(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping) {
@@ -153,7 +181,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             return (Mono<?>) invoked;
         }
         if (invoked instanceof Flux<?>) {
-            if (mapping.isStreamJson() || mapping.isEventStream()) {
+            if (mapping.isStream()) {
                 return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
             return ((Flux<?>) invoked).collectList();

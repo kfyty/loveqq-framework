@@ -1,6 +1,9 @@
 package com.kfyty.loveqq.framework.web.core.http;
 
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.net.HttpCookie;
@@ -197,5 +200,45 @@ public interface ServerRequest {
      *
      * @return 原始请求
      */
-    Object getRawRequest();
+    <T> T getRawRequest();
+
+    /*------------------------------------------------- 下面是响应式方法 -------------------------------------------------*/
+
+    /**
+     * 获取原始请求体
+     *
+     * @return request body
+     */
+    default Flux<ByteBuf> getBody() {
+        throw new UnsupportedOperationException("ServerRequest.getBody");
+    }
+
+    /**
+     * 获取聚合数据后的原始请求体
+     *
+     * @return request body
+     */
+    default Mono<ByteBuf> getAggregateBody() {
+        throw new UnsupportedOperationException("ServerRequest.getBody");
+    }
+
+    /**
+     * 修改请求体
+     * 目前不支持修改 POST 表单及上传文件请求体
+     *
+     * @return {@link Mono}
+     */
+    default Mono<Void> mutateBody(Flux<ByteBuf> body) {
+        throw new UnsupportedOperationException("ServerRequest.mutateBody");
+    }
+
+    /**
+     * 接收解码后的请求体
+     * 调用该方法后，{@link this#getParameterMap()}/{@link this#getMultipart()}/{@link this#getInputStream()} 才可用
+     *
+     * @return 解码后的请求体
+     */
+    default Mono<ServerRequest> receive() {
+        throw new UnsupportedOperationException("ServerRequest.receive");
+    }
 }
