@@ -73,18 +73,12 @@ public class MethodMapping implements Cloneable {
         return this.paths.length;
     }
 
-    public boolean isEventStream() {
-        return this.produces != null && this.produces.contains("text/event-stream");
+    public boolean isStream() {
+        return isStream(this.produces);
     }
 
-    public boolean isStream() {
-        if (this.produces == null) {
-            return false;
-        }
-        return this.produces.contains("application/octet-stream") ||
-                this.produces.contains("text/event-stream") ||
-                this.produces.contains("application/x-ndjson") ||
-                this.produces.contains("application/stream+json");
+    public boolean isEventStream() {
+        return this.produces != null && this.produces.contains("text/event-stream");
     }
 
     public Object getController() {
@@ -141,5 +135,15 @@ public class MethodMapping implements Cloneable {
         }
         methodMapping.setRestful(true);
         methodMapping.setRestfulMappingIndex(mappingIndex.toArray(new Pair[0]));
+    }
+
+    public static boolean isStream(String produces) {
+        if (produces == null) {
+            return false;
+        }
+        return produces.contains("application/octet-stream") ||
+                produces.contains("text/event-stream") ||
+                produces.contains("application/x-ndjson") ||
+                produces.contains("application/stream+json");
     }
 }

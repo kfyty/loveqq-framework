@@ -278,7 +278,7 @@ public abstract class CommonUtil {
 
     public static Map<String, String> resolveURLParameters(String url, String prefix) {
         if (empty(url) || url.indexOf('=') < 0) {
-            return Collections.emptyMap();
+            return new HashMap<>(4);
         }
         int index = url.indexOf('?');
         String parameter = index < 0 ? url : url.substring(index + 1);

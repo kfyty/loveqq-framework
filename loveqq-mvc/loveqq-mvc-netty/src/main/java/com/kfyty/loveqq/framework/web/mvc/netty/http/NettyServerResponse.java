@@ -1,7 +1,10 @@
 package com.kfyty.loveqq.framework.web.mvc.netty.http;
 
 import com.kfyty.loveqq.framework.core.utils.NIOUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
+import com.kfyty.loveqq.framework.web.mvc.netty.request.support.RequestContextHolder;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import lombok.RequiredArgsConstructor;
@@ -58,11 +61,6 @@ public class NettyServerResponse implements ServerResponse {
     }
 
     @Override
-    public Object sendRedirect(String location) {
-        return this.response.sendRedirect(location);
-    }
-
-    @Override
     public void setHeader(String name, String value) {
         this.response.header(name, value);
     }
@@ -93,12 +91,24 @@ public class NettyServerResponse implements ServerResponse {
     }
 
     @Override
+    public Object sendForward(String location) {
+        ServerRequest request = RequestContextHolder.get();
+        DispatcherHandler handler = (DispatcherHandler) request.getAttribute(DispatcherHandler.DISPATCHER_HANDLER_ATTRIBUTE);
+        return handler.service(request.mutate().path(location).build(), this);
+    }
+
+    @Override
+    public Object sendRedirect(String location) {
+        return this.response.sendRedirect(location);
+    }
+
+    @Override
     public void flush() throws IOException {
         this.outputStream.flush();
     }
 
     @Override
-    public Object getRawResponse() {
+    public HttpServerResponse getRawResponse() {
         return this.response;
     }
 
@@ -106,14 +116,14 @@ public class NettyServerResponse implements ServerResponse {
     private class ReactorNettyByteArrayOutputStream extends ByteArrayOutputStream {
 
         @Override
-        public void flush() throws IOException {
+        public void flush() {
             ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
             NettyServerResponse.this.response.send(Mono.just(NIOUtil.from(outputStream.toByteArray())), e -> true).then().subscribe();
             outputStream.reset();
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
             byte[] bytes = outputStream.toByteArray();
             if (bytes.length > 0) {

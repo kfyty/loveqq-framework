@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
@@ -69,8 +70,8 @@ public class WebServletMvcAutoConfig {
         dispatcherServlet.setReturnValueProcessors(this.returnValueProcessors);
         dispatcherServlet.setExceptionHandlers(this.exceptionHandlers);
         dispatcherServlet.setRequestMappingMatcher(requestMappingMatcher);
-        dispatcherServlet.setPrefix(prefix);
-        dispatcherServlet.setSuffix(suffix);
+        Mapping.from(prefix).whenNotNull(dispatcherServlet::setPrefix);
+        Mapping.from(suffix).whenNotNull(dispatcherServlet::setSuffix);
         return dispatcherServlet;
     }
 }

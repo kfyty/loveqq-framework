@@ -4,10 +4,12 @@ import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
+import com.kfyty.loveqq.framework.core.lang.internal.SunReflectionSupport;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.Triple;
 import lombok.extern.slf4j.Slf4j;
+import sun.misc.Unsafe;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -374,11 +376,40 @@ public abstract class ReflectUtil {
      * @param value    新值
      */
     public static void setFinalFieldValue(Object instance, Field field, Object value) {
-        int modifiers = field.getModifiers();
+        final int modifiers = field.getModifiers();
         Field modifiersField = ReflectUtil.getField(Field.class, "modifiers");
-        setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
-        setFieldValue(instance, field, value);
-        setFieldValue(field, modifiersField, modifiers);
+        try {
+            setFieldValue(field, modifiersField, field.getModifiers() & ~Modifier.FINAL);
+            setFieldValue(instance, field, value);
+            setFieldValue(field, modifiersField, modifiers);
+        } catch (InternalError error) {
+            // 恢复
+            setFieldValue(field, modifiersField, modifiers);
+
+            // 基于 unsafe 设置
+            long offset = -1L;
+            Unsafe unsafe = SunReflectionSupport.getUnSafe();
+
+            try {
+                offset = Modifier.isStatic(modifiers) ? unsafe.staticFieldOffset(field) : unsafe.objectFieldOffset(field);
+            } catch (UnsupportedOperationException e) {
+                Field theInternalUnsafeField = getField(unsafe.getClass(), "theInternalUnsafe");
+                if (theInternalUnsafeField == null) {
+                    throw error;
+                }
+                Object theInternalUnsafe = getFieldValue(unsafe, theInternalUnsafeField);
+                if (Modifier.isStatic(modifiers)) {
+                    offset = invokeMethod(theInternalUnsafe, "staticFieldOffset", field);
+                } else {
+                    offset = invokeMethod(theInternalUnsafe, "objectFieldOffset", field);
+                }
+            }
+
+            // 设置值
+            if (offset > -1L) {
+                unsafe.putObject(instance, offset, value);
+            }
+        }
     }
 
     public static Object getFieldValue(Object instance, String fieldName) {

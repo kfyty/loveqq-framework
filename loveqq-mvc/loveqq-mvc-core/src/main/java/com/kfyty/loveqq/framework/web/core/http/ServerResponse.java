@@ -42,14 +42,6 @@ public interface ServerResponse extends Flushable {
     void addCookie(HttpCookie cookie);
 
     /**
-     * 重定向
-     *
-     * @param location 重定向路径
-     * @return 重定向结果，主要是响应式使用
-     */
-    Object sendRedirect(String location);
-
-    /**
      * 设置请求头，直接覆盖
      *
      * @param name  header name
@@ -94,9 +86,25 @@ public interface ServerResponse extends Flushable {
     void setStatus(int sc);
 
     /**
+     * 转发
+     *
+     * @param location 转发路径
+     * @return 转发结果，主要是响应式使用
+     */
+    Object sendForward(String location);
+
+    /**
+     * 重定向
+     *
+     * @param location 重定向路径
+     * @return 重定向结果，主要是响应式使用
+     */
+    Object sendRedirect(String location);
+
+    /**
      * 获取原始响应
      *
      * @return 原始响应
      */
-    Object getRawResponse();
+    <T> T getRawResponse();
 }

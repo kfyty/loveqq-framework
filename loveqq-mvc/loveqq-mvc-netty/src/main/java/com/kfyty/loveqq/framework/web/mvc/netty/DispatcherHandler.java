@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.web.mvc.netty;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.CookieValue;
@@ -54,12 +53,16 @@ import static com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorH
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHandler> {
+    /**
+     * DISPATCHER_HANDLER_ATTRIBUTE
+     */
+    public static final String DISPATCHER_HANDLER_ATTRIBUTE = DispatcherHandler.class.getName() + ".DISPATCHER_HANDLER_ATTRIBUTE";
 
     public Publisher<Void> service(ServerRequest req, ServerResponse resp) {
         return this.processRequest(req, resp);
     }
 
-    protected void prepareRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
+    protected Mono<MethodMapping> prepareRequestResponse(MethodMapping mapping, ServerRequest request, ServerResponse response) {
         if (mapping.getProduces() != null) {
             response.setContentType(mapping.getProduces());
         }
@@ -71,25 +74,28 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             response.setHeader(HttpHeaderNames.CONNECTION.toString(), "keep-alive");
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
         }
-        LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI()));
+        if (log.isDebugEnabled()) {
+            log.debug("Matched uri mapping [{}] to request URI [{}] !", mapping.getUrl(), request.getRequestURI());
+        }
+        request.setAttribute(DISPATCHER_HANDLER_ATTRIBUTE, this);
+        return Mono.just(mapping);
     }
 
     protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
-        MethodMapping methodMapping = this.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
-        if (methodMapping == null) {
+        MethodMapping route = this.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
+        if (route == null) {
             return ((HttpServerResponse) response.getRawResponse()).sendNotFound();
         }
         AtomicReference<Throwable> throwableReference = new AtomicReference<>();
-        return Mono.just(methodMapping)
-                .doOnNext(mapping -> this.prepareRequestResponse(mapping, request, response))
+        return this.prepareRequestResponse(route, request, response)
                 .filterWhen(mapping -> this.applyPreInterceptorAsync(request, response, mapping))
                 .flatMap(mapping -> this.prepareMethodParameterAsync(request, response, mapping))
-                .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, methodMapping))
-                .filterWhen(p -> this.applyPostInterceptorAsync(request, response, methodMapping, p.getT2()).thenReturn(true))
+                .zipWhen(returnType -> this.invokeMethodMapping(request, response, returnType, route))
+                .filterWhen(p -> this.applyPostInterceptorAsync(request, response, route, p.getT2()).thenReturn(true))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getT2(), p.getT1(), request, response)))
-                .onErrorResume(e -> this.handleException(request, response, methodMapping, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
+                .onErrorResume(e -> this.handleException(request, response, route, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getT1(), p.getT2(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
-                .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, methodMapping, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
+                .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, route, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
     }
 
     protected Mono<MethodParameter> prepareMethodParameterAsync(ServerRequest request, ServerResponse response, MethodMapping mapping) {
@@ -153,9 +159,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     @Override
-    protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter parameter, ServerRequest request, ServerResponse response) {
+    protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter returnType, ServerRequest request, ServerResponse response) {
         try {
-            Object processedReturnValue = super.handleReturnValue(retValue, parameter, request, response);
+            Object processedReturnValue = super.handleReturnValue(retValue, returnType, request, response);
             return writeReturnValue(processedReturnValue, request, response, this.shouldFlush(response.getContentType()));
         } catch (Exception e) {
             throw e instanceof NettyServerException ? (NettyServerException) e : new NettyServerException(unwrap(e));
@@ -171,20 +177,20 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     protected Mono<?> adapterReturnValue(ServerRequest request, ServerResponse response, MethodParameter returnType, MethodMapping mapping, Object invoked) {
-        if (invoked instanceof NettyOutbound) {
-            return Mono.from((NettyOutbound) invoked);
+        if (invoked instanceof NettyOutbound outbound) {
+            return Mono.from(outbound);
         }
-        if (invoked instanceof CompletionStage<?>) {
-            return Mono.fromCompletionStage((CompletionStage<?>) invoked);
+        if (invoked instanceof CompletionStage<?> stage) {
+            return Mono.fromCompletionStage(stage);
         }
-        if (invoked instanceof Mono<?>) {
-            return (Mono<?>) invoked;
+        if (invoked instanceof Mono<?> mono) {
+            return mono;
         }
-        if (invoked instanceof Flux<?>) {
+        if (invoked instanceof Flux<?> flux) {
             if (mapping.isStream()) {
-                return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
+                return flux.flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
-            return ((Flux<?>) invoked).collectList();
+            return flux.collectList();
         }
         return invoked == null ? Mono.empty() : Mono.just(invoked);
     }

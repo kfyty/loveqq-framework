@@ -83,7 +83,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
         if (retValue == null) {
             return Mono.empty();
         }
-        HttpServerResponse response = (HttpServerResponse) serverResponse.getRawResponse();
+        HttpServerResponse response = serverResponse.getRawResponse();
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
         }
@@ -97,7 +97,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
             return response.send((Publisher<? extends ByteBuf>) publisher, e -> isSse);
         }
         if (retValue instanceof RandomAccessStream stream) {
-            return response.send(new InputStreamByteBufPublisher(serverRequest, serverResponse, stream).onBackpressureBuffer(), e -> stream.refresh());
+            return response.send(new RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream).onBackpressureBuffer(), e -> stream.refresh());
         }
         if (retValue instanceof byte[] bytes) {
             return response.send(Mono.just(from(bytes)), e -> isSse);
@@ -118,7 +118,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
      * 输入流发布者
      */
     @RequiredArgsConstructor
-    class InputStreamByteBufPublisher implements Publisher<ByteBuf> {
+    class RandomAccessStreamByteBufPublisher implements Publisher<ByteBuf> {
         /**
          * 请求
          */
@@ -183,11 +183,11 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
                 }
                 try {
                     if (this.startRead()) {
-                        InputStreamByteBufPublisher.this.s.onComplete();
+                        RandomAccessStreamByteBufPublisher.this.s.onComplete();
                     }
                 } catch (Throwable e) {
                     this.cancel();
-                    InputStreamByteBufPublisher.this.s.onError(e);
+                    RandomAccessStreamByteBufPublisher.this.s.onError(e);
                 }
             }
 
@@ -213,7 +213,7 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
             @SuppressWarnings("unchecked")
             protected void doStartRead() throws IOException {
                 List<AcceptRange> ranges = (List<AcceptRange>) request.getAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE);
-                try (RandomAccessStream stream = InputStreamByteBufPublisher.this.stream) {
+                try (RandomAccessStream stream = RandomAccessStreamByteBufPublisher.this.stream) {
                     AbstractResponseBodyHandlerMethodReturnValueProcessor.doHandleRandomAccessStreamReturnValue(
                             stream,
                             ranges,

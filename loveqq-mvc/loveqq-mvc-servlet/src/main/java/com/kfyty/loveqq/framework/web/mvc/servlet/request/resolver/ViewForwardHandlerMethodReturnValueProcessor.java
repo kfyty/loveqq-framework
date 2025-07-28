@@ -17,11 +17,15 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.removePrefix;
  */
 @Component
 @Order(Integer.MIN_VALUE)
-public class RedirectViewHandlerMethodReturnValueProcessor implements HandlerMethodReturnValueProcessor {
+public class ViewForwardHandlerMethodReturnValueProcessor implements HandlerMethodReturnValueProcessor {
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        return returnValue instanceof CharSequence cs && cs.toString().startsWith("redirect:");
+        if (returnValue instanceof CharSequence cs) {
+            String view = cs.toString();
+            return view.startsWith("forward:") || view.startsWith("redirect:");
+        }
+        return false;
     }
 
     @Override
@@ -30,6 +34,10 @@ public class RedirectViewHandlerMethodReturnValueProcessor implements HandlerMet
         if (container.getModel() != null) {
             container.getModel().forEach((k, v) -> container.getRequest().setAttribute(k, v));
         }
-        container.getResponse().sendRedirect(removePrefix("redirect:", view));
+        if (view.startsWith("redirect:")) {
+            container.getResponse().sendRedirect(removePrefix("redirect:", view));
+        } else {
+            container.getResponse().sendForward(container.getPrefix() + removePrefix("forward:", view) + container.getSuffix());
+        }
     }
 }

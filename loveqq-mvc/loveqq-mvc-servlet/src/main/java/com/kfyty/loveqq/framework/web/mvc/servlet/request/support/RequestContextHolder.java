@@ -12,6 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 public class RequestContextHolder extends com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder {
 
     public static HttpServletRequest getRequest() {
-        return (HttpServletRequest) get().getRawRequest();
+        return get().getRawRequest();
     }
 }

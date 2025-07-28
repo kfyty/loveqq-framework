@@ -223,16 +223,6 @@ public interface ServerRequest {
     }
 
     /**
-     * 修改请求体
-     * 目前不支持修改 POST 表单及上传文件请求体
-     *
-     * @return {@link Mono}
-     */
-    default Mono<Void> mutateBody(Flux<ByteBuf> body) {
-        throw new UnsupportedOperationException("ServerRequest.mutateBody");
-    }
-
-    /**
      * 接收解码后的请求体
      * 调用该方法后，{@link this#getParameterMap()}/{@link this#getMultipart()}/{@link this#getInputStream()} 才可用
      *
@@ -240,5 +230,66 @@ public interface ServerRequest {
      */
     default Mono<ServerRequest> receive() {
         throw new UnsupportedOperationException("ServerRequest.receive");
+    }
+
+    /**
+     * 创建请求构建器
+     *
+     * @return {@link ServerRequestBuilder}
+     */
+    default ServerRequestBuilder mutate() {
+        throw new UnsupportedOperationException("ServerRequest.mutate");
+    }
+
+    /**
+     * {@link ServerRequest} 构建器
+     */
+    interface ServerRequestBuilder {
+        /**
+         * 请求路径
+         *
+         * @param path 请求路径
+         * @return this
+         */
+        ServerRequestBuilder path(String path);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(String body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(byte[] body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(InputStream body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(Flux<ByteBuf> body);
+
+        /**
+         * 构建请求
+         *
+         * @return 新的请求
+         */
+        ServerRequest build();
     }
 }
