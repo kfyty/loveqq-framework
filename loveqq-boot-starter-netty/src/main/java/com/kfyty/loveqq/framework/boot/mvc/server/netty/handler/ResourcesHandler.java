@@ -119,16 +119,16 @@ public class ResourcesHandler implements ConnectionObserver {
 
         // 预检请求不发送实际数据
         if (RequestMethod.matchRequestMethod(serverRequest.getMethod()) == RequestMethod.HEAD) {
-            new DefaultFilterChain(this.patternMatcher, this.filters, response::send).doFilter(serverRequest, serverResponse).subscribe(operations.disposeSubscriber());
+            new DefaultFilterChain(this.patternMatcher, this.filters, (req, res) -> response.send()).doFilter(serverRequest, serverResponse).subscribe(operations.disposeSubscriber());
             return;
         }
 
         // 构建发布者
         serverRequest.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
-        ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.InputStreamByteBufPublisher(serverRequest, serverResponse, stream);
+        ReactorHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream);
 
         // 订阅处理请求
-        new DefaultFilterChain(this.patternMatcher, this.filters, () -> response.send(publisher))
+        new DefaultFilterChain(this.patternMatcher, this.filters, (req, res) -> response.send(publisher))
                 .doFilter(serverRequest, serverResponse)
                 .subscribe(operations.disposeSubscriber());
     }

@@ -108,7 +108,8 @@ public abstract class AopUtil {
         if (isJdkProxy(targetClass) || declaringClass == targetClass || declaringClass == Object.class) {
             return method;
         }
-        return ofNullable(ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);
+        Method target = ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes());
+        return target == null ? method : target;
     }
 
     /**

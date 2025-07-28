@@ -100,12 +100,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      * @return true/false
      */
     public boolean shouldFlush(String contentType) {
-        if (contentType == null) {
-            return false;
-        }
-        return contentType.contains("text/event-stream") ||
-                contentType.contains("application/stream+json") ||
-                contentType.contains("application/x-ndjson");
+        return MethodMapping.isStream(contentType);
     }
 
     /**

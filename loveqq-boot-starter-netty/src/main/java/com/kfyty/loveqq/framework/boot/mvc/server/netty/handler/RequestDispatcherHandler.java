@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 /**
  * 描述: 请求分发处理器
@@ -70,8 +69,8 @@ public class RequestDispatcherHandler implements BiFunction<HttpServerRequest, H
             if (webSocketHandler == null) {
                 return response.sendNotFound();
             }
-            Supplier<Publisher<Void>> requestProcessorSupplier = () -> response.sendWebsocket(this.upgradeWebSocketHandler(serverRequest, webSocketHandler));
-            return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessorSupplier).doFilter(serverRequest, null);
+            BiFunction<ServerRequest, ServerResponse, Publisher<Void>> requestProcessor = (req, res) -> response.sendWebsocket(this.upgradeWebSocketHandler(serverRequest, webSocketHandler));
+            return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessor).doFilter(serverRequest, null);
         }
 
         // 处理请求
@@ -89,17 +88,17 @@ public class RequestDispatcherHandler implements BiFunction<HttpServerRequest, H
         ServerRequest request = new NettyServerRequest(serverRequest);
         ServerResponse response = new NettyServerResponse(serverResponse);
 
-        // 构建请求处理器生产者
-        Supplier<Publisher<Void>> requestProcessorSupplier = () -> {
+        // 构建请求处理器
+        BiFunction<ServerRequest, ServerResponse, Publisher<Void>> requestProcessor = (req, res) -> {
             if (serverResponse.hasSentHeaders()) {
                 return Mono.empty();
             }
             if (serverRequest.method() == HttpMethod.OPTIONS) {
                 return serverResponse.send();
             }
-            return this.dispatcherHandler.service(request, response);
+            return this.dispatcherHandler.service(req, res);
         };
 
-        return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessorSupplier).doFilter(request, response);
+        return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessor).doFilter(request, response);
     }
 }

@@ -4,16 +4,16 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.filter.FilterChain;
+import com.kfyty.loveqq.framework.web.core.filter.ws.WsFilter;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.filter.ws.WsFilter;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 
 /**
  * 描述: 默认实现，主要是提供 reactor 实现
@@ -41,13 +41,13 @@ public class DefaultFilterChain implements FilterChain {
     /**
      * 处理器
      */
-    private final Supplier<Publisher<Void>> handler;
+    private final BiFunction<ServerRequest, ServerResponse, Publisher<Void>> handler;
 
-    public DefaultFilterChain(List<Filter> filters, Supplier<Publisher<Void>> handler) {
+    public DefaultFilterChain(List<Filter> filters, BiFunction<ServerRequest, ServerResponse, Publisher<Void>> handler) {
         this(new AntPathMatcher(), filters, handler);
     }
 
-    public DefaultFilterChain(PatternMatcher patternMatcher, List<Filter> filters, Supplier<Publisher<Void>> handler) {
+    public DefaultFilterChain(PatternMatcher patternMatcher, List<Filter> filters, BiFunction<ServerRequest, ServerResponse, Publisher<Void>> handler) {
         this.index = 0;
         this.matcher = patternMatcher;
         this.filters = filters;
@@ -57,7 +57,7 @@ public class DefaultFilterChain implements FilterChain {
     @Override
     public Publisher<Void> doFilter(ServerRequest request, ServerResponse response) {
         if (this.filters == null || this.index >= this.filters.size()) {
-            return Mono.defer(() -> Mono.from(this.handler.get()));
+            return Mono.defer(() -> Mono.from(this.handler.apply(request, response)));
         }
         Filter filter = this.filters.get(index++);
         if (filter instanceof WsFilter) {

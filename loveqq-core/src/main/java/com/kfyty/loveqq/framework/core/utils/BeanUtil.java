@@ -32,6 +32,11 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public abstract class BeanUtil {
     /**
+     * 默认的复制属性断言
+     */
+    public static final BiPredicate<Field, Object> DEFAULT_COPY_PREDICATE = (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers()));
+
+    /**
      * 作用域代理原 bean 名称前缀
      */
     public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
@@ -167,7 +172,7 @@ public abstract class BeanUtil {
      * @return 目标对象
      */
     public static <S, T> T copyProperties(S source, T target) {
-        return copyProperties(source, target, (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers())));
+        return copyProperties(source, target, DEFAULT_COPY_PREDICATE);
     }
 
     /**
@@ -178,7 +183,7 @@ public abstract class BeanUtil {
      * @return 目标对象
      */
     public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz) {
-        return copyProperties(map, clazz, (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers())));
+        return copyProperties(map, clazz, DEFAULT_COPY_PREDICATE);
     }
 
     /**
@@ -202,18 +207,18 @@ public abstract class BeanUtil {
     public static <S, T> T copyProperties(S source, T target, BiPredicate<Field, Object> fieldValTest) {
         Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
         Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
-        for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
-            if (!targetFieldMap.containsKey(fieldEntry.getKey())) {
-                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass()));
+        for (Map.Entry<String, Field> entry : sourceFileMap.entrySet()) {
+            if (!targetFieldMap.containsKey(entry.getKey())) {
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy bean from [{}] to [{}], there's not field found from target bean !", source.getClass(), target.getClass()));
                 continue;
             }
-            Field field = targetFieldMap.get(fieldEntry.getKey());
-            Object fieldValue = ReflectUtil.getFieldValue(source, fieldEntry.getValue());
-            if (!fieldValTest.test(field, fieldValue)) {
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", fieldEntry.getValue()));
-                continue;
+            Field field = targetFieldMap.get(entry.getKey());
+            Object fieldValue = ReflectUtil.getFieldValue(source, entry.getValue());
+            if (fieldValTest.test(field, fieldValue)) {
+                ReflectUtil.setFieldValue(target, field, fieldValue);
+            } else {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
             }
-            ReflectUtil.setFieldValue(target, field, fieldValue);
         }
         return target;
     }
@@ -237,11 +242,11 @@ public abstract class BeanUtil {
                 LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
                 continue;
             }
-            if (!fieldValTest.test(field, entry.getValue())) {
+            if (fieldValTest.test(field, entry.getValue())) {
+                ReflectUtil.setFieldValue(o, field, entry.getValue());
+            } else {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", field));
-                continue;
             }
-            ReflectUtil.setFieldValue(o, field, entry.getValue());
         }
         return o;
     }
@@ -264,11 +269,11 @@ public abstract class BeanUtil {
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {
             Object fieldValue = ReflectUtil.getFieldValue(obj, entry.getValue());
-            if (!fieldValTest.test(entry.getValue(), fieldValue)) {
+            if (fieldValTest.test(entry.getValue(), fieldValue)) {
+                map.put(entry.getKey(), fieldValue);
+            } else {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
-                continue;
             }
-            map.put(entry.getKey(), fieldValue);
         }
         return map;
     }

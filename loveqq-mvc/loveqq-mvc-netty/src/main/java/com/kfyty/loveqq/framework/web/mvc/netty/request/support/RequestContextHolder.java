@@ -22,10 +22,10 @@ public class RequestContextHolder extends com.kfyty.loveqq.framework.web.core.re
     }
 
     public static HttpServerRequest getRequest() {
-        return (HttpServerRequest) get().getRawRequest();
+        return get().getRawRequest();
     }
 
     public static HttpServerRequest getRequest(ContextView contextView) {
-        return (HttpServerRequest) get(contextView).getRawRequest();
+        return get(contextView).getRawRequest();
     }
 }

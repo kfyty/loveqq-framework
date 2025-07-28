@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
@@ -47,8 +48,8 @@ public class NettyServerMvcAutoConfig {
         dispatcherHandler.setReturnValueProcessors(this.returnValueProcessors);
         dispatcherHandler.setExceptionHandlers(this.exceptionHandlers);
         dispatcherHandler.setRequestMappingMatcher(requestMappingMatcher);
-        dispatcherHandler.setPrefix(prefix);
-        dispatcherHandler.setSuffix(suffix);
+        Mapping.from(prefix).whenNotNull(dispatcherHandler::setPrefix);
+        Mapping.from(suffix).whenNotNull(dispatcherHandler::setSuffix);
         return dispatcherHandler;
     }
 }
