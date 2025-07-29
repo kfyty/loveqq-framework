@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.web.core.interceptor;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 /**
  * 描述: 拦截器接口
@@ -38,7 +38,7 @@ public interface HandlerInterceptor {
      * @param handler  处理器
      * @return true if continue
      */
-    default boolean preHandle(ServerRequest request, ServerResponse response, MethodMapping handler) {
+    default boolean preHandle(ServerRequest request, ServerResponse response, Route handler) {
         return true;
     }
 
@@ -50,7 +50,7 @@ public interface HandlerInterceptor {
      * @param handler  处理器
      * @param retValue 返回值
      */
-    default void postHandle(ServerRequest request, ServerResponse response, MethodMapping handler, Object retValue) {
+    default void postHandle(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
     }
 
     /**
@@ -61,6 +61,6 @@ public interface HandlerInterceptor {
      * @param handler  处理器
      * @param ex       异常，可能为空
      */
-    default void afterCompletion(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable ex) {
+    default void afterCompletion(ServerRequest request, ServerResponse response, Route handler, Throwable ex) {
     }
 }

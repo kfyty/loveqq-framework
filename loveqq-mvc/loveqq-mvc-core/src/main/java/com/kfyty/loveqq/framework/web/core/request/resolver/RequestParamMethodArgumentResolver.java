@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestParam;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +44,7 @@ public class RequestParamMethodArgumentResolver extends AbstractHandlerMethodArg
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
         RequestParam annotation = findAnnotation(parameter.getParameter(), RequestParam.class);
         String paramName = parameter.getParameterName(annotation, RequestParam::value);
 

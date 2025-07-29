@@ -7,7 +7,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,9 +35,9 @@ public class DefaultRequestMappingHandler implements RequestMappingHandler {
      */
     public static final IntFunction<RequestMapping[]> REQUEST_MAPPING_ARRAY_SUPPLIER = RequestMapping[]::new;
 
-    public List<MethodMapping> resolveRequestMapping(Class<?> controllerClass, Lazy<Object> controller) {
+    public List<Route> resolveRequestMappingRoute(Class<?> controllerClass, Lazy<Object> controller) {
         String superUrl = CommonUtil.EMPTY_STRING;
-        List<MethodMapping> retValue = new ArrayList<>();
+        List<Route> retValue = new ArrayList<>();
         RequestMapping annotation = AnnotationUtil.findAnnotation(controllerClass, RequestMapping.class);
         if (annotation != null) {
             superUrl = CommonUtil.formatURI(annotation.value());
@@ -45,7 +46,7 @@ public class DefaultRequestMappingHandler implements RequestMappingHandler {
         return retValue;
     }
 
-    protected void resolveMethodMapping(RequestMapping superAnnotation, String superUrl, Class<?> controllerClass, Lazy<Object> controller, List<MethodMapping> methodMappings) {
+    protected void resolveMethodMapping(RequestMapping superAnnotation, String superUrl, Class<?> controllerClass, Lazy<Object> controller, List<Route> routes) {
         final boolean expose = superAnnotation != null && superAnnotation.expose();
         final Method[] methods = ReflectUtil.getMethods(controllerClass);
         for (Method method : methods) {
@@ -66,26 +67,26 @@ public class DefaultRequestMappingHandler implements RequestMappingHandler {
                     RequestMethod requestMethod = annotation == superAnnotation ? RequestMethod.POST : annotation.method();
                     String requestURI = annotation == superAnnotation || CommonUtil.empty(annotation.value()) && annotation.strategy() == DEFAULT ? method.getName() : annotation.value();
                     String mappingPath = superUrl + CommonUtil.formatURI(requestURI);
-                    MethodMapping methodMapping = MethodMapping.create(mappingPath, requestMethod, controller, method);
-                    methodMappings.add(this.resolveRequestMappingProduces(controllerClass, annotation, methodMapping));
+                    HandlerMethodRoute route = HandlerMethodRoute.create(mappingPath, requestMethod, controller, method);
+                    routes.add(this.resolveRequestMappingProduces(controllerClass, annotation, route));
                 }
             }
         }
     }
 
-    protected MethodMapping resolveRequestMappingProduces(Class<?> controllerClass, RequestMapping annotation, MethodMapping methodMapping) {
-        methodMapping.setProduces(annotation.produces());
-        if (!methodMapping.isEventStream()) {
-            ResponseBody responseBody = AnnotationUtil.findAnnotation(methodMapping.getMappingMethod(), ResponseBody.class);
+    protected HandlerMethodRoute resolveRequestMappingProduces(Class<?> controllerClass, RequestMapping annotation, HandlerMethodRoute methodRoute) {
+        methodRoute.setProduces(annotation.produces());
+        if (!methodRoute.isEventStream()) {
+            ResponseBody responseBody = AnnotationUtil.findAnnotation(methodRoute.getMappedMethod(), ResponseBody.class);
             if (responseBody == null && RequestMapping.DEFAULT_PRODUCES.equals(annotation.produces())) {
                 // 如果方法上没有，并且是默认的，则查找类上的注解
                 responseBody = AnnotationUtil.findAnnotation(controllerClass, ResponseBody.class);
             }
             if (responseBody != null) {
-                methodMapping.setProduces(responseBody.contentType());
+                methodRoute.setProduces(responseBody.contentType());
             }
         }
-        log.info("Resolved request mapping: [URI:{}, RequestMethod:{}, MappingMethod:{}]", methodMapping.getUrl(), methodMapping.getRequestMethod(), methodMapping.getMappingMethod());
-        return methodMapping;
+        log.info("Resolved request mapping: [URI:{}, RequestMethod:{}, MappingMethod:{}]", methodRoute.getUrl(), methodRoute.getRequestMethod(), methodRoute.getMappedMethod());
+        return methodRoute;
     }
 }

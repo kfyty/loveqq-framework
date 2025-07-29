@@ -14,7 +14,7 @@ import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
@@ -64,7 +64,7 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     public void afterPropertiesSet() {
         Object target = this.adviceBean.get();
         Class<?> targetClass = AopUtil.getTargetClass(target);
-        this.exceptionHandlerMap = new LinkedHashMap<>();
+        Map<Class<? extends Throwable>, MethodParameter> exceptionHandlerMap = new LinkedHashMap<>();
         for (Method method : ReflectUtil.getMethods(targetClass)) {
             com.kfyty.loveqq.framework.web.core.annotation.ExceptionHandler annotation = AnnotationUtil.findAnnotation(method, com.kfyty.loveqq.framework.web.core.annotation.ExceptionHandler.class);
             if (annotation != null) {
@@ -73,16 +73,17 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                     if (Throwable.class.isAssignableFrom(exceptionClass)) {
                         Method targetMethod = AopUtil.getInterfaceMethod(targetClass, method);
                         MethodParameter methodParameter = new MethodParameter(target, targetMethod);
-                        this.exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, methodParameter.metadata(obtainContentType(methodParameter)));
+                        exceptionHandlerMap.put((Class<? extends Throwable>) exceptionClass, methodParameter.metadata(obtainContentType(methodParameter)));
                     }
                 }
             }
         }
+        this.exceptionHandlerMap = exceptionHandlerMap;
     }
 
     @Override
-    public boolean canHandle(MethodMapping mapping, Throwable throwable) {
-        Object controller = mapping.getController();
+    public boolean canHandle(Route route, Throwable throwable) {
+        Object controller = route.getController();
         if (controller == null) {
             return false;
         }
@@ -97,15 +98,15 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     }
 
     @Override
-    public Pair<MethodParameter, Object> handle(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
-        MethodParameter adviceMethod = this.findControllerExceptionAdvice(request, response, mapping, unwrap(throwable));
+    public Pair<MethodParameter, Object> handle(ServerRequest request, ServerResponse response, Route route, Throwable throwable) throws Throwable {
+        MethodParameter adviceMethod = this.findControllerExceptionAdvice(request, response, route, unwrap(throwable));
         if (adviceMethod == null) {
             throw throwable;
         }
         return new Pair<>(adviceMethod, ReflectUtil.invokeMethod(adviceMethod.getSource(), adviceMethod.getMethod(), adviceMethod.getMethodArgs()));
     }
 
-    public MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) {
+    public MethodParameter findControllerExceptionAdvice(ServerRequest request, ServerResponse response, Route route, Throwable throwable) {
         Class<? extends Throwable> throwableClass = throwable.getClass();
         MethodParameter exceptionHandler = this.exceptionHandlerMap.get(throwableClass);
         if (exceptionHandler == null) {
@@ -126,8 +127,8 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
                 exceptionArgs[i] = response;
                 continue;
             }
-            if (MethodMapping.class.isAssignableFrom(parameterType)) {
-                exceptionArgs[i] = mapping;
+            if (Route.class.isAssignableFrom(parameterType)) {
+                exceptionArgs[i] = route;
                 continue;
             }
             if (parameterType.isAssignableFrom(throwableClass)) {
@@ -136,15 +137,17 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
             }
         }
 
-        MethodMapping cloned = mapping.clone();
+        Route cloned = route.clone();
         MethodParameter handler = exceptionHandler.clone();
 
         handler.setMethodArgs(exceptionArgs);
 
+        // 异常处理器的 produces
         if (handler.getMetadata() != null) {
             cloned.setProduces(handler.getMetadata().toString());
         }
 
+        // produces 已使用，元数据更新为路由信息
         return handler.metadata(cloned);
     }
 

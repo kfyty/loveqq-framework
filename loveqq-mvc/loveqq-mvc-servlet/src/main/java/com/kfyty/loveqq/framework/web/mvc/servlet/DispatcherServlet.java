@@ -4,11 +4,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
-import com.kfyty.loveqq.framework.core.utils.LogUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerResponse;
@@ -86,61 +84,61 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
         }
     }
 
-    protected void preparedRequestResponse(MethodMapping mapping, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void preparedRequestResponse(Route route, HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        if (mapping.getProduces() != null) {
-            response.setContentType(mapping.getProduces());
+        if (route.getProduces() != null) {
+            response.setContentType(route.getProduces());
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Matched URI mapping [{}] to request URI [{}] !", route.getUrl(), request.getRequestURI());
         }
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         Throwable exception = null;
-        MethodParameter parameter = null;
         ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
         ServletServerResponse serverResponse = new ServletServerResponse(response);
-        MethodMapping methodMapping = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
+        Route route = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
         try {
-            // 初始化请求
-            serverRequest.init();
-
             // 无匹配，转发到 404
-            if (methodMapping == null) {
+            if (route == null) {
                 this.handleReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);
                 return;
             }
 
             // 预处理
-            this.preparedRequestResponse(methodMapping, request, response);
-            LogUtil.logIfDebugEnabled(log, log -> log.debug("Matched URI mapping [{}] to request URI [{}] !", methodMapping.getUrl(), request.getRequestURI()));
+            serverRequest.init();
+            this.preparedRequestResponse(route, request, response);
 
             // 应用前置拦截器
-            if (!this.applyPreInterceptor(serverRequest, serverResponse, methodMapping)) {
+            if (!this.applyPreInterceptor(serverRequest, serverResponse, route)) {
                 return;
             }
 
-            // 解析参数并处理请求
-            parameter = this.prepareMethodParameter(serverRequest, serverResponse, methodMapping);
-            Object retValue = ReflectUtil.invokeMethod(methodMapping.getController(), methodMapping.getMappingMethod(), parameter.getMethodArgs());
+            // 应用路由处理请求
+            final Pair<MethodParameter, Object> routeResult = route.applyRoute(serverRequest, serverResponse, this);
+            final MethodParameter parameter = routeResult.getKey();
+            final Object retValue = routeResult.getValue();
 
             // 应用后置处理器并处理返回值
-            this.applyPostInterceptor(serverRequest, serverResponse, methodMapping, retValue);
+            this.applyPostInterceptor(serverRequest, serverResponse, route, retValue);
             if (retValue != null) {
                 this.handleReturnValue(retValue, parameter, serverRequest, serverResponse);
             }
         } catch (Throwable e) {
             exception = e;
             log.error("process request error: {}", e.getMessage(), e);
-            this.handleException(serverRequest, serverResponse, methodMapping, e);
+            this.handleException(serverRequest, serverResponse, route, e);
         } finally {
-            if (methodMapping != null) {
-                this.applyCompletionInterceptor(serverRequest, serverResponse, methodMapping, exception);
+            if (route != null) {
+                this.applyCompletionInterceptor(serverRequest, serverResponse, route, exception);
             }
         }
     }
 
     @Override
-    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
+    public Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
         if (HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
             return request.getRawRequest();
         }
@@ -150,9 +148,9 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
         return super.resolveInternalParameter(parameter, request, response);
     }
 
-    protected void handleException(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws ServletException {
+    protected void handleException(ServerRequest request, ServerResponse response, Route route, Throwable throwable) throws ServletException {
         try {
-            Pair<MethodParameter, Object> handled = super.obtainExceptionHandleValue(request, response, mapping, throwable);
+            Pair<MethodParameter, Object> handled = super.obtainExceptionHandleValue(request, response, route, throwable);
             this.handleReturnValue(handled.getValue(), handled.getKey(), request, response);
         } catch (Throwable e) {
             throw e instanceof ServletException ? (ServletException) e : new ServletException(unwrap(e));

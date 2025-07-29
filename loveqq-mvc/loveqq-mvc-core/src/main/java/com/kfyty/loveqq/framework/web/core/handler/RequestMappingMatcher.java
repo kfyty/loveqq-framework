@@ -4,11 +4,10 @@ import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -27,7 +26,7 @@ public interface RequestMappingMatcher {
      * @param route         处理器，必须是方法引用，否则无法解析
      * @return 路由，可进一步定制
      */
-    MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route);
+    Route registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route);
 
     /**
      * 注册路由
@@ -37,18 +36,7 @@ public interface RequestMappingMatcher {
      * @param route         处理器，必须是方法引用，否则无法解析
      * @return 路由，可进一步定制
      */
-    MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route);
-
-    /**
-     * 注册路由
-     *
-     * @param url           url
-     * @param requestMethod 请求方法
-     * @param controller    控制器
-     * @param mappingMethod 控制器方法
-     * @return 路由，可进一步定制
-     */
-    MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, Object controller, Method mappingMethod);
+    Route registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route);
 
     /**
      * 注册方法映射
@@ -56,7 +44,7 @@ public interface RequestMappingMatcher {
      *
      * @param mapping 方法映射
      */
-    void registryMethodMapping(MethodMapping mapping);
+    void registryRoute(Route mapping);
 
     /**
      * 注册方法映射
@@ -64,7 +52,7 @@ public interface RequestMappingMatcher {
      *
      * @param methodMappings 方法映射
      */
-    void registryMethodMapping(List<MethodMapping> methodMappings);
+    void registryRoute(List<Route> methodMappings);
 
     /**
      * 获取指定方法的全部路由
@@ -79,14 +67,14 @@ public interface RequestMappingMatcher {
      *
      * @return 全部路由
      */
-    List<MethodMapping> getRoutes();
+    List<Route> getRoutes();
 
     /**
      * 匹配请求
      *
      * @param method     请求方法
      * @param requestURI 请求 URI
-     * @return {@link MethodMapping}
+     * @return {@link Route}
      */
-    MethodMapping matchRoute(RequestMethod method, String requestURI);
+    Route matchRoute(RequestMethod method, String requestURI);
 }

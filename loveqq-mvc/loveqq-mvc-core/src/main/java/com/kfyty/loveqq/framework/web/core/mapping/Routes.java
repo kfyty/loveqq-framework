@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * 描述: 请求方法映射信息
+ * 描述: 路由管理
  *
  * @author kfyty725
  * @date 2021/5/22 14:25
@@ -52,7 +52,7 @@ public class Routes {
      * key: url 长度
      * value: url 映射
      */
-    private final Map<Integer, Map<String, MethodMapping>> indexMapping;
+    private final Map<Integer, Map<String, Route>> indexMapping;
 
     public Routes(RequestMethod requestMethod) {
         this.requestMethod = requestMethod;
@@ -62,17 +62,17 @@ public class Routes {
     /**
      * 添加路由
      *
-     * @param methodMapping 方法映射
+     * @param route 路由
      * @return this
      */
-    public Routes addRoute(MethodMapping methodMapping) {
-        if (this.requestMethod != methodMapping.getRequestMethod()) {
+    public Routes addRoute(Route route) {
+        if (this.requestMethod != route.getRequestMethod()) {
             throw new IllegalArgumentException("Route RequestMethod doesn't match");
         }
-        Map<String, MethodMapping> mappingMap = this.indexMapping.computeIfAbsent(methodMapping.getLength(), k -> new ConcurrentHashMap<>());
-        MethodMapping exists = mappingMap.putIfAbsent(methodMapping.getUrl(), methodMapping);
+        Map<String, Route> routeMap = this.indexMapping.computeIfAbsent(route.getLength(), k -> new ConcurrentHashMap<>());
+        Route exists = routeMap.putIfAbsent(route.getUrl(), route);
         if (exists != null) {
-            throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", this.requestMethod, methodMapping.getUrl()));
+            throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", this.requestMethod, route.getUrl()));
         }
         return this;
     }

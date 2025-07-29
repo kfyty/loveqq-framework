@@ -11,7 +11,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.SerializableLambdaUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
@@ -49,44 +50,37 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     @Override
-    public MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route) {
+    public Route registryRoute(String url, RequestMethod requestMethod, SerializableBiConsumer<ServerRequest, ServerResponse> route) {
         Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
         if (pair.getValue() == null) {
             throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
         }
-        return this.registryMethodMapping(url, requestMethod, pair.getKey(), pair.getValue());
+        return this.registryMethodMappedRoute(url, requestMethod, pair.getKey(), pair.getValue());
     }
 
     @Override
-    public MethodMapping registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route) {
+    public Route registryRoute(String url, RequestMethod requestMethod, SerializableBiFunction<ServerRequest, ServerResponse, Object> route) {
         Pair<Object, Method> pair = SerializableLambdaUtil.resolveMethod(route, ServerRequest.class, ServerResponse.class);
         if (pair.getValue() == null) {
             throw new IllegalArgumentException("Registry route failed, resolve method from lambda failed: " + url);
         }
-        return this.registryMethodMapping(url, requestMethod, pair.getKey(), pair.getValue());
+        return this.registryMethodMappedRoute(url, requestMethod, pair.getKey(), pair.getValue());
     }
 
     @Override
-    public MethodMapping registryMethodMapping(String url, RequestMethod requestMethod, Object controller, Method mappingMethod) {
-        MethodMapping methodMapping = MethodMapping.create(url, requestMethod, new Lazy<>(() -> controller), mappingMethod);
-        this.registryMethodMapping(methodMapping);
-        return methodMapping;
+    public void registryRoute(Route route) {
+        Routes routes = this.routesMap.computeIfAbsent(route.getRequestMethod(), Routes::new);
+        routes.addRoute(route);
     }
 
     @Override
-    public void registryMethodMapping(MethodMapping mapping) {
-        Routes routes = this.routesMap.computeIfAbsent(mapping.getRequestMethod(), Routes::new);
-        routes.addRoute(mapping);
-    }
-
-    @Override
-    public void registryMethodMapping(List<MethodMapping> methodMappings) {
-        if (CommonUtil.empty(methodMappings)) {
+    public void registryRoute(List<Route> routeList) {
+        if (routeList == null || routeList.isEmpty()) {
             return;
         }
-        for (MethodMapping methodMapping : methodMappings) {
-            Routes routes = this.routesMap.computeIfAbsent(methodMapping.getRequestMethod(), Routes::new);
-            routes.addRoute(methodMapping);
+        for (Route route : routeList) {
+            Routes routes = this.routesMap.computeIfAbsent(route.getRequestMethod(), Routes::new);
+            routes.addRoute(route);
         }
     }
 
@@ -96,17 +90,26 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
     }
 
     @Override
-    public List<MethodMapping> getRoutes() {
+    public List<Route> getRoutes() {
         return this.routesMap.values().stream().flatMap(e -> e.getIndexMapping().values().stream().flatMap(p -> p.values().stream())).collect(Collectors.toList());
     }
 
     @Override
-    public MethodMapping matchRoute(RequestMethod method, String requestURI) {
-        MethodMapping methodMapping = this.preciseMatch(method, requestURI);
-        if (methodMapping != null) {
-            return methodMapping;
+    public Route matchRoute(RequestMethod method, String requestURI) {
+        Route route = this.preciseMatch(method, requestURI);
+        if (route != null) {
+            return route;
         }
         return this.antPathMatch(method, requestURI);
+    }
+
+    /**
+     * 注册方法映射的路由
+     */
+    protected Route registryMethodMappedRoute(String url, RequestMethod requestMethod, Object controller, Method mappedMethod) {
+        HandlerMethodRoute route = HandlerMethodRoute.create(url, requestMethod, new Lazy<>(() -> controller), mappedMethod);
+        this.registryRoute(route);
+        return route;
     }
 
     /**
@@ -116,14 +119,14 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
      * @param requestURI 请求 uri
      * @return 路由
      */
-    protected MethodMapping preciseMatch(RequestMethod method, String requestURI) {
+    protected Route preciseMatch(RequestMethod method, String requestURI) {
         String[] paths = Routes.SLASH_PATTERN.split(requestURI, 0);
-        Map<String, MethodMapping> mappingMap = this.getRoutes(method).getIndexMapping().get(paths.length);
-        if (CommonUtil.empty(mappingMap)) {
+        Map<String, Route> routeMap = this.getRoutes(method).getIndexMapping().get(paths.length);
+        if (routeMap == null || routeMap.isEmpty()) {
             return null;
         }
-        MethodMapping methodMapping = mappingMap.get(requestURI);
-        return methodMapping != null ? methodMapping : restfulMatch(method, requestURI, paths, mappingMap);
+        Route route = routeMap.get(requestURI);
+        return route != null ? route : restfulMatch(method, requestURI, paths, routeMap);
     }
 
     /**
@@ -133,10 +136,10 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
      * @param requestURI 请求 url
      * @return 路由
      */
-    protected MethodMapping antPathMatch(RequestMethod method, String requestURI) {
+    protected Route antPathMatch(RequestMethod method, String requestURI) {
         Routes routes = this.getRoutes(method);
-        for (Map<String, MethodMapping> mappingMap : routes.getIndexMapping().values()) {
-            for (Map.Entry<String, MethodMapping> entry : mappingMap.entrySet()) {
+        for (Map<String, Route> routeMap : routes.getIndexMapping().values()) {
+            for (Map.Entry<String, Route> entry : routeMap.entrySet()) {
                 String pattern = entry.getValue().isRestful() ? Routes.BRACE_PATTERN.matcher(entry.getKey()).replaceAll("*") : entry.getKey();
                 if (this.patternMatcher.matches(pattern, requestURI)) {
                     return entry.getValue();
@@ -152,51 +155,51 @@ public class DefaultRequestMappingMatcher implements RequestMappingMatcher {
      * @param method     请求方法
      * @param requestURI 请求 uri
      * @param paths      请求路径
-     * @param mappingMap 路由集合
+     * @param routeMap   路由集合
      * @return 路由
      */
-    protected MethodMapping restfulMatch(RequestMethod method, String requestURI, String[] paths, Map<String, MethodMapping> mappingMap) {
-        List<MethodMapping> methodMappings = new ArrayList<>();
-        for (MethodMapping methodMapping : mappingMap.values()) {
-            if (!methodMapping.isRestful()) {
+    protected Route restfulMatch(RequestMethod method, String requestURI, String[] paths, Map<String, Route> routeMap) {
+        List<Route> routes = new ArrayList<>();
+        for (Route route : routeMap.values()) {
+            if (!route.isRestful()) {
                 continue;
             }
             boolean match = true;
             for (int i = 0, length = paths.length; i < length; i++) {
-                if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(methodMapping.getPaths()[i]).matches()) {
+                if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(route.getPaths()[i]).matches()) {
                     continue;
                 }
-                if (!methodMapping.getPaths()[i].equals(paths[i])) {
+                if (!route.getPaths()[i].equals(paths[i])) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                methodMappings.add(methodMapping);
+                routes.add(route);
             }
         }
-        return this.matchBestRestful(method, requestURI, methodMappings);
+        return this.matchBestRestful(method, requestURI, routes);
     }
 
     /**
      * 匹配最佳的 restful
      *
-     * @param method         请求方法
-     * @param requestURI     请求 uri
-     * @param methodMappings 所有符合 restful 的路由
+     * @param method     请求方法
+     * @param requestURI 请求 uri
+     * @param routes     所有符合 restful 的路由
      * @return 最佳路由
      */
-    protected MethodMapping matchBestRestful(RequestMethod method, String requestURI, List<MethodMapping> methodMappings) {
-        if (CommonUtil.empty(methodMappings)) {
+    protected Route matchBestRestful(RequestMethod method, String requestURI, List<Route> routes) {
+        if (CommonUtil.empty(routes)) {
             return null;
         }
-        if (methodMappings.size() == 1) {
-            return methodMappings.get(0);
+        if (routes.size() == 1) {
+            return routes.get(0);
         }
-        methodMappings = methodMappings.stream().sorted(Comparator.comparingInt(e -> e.getRestfulMappingIndex().length)).collect(Collectors.toList());
-        if (methodMappings.get(0).getRestfulMappingIndex().length == methodMappings.get(1).getRestfulMappingIndex().length) {
+        routes = routes.stream().sorted(Comparator.comparingInt(e -> e.getRestfulIndex().length)).collect(Collectors.toList());
+        if (routes.get(0).getRestfulIndex().length == routes.get(1).getRestfulIndex().length) {
             throw new IllegalArgumentException(CommonUtil.format("Request mapping method ambiguous: [RequestMethod: {}, URI:{}] !", method, requestURI));
         }
-        return methodMappings.get(0);
+        return routes.get(0);
     }
 }
