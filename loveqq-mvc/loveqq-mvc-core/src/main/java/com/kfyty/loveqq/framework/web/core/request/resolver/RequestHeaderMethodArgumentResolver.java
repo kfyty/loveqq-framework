@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestHeader;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 
@@ -26,7 +26,7 @@ public class RequestHeaderMethodArgumentResolver extends AbstractHandlerMethodAr
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
         RequestHeader annotation = findAnnotation(parameter.getParameter(), RequestHeader.class);
         String parameterName = parameter.getParameterName(annotation, RequestHeader::value);
         String header = request.getHeader(parameterName);

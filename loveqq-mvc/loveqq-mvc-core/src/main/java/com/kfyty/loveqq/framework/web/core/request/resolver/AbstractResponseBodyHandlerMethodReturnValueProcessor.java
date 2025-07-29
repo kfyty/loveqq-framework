@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.HandlerMethodRoute;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
@@ -40,7 +40,7 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         if (returnType == null) {
             return false;
         }
-        String contentType = ((MethodMapping) returnType.getMetadata()).getProduces();
+        String contentType = ((HandlerMethodRoute) returnType.getMetadata()).getProduces();
         if (contentType == null) {
             return false;
         }

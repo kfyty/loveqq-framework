@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -35,7 +35,7 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
         Class<?> paramType = parameter.getParamType();
         if (paramType == byte[].class) {
             return IOUtil.read(request.getInputStream());

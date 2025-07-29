@@ -7,7 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.SessionAttribute;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -29,7 +29,7 @@ public class SessionAttributeMethodArgumentResolver implements HandlerMethodArgu
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
         SessionAttribute annotation = findAnnotation(parameter.getParameter(), SessionAttribute.class);
         String parameterName = parameter.getParameterName(annotation, SessionAttribute::value);
         Object attribute = ((HttpServletRequest) request.getRawRequest()).getSession().getAttribute(parameterName);

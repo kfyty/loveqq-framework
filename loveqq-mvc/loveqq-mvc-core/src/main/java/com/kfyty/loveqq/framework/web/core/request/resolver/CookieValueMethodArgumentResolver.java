@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.CookieValue;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 import java.net.HttpCookie;
 
@@ -28,7 +28,7 @@ public class CookieValueMethodArgumentResolver extends AbstractHandlerMethodArgu
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
         CookieValue annotation = findAnnotation(parameter.getParameter(), CookieValue.class);
         String parameterName = parameter.getParameterName(annotation, CookieValue::value);
         HttpCookie cookie = request.getCookie(parameterName);

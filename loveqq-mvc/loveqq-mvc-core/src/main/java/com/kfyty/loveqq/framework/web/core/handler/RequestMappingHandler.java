@@ -1,12 +1,12 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
 import com.kfyty.loveqq.framework.core.lang.Lazy;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 import java.util.List;
 
 /**
- * 描述: 方法映射解析器
+ * 描述: {@link com.kfyty.loveqq.framework.web.core.annotation.RequestMapping} 注解路由解析器
  *
  * @author kfyty725
  * @date 2021/5/22 14:25
@@ -19,8 +19,8 @@ public interface RequestMappingHandler {
      *
      * @param controller 控制器
      */
-    default List<MethodMapping> resolveRequestMapping(Object controller) {
-        return this.resolveRequestMapping(controller.getClass(), new Lazy<>(() -> controller));
+    default List<Route> resolveRequestMappingRoute(Object controller) {
+        return this.resolveRequestMappingRoute(controller.getClass(), new Lazy<>(() -> controller));
     }
 
     /**
@@ -30,5 +30,5 @@ public interface RequestMappingHandler {
      * @param controllerClass 控制器 class
      * @param controller      控制器
      */
-    List<MethodMapping> resolveRequestMapping(Class<?> controllerClass, Lazy<Object> controller);
+    List<Route> resolveRequestMappingRoute(Class<?> controllerClass, Lazy<Object> controller);
 }

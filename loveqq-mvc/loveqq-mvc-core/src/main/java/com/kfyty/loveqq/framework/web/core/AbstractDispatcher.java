@@ -7,15 +7,13 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
-import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.mapping.Route;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
@@ -23,7 +21,6 @@ import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,7 +97,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      * @return true/false
      */
     public boolean shouldFlush(String contentType) {
-        return MethodMapping.isStream(contentType);
+        return Route.isStream(contentType);
     }
 
     /**
@@ -110,9 +107,9 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      * @param requestURI 请求 uri
      * @return 路由
      */
-    public MethodMapping matchRoute(RequestMethod method, String requestURI) {
+    public Route matchRoute(RequestMethod method, String requestURI) {
         // 精确匹配
-        MethodMapping matched = this.requestMappingMatcher.matchRoute(method, requestURI);
+        Route matched = this.requestMappingMatcher.matchRoute(method, requestURI);
 
         // HEAD 方法，可能是检测，再匹配一下 GET/POST
         if (matched == null && method == RequestMethod.HEAD) {
@@ -149,54 +146,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return (T) this;
     }
 
-    protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) {
-        for (HandlerInterceptor interceptor : this.interceptorChains) {
-            if (this.shouldApplyInterceptor(request, response, interceptor) && !interceptor.preHandle(request, response, handler)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
-        for (HandlerInterceptor interceptor : this.interceptorChains) {
-            if (this.shouldApplyInterceptor(request, response, interceptor)) {
-                interceptor.postHandle(request, response, handler, value);
-            }
-        }
-    }
-
-    protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable e) {
-        for (HandlerInterceptor interceptor : this.interceptorChains) {
-            if (this.shouldApplyInterceptor(request, response, interceptor)) {
-                interceptor.afterCompletion(request, response, handler, e);
-            }
-        }
-    }
-
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping mapping) {
-        int index = 0;
-        final Method method = mapping.getMappingMethod();
-        final Parameter[] parameters = method.getParameters();
-        final Object[] paramValues = new Object[parameters.length];
-        for (Parameter parameter : parameters) {
-            Object param = this.resolveInternalParameter(parameter, request, response);
-            if (param != null) {
-                paramValues[index++] = param;
-                continue;
-            }
-            MethodParameter methodParameter = new MethodParameter(mapping.getController(), method, parameter);
-            MethodParameter arguments = this.resolveMethodArguments(methodParameter, mapping, request);
-            if (arguments != null) {
-                paramValues[index++] = arguments.getValue();
-            } else {
-                throw new MethodArgumentResolveException("The parameter resolve failed, there's no suitable parameter resolver available.");
-            }
-        }
-        return mapping.buildMethodParameter(paramValues).metadata(mapping);
-    }
-
-    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
+    public Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
         if (ServerRequest.class.isAssignableFrom(parameter.getType())) {
             return request;
         }
@@ -206,27 +156,35 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return null;
     }
 
-    protected MethodParameter resolveMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) {
-        try {
-            for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
-                if (argumentResolver.supportsParameter(methodParameter)) {
-                    methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
-                    return methodParameter;
-                }
+    protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, Route handler) {
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            if (this.shouldApplyInterceptor(request, response, interceptor) && !interceptor.preHandle(request, response, handler)) {
+                return false;
             }
-            return null;
-        } catch (MissingRequestParameterException e) {
-            throw e;
-        } catch (Throwable e) {
-            Parameter parameter = methodParameter.getParameter();
-            throw new MethodArgumentResolveException(parameter, "Method parameter resolve failed: " + parameter.getName(), e);
+        }
+        return true;
+    }
+
+    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, Route handler, Object value) {
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            if (this.shouldApplyInterceptor(request, response, interceptor)) {
+                interceptor.postHandle(request, response, handler, value);
+            }
         }
     }
 
-    protected Pair<MethodParameter, Object> obtainExceptionHandleValue(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+    protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, Route handler, Throwable e) {
+        for (HandlerInterceptor interceptor : this.interceptorChains) {
+            if (this.shouldApplyInterceptor(request, response, interceptor)) {
+                interceptor.afterCompletion(request, response, handler, e);
+            }
+        }
+    }
+
+    protected Pair<MethodParameter, Object> obtainExceptionHandleValue(ServerRequest request, ServerResponse response, Route route, Throwable throwable) throws Throwable {
         for (ExceptionHandler exceptionHandler : this.exceptionHandlers) {
-            if (exceptionHandler.canHandle(mapping, throwable)) {
-                return exceptionHandler.handle(request, response, mapping, throwable);
+            if (exceptionHandler.canHandle(route, throwable)) {
+                return exceptionHandler.handle(request, response, route, throwable);
             }
         }
         throw throwable;
