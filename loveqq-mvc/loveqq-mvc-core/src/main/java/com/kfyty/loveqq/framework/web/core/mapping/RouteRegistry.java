@@ -1,23 +1,21 @@
-package com.kfyty.loveqq.framework.web.core.handler;
+package com.kfyty.loveqq.framework.web.core.mapping;
 
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiConsumer;
 import com.kfyty.loveqq.framework.core.lang.function.SerializableBiFunction;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
-import com.kfyty.loveqq.framework.web.core.mapping.Routes;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
 import java.util.List;
 
 /**
- * 描述: 请求映射匹配器
+ * 描述: 路由注册
  *
  * @author kfyty725
  * @date 2021/6/4 10:05
  * @email kfyty725@hotmail.com
  */
-public interface RequestMappingMatcher {
+public interface RouteRegistry {
     /**
      * 注册路由
      *
@@ -55,26 +53,17 @@ public interface RequestMappingMatcher {
     void registryRoute(List<Route> methodMappings);
 
     /**
+     * 获取全部路由
+     *
+     * @return 全部路由
+     */
+    Routes getRoutes();
+
+    /**
      * 获取指定方法的全部路由
      *
      * @param requestMethod 请求方法
      * @return 路由
      */
-    Routes getRoutes(RequestMethod requestMethod);
-
-    /**
-     * 获取全部路由
-     *
-     * @return 全部路由
-     */
-    List<Route> getRoutes();
-
-    /**
-     * 匹配请求
-     *
-     * @param method     请求方法
-     * @param requestURI 请求 URI
-     * @return {@link Route}
-     */
-    Route matchRoute(RequestMethod method, String requestURI);
+    List<Route> getRoutes(RequestMethod requestMethod);
 }

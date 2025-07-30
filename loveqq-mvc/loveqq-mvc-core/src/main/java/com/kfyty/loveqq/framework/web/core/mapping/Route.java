@@ -17,11 +17,11 @@ import org.reactivestreams.Publisher;
  */
 public interface Route extends Cloneable {
     /**
-     * 路由目标 url
+     * 路由目标 uri
      *
-     * @return url
+     * @return uri
      */
-    String getUrl();
+    String getUri();
 
     /**
      * 路由路径，即按 '/' 分割后的路径

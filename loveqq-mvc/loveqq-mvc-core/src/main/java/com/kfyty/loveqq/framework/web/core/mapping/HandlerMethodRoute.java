@@ -39,7 +39,7 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
 
 /**
- * 功能描述: url 映射
+ * 功能描述: 处理器方法路由
  *
  * @author kfyty725@hotmail.com
  * @date 2019/9/10 19:25
@@ -52,7 +52,7 @@ public class HandlerMethodRoute implements Route {
     /**
      * URL
      */
-    private String url;
+    private String uri;
 
     /**
      * url 路径
@@ -101,7 +101,7 @@ public class HandlerMethodRoute implements Route {
                 }
             }
         }
-        throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.url + ", path=" + path);
+        throw new IllegalArgumentException("The restful path index does not exists: restful=" + this.uri + ", path=" + path);
     }
 
     public boolean isStream() {
@@ -114,10 +114,6 @@ public class HandlerMethodRoute implements Route {
 
     public Object getController() {
         return this.controller.get();
-    }
-
-    public MethodParameter buildMethodParameter(Object[] parameters) {
-        return new MethodParameter(this.getController(), this.mappedMethod, parameters);
     }
 
     @Override
@@ -151,6 +147,10 @@ public class HandlerMethodRoute implements Route {
         } catch (CloneNotSupportedException e) {
             throw new ResolvableException(e);
         }
+    }
+
+    protected MethodParameter buildMethodParameter(Object[] parameters) {
+        return new MethodParameter(this.getController(), this.mappedMethod, parameters);
     }
 
     protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, AbstractDispatcher<?> dispatcher) {
@@ -213,20 +213,20 @@ public class HandlerMethodRoute implements Route {
         }
     }
 
-    public static HandlerMethodRoute create(String url, RequestMethod requestMethod, Lazy<Object> controller, Method mappedMethod) {
+    public static HandlerMethodRoute create(String uri, RequestMethod requestMethod, Lazy<Object> controller, Method mappedMethod) {
         HandlerMethodRoute handlerMethodRoute = new HandlerMethodRoute();
         handlerMethodRoute.setController(controller);
         handlerMethodRoute.setMappedMethod(mappedMethod);
         handlerMethodRoute.setRequestMethod(requestMethod);
-        handlerMethodRoute.setUrl(url);
-        handlerMethodRoute.setPaths(CommonUtil.split(url, "[/]").toArray(EMPTY_STRING_ARRAY));
+        handlerMethodRoute.setUri(uri);
+        handlerMethodRoute.setPaths(CommonUtil.split(uri, "[/]").toArray(EMPTY_STRING_ARRAY));
         handlerMethodRoute.resolveRestfulVariableIfNecessary();
         return handlerMethodRoute;
     }
 
     @SuppressWarnings("unchecked")
     private void resolveRestfulVariableIfNecessary() {
-        if (Routes.RESTFUL_URL_PATTERN.matcher(this.url).matches()) {
+        if (Routes.RESTFUL_URL_PATTERN.matcher(this.uri).matches()) {
             String[] paths = this.paths;
             List<Pair<String, Integer>> mappingIndex = new ArrayList<>();
             for (int i = 0; i < paths.length; i++) {

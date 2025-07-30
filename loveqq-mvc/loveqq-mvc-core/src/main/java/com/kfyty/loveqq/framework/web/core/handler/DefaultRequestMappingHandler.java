@@ -21,7 +21,7 @@ import java.util.function.IntFunction;
 import static com.kfyty.loveqq.framework.web.core.annotation.RequestMapping.Strategy.DEFAULT;
 
 /**
- * 功能描述: 注解处理器
+ * 功能描述: {@link com.kfyty.loveqq.framework.web.core.annotation.RequestMapping} 注解路由解析器
  *
  * @author kfyty725@hotmail.com
  * @date 2019/9/10 19:24
@@ -86,7 +86,7 @@ public class DefaultRequestMappingHandler implements RequestMappingHandler {
                 methodRoute.setProduces(responseBody.contentType());
             }
         }
-        log.info("Resolved request mapping: [URI:{}, RequestMethod:{}, MappingMethod:{}]", methodRoute.getUrl(), methodRoute.getRequestMethod(), methodRoute.getMappedMethod());
+        log.info("Resolved request mapping: [URI:{}, RequestMethod:{}, MappingMethod:{}]", methodRoute.getUri(), methodRoute.getRequestMethod(), methodRoute.getMappedMethod());
         return methodRoute;
     }
 }
