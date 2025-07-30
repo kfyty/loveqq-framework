@@ -1,9 +1,11 @@
 package com.kfyty.loveqq.framework.web.core.mapping;
 
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -38,25 +40,28 @@ public class Routes {
     public static final Pattern RESTFUL_URL_PATTERN = Pattern.compile(".*\\{([^/}]*)}.*");
 
     /**
-     * 空路由
+     * uri 长度映射
+     * key: uri 长度
+     * value: uri 映射
      */
-    public static final Routes EMPTY = new Routes(RequestMethod.GET);
+    private final Map<Integer, Map<Pair<String, RequestMethod>, Route>> routeIndex;
+
+    public Routes() {
+        this(new ConcurrentHashMap<>());
+    }
+
+    public Routes(Map<Integer, Map<Pair<String, RequestMethod>, Route>> routeIndex) {
+        this.routeIndex = routeIndex;
+    }
 
     /**
-     * 请求方法
+     * 根据路由长度获取路由
+     *
+     * @param length 路由长度
+     * @return 路由
      */
-    private final RequestMethod requestMethod;
-
-    /**
-     * url 长度映射
-     * key: url 长度
-     * value: url 映射
-     */
-    private final Map<Integer, Map<String, Route>> indexMapping;
-
-    public Routes(RequestMethod requestMethod) {
-        this.requestMethod = requestMethod;
-        this.indexMapping = new ConcurrentHashMap<>();
+    public Map<Pair<String, RequestMethod>, Route> getRoutes(int length) {
+        return this.routeIndex.getOrDefault(length, Collections.emptyMap());
     }
 
     /**
@@ -66,13 +71,10 @@ public class Routes {
      * @return this
      */
     public Routes addRoute(Route route) {
-        if (this.requestMethod != route.getRequestMethod()) {
-            throw new IllegalArgumentException("Route RequestMethod doesn't match");
-        }
-        Map<String, Route> routeMap = this.indexMapping.computeIfAbsent(route.getLength(), k -> new ConcurrentHashMap<>());
-        Route exists = routeMap.putIfAbsent(route.getUrl(), route);
+        Map<Pair<String, RequestMethod>, Route> routeMap = this.routeIndex.computeIfAbsent(route.getLength(), k -> new ConcurrentHashMap<>());
+        Route exists = routeMap.putIfAbsent(new Pair<>(route.getUri(), route.getRequestMethod()), route);
         if (exists != null) {
-            throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", this.requestMethod, route.getUrl()));
+            throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", route.getRequestMethod(), route.getUri()));
         }
         return this;
     }

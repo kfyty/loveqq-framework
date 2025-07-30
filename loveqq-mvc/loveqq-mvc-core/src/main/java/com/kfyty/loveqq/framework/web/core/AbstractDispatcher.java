@@ -7,13 +7,12 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
-import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
 import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.mapping.RouteMatcher;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
@@ -22,8 +21,8 @@ import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
 
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -68,27 +67,27 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     /**
      * 请求匹配器
      */
-    protected RequestMappingMatcher requestMappingMatcher = new DefaultRequestMappingMatcher();
+    protected List<RouteMatcher> routeMatchers = new LinkedList<>();
 
     /**
      * 拦截器链
      */
-    protected List<HandlerInterceptor> interceptorChains = new ArrayList<>(4);
+    protected List<HandlerInterceptor> interceptorChains = new LinkedList<>();
 
     /**
      * 方法参数解析器
      */
-    protected List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(4);
+    protected List<HandlerMethodArgumentResolver> argumentResolvers = new LinkedList<>();
 
     /**
      * 方法返回值处理器
      */
-    protected List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>(4);
+    protected List<HandlerMethodReturnValueProcessor> returnValueProcessors = new LinkedList<>();
 
     /**
      * 控制器异常处理器
      */
-    protected List<ExceptionHandler> exceptionHandlers = new ArrayList<>(4);
+    protected List<ExceptionHandler> exceptionHandlers = new LinkedList<>();
 
     /**
      * 是否应该逐步刷新到客户端
@@ -108,18 +107,19 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      * @return 路由
      */
     public Route matchRoute(RequestMethod method, String requestURI) {
-        // 精确匹配
-        Route matched = this.requestMappingMatcher.matchRoute(method, requestURI);
-
-        // HEAD 方法，可能是检测，再匹配一下 GET/POST
-        if (matched == null && method == RequestMethod.HEAD) {
-            matched = this.requestMappingMatcher.matchRoute(RequestMethod.GET, requestURI);
-            if (matched == null) {
-                matched = this.requestMappingMatcher.matchRoute(RequestMethod.POST, requestURI);
+        for (RouteMatcher routeMatcher : this.routeMatchers) {
+            Route matched = routeMatcher.match(method, requestURI);
+            if (matched != null) {
+                return matched;
             }
         }
+        return null;
+    }
 
-        return matched;
+    @SuppressWarnings("unchecked")
+    public T addRouteMatcher(RouteMatcher routeMatcher) {
+        this.routeMatchers.add(routeMatcher);
+        return (T) this;
     }
 
     @SuppressWarnings("unchecked")

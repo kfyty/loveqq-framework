@@ -17,7 +17,7 @@ import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.cors.CorsFilter;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
-import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
+import com.kfyty.loveqq.framework.web.core.mapping.RouteRegistry;
 import com.kfyty.loveqq.framework.web.core.mapping.Route;
 
 import java.util.List;
@@ -51,11 +51,11 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
     @Override
     public void onAfterRefreshed(ApplicationContext applicationContext) {
+        RouteRegistry routeRegistry = applicationContext.getBean(RouteRegistry.class);
         RequestMappingHandler requestMappingHandler = applicationContext.getBean(RequestMappingHandler.class);
-        RequestMappingMatcher requestMappingMatcher = applicationContext.getBean(RequestMappingMatcher.class);
         for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
             List<Route> routes = requestMappingHandler.resolveRequestMappingRoute(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
-            requestMappingMatcher.registryRoute(routes);
+            routeRegistry.registryRoute(routes);
         }
         this.startWebServer(applicationContext);
     }

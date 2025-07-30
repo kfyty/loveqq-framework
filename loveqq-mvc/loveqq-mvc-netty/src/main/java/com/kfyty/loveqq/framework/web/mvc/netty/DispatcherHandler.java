@@ -65,7 +65,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             response.setHeader(HttpHeaderNames.CACHE_CONTROL.toString(), "no-cache");
         }
         if (log.isDebugEnabled()) {
-            log.debug("Matched uri mapping [{}] to request URI [{}] !", route.getUrl(), request.getRequestURI());
+            log.debug("Matched uri mapping [{}] to request URI [{}] !", route.getUri(), request.getRequestURI());
         }
         request.setAttribute(DISPATCHER_HANDLER_ATTRIBUTE, this);
         return Mono.just(route);

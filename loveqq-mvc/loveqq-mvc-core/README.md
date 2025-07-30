@@ -5,7 +5,7 @@
 * 基础请求分发器：com.kfyty.loveqq.framework.web.core.AbstractDispatcher
 * 响应式基础请求分发器：com.kfyty.loveqq.framework.web.core.AbstractReactiveDispatcher
 * 请求映射解析器：com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler
-* 路由匹配器：com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher
+* 路由匹配器：com.kfyty.loveqq.framework.web.core.mapping.RouteRegistry
 * 异常处理器：com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler
 * 处理器方法参数解析器：com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver
 * 处理器方法返回值处理器：com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor

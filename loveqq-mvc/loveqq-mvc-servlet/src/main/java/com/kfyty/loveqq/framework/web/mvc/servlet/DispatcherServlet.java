@@ -59,11 +59,11 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
             if (this != bean) {
                 this.setPrefix(bean.getPrefix());
                 this.setSuffix(bean.getSuffix());
+                this.setRouteMatchers(bean.getRouteMatchers());
                 this.setArgumentResolvers(bean.getArgumentResolvers());
                 this.setReturnValueProcessors(bean.getReturnValueProcessors());
                 this.setInterceptorChains(bean.getInterceptorChains());
                 this.setExceptionHandlers(bean.getExceptionHandlers());
-                this.setRequestMappingMatcher(bean.getRequestMappingMatcher());
             }
         }
     }
@@ -91,7 +91,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
             response.setContentType(route.getProduces());
         }
         if (log.isDebugEnabled()) {
-            log.debug("Matched URI mapping [{}] to request URI [{}] !", route.getUrl(), request.getRequestURI());
+            log.debug("Matched URI mapping [{}] to request URI [{}] !", route.getUri(), request.getRequestURI());
         }
     }
 
