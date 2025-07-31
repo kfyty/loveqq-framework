@@ -6,8 +6,10 @@ import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.Data;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -77,5 +79,22 @@ public class Routes {
             throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", route.getRequestMethod(), route.getUri()));
         }
         return this;
+    }
+
+    /**
+     * 根据条件移除路由
+     *
+     * @param test 断言条件
+     */
+    public void removeRoute(Predicate<Route> test) {
+        synchronized (this) {
+            for (Iterator<Map.Entry<Integer, Map<Pair<String, RequestMethod>, Route>>> i = this.routeIndex.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry<Integer, Map<Pair<String, RequestMethod>, Route>> entry = i.next();
+                entry.getValue().entrySet().removeIf(routeEntry -> test.test(routeEntry.getValue()));
+                if (entry.getValue().isEmpty()) {
+                    i.remove();
+                }
+            }
+        }
     }
 }

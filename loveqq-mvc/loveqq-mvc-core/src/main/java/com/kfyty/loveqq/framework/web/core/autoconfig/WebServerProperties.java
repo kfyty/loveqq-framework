@@ -4,7 +4,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -17,11 +16,18 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 @Data
-@Slf4j
 @Component
 @ConfigurationProperties("k.server")
 public class WebServerProperties {
+    /**
+     * 默认映射路径
+     */
     public static final String DEFAULT_DISPATCHER_MAPPING = "/";
+
+    /**
+     * 启动类
+     */
+    protected Class<?> primarySource;
 
     /**
      * 是否启用虚拟线程
@@ -69,11 +75,6 @@ public class WebServerProperties {
      * value: 本地磁盘基础路径
      */
     protected List<Pair<String, String>> resources;
-
-    /**
-     * 启动类
-     */
-    protected Class<?> primarySource;
 
     public WebServerProperties() {
         this(WebServerProperties.class);

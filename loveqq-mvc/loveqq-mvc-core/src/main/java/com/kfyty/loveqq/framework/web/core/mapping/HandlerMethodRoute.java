@@ -50,12 +50,12 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRA
 @NoArgsConstructor
 public class HandlerMethodRoute implements Route {
     /**
-     * URL
+     * uri
      */
     private String uri;
 
     /**
-     * url 路径
+     * uri 路径
      */
     private String[] paths;
 

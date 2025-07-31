@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.core.mapping;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
 
@@ -28,15 +29,9 @@ public class RestfulRouteMatcher implements RouteMatcher {
     private final RouteRegistry routeRegistry;
 
     @Override
-    public Route match(RequestMethod method, String requestURI) {
-        // route length 0 will not to use
-        return match(method, requestURI, 0);
-    }
-
-    @Override
-    public Route match(RequestMethod method, String requestURI, int routeLength) {
+    public Route match(RequestMethod method, ServerRequest request) {
         List<Route> routes = new LinkedList<>();
-        List<String> paths = CommonUtil.split(requestURI, "[/]");
+        List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         loop:
         for (Route route : this.routeRegistry.getRoutes().getRoutes(paths.size()).values()) {
             if (route.isRestful() && route.getRequestMethod() == method) {
@@ -53,7 +48,7 @@ public class RestfulRouteMatcher implements RouteMatcher {
                 routes.add(route);
             }
         }
-        return this.matchBestRestful(method, requestURI, routes);
+        return this.matchBestRestful(method, request.getRequestURI(), routes);
     }
 
     /**

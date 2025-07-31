@@ -99,7 +99,7 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
         Throwable exception = null;
         ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
         ServletServerResponse serverResponse = new ServletServerResponse(response);
-        Route route = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request.getRequestURI());
+        Route route = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), serverRequest);
         try {
             // 无匹配，转发到 404
             if (route == null) {

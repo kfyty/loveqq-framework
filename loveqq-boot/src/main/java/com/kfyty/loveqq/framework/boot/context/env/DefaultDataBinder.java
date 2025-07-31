@@ -155,15 +155,15 @@ public class DefaultDataBinder implements DataBinder {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static void mergeOrUpdateFieldValue(Object bindValue, Field field, Instance target) {
-        // 获取原属性值
-        Object oldValue = ReflectUtil.getFieldValue(target.getTarget(), field);
+        // 获取原属性值，若是代理则直接获取属性值，否则可能触发实际的 bean 创建，导致配置属性错误的合并
+        Object oldValue = ReflectUtil.getFieldValue(target.getTarget(), field, !AopUtil.isClassProxy(target.getTarget()));
 
         // 集合
         if (oldValue instanceof Collection<?> && bindValue instanceof Collection<?> && oldValue != Collections.emptyList() && oldValue != Collections.emptySet()) {
             ((Collection<?>) oldValue).addAll((Collection) bindValue);
         }
         // map
-        else if (oldValue instanceof Map<?, ?> && bindValue instanceof Map<?,?> && oldValue != Collections.emptyMap()) {
+        else if (oldValue instanceof Map<?, ?> && bindValue instanceof Map<?, ?> && oldValue != Collections.emptyMap()) {
             ((Map<?, ?>) oldValue).putAll((Map) bindValue);
         }
         // 其他情况

@@ -4,8 +4,8 @@ import com.kfyty.loveqq.framework.boot.mvc.server.netty.socket.OioBasedLoopResou
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
-import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import reactor.netty.http.client.HttpClient;
@@ -19,9 +19,9 @@ import reactor.netty.resources.ConnectionProvider;
  * @email kfyty725@hotmail.com
  */
 @Component
-@ConditionalOnProperty(prefix = "k.mvc.netty", value = "enableClient", havingValue = "true")
 public class HttpClientAutoConfig {
 
+    @Primary
     @Bean(resolveNested = false, independent = true)
     public HttpClient reactorHttpClient(@Value("${k.server.virtualThread:false}") Boolean virtualThread,
                                         @Autowired(required = false) ConnectionProvider connectionProvider) {

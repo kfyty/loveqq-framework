@@ -72,7 +72,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     }
 
     protected Publisher<Void> processRequest(ServerRequest request, ServerResponse response) {
-        Route route = this.matchRoute(matchRequestMethod(request.getMethod()), request.getRequestURI());
+        Route route = this.matchRoute(matchRequestMethod(request.getMethod()), request);
         if (route == null) {
             return ((HttpServerResponse) response.getRawResponse()).sendNotFound();
         }
