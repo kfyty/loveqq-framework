@@ -13,6 +13,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.gateway.DefaultGatewayFilterChain;
 import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayFilter;
 import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayPredicate;
+import com.kfyty.loveqq.framework.web.core.mapping.gateway.LoadBalanceGatewayFilter;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.Getter;
 import lombok.Setter;
@@ -203,6 +204,7 @@ public class GatewayRoute implements Route {
         }
 
         // 添加默认的过滤器
+        gatewayFilters.add(beanFactory.getBean(LoadBalanceGatewayFilter.class));
         gatewayFilters.add(beanFactory.getBean(DEFAULT_FORWARD_FILTER_NAME));
 
         return gatewayFilters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());

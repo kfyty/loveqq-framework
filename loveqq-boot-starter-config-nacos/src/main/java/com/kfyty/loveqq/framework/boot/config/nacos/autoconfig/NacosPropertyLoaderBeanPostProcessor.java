@@ -100,7 +100,7 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
                 this.configService.addListener(dataId, group, this.configListener);
             }
         } catch (NacosException e) {
-            throw new ResolvableException("load nacos config failed", e);
+            throw new ResolvableException("load nacos config failed.", e);
         }
     }
 
