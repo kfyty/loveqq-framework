@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * 描述: 路由注册
@@ -40,17 +41,24 @@ public interface RouteRegistry {
      * 注册方法映射
      * 实现必须线程安全
      *
-     * @param mapping 方法映射
+     * @param route 方法映射
      */
-    void registryRoute(Route mapping);
+    void registryRoute(Route route);
 
     /**
      * 注册方法映射
      * 实现必须线程安全
      *
-     * @param methodMappings 方法映射
+     * @param routes 方法映射
      */
-    void registryRoute(List<Route> methodMappings);
+    void registryRoute(List<Route> routes);
+
+    /**
+     * 根据条件移除路由
+     *
+     * @param test 断言条件
+     */
+    void removeRoute(Predicate<Route> test);
 
     /**
      * 获取全部路由

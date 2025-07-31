@@ -366,7 +366,7 @@ public class AutowiredProcessor {
                         if (!AutowiredDescription.isRequired(autowired)) {
                             return beanOfType;
                         }
-                        throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean definition of type {}, and no primary found", targetType));
+                        throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean definition of type {}, and there's not primary found", targetType));
                     }
                     beanOfType.put(beanDefinition.getBeanName(), this.context.registerBean(beanDefinition, AutowiredDescription.isLazied(autowired)));
                 }
@@ -381,7 +381,7 @@ public class AutowiredProcessor {
             if (!isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
                 Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 if (primaryBeanOfType.size() > 1) {
-                    throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and no primary found", targetType));
+                    throw new BeansException(CommonUtil.format("Resolve target bean failed, more than one bean of type {} found, and there's not primary found", targetType));
                 }
                 return primaryBeanOfType.isEmpty() ? beanOfType : primaryBeanOfType;
             }

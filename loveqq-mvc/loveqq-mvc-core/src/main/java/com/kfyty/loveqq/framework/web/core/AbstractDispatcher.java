@@ -102,13 +102,13 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     /**
      * 匹配请求路由
      *
-     * @param method     请求方法
-     * @param requestURI 请求 uri
+     * @param method  请求方法
+     * @param request 请求
      * @return 路由
      */
-    public Route matchRoute(RequestMethod method, String requestURI) {
+    public Route matchRoute(RequestMethod method, ServerRequest request) {
         for (RouteMatcher routeMatcher : this.routeMatchers) {
-            Route matched = routeMatcher.match(method, requestURI);
+            Route matched = routeMatcher.match(method, request);
             if (matched != null) {
                 return matched;
             }

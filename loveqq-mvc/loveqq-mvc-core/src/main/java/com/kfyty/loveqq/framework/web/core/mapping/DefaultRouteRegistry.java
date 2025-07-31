@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +66,11 @@ public class DefaultRouteRegistry implements RouteRegistry {
         for (Route route : routeList) {
             this.routes.addRoute(route);
         }
+    }
+
+    @Override
+    public void removeRoute(Predicate<Route> test) {
+        this.routes.removeRoute(test);
     }
 
     @Override

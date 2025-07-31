@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.mapping;
 
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 
 /**
@@ -14,27 +15,8 @@ public interface RouteMatcher {
      * 匹配路由
      *
      * @param method     请求方法
-     * @param requestURI 请求 URI
+     * @param request    请求
      * @return {@link Route}
      */
-    default Route match(RequestMethod method, String requestURI) {
-        int length = 0;
-        String[] paths = Routes.SLASH_PATTERN.split(requestURI, 0);
-        for (String path : paths) {
-            if (!path.isEmpty()) {
-                length++;
-            }
-        }
-        return match(method, requestURI, length);
-    }
-
-    /**
-     * 匹配路由
-     *
-     * @param method     请求方法
-     * @param requestURI 请求 URI
-     * @param length     路由长度
-     * @return {@link Route}
-     */
-    Route match(RequestMethod method, String requestURI, int length);
+    Route match(RequestMethod method, ServerRequest request);
 }

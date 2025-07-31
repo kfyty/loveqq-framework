@@ -165,6 +165,16 @@ public abstract class BeanUtil {
     }
 
     /**
+     * 将对象的属性复制到 Map 中
+     *
+     * @param obj 目标对象
+     * @return Map
+     */
+    public static Map<String, Object> copyProperties(Object obj) {
+        return copyProperties(obj, (f, v) -> true);
+    }
+
+    /**
      * 复制 bean 属性
      *
      * @param source 源对象
@@ -182,18 +192,35 @@ public abstract class BeanUtil {
      * @param clazz 目标 bean class 类型
      * @return 目标对象
      */
-    public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz) {
-        return copyProperties(map, clazz, DEFAULT_COPY_PREDICATE);
+    public static <T> T bindProperties(Map<String, Object> map, Class<T> clazz) {
+        return bindProperties(map, clazz, DEFAULT_COPY_PREDICATE);
     }
 
     /**
-     * 将对象的属性复制到 Map 中
+     * 将对象的属性复制到 Map 中，允许通过属性过滤器控制
      *
-     * @param obj 目标对象
+     * @param obj          目标对象
+     * @param fieldValTest 属性过滤器
      * @return Map
      */
-    public static Map<String, Object> copyProperties(Object obj) {
-        return copyProperties(obj, (f, v) -> true);
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> copyProperties(Object obj, BiPredicate<Field, Object> fieldValTest) {
+        if (obj == null) {
+            return Collections.emptyMap();
+        }
+        if (obj instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        Map<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {
+            Object fieldValue = ReflectUtil.getFieldValue(obj, entry.getValue());
+            if (fieldValTest.test(entry.getValue(), fieldValue)) {
+                map.put(entry.getKey(), fieldValue);
+            } else {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
+            }
+        }
+        return map;
     }
 
     /**
@@ -231,7 +258,7 @@ public abstract class BeanUtil {
      * @param fieldValTest 属性过滤器
      * @return 目标对象
      */
-    public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz, BiPredicate<Field, Object> fieldValTest) {
+    public static <T> T bindProperties(Map<String, Object> map, Class<T> clazz, BiPredicate<Field, Object> fieldValTest) {
         if (CommonUtil.empty(map) || clazz == null) {
             return null;
         }
@@ -239,42 +266,19 @@ public abstract class BeanUtil {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             Field field = ReflectUtil.getField(clazz, entry.getKey());
             if (field == null) {
-                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot bind properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
                 continue;
             }
             if (fieldValTest.test(field, entry.getValue())) {
-                ReflectUtil.setFieldValue(o, field, entry.getValue());
+                if (field.getType().isInstance(entry.getValue())) {
+                    ReflectUtil.setFieldValue(o, field, entry.getValue());
+                } else {
+                    ReflectUtil.setFieldValue(o, field, ConverterUtil.convert(entry.getValue(), field.getType()));
+                }
             } else {
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", field));
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("bind properties skip field: {}", field));
             }
         }
         return o;
-    }
-
-    /**
-     * 将对象的属性复制到 Map 中，允许通过属性过滤器控制
-     *
-     * @param obj          目标对象
-     * @param fieldValTest 属性过滤器
-     * @return Map
-     */
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> copyProperties(Object obj, BiPredicate<Field, Object> fieldValTest) {
-        if (obj == null) {
-            return Collections.emptyMap();
-        }
-        if (obj instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
-        }
-        Map<String, Object> map = new HashMap<>();
-        for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {
-            Object fieldValue = ReflectUtil.getFieldValue(obj, entry.getValue());
-            if (fieldValTest.test(entry.getValue(), fieldValue)) {
-                map.put(entry.getKey(), fieldValue);
-            } else {
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
-            }
-        }
-        return map;
     }
 }

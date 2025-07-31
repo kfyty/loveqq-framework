@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.web.core.mapping;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +24,14 @@ public class AccurateRouteMatcher implements RouteMatcher {
     private final RouteRegistry routeRegistry;
 
     @Override
-    public Route match(RequestMethod method, String requestURI, int length) {
-        return this.routeRegistry.getRoutes().getRoutes(length).get(new Pair<>(requestURI, method));
+    public Route match(RequestMethod method, ServerRequest request) {
+        int length = 0;
+        String[] paths = Routes.SLASH_PATTERN.split(request.getRequestURI(), 0);
+        for (String path : paths) {
+            if (!path.isEmpty()) {
+                length++;
+            }
+        }
+        return this.routeRegistry.getRoutes().getRoutes(length).get(new Pair<>(request.getRequestURI(), method));
     }
 }

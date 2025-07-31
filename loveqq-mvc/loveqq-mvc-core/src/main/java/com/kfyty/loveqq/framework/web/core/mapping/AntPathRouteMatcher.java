@@ -4,12 +4,12 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
-import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
+import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * 描述: 精确路由匹配器
@@ -38,16 +38,14 @@ public class AntPathRouteMatcher implements RouteMatcher {
     }
 
     @Override
-    public Route match(RequestMethod method, String requestURI, int length) {
-        Map<Pair<String, RequestMethod>, Route> routeMap = this.routeRegistry.getRoutes().getRoutes(length);
-        for (Map.Entry<Pair<String, RequestMethod>, Route> entry : routeMap.entrySet()) {
-            String uri = entry.getKey().getKey();
-            Route route = entry.getValue();
-            if (route.getRequestMethod() == method) {
-                String pattern = route.isRestful() ? Routes.BRACE_PATTERN.matcher(uri).replaceAll("*") : uri;
-                if (this.patternMatcher.matches(pattern, requestURI)) {
-                    return entry.getValue();
-                }
+    public Route match(RequestMethod method, ServerRequest request) {
+        String requestURI = request.getRequestURI();
+        List<Route> routes = this.routeRegistry.getRoutes(method);
+        for (Route route : routes) {
+            String uri = route.getUri();
+            String pattern = route.isRestful() ? Routes.BRACE_PATTERN.matcher(uri).replaceAll("*") : uri;
+            if (this.patternMatcher.matches(pattern, requestURI)) {
+                return route;
             }
         }
         return null;

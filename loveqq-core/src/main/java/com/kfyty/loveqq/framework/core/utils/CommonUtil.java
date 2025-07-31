@@ -306,7 +306,7 @@ public abstract class CommonUtil {
 
     public static String underline2CamelCase(String underlineTarget, char lineChar, boolean firstUpper) {
         if (underlineTarget == null || underlineTarget.isEmpty()) {
-            throw new ResolvableException("convert underline to camel case failed, target can't empty !");
+            throw new ResolvableException("Convert underline to camel case failed, target can't empty.");
         }
 
         // 全部都是大写字母或数字，需先转换为小写，包含 lineChar 时也要先转换，因为此时判断大小写无效
@@ -337,7 +337,7 @@ public abstract class CommonUtil {
 
     public static String camelCase2Underline(String target, boolean lower) {
         if (target == null || target.isEmpty()) {
-            throw new ResolvableException("convert camel case to underline failed, target can't empty !");
+            throw new ResolvableException("Convert camel case to underline failed, target can't empty.");
         }
         if (UPPER_CASE_PATTERN.matcher(target).matches()) {
             return lower ? target.toLowerCase() : target.toUpperCase();                                                 // 纯大写字母或数字，无法转换
