@@ -3,11 +3,15 @@ package com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener;
 import com.alibaba.nacos.api.naming.listener.AbstractEventListener;
 import com.alibaba.nacos.api.naming.listener.Event;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent;
+import com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.Server;
+import com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.ServerInstance;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +45,14 @@ public class NacosNamingEventListener extends AbstractEventListener implements A
      * @param event 事件
      */
     protected void onEvent(NamingEvent event) {
-        List<ServerEvent.Instance> instances = event.getInstances().stream().map(e -> new ServerEvent.Instance(e.getInstanceId(), e.getIp(), e.getPort(), e.getMetadata())).collect(Collectors.toList());
-        this.applicationContext.publishEvent(new ServerEvent(new ServerEvent.Server(event.getServiceName(), instances)));
+        Function<Instance, ServerInstance> mapping = e -> new ServerInstance(
+                e.getInstanceId() != null ? e.getInstanceId() : e.getIp() + ':' + e.getPort(),
+                "http",
+                e.getIp(),
+                e.getPort(),
+                e.getMetadata()
+        );
+        List<ServerInstance> instances = event.getInstances().stream().map(mapping).collect(Collectors.toList());
+        this.applicationContext.publishEvent(new ServerEvent(new Server(event.getServiceName(), instances)));
     }
 }
