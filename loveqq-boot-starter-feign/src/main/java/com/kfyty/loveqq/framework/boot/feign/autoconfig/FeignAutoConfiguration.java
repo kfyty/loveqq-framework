@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqDecoder;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqEncoder;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.adapter.LoveqqMvcContract;
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.factory.LoadBalancerClientFactory;
-import com.kfyty.loveqq.framework.boot.feign.autoconfig.listener.ServerListener;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.listener.CloudServerListener;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
@@ -26,7 +26,6 @@ import feign.codec.Encoder;
 import feign.httpclient.ApacheHttpClient;
 import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
-import feign.ribbon.LBClientFactory;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -78,13 +77,13 @@ public class FeignAutoConfiguration {
 
     @Bean(resolveNested = false)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
-    public ServerListener serverListener() {
-        return new ServerListener();
+    public CloudServerListener cloudServerListener() {
+        return new CloudServerListener();
     }
 
     @Bean(resolveNested = false)
     @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent")
-    public LBClientFactory loadBalancerClientFactory() {
+    public LoadBalancerClientFactory loadBalancerClientFactory() {
         return new LoadBalancerClientFactory();
     }
 
@@ -93,10 +92,8 @@ public class FeignAutoConfiguration {
     public ZoneAwareLoadBalancer<Server> zoneAwareLoadBalancer() {
         IRule rule = this.feignProperties.getRule();
         ZoneAwareLoadBalancer<Server> loadBalancer = new ZoneAwareLoadBalancer<>();
-        if (rule != null) {
-            rule.setLoadBalancer(loadBalancer);
-            loadBalancer.setRule(rule);
-        }
+        rule.setLoadBalancer(loadBalancer);
+        loadBalancer.setRule(rule);
         return loadBalancer;
     }
 

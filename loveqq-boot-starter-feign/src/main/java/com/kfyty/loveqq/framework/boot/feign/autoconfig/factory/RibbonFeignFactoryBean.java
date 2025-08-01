@@ -1,10 +1,9 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig.factory;
 
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.annotation.FeignClient;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.override.LoveqqRibbonClient;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import feign.Feign;
-import feign.ribbon.LBClientFactory;
-import feign.ribbon.RibbonClient;
 
 /**
  * 描述: 基于 ribbon 创建 feign 代理
@@ -15,7 +14,7 @@ import feign.ribbon.RibbonClient;
  */
 public class RibbonFeignFactoryBean<T> extends FeignFactoryBean<T> {
     @Autowired(required = false)
-    private LBClientFactory lbClientFactory;
+    private LoadBalancerClientFactory lbClientFactory;
 
     public RibbonFeignFactoryBean(Class<T> feignInterface) {
         super(feignInterface);
@@ -27,10 +26,7 @@ public class RibbonFeignFactoryBean<T> extends FeignFactoryBean<T> {
             super.afterConfig(annotation, builder);
             return;
         }
-        RibbonClient ribbonClient = RibbonClient.builder()
-                .delegate(this.client)
-                .lbClientFactory(this.lbClientFactory)
-                .build();
+        LoveqqRibbonClient ribbonClient = new LoveqqRibbonClient(this.client, this.lbClientFactory);
         super.afterConfig(annotation, builder.client(ribbonClient));
     }
 }
