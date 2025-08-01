@@ -22,13 +22,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-boot-starter-netty</artifactId>
-            <version>${revision}</version>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
             <groupId>ognl</groupId>
             <artifactId>ognl</artifactId>
             <optional>true</optional>
