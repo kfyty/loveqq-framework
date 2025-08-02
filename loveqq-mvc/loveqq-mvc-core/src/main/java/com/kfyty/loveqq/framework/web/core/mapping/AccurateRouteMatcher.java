@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.web.core.mapping;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
-import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,6 @@ public class AccurateRouteMatcher implements RouteMatcher {
                 length++;
             }
         }
-        return this.routeRegistry.getRoutes().getRoutes(length).get(new Pair<>(request.getRequestURI(), method));
+        return this.routeRegistry.getRoutes().getRoutes(length).get(new Routes.RouteKey(request.getRequestURI(), method));
     }
 }

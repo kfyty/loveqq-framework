@@ -1,11 +1,14 @@
 package com.kfyty.loveqq.framework.web.core.mapping.gateway;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.PrototypeScope;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
@@ -19,6 +22,7 @@ import java.util.Map;
  */
 @Component("Path")
 @RequiredArgsConstructor
+@PrototypeScope(scopeProxy = false)
 public class PathGatewayPredicate implements GatewayPredicate {
     /**
      * 路径匹配
@@ -50,6 +54,8 @@ public class PathGatewayPredicate implements GatewayPredicate {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Config {
         private String path;
     }

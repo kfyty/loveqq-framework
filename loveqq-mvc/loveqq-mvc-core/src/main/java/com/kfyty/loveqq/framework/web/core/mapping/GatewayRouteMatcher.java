@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.web.core.mapping;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
-import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayPredicate;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
@@ -28,10 +27,10 @@ public class GatewayRouteMatcher implements RouteMatcher {
 
     @Override
     public Route match(RequestMethod method, ServerRequest request) {
-        for (Map.Entry<Integer, Map<Pair<String, RequestMethod>, Route>> entry : this.routeRegistry.getRoutes().getRouteIndex().entrySet()) {
-            for (Map.Entry<Pair<String, RequestMethod>, Route> routeEntry : entry.getValue().entrySet()) {
-                if (routeEntry.getValue() instanceof GatewayRoute route) {
-                    if (this.isMatch(route, request)) {
+        for (Map<Routes.RouteKey, Route> routeMap : this.routeRegistry.getRoutes().getRouteIndex().values()) {
+            for (Route route : routeMap.values()) {
+                if (route instanceof GatewayRoute gatewayRoute) {
+                    if (this.isMatch(gatewayRoute, request)) {
                         return route;
                     }
                 }

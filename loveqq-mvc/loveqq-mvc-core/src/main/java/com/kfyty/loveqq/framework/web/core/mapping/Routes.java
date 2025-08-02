@@ -3,10 +3,10 @@ package com.kfyty.loveqq.framework.web.core.mapping;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
-import lombok.Data;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
  * @date 2021/5/22 14:25
  * @email kfyty725@hotmail.com
  */
-@Data
 public class Routes {
     /**
      * {} 正则
@@ -46,24 +45,34 @@ public class Routes {
      * key: uri 长度
      * value: uri 映射
      */
-    private final Map<Integer, Map<Pair<String, RequestMethod>, Route>> routeIndex;
+    private final Map<Integer, Map<RouteKey, Route>> routeIndex;
 
     public Routes() {
         this(new ConcurrentHashMap<>());
     }
 
-    public Routes(Map<Integer, Map<Pair<String, RequestMethod>, Route>> routeIndex) {
+    public Routes(Map<Integer, Map<RouteKey, Route>> routeIndex) {
         this.routeIndex = routeIndex;
     }
 
     /**
+     * 获取全部路由
+     *
+     * @return 路由
+     */
+    public Map<Integer, Map<RouteKey, Route>> getRouteIndex() {
+        return Collections.unmodifiableMap(this.routeIndex);
+    }
+
+    /**
      * 根据路由长度获取路由
+     * 由于内部 Map 保证注册顺序，线程不安全，因此返回不可变对象
      *
      * @param length 路由长度
      * @return 路由
      */
-    public Map<Pair<String, RequestMethod>, Route> getRoutes(int length) {
-        return this.routeIndex.getOrDefault(length, Collections.emptyMap());
+    public Map<RouteKey, Route> getRoutes(int length) {
+        return Collections.unmodifiableMap(this.routeIndex.getOrDefault(length, Collections.emptyMap()));
     }
 
     /**
@@ -73,10 +82,12 @@ public class Routes {
      * @return this
      */
     public Routes addRoute(Route route) {
-        Map<Pair<String, RequestMethod>, Route> routeMap = this.routeIndex.computeIfAbsent(route.getLength(), k -> new ConcurrentHashMap<>());
-        Route exists = routeMap.putIfAbsent(new Pair<>(route.getUri(), route.getRequestMethod()), route);
-        if (exists != null) {
-            throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", route.getRequestMethod(), route.getUri()));
+        Map<RouteKey, Route> routeMap = this.routeIndex.computeIfAbsent(route.getLength(), k -> new LinkedHashMap<>());
+        synchronized (routeMap) {
+            Route exists = routeMap.putIfAbsent(new RouteKey(route.getUri(), route.getRequestMethod()), route);
+            if (exists != null) {
+                throw new IllegalArgumentException(CommonUtil.format("Route already exists: [RequestMethod: {}, URL:{}] !", route.getRequestMethod(), route.getUri()));
+            }
         }
         return this;
     }
@@ -87,14 +98,54 @@ public class Routes {
      * @param test 断言条件
      */
     public void removeRoute(Predicate<Route> test) {
-        synchronized (this) {
-            for (Iterator<Map.Entry<Integer, Map<Pair<String, RequestMethod>, Route>>> i = this.routeIndex.entrySet().iterator(); i.hasNext(); ) {
-                Map.Entry<Integer, Map<Pair<String, RequestMethod>, Route>> entry = i.next();
-                entry.getValue().entrySet().removeIf(routeEntry -> test.test(routeEntry.getValue()));
-                if (entry.getValue().isEmpty()) {
+        for (Iterator<Map.Entry<Integer, Map<RouteKey, Route>>> i = this.routeIndex.entrySet().iterator(); i.hasNext(); ) {
+            Map<RouteKey, Route> routeMap = i.next().getValue();
+            synchronized (routeMap) {
+                routeMap.entrySet().removeIf(routeEntry -> test.test(routeEntry.getValue()));
+                if (routeMap.isEmpty()) {
                     i.remove();
                 }
             }
+        }
+    }
+
+    /**
+     * toString
+     *
+     * @return string
+     */
+    @Override
+    public String toString() {
+        return this.routeIndex.toString();
+    }
+
+    /**
+     * 路由 key
+     */
+    public static class RouteKey extends Pair<String, RequestMethod> {
+        /**
+         * 构造器
+         *
+         * @param key   uri
+         * @param value 请求方法
+         */
+        public RouteKey(String key, RequestMethod value) {
+            super(key, value);
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+
+        @Override
+        public String toString() {
+            return super.toString();
         }
     }
 }
