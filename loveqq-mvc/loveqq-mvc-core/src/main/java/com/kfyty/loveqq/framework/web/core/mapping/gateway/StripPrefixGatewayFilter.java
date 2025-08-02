@@ -1,11 +1,14 @@
 package com.kfyty.loveqq.framework.web.core.mapping.gateway;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.PrototypeScope;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnClass;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
  * @since JDK 1.8
  */
 @Component("StripPrefix")
+@PrototypeScope(scopeProxy = false)
 @ConditionalOnClass("reactor.core.publisher.Mono")
 public class StripPrefixGatewayFilter implements GatewayFilter {
     /**
@@ -46,6 +50,8 @@ public class StripPrefixGatewayFilter implements GatewayFilter {
     }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Config {
         private Integer stripPrefix;
     }

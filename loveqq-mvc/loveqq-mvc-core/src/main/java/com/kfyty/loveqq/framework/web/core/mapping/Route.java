@@ -49,7 +49,9 @@ public interface Route extends Cloneable {
      *
      * @return true/false
      */
-    boolean isRestful();
+    default boolean isRestful() {
+        return false;
+    }
 
     /**
      * 获取指定路径参数的 restful 索引
@@ -57,49 +59,63 @@ public interface Route extends Cloneable {
      * @param path 路径参数
      * @return 索引
      */
-    int getRestfulIndex(String path);
+    default int getRestfulIndex(String path) {
+        return -1;
+    }
 
     /**
      * 返回 restful 风格索引
      *
      * @return restful 索引
      */
-    Pair<String, Integer>[] getRestfulIndex();
+    default Pair<String, Integer>[] getRestfulIndex() {
+        return null;
+    }
 
     /**
      * 该路由生产的内容类型
      *
      * @return content-type
      */
-    String getProduces();
+    default String getProduces() {
+        return null;
+    }
 
     /**
      * 设置该路由生产的内容类型
      *
      * @param produces content-type
      */
-    void setProduces(String produces);
+    default void setProduces(String produces) {
+
+    }
 
     /**
      * 该路由结果是否是流式结果
      *
      * @return true/false
      */
-    boolean isStream();
+    default boolean isStream() {
+        return false;
+    }
 
     /**
      * 该路由结果是否是 sse 结果
      *
      * @return true/false
      */
-    boolean isEventStream();
+    default boolean isEventStream() {
+        return false;
+    }
 
     /**
      * 获取路由控制器
      *
      * @return 控制器
      */
-    Object getController();
+    default Object getController() {
+        return null;
+    }
 
     /**
      * 应用路由，并得到应用后的结果

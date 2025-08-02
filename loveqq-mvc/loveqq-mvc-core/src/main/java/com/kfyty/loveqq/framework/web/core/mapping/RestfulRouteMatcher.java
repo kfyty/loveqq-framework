@@ -7,8 +7,8 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +30,7 @@ public class RestfulRouteMatcher implements RouteMatcher {
 
     @Override
     public Route match(RequestMethod method, ServerRequest request) {
-        List<Route> routes = new LinkedList<>();
+        List<Route> routes = new ArrayList<>();
         List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
         loop:
         for (Route route : this.routeRegistry.getRoutes().getRoutes(paths.size()).values()) {

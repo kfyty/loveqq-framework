@@ -35,7 +35,9 @@ public class NacosNamingEventListener extends AbstractEventListener implements A
     @Override
     public void onEvent(Event event) {
         if (event instanceof NamingEvent) {
-            this.onEvent((NamingEvent) event);
+            synchronized (this) {
+                this.onEvent((NamingEvent) event);
+            }
         }
     }
 
