@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * 完全复制自 {@link feign.ribbon.RibbonClient}
+ * 完全复制自 {@link feign.ribbon.RibbonClient}，修改了 {@link this#lbClient(String)} 的返回值
  * <p>
  * RibbonClient can be used in Feign builder to activate smart routing and resiliency capabilities
  * provided by Ribbon. Ex.
@@ -50,6 +50,10 @@ public class LoveqqRibbonClient implements Client {
         }
     }
 
+    protected LoveqqLBClient lbClient(String clientName) {
+        return this.lbClientFactory.create(clientName);
+    }
+
     static void propagateFirstIOException(Throwable throwable) throws IOException {
         while (throwable != null) {
             if (throwable instanceof IOException) {
@@ -61,10 +65,6 @@ public class LoveqqRibbonClient implements Client {
 
     static URI cleanUrl(String originalUrl, String host) {
         return URI.create(originalUrl.replaceFirst(host, ""));
-    }
-
-    private LoveqqLBClient lbClient(String clientName) {
-        return this.lbClientFactory.create(clientName);
     }
 
     static class FeignOptionsClientConfig extends DefaultClientConfigImpl {

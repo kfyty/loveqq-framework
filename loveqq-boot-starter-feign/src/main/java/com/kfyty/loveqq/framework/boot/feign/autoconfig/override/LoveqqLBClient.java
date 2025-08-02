@@ -28,8 +28,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 完全复制自 {@link feign.ribbon.LBClient}
+ * 去除了 final 修饰
  */
-public final class LoveqqLBClient extends AbstractLoadBalancerAwareClient<LoveqqLBClient.RibbonRequest, LoveqqLBClient.RibbonResponse> {
+public class LoveqqLBClient extends AbstractLoadBalancerAwareClient<LoveqqLBClient.RibbonRequest, LoveqqLBClient.RibbonResponse> {
     private final int connectTimeout;
     private final int readTimeout;
     private final IClientConfig clientConfig;
@@ -67,7 +68,7 @@ public final class LoveqqLBClient extends AbstractLoadBalancerAwareClient<Loveqq
             options = new Request.Options(
                     configOverride.get(CommonClientConfigKey.ConnectTimeout, connectTimeout),
                     TimeUnit.MILLISECONDS,
-                    (configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout)),
+                    configOverride.get(CommonClientConfigKey.ReadTimeout, readTimeout),
                     TimeUnit.MILLISECONDS,
                     configOverride.get(CommonClientConfigKey.FollowRedirects, followRedirects)
             );
@@ -99,7 +100,7 @@ public final class LoveqqLBClient extends AbstractLoadBalancerAwareClient<Loveqq
         builder.withServerLocator(request.getLoadBalancerKey());
     }
 
-    static class RibbonRequest extends ClientRequest implements Cloneable {
+    public static class RibbonRequest extends ClientRequest implements Cloneable {
         private final Request request;
         private final Client client;
 
@@ -116,7 +117,7 @@ public final class LoveqqLBClient extends AbstractLoadBalancerAwareClient<Loveqq
             final byte[] body = request.body();
             final int bodyLength = body != null ? body.length : 0;
             // create a new Map to avoid side effect, not to change the old headers
-            Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
+            Map<String, Collection<String>> headers = new LinkedHashMap<>();
             headers.putAll(request.headers());
             headers.put(Util.CONTENT_LENGTH, Collections.singletonList(String.valueOf(bodyLength)));
             return Request.create(request.httpMethod(), getUri().toASCIIString(), headers, body, request.charset());
@@ -126,12 +127,12 @@ public final class LoveqqLBClient extends AbstractLoadBalancerAwareClient<Loveqq
             return client;
         }
 
-        public Object clone() {
+        public LoveqqLBClient.RibbonRequest clone() {
             return new LoveqqLBClient.RibbonRequest(client, request, getUri(), getLoadBalancerKey());
         }
     }
 
-    static class RibbonResponse implements IResponse {
+    public static class RibbonResponse implements IResponse {
         private final URI uri;
         private final Response response;
 

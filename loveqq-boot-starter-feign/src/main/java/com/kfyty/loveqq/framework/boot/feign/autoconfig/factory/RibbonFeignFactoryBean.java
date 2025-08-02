@@ -22,7 +22,8 @@ public class RibbonFeignFactoryBean<T> extends FeignFactoryBean<T> {
 
     @Override
     protected void afterConfig(FeignClient annotation, Feign.Builder builder) {
-        if (this.lbClientFactory == null) {
+        // name 空表示没有使用注册中心，无需 ribbon 包装
+        if (this.lbClientFactory == null || annotation.value().isEmpty()) {
             super.afterConfig(annotation, builder);
             return;
         }
