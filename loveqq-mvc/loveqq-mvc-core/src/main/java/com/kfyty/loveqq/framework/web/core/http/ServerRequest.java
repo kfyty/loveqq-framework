@@ -254,6 +254,25 @@ public interface ServerRequest {
         ServerRequestBuilder path(String path);
 
         /**
+         * 添加请求头
+         *
+         * @param name   请求头名称
+         * @param values 请求头值
+         * @return this
+         */
+        ServerRequestBuilder headers(String name, String... values);
+
+        /**
+         * 添加请求头
+         *
+         * @param append 是否添加
+         * @param name   请求头名称
+         * @param values 请求头值
+         * @return this
+         */
+        ServerRequestBuilder headers(boolean append, String name, String... values);
+
+        /**
          * 请求体
          *
          * @param body 请求体

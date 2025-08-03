@@ -18,6 +18,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.multipart.FileUpload;
@@ -39,6 +40,7 @@ import java.lang.reflect.Modifier;
 import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -376,6 +378,22 @@ public class NettyServerRequest implements ServerRequest {
         @Override
         public ServerRequestBuilder path(String path) {
             this.path = path;
+            return this;
+        }
+
+        @Override
+        public ServerRequestBuilder headers(String name, String... values) {
+            return headers(true, name, values);
+        }
+
+        @Override
+        public ServerRequestBuilder headers(boolean append, String name, String... values) {
+            HttpHeaders headers = NettyServerRequest.this.request.requestHeaders();
+            if (append) {
+                headers.add(name, Arrays.asList(values));
+            } else {
+                headers.set(name, Arrays.asList(values));
+            }
             return this;
         }
 
