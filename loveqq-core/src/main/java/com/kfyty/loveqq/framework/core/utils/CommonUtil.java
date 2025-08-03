@@ -277,18 +277,18 @@ public abstract class CommonUtil {
     }
 
     public static Map<String, String> resolveURLParameters(String url, String prefix) {
-        if (empty(url) || url.indexOf('=') < 0) {
+        if (url == null || url.isEmpty() || url.indexOf('=') < 0) {
             return new HashMap<>(4);
         }
         int index = url.indexOf('?');
         String parameter = index < 0 ? url : url.substring(index + 1);
-        String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
+        String paramPrefix = prefix == null || prefix.isEmpty() ? EMPTY_STRING : prefix + '.';
         Map<String, String> query = new HashMap<>();
         List<String> split = split(parameter, "&");
         for (String params : split) {
             String[] paramPair = params.split("=");
             if (paramPair.length > 1) {
-                query.put(paramPrefix + paramPair[0], paramPair[1]);
+                query.merge(paramPrefix + paramPair[0], paramPair[1], (o, n) -> o + ',' + n);
             }
         }
         return query;

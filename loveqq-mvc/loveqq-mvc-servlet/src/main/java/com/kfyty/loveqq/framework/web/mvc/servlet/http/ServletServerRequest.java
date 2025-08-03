@@ -16,8 +16,6 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -106,21 +104,21 @@ public class ServletServerRequest implements ServerRequest {
 
     @Override
     public String getParameter(String name) {
-        return this.request.getParameter(name);
+        String[] values = this.request.getParameterValues(name);
+        if (values == null || values.length == 0) {
+            return null;
+        }
+        return values.length == 1 ? values[0] : String.join(",", values);
     }
 
     @Override
     public Collection<String> getParameterNames() {
-        List<String> names = new LinkedList<>();
-        for (String value : new EnumerationIterator<>(this.request.getParameterNames())) {
-            names.add(value);
-        }
-        return names;
+        return new EnumerationIterator<>(this.request.getParameterNames()).toList();
     }
 
     @Override
     public Map<String, String> getParameterMap() {
-        return this.getParameterNames().stream().collect(Collectors.toMap(k -> k, this::getParameter));
+        return this.request.getParameterMap().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> String.join(",", v.getValue())));
     }
 
     @Override
@@ -130,20 +128,12 @@ public class ServletServerRequest implements ServerRequest {
 
     @Override
     public Collection<String> getHeaders(String name) {
-        List<String> names = new LinkedList<>();
-        for (String value : new EnumerationIterator<>(this.request.getHeaders(name))) {
-            names.add(value);
-        }
-        return names;
+        return new EnumerationIterator<>(this.request.getHeaders(name)).toList();
     }
 
     @Override
     public Collection<String> getHeaderNames() {
-        List<String> names = new LinkedList<>();
-        for (String value : new EnumerationIterator<>(this.request.getHeaderNames())) {
-            names.add(value);
-        }
-        return names;
+        return new EnumerationIterator<>(this.request.getHeaderNames()).toList();
     }
 
     @Override

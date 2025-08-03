@@ -35,6 +35,10 @@ public class CloudServerListener implements ApplicationListener<ServerEvent> {
                 instanceMap.remove(server.getId());
             }
 
+            // 更新已有的
+            this.loadBalancer.setServersList(servers);
+
+            // 创建新的
             for (ServerInstance instance : instanceMap.values()) {
                 Server server = new Server(instance.getId());
                 server.setHost(instance.getIp());

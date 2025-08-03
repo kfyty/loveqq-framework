@@ -19,7 +19,7 @@ import reactor.netty.resources.ConnectionProvider;
  * @email kfyty725@hotmail.com
  */
 @Component
-public class HttpClientAutoConfig {
+public class NettyHttpClientAutoConfig {
 
     @Primary
     @Bean(resolveNested = false, independent = true)

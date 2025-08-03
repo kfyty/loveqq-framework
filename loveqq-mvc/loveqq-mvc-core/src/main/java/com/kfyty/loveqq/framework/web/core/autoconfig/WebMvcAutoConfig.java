@@ -106,30 +106,33 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
             gatewayRoutesList.add(GatewayRoute.create(applicationContext, routeDefinition));
         }
 
-        final GatewayFilter balanceGatewayFilter = applicationContext.getBean(LoadBalanceGatewayFilter.class);
-        final GatewayFilter defaultForwardFilter = applicationContext.getBean(DEFAULT_FORWARD_FILTER_NAME);
-        for (GatewayRoute gatewayRoute : gatewayRoutes.values()) {
-            boolean hasLoadBalanceFilter = false;
-            boolean hasDefaultForwardFilter = false;
-            if (gatewayRoute.getFilters() != null) {
-                for (GatewayFilter filter : gatewayRoute.getFilters()) {
-                    if (balanceGatewayFilter != null && filter == balanceGatewayFilter) {
-                        hasLoadBalanceFilter = true;
-                        continue;
-                    }
-                    if (filter == defaultForwardFilter) {
-                        hasDefaultForwardFilter = true;
-                        continue;
+        // 这里要先判断，避免 DEFAULT_FORWARD_FILTER_NAME 不存在
+        if (!gatewayRoutes.isEmpty()) {
+            final GatewayFilter balanceGatewayFilter = applicationContext.getBean(LoadBalanceGatewayFilter.class);
+            final GatewayFilter defaultForwardFilter = applicationContext.getBean(DEFAULT_FORWARD_FILTER_NAME);
+            for (GatewayRoute gatewayRoute : gatewayRoutes.values()) {
+                boolean hasLoadBalanceFilter = false;
+                boolean hasDefaultForwardFilter = false;
+                if (gatewayRoute.getFilters() != null) {
+                    for (GatewayFilter filter : gatewayRoute.getFilters()) {
+                        if (balanceGatewayFilter != null && filter == balanceGatewayFilter) {
+                            hasLoadBalanceFilter = true;
+                            continue;
+                        }
+                        if (filter == defaultForwardFilter) {
+                            hasDefaultForwardFilter = true;
+                            continue;
+                        }
                     }
                 }
+                if (balanceGatewayFilter != null && !hasLoadBalanceFilter || !hasDefaultForwardFilter) {
+                    List<GatewayFilter> filters = new ArrayList<>(Optional.ofNullable(gatewayRoute.getFilters()).orElse(Collections.emptyList()));
+                    Mapping.from(balanceGatewayFilter).whenNotNull(filters::add);
+                    Mapping.from(defaultForwardFilter).whenNotNull(filters::add);
+                    gatewayRoute.setFilters(filters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList()));
+                }
+                gatewayRoutesList.add(gatewayRoute);
             }
-            if (balanceGatewayFilter != null && !hasLoadBalanceFilter || !hasDefaultForwardFilter) {
-                List<GatewayFilter> filters = new ArrayList<>(Optional.ofNullable(gatewayRoute.getFilters()).orElse(Collections.emptyList()));
-                Mapping.from(balanceGatewayFilter).whenNotNull(filters::add);
-                Mapping.from(defaultForwardFilter).whenNotNull(filters::add);
-                gatewayRoute.setFilters(filters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList()));
-            }
-            gatewayRoutesList.add(gatewayRoute);
         }
 
         gatewayRoutesList.stream().sorted(Comparator.comparing(GatewayRoute::getOrder)).forEach(routeRegistry::registryRoute);
