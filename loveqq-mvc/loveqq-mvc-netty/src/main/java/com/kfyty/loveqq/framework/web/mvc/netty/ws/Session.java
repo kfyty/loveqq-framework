@@ -32,6 +32,7 @@ public interface Session {
 
     /**
      * 获取连接请求
+     * 查询参数可从该方法返回值获取
      *
      * @return 连接请求
      */
@@ -45,13 +46,6 @@ public interface Session {
     boolean isActive();
 
     /**
-     * 发送字符串
-     *
-     * @param message 消息体
-     */
-    Publisher<Void> sendStringAsync(Publisher<? extends String> message);
-
-    /**
      * 发送文件
      *
      * @param file 文件
@@ -59,32 +53,30 @@ public interface Session {
     Publisher<Void> sendFileAsync(File file);
 
     /**
+     * 发送字符串
+     *
+     * @param message 消息体
+     */
+    Publisher<Void> sendStringAsync(Publisher<String> message);
+
+    /**
      * 发送字节数组
      *
      * @param bytes 字节数组
      */
-    Publisher<Void> sendByteArrayAsync(Publisher<? extends byte[]> bytes);
+    Publisher<Void> sendByteArrayAsync(Publisher<byte[]> bytes);
 
     /**
      * 发送字节数组
      *
      * @param byteBuf 字节数组
      */
-    Publisher<Void> sendByteBufAsync(Publisher<? extends ByteBuf> byteBuf);
+    Publisher<Void> sendAsync(Publisher<ByteBuf> byteBuf);
 
     /**
      * 关闭 session
      */
-    void close();
-
-    /**
-     * 发送字符串
-     *
-     * @param message 消息体
-     */
-    default void sendString(String message) {
-        Mono.from(this.sendStringAsync(Mono.just(message))).subscribe();
-    }
+    Publisher<Void> closeAsync();
 
     /**
      * 发送文件
@@ -93,6 +85,15 @@ public interface Session {
      */
     default void sendFile(File file) {
         Mono.from(this.sendFileAsync(file)).subscribe();
+    }
+
+    /**
+     * 发送字符串
+     *
+     * @param message 消息体
+     */
+    default void sendString(String message) {
+        Mono.from(this.sendStringAsync(Mono.just(message))).subscribe();
     }
 
     /**
@@ -106,24 +107,18 @@ public interface Session {
 
     /**
      * 发送字节数组
+     * 发送后会自动释放 {@link ByteBuf}
      *
      * @param byteBuf 字节数组
      */
-    default void sendByteBuf(ByteBuf byteBuf) {
-        this.sendByteBuf(byteBuf, true);
+    default void send(ByteBuf byteBuf) {
+        Mono.from(this.sendAsync(Mono.just(byteBuf))).subscribe();
     }
 
     /**
-     * 发送字节数组
-     *
-     * @param byteBuf 字节数组
-     * @param release 是否自动 release
+     * 关闭 session
      */
-    default void sendByteBuf(ByteBuf byteBuf, boolean release) {
-        if (!release) {
-            Mono.from(this.sendByteBufAsync(Mono.just(byteBuf))).subscribe();
-            return;
-        }
-        Mono.from(this.sendByteBufAsync(Mono.just(byteBuf))).doFinally(s -> byteBuf.release()).subscribe();
+    default void close() {
+        Mono.from(this.closeAsync()).subscribe();
     }
 }

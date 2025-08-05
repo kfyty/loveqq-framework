@@ -44,18 +44,14 @@ public interface ReactorHandlerMethodReturnValueProcessor extends HandlerMethodR
 
     /**
      * 处理返回值
-     * 响应式处理的默认实现，一般不会被调用
+     * 响应式处理时不应该被调用
      *
      * @param returnValue 控制器返回值
      * @param returnType  返回类型
      * @param container   模型视图容器
      */
     default void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        Object processedReturnValue = this.transformReturnValue(returnValue, returnType, container);
-        if (processedReturnValue != null) {
-            Mono.from(writeReturnValue(processedReturnValue, container.getRequest(), container.getResponse(), false)).subscribe();
-            log.warn("reactor return value processor should not invoke this implements: {}", this);
-        }
+        throw new UnsupportedOperationException("ReactorHandlerMethodReturnValueProcessor.handleReturnValue");
     }
 
     /**

@@ -66,11 +66,11 @@ public class RequestDispatcherHandler implements BiFunction<HttpServerRequest, H
         if (request.requestHeaders().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)) {
             ServerRequest serverRequest = new NettyServerRequest(request);
             WebSocketHandler webSocketHandler = this.webSocketHandlerMap.get(serverRequest.getRequestURI());
-            if (webSocketHandler == null) {
-                return response.sendNotFound();
+            if (webSocketHandler != null) {
+                BiFunction<ServerRequest, ServerResponse, Publisher<Void>> requestProcessor = (req, res) -> response.sendWebsocket(this.upgradeWebSocketHandler(serverRequest, webSocketHandler));
+                return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessor).doFilter(serverRequest, null);
             }
-            BiFunction<ServerRequest, ServerResponse, Publisher<Void>> requestProcessor = (req, res) -> response.sendWebsocket(this.upgradeWebSocketHandler(serverRequest, webSocketHandler));
-            return new DefaultFilterChain(this.patternMatcher, this.filters, requestProcessor).doFilter(serverRequest, null);
+            // 可能被转发到其他路由，继续
         }
 
         // 处理请求

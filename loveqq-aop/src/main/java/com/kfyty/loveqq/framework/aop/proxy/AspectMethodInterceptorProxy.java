@@ -12,7 +12,6 @@ import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.proxy.aop.AdviceMethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.proxy.aop.JoinPointHolder;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.aop.Advice;
 import org.aspectj.lang.JoinPoint;
@@ -53,7 +52,7 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
     @Override
     public Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable {
         List<MethodInterceptorChainPoint> advices = this.findAdviceChainPoints(methodProxy);
-        if (CommonUtil.empty(advices)) {
+        if (advices.isEmpty()) {
             return chain.proceed(methodProxy);
         }
         JoinPoint prevJoinPoint = null;
@@ -98,8 +97,8 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
         Method targetMethod = methodProxy.getTargetMethod();
         Class<?> targetClass = methodProxy.getTargetClass();
         for (Advisor advisor : this.advisors) {
-            if (advisor instanceof PointcutAdvisor) {
-                MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();
+            if (advisor instanceof PointcutAdvisor pointcutAdvisor) {
+                MethodMatcher methodMatcher = pointcutAdvisor.getPointcut().getMethodMatcher();
                 if (methodMatcher.matches(targetMethod, targetClass)) {
                     filteredAdvisors.add(advisor);
                 }

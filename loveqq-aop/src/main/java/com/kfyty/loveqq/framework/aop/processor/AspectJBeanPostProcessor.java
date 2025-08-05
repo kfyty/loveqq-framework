@@ -16,7 +16,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.proxy.AbstractProxyCreatorProcessor;
 import com.kfyty.loveqq.framework.core.proxy.MethodInterceptorChainPoint;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
@@ -69,7 +68,7 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
             return null;
         }
         List<Advisor> advisors = this.findAvailableAdvisor(beanClass);
-        if (CommonUtil.empty(advisors)) {
+        if (advisors.isEmpty()) {
             return null;
         }
         return this.createProxy(bean, beanDefinition, new AspectMethodInterceptorProxy(advisors, this.adviceInterceptorPointAdapters));
@@ -92,8 +91,8 @@ public class AspectJBeanPostProcessor extends AbstractProxyCreatorProcessor {
         List<Advisor> advisors = new ArrayList<>();
         Method[] methods = ReflectUtil.getMethods(beanClass);
         for (Advisor advisor : this.aspectAdvisor) {
-            if (advisor instanceof PointcutAdvisor) {
-                MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();
+            if (advisor instanceof PointcutAdvisor pointcutAdvisor) {
+                MethodMatcher methodMatcher = pointcutAdvisor.getPointcut().getMethodMatcher();
                 for (Method targetMethod : methods) {
                     if (methodMatcher.matches(targetMethod, beanClass)) {
                         advisors.add(advisor);

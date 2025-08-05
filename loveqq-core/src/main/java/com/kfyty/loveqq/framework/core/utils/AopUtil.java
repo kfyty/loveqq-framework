@@ -147,8 +147,8 @@ public abstract class AopUtil {
         }
         if (isJdkProxy(bean)) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-            if (invocationHandler instanceof MethodInterceptorChain) {
-                ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
+            if (invocationHandler instanceof MethodInterceptorChain chain) {
+                chain.addInterceptorPoint(methodInterceptorChainPoint);
                 return true;
             }
         }
