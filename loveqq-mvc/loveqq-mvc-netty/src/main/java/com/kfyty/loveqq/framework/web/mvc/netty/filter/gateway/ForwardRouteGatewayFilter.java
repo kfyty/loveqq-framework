@@ -5,9 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.mapping.GatewayRoute;
-import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayFilter;
 import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayFilterChain;
-import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
@@ -29,18 +27,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Order(Order.LOWEST_PRECEDENCE)
 @Component(GatewayRoute.DEFAULT_FORWARD_FILTER_NAME)
-public class ForwardRouteGatewayFilter implements GatewayFilter {
+public class ForwardRouteGatewayFilter extends AbstractNettyRouteGatewayFilter {
     /**
      * 默认的 http client
      */
     private final HttpClient client;
 
     @Override
-    public Mono<Void> doFilter(ServerRequest request, ServerResponse response, GatewayFilterChain chain) {
-        if (!(response instanceof NettyServerResponse)) {
-            return chain.doFilter(request, response);
-        }
-        final GatewayRoute route = (GatewayRoute) request.getAttribute(GatewayRoute.GATEWAY_ROUTE_ATTRIBUTE);
+    public Mono<Void> doFilter(GatewayRoute route, ServerRequest request, ServerResponse response, GatewayFilterChain chain) {
         final URI routeURI = this.createRouteURI(route, request);
         final Flux<Void> flux = this.client.headers(headers -> {
                     for (String headerName : request.getHeaderNames()) {
@@ -59,27 +53,5 @@ public class ForwardRouteGatewayFilter implements GatewayFilter {
                     return Mono.from(nettyResponse.send(connection.inbound().receive().retain())).doFinally(s -> connection.dispose());
                 });
         return chain.doFilter(request, response).then(flux.then());
-    }
-
-    protected URI createRouteURI(GatewayRoute route, ServerRequest request) {
-        URI routeURI = route.getURI();
-        StringBuilder newRouteURI = new StringBuilder(routeURI.getScheme())
-                .append("://")
-                .append(routeURI.getHost())
-                .append(':')
-                .append(routeURI.getPort())
-                .append(request.getRequestURI());
-
-        // 此时没有接受请求体，都是查询参数
-        Map<String, String> parameters = request.getParameterMap();
-        if (!parameters.isEmpty()) {
-            newRouteURI.append('?');
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                newRouteURI.append(entry.getKey()).append('=').append(entry.getValue()).append('&');
-            }
-            newRouteURI.deleteCharAt(newRouteURI.length() - 1);
-        }
-
-        return URI.create(newRouteURI.toString());
     }
 }
