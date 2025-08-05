@@ -125,8 +125,8 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
 
     @Override
     protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
-        if (returnValueProcessor instanceof ReactorHandlerMethodReturnValueProcessor) {
-            return ((ReactorHandlerMethodReturnValueProcessor) returnValueProcessor).transformReturnValue(retValue, returnType, container);
+        if (returnValueProcessor instanceof ReactorHandlerMethodReturnValueProcessor processor) {
+            return processor.transformReturnValue(retValue, returnType, container);
         }
         return super.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
     }

@@ -51,6 +51,11 @@ public class GatewayRoute implements Route, Ordered {
     /**
      * 默认的转发过滤器 bean name
      */
+    public static final String DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME = "defaultWebSocketForwardRouteGatewayFilter";
+
+    /**
+     * 默认的转发过滤器 bean name
+     */
     public static final String DEFAULT_FORWARD_FILTER_NAME = "defaultForwardRouteGatewayFilter";
 
     /**
@@ -185,6 +190,7 @@ public class GatewayRoute implements Route, Ordered {
 
         // 添加默认的过滤器
         Mapping.from(beanFactory.getBean(LoadBalanceGatewayFilter.class)).whenNotNull(gatewayFilters::add);
+        Mapping.from(beanFactory.getBean(DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME)).whenNotNull(e -> gatewayFilters.add((GatewayFilter) e));
         Mapping.from(beanFactory.getBean(DEFAULT_FORWARD_FILTER_NAME)).whenNotNull(e -> gatewayFilters.add((GatewayFilter) e));
 
         return gatewayFilters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());

@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 import reactor.netty.http.websocket.WebsocketInbound;
 import reactor.netty.http.websocket.WebsocketOutbound;
@@ -48,7 +47,6 @@ public class UpgradeWebSocketHandler implements BiFunction<WebsocketInbound, Web
         inbound.aggregateFrames()
                 .receive()
                 .map(ByteBuf::retain)
-                .publishOn(Schedulers.parallel())
                 .doOnDiscard(ByteBuf.class, ReferenceCounted::release)
                 .subscribe(new CoreSubscriber<>() {
 

@@ -26,9 +26,14 @@ import java.net.URI;
 @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.LoadBalanceChooser")
 public class LoadBalanceGatewayFilter implements GatewayFilter {
     /**
+     * web socket 升级
+     */
+    public static final String UPGRADE = "upgrade";
+
+    /**
      * 负载均衡协议
      */
-    private static final String LOAD_BALANCE_SCHEME = "lb";
+    public static final String LOAD_BALANCE_SCHEME = "lb";
 
     /**
      * 负载均衡选择器
@@ -45,13 +50,42 @@ public class LoadBalanceGatewayFilter implements GatewayFilter {
             return chain.doFilter(request, response);
         }
 
-        ServerInstance server = this.loadBalanceChooser.choose(uri.getHost());
+        String host = uri.getHost();
+
+        if (host == null) {
+            String schemeSpecificPart = uri.getSchemeSpecificPart();                                // 可能是 ws，尝试从 SchemeSpecificPart 获取
+            if (schemeSpecificPart != null) {
+                uri = URI.create(schemeSpecificPart);
+                host = uri.getHost();
+            }
+            if (host == null) {
+                return Mono.just(response).doOnNext(e -> e.setStatus(503)).then();                  // 仍然获取不到，返回 503
+            }
+        }
+
+        ServerInstance server = this.loadBalanceChooser.choose(host);
+
         if (server == null) {
             return Mono.just(response).doOnNext(e -> e.setStatus(503)).then();
         }
 
-        String newRouteURI = server.getScheme() + "://" + server.getIp() + ':' + server.getPort();
-        route.setUri(URI.create(newRouteURI));
+        String routeURI = this.resolveRouteURI(uri, request, server);
+        route.setUri(URI.create(routeURI));
+
         return chain.doFilter(request, response);
+    }
+
+    protected String resolveRouteURI(URI uri, ServerRequest request, ServerInstance server) {
+        final String scheme = uri.getScheme().toLowerCase();
+        if (scheme.equals("ws") || scheme.equals("wss")) {
+            return scheme + "://" + server.getIp() + ':' + server.getPort();
+        }
+        if (UPGRADE.equalsIgnoreCase(request.getHeader("connection"))) {
+            if (request.getScheme().equals("http")) {
+                return "ws://" + server.getIp() + ':' + server.getPort();
+            }
+            return "wss://" + server.getIp() + ':' + server.getPort();
+        }
+        return server.getScheme() + "://" + server.getIp() + ':' + server.getPort();
     }
 }

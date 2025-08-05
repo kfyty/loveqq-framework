@@ -30,6 +30,11 @@ public class Pair<K, V> extends Value<V> {
         this.key = key;
     }
 
+    public void setKeyValue(final K key, final V value) {
+        this.setKey(key);
+        this.setValue(value);
+    }
+
     @Override
     public String toString() {
         return "key=" + getKey() + ", value=" + getValue();

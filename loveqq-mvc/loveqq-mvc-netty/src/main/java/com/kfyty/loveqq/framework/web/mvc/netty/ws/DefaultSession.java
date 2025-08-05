@@ -12,7 +12,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 
 /**
- * 描述:
+ * 描述: 默认 websocket session 实现
  *
  * @author kfyty725
  * @date 2024/7/30 10:46
@@ -46,28 +46,28 @@ public class DefaultSession implements Session {
     }
 
     @Override
-    public Publisher<Void> sendStringAsync(Publisher<? extends String> message) {
-        return this.outbound.sendString(message);
-    }
-
-    @Override
     public Publisher<Void> sendFileAsync(File file) {
         return this.outbound.sendFile(file.toPath());
     }
 
     @Override
-    public Publisher<Void> sendByteArrayAsync(Publisher<? extends byte[]> bytes) {
+    public Publisher<Void> sendStringAsync(Publisher<String> message) {
+        return this.outbound.sendString(message);
+    }
+
+    @Override
+    public Publisher<Void> sendByteArrayAsync(Publisher<byte[]> bytes) {
         return this.outbound.sendByteArray(bytes);
     }
 
     @Override
-    public Publisher<Void> sendByteBufAsync(Publisher<? extends ByteBuf> byteBuf) {
+    public Publisher<Void> sendAsync(Publisher<ByteBuf> byteBuf) {
         return this.outbound.send(byteBuf);
     }
 
     @Override
-    public void close() {
-        this.outbound.sendClose().subscribe();
+    public Publisher<Void> closeAsync() {
+        return this.outbound.sendClose();
     }
 
     @Override

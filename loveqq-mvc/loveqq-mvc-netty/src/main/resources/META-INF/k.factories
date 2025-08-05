@@ -1,5 +1,6 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.mvc.netty.filter.RequestResponseContextHolderFilter,\
+    com.kfyty.loveqq.framework.web.mvc.netty.filter.gateway.WebSocketForwardRouteGatewayFilter,\
     com.kfyty.loveqq.framework.web.mvc.netty.filter.gateway.ForwardRouteGatewayFilter,\
     com.kfyty.loveqq.framework.web.mvc.netty.autoconfig.NettyServerMvcAutoConfig,\
     com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ViewForwardHandlerMethodReturnValueProcessor,\
