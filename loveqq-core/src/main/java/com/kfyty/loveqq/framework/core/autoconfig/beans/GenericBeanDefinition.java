@@ -375,7 +375,7 @@ public class GenericBeanDefinition implements BeanDefinition {
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
-            Object resolveBean = autowiredProcessor.doResolveBean(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
+            Object resolveBean = autowiredProcessor.doResolve(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
             constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }
         return constructorArgs;
