@@ -106,7 +106,7 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(methodDescription);
-            parameters[index++] = autowiredProcessor.doResolveBean(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
+            parameters[index++] = autowiredProcessor.doResolve(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
         }
         return parameters;
     }

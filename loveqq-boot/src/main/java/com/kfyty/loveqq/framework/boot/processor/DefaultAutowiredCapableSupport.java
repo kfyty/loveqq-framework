@@ -104,7 +104,7 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
             else {
                 requireNonNull(propertyValue.getReference(), "The reference field is required");
                 requireNonNull(propertyValue.getReferenceType(), "The referenceType field is required");
-                autowiredValue = this.autowiredProcessor.doResolveBean(SimpleGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
+                autowiredValue = this.autowiredProcessor.doResolve(SimpleGeneric.from(targetClass, field), propertyValue.getReference(), propertyValue.getReferenceType());
             }
             if (autowiredValue != null) {
                 ReflectUtil.setFieldValue(target, field, autowiredValue);
@@ -130,8 +130,9 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
         Collection<Method> beanMethods = Arrays.stream(ReflectUtil.getMethods(clazz)).filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
 
         // 开始字段注入
+        AutowiredDescriptionResolver resolver = this.autowiredProcessor.getResolver();
         for (Field field : ReflectUtil.getFields(clazz)) {
-            AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(field);
+            AutowiredDescription description = resolver.resolve(field);
             if (description == null) {
                 continue;
             }
@@ -140,7 +141,7 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
                 laziedFields.add(new Pair<>(field, description));
                 continue;
             }
-            Object autowired = this.autowiredProcessor.resolveAutowired(bean, field, description);
+            Object autowired = this.autowiredProcessor.doResolve(bean, field, description);
             if (autowired != null && bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                 ReflectUtil.setFieldValue(exposedBean, field, autowired);
             }
@@ -148,7 +149,7 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
 
         // 注入临时忽略的属性
         for (Pair<Field, AutowiredDescription> fieldPair : laziedFields) {
-            Object autowired = this.autowiredProcessor.resolveAutowired(bean, fieldPair.getKey(), fieldPair.getValue());
+            Object autowired = this.autowiredProcessor.doResolve(bean, fieldPair.getKey(), fieldPair.getValue());
             if (autowired != null && bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                 ReflectUtil.setFieldValue(exposedBean, fieldPair.getKey(), autowired);
             }
@@ -156,13 +157,14 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
     }
 
     protected void resolveMethodAutowired(Class<?> clazz, Object bean, Object exposedBean) {
+        AutowiredDescriptionResolver resolver = this.autowiredProcessor.getResolver();
         for (Method method : ReflectUtil.getMethods(clazz)) {
-            AutowiredDescription description = this.autowiredProcessor.getResolver().resolve(method);
+            AutowiredDescription description = resolver.resolve(method);
             if (description != null) {
                 if (AnnotationUtil.hasAnnotation(method, Bean.class)) {
                     continue;                                                                                           // Bean 方法创建实例时会注入，此时无需自动注入
                 }
-                Object[] parameters = this.autowiredProcessor.resolveAutowired(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
+                Object[] parameters = this.autowiredProcessor.doResolve(bean, method, description, this.autowiredProcessor.getResolver()::resolve);
                 if (bean != exposedBean && AopUtil.isClassProxy(exposedBean)) {
                     ReflectUtil.invokeMethod(exposedBean, method, parameters);
                 }
