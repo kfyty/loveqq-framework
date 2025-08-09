@@ -5,7 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProper
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.RefreshScope;
 import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.core.mapping.gateway.RouteDefinition;
+import com.kfyty.loveqq.framework.web.core.route.gateway.RouteDefinition;
 import lombok.Data;
 
 import java.util.HashMap;

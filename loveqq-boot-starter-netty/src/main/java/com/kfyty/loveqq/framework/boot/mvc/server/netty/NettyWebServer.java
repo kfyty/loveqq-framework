@@ -9,10 +9,10 @@ import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractDispatcher;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
-import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
-import com.kfyty.loveqq.framework.web.mvc.netty.ServerWebServer;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.DispatcherHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ReactiveWebServer;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ws.WebSocketHandler;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class NettyWebServer implements ServerWebServer {
+public class NettyWebServer implements ReactiveWebServer {
     /**
      * 是否已启动
      */

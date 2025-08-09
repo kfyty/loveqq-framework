@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import java.util.Map;
 

@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 import com.kfyty.loveqq.framework.web.core.request.support.Model;
 
 /**

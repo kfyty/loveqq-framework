@@ -9,7 +9,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestParam;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import java.util.Arrays;
 import java.util.List;

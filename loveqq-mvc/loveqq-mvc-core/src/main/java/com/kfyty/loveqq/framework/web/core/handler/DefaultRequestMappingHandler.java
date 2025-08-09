@@ -7,8 +7,8 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.RequestMapping;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
-import com.kfyty.loveqq.framework.web.core.mapping.HandlerMethodRoute;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import lombok.extern.slf4j.Slf4j;
 

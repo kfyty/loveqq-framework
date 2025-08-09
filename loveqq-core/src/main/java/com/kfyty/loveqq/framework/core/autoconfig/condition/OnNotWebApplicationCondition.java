@@ -23,7 +23,7 @@ public class OnNotWebApplicationCondition extends OnWebApplicationCondition {
         switch (annotation.value()) {
             case SERVLET:
                 return WEB_SERVLET_SERVER_CLASS;
-            case SERVER:
+            case REACTOR:
                 return WEB_NETTY_SERVER_CLASS;
         }
         return WEB_SERVER_CLASS;

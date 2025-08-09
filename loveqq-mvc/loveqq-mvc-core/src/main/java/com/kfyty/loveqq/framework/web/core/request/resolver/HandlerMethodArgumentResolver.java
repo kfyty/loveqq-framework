@@ -2,7 +2,7 @@ package com.kfyty.loveqq.framework.web.core.request.resolver;
 
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 /**
  * 描述: 处理器方法参数解析器

@@ -21,12 +21,12 @@ import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
 import com.kfyty.loveqq.framework.web.core.cors.CorsFilter;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.core.handler.RequestMappingHandler;
-import com.kfyty.loveqq.framework.web.core.mapping.GatewayRoute;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
-import com.kfyty.loveqq.framework.web.core.mapping.RouteRegistry;
-import com.kfyty.loveqq.framework.web.core.mapping.gateway.GatewayFilter;
-import com.kfyty.loveqq.framework.web.core.mapping.gateway.LoadBalanceGatewayFilter;
-import com.kfyty.loveqq.framework.web.core.mapping.gateway.RouteDefinition;
+import com.kfyty.loveqq.framework.web.core.route.GatewayRoute;
+import com.kfyty.loveqq.framework.web.core.route.Route;
+import com.kfyty.loveqq.framework.web.core.route.RouteRegistry;
+import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilter;
+import com.kfyty.loveqq.framework.web.core.route.gateway.LoadBalanceGatewayFilter;
+import com.kfyty.loveqq.framework.web.core.route.gateway.RouteDefinition;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.kfyty.loveqq.framework.web.core.mapping.GatewayRoute.DEFAULT_FORWARD_FILTER_NAME;
-import static com.kfyty.loveqq.framework.web.core.mapping.GatewayRoute.DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME;
+import static com.kfyty.loveqq.framework.web.core.route.GatewayRoute.DEFAULT_FORWARD_FILTER_NAME;
+import static com.kfyty.loveqq.framework.web.core.route.GatewayRoute.DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME;
 
 /**
  * 描述: mvc 自动配置

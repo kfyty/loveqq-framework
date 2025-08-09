@@ -39,12 +39,6 @@
         </dependency>
 
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.kfyty</groupId>
             <artifactId>loveqq-mvc-servlet</artifactId>
             <version>${revision}</version>
@@ -53,9 +47,22 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-mvc-netty</artifactId>
+            <artifactId>loveqq-mvc-reactor</artifactId>
             <version>${revision}</version>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-http</artifactId>
+            <version>${reactor.netty.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

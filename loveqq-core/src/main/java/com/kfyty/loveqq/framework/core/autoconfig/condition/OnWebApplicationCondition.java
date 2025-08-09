@@ -17,7 +17,7 @@ public class OnWebApplicationCondition extends AbstractBeanCondition implements 
 
     protected static final String WEB_SERVLET_SERVER_CLASS = "com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer";
 
-    protected static final String WEB_NETTY_SERVER_CLASS = "com.kfyty.loveqq.framework.web.mvc.netty.ServerWebServer";
+    protected static final String WEB_NETTY_SERVER_CLASS = "com.kfyty.loveqq.framework.web.mvc.reactor.ReactiveWebServer";
 
     @Override
     public boolean isMatch(ConditionContext context, AnnotationMetadata<?> metadata) {
@@ -48,7 +48,7 @@ public class OnWebApplicationCondition extends AbstractBeanCondition implements 
         switch (annotation.value()) {
             case SERVLET:
                 return WEB_SERVLET_SERVER_CLASS;
-            case SERVER:
+            case REACTOR:
                 return WEB_NETTY_SERVER_CLASS;
         }
         return WEB_SERVER_CLASS;

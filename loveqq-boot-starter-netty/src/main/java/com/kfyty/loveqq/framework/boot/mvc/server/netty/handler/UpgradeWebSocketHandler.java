@@ -1,8 +1,8 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty.handler;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.DefaultSession;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.ws.DefaultSession;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ws.WebSocketHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCounted;
 import lombok.RequiredArgsConstructor;

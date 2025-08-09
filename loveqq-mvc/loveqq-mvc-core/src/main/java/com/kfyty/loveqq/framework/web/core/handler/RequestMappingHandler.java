@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.web.core.handler;
 
 import com.kfyty.loveqq.framework.core.lang.Lazy;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import java.util.List;
 

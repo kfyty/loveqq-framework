@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestHeader;
 import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 
