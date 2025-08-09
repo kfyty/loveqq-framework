@@ -1,12 +1,13 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerRequest;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerResponse;
@@ -15,10 +16,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 
 import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
@@ -30,7 +29,6 @@ import static com.kfyty.loveqq.framework.core.utils.ExceptionUtil.unwrap;
  * @date 2019/9/9 16:31
  * @since JDK 1.8
  */
-@Slf4j
 @Getter
 public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServlet> {
     /**
@@ -80,72 +78,62 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
     public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         // 预检请求已在过滤器处理
         if (!req.getMethod().equals(RequestMethod.OPTIONS.name())) {
-            this.processRequest(req, resp);
-        }
-    }
-
-    protected void preparedRequestResponse(Route route, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        if (route.getProduces() != null) {
-            response.setContentType(route.getProduces());
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Matched URI mapping [{}] to request URI [{}] !", route.getUri(), request.getRequestURI());
-        }
-    }
-
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        Throwable exception = null;
-        ServletServerRequest serverRequest = new ServletServerRequest(request);                                         // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
-        ServletServerResponse serverResponse = new ServletServerResponse(response);
-        Route route = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), serverRequest);
-        try {
-            // 无匹配，转发到 404
-            if (route == null) {
-                this.handleReturnValue(NOT_FOUND_VIEW, null, serverRequest, serverResponse);
-                return;
-            }
-
-            // 预处理
-            serverRequest.init();
-            this.preparedRequestResponse(route, request, response);
-
-            // 应用前置拦截器
-            if (!this.applyPreInterceptor(serverRequest, serverResponse, route)) {
-                return;
-            }
-
-            // 应用路由处理请求
-            final Pair<MethodParameter, Object> routeResult = route.applyRoute(serverRequest, serverResponse, this);
-            final MethodParameter parameter = routeResult.getKey();
-            final Object retValue = routeResult.getValue();
-
-            // 应用后置处理器并处理返回值
-            this.applyPostInterceptor(serverRequest, serverResponse, route, retValue);
-            if (retValue != null) {
-                this.handleReturnValue(retValue, parameter, serverRequest, serverResponse);
-            }
-        } catch (Throwable e) {
-            exception = e;
-            log.error("process request error: {}", e.getMessage(), e);
-            this.handleException(serverRequest, serverResponse, route, e);
-        } finally {
-            if (route != null) {
-                this.applyCompletionInterceptor(serverRequest, serverResponse, route, exception);
-            }
+            // 这里必须使用构造器，否则某些框架集成会出问题，eg: shiro session
+            this.processRequest(new ServletServerRequest(req), new ServletServerResponse(resp));
         }
     }
 
     @Override
-    public Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
-        if (HttpServletRequest.class.isAssignableFrom(parameter.getType())) {
-            return request.getRawRequest();
+    protected Route prepareRequestResponse(Route route, ServerRequest request, ServerResponse response) {
+        try {
+            HttpServletRequest servletRequest = request.getRawRequest();
+            HttpServletResponse servletResponse = response.getRawResponse();
+            servletRequest.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            servletResponse.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            ((ServletServerRequest) request).init();
+            return super.prepareRequestResponse(route, request, response);
+        } catch (IOException e) {
+            throw new ResolvableException(e);
         }
-        if (HttpServletResponse.class.isAssignableFrom(parameter.getType())) {
-            return response.getRawResponse();
+    }
+
+    protected void processRequest(ServerRequest request, ServerResponse response) throws ServletException {
+        Throwable exception = null;
+        Route route = this.matchRoute(RequestMethod.matchRequestMethod(request.getMethod()), request);
+        try {
+            // 无匹配，转发到 404
+            if (route == null) {
+                this.handleReturnValue(NOT_FOUND_VIEW, null, request, response);
+                return;
+            }
+
+            // 预处理
+            this.prepareRequestResponse(route, request, response);
+
+            // 应用前置拦截器
+            if (this.applyPreInterceptor(request, response, route)) {
+                // 应用路由处理请求
+                final Pair<MethodParameter, Object> routeResult = route.applyRoute(request, response, this);
+                final MethodParameter parameter = routeResult.getKey();
+                final Object retValue = routeResult.getValue();
+
+                // 应用后置处理器并处理返回值
+                this.applyPostInterceptor(request, response, route, retValue);
+
+                // 处理返回值
+                if (retValue != null) {
+                    this.handleReturnValue(retValue, parameter, request, response);
+                }
+            }
+        } catch (Throwable e) {
+            exception = e;
+            log.error("process request error: {}", e.getMessage(), e);
+            this.handleException(request, response, route, e);
+        } finally {
+            if (route != null) {
+                this.applyCompletionInterceptor(request, response, route, exception);
+            }
         }
-        return super.resolveInternalParameter(parameter, request, response);
     }
 
     protected void handleException(ServerRequest request, ServerResponse response, Route route, Throwable throwable) throws ServletException {

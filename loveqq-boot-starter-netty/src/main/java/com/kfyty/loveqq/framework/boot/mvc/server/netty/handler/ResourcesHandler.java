@@ -14,9 +14,9 @@ import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBody
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.FileRandomAccessStream;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
-import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerRequest;
-import com.kfyty.loveqq.framework.web.mvc.netty.http.NettyServerResponse;
-import com.kfyty.loveqq.framework.web.mvc.netty.request.resolver.ReactorHandlerMethodReturnValueProcessor;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerRequest;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerResponse;
+import com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ReactiveHandlerMethodReturnValueProcessor;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,7 +125,7 @@ public class ResourcesHandler implements ConnectionObserver {
 
         // 构建发布者
         serverRequest.setAttribute(AbstractResponseBodyHandlerMethodReturnValueProcessor.MULTIPART_BYTE_RANGES_ATTRIBUTE, ranges);
-        ReactorHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher publisher = new ReactorHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream);
+        ReactiveHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher publisher = new ReactiveHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream);
 
         // 订阅处理请求
         new DefaultFilterChain(this.patternMatcher, this.filters, (req, res) -> response.send(publisher))

@@ -2,14 +2,14 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.core.autoconfig.GatewayRouteProperties$StringToPredicatesConverter,\
     com.kfyty.loveqq.framework.web.core.autoconfig.GatewayRouteProperties$StringToFiltersConverter,\
     com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingHandler,\
-    com.kfyty.loveqq.framework.web.core.mapping.DefaultRouteRegistry,\
-    com.kfyty.loveqq.framework.web.core.mapping.AccurateRouteMatcher,\
-    com.kfyty.loveqq.framework.web.core.mapping.RestfulRouteMatcher,\
-    com.kfyty.loveqq.framework.web.core.mapping.AntPathRouteMatcher,\
-    com.kfyty.loveqq.framework.web.core.mapping.GatewayRouteMatcher,\
-    com.kfyty.loveqq.framework.web.core.mapping.gateway.PathGatewayPredicate,\
-    com.kfyty.loveqq.framework.web.core.mapping.gateway.LoadBalanceGatewayFilter,\
-    com.kfyty.loveqq.framework.web.core.mapping.gateway.StripPrefixGatewayFilter,\
+    com.kfyty.loveqq.framework.web.core.route.DefaultRouteRegistry,\
+    com.kfyty.loveqq.framework.web.core.route.AccurateRouteMatcher,\
+    com.kfyty.loveqq.framework.web.core.route.RestfulRouteMatcher,\
+    com.kfyty.loveqq.framework.web.core.route.AntPathRouteMatcher,\
+    com.kfyty.loveqq.framework.web.core.route.GatewayRouteMatcher,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.PathGatewayPredicate,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.LoadBalanceGatewayFilter,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.StripPrefixGatewayFilter,\
     com.kfyty.loveqq.framework.web.core.handler.ControllerAdviceExceptionHandlerRegistry,\
     com.kfyty.loveqq.framework.web.core.request.resolver.ModelMethodArgumentResolver,\
     com.kfyty.loveqq.framework.web.core.request.resolver.MapMethodArgumentResolver,\

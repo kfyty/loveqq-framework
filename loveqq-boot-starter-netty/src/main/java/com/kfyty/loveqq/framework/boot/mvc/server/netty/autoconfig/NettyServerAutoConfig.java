@@ -13,10 +13,10 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
-import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ws.WebSocketHandler;
 import reactor.netty.tcp.SslProvider;
 
 import java.util.ArrayList;

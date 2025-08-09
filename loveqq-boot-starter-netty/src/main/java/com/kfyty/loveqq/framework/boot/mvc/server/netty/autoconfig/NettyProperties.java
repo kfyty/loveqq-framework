@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.ResourceResolver;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

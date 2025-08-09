@@ -40,12 +40,11 @@ public class ServletServerRequest implements ServerRequest {
      */
     private Map<String, MultipartFile> multipart;
 
-    public ServerRequest init() {
+    public void init() {
         String contentType = this.request.getContentType();
         if (contentType != null && contentType.contains("multipart/form-data")) {
             this.multipart = Collections.unmodifiableMap(ServletUtil.from(this.request).stream().collect(Collectors.toMap(MultipartFile::getName, v -> v)));
         }
-        return this;
     }
 
     @Override

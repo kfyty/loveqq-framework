@@ -23,8 +23,13 @@
 
         <dependency>
             <groupId>com.kfyty</groupId>
-            <artifactId>loveqq-mvc-netty</artifactId>
+            <artifactId>loveqq-mvc-reactor</artifactId>
             <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
         </dependency>
     </dependencies>
 </project>

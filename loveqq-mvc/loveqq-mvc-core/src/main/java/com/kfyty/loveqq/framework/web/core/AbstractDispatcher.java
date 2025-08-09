@@ -11,14 +11,16 @@ import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
-import com.kfyty.loveqq.framework.web.core.mapping.Route;
-import com.kfyty.loveqq.framework.web.core.mapping.RouteMatcher;
+import com.kfyty.loveqq.framework.web.core.route.Route;
+import com.kfyty.loveqq.framework.web.core.route.RouteMatcher;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -34,6 +36,11 @@ import java.util.List;
  */
 @Data
 public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implements BeanFactoryAware {
+    /**
+     * log
+     */
+    protected static final Logger log = LoggerFactory.getLogger(AbstractDispatcher.class);
+
     /**
      * 视图路径前缀配置 key
      */
@@ -147,13 +154,38 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     }
 
     public Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
-        if (ServerRequest.class.isAssignableFrom(parameter.getType())) {
+        Class<?> parameterType = parameter.getType();
+        if (ServerRequest.class.isAssignableFrom(parameterType)) {
             return request;
         }
-        if (ServerResponse.class.isAssignableFrom(parameter.getType())) {
+        if (ServerResponse.class.isAssignableFrom(parameterType)) {
             return response;
         }
+        if (parameterType.isInstance(request.getRawRequest())) {
+            return request.getRawRequest();
+        }
+        if (parameterType.isInstance(response.getRawResponse())) {
+            return response.getRawResponse();
+        }
         return null;
+    }
+
+    protected Route prepareRequestResponse(Route route, ServerRequest request, ServerResponse response) {
+        if (route.getProduces() != null) {
+            response.setContentType(route.getProduces());
+        }
+        if (route.isStream()) {
+            response.setHeader("Connection", "keep-alive");
+            response.setHeader("Transfer-Encoding", "chunked");
+        }
+        if (route.isEventStream()) {
+            response.setHeader("Connection", "keep-alive");
+            response.setHeader("Cache-Control", "no-cache");
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Matched route uri [{}] to request URI [{}] !", route.getUri(), request.getRequestURI());
+        }
+        return route;
     }
 
     protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, Route handler) {
