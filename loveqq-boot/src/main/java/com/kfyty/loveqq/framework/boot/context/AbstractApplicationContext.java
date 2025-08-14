@@ -26,7 +26,6 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
-import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
@@ -71,7 +70,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
      */
     @Lazy
     @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
-    protected Lazy<ExecutorService> executorService;
+    protected com.kfyty.loveqq.framework.core.lang.Lazy<ExecutorService> executorService;
 
     /**
      * 事件订阅发布器

@@ -49,7 +49,8 @@ public abstract class JsonUtil {
     /**
      * MAP_TYPE_REFERENCE
      */
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {
+    };
 
     /**
      * DEFAULT_OBJECT_MAPPER
@@ -167,11 +168,11 @@ public abstract class JsonUtil {
 
     @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> toList(Object o) {
-        if (o instanceof List<?> list && (list.isEmpty() || list.get(0) instanceof Map<?, ?>)) {
-            return (List<Map<String, Object>>) list;
+        if (o instanceof List<?> && (((List<?>) o).isEmpty() || ((List<?>) o).get(0) instanceof Map<?, ?>)) {
+            return (List<Map<String, Object>>) o;
         }
-        if (o instanceof CharSequence cs) {
-            return (List<Map<String, Object>>) toObject(cs, ArrayList.class);
+        if (o instanceof CharSequence) {
+            return (List<Map<String, Object>>) toObject(o.toString(), ArrayList.class);
         }
         return (List<Map<String, Object>>) toObject(toJSONString(o), ArrayList.class);
     }

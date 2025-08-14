@@ -246,9 +246,10 @@ public class ConditionalBeanDefinition implements BeanDefinition {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof ConditionalBeanDefinition other)) {
+        if (!(obj instanceof ConditionalBeanDefinition)) {
             return false;
         }
+        ConditionalBeanDefinition other = (ConditionalBeanDefinition) obj;
         return Objects.equals(this.beanDefinition, other.beanDefinition) &&
                 Objects.equals(this.parent, other.parent) &&
                 Objects.equals(this.conditionDeclares, other.conditionDeclares);

@@ -24,8 +24,8 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements ReactiveHan
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnValue instanceof CharSequence cs) {
-            String view = cs.toString();
+        if (returnValue instanceof CharSequence) {
+            String view = returnValue.toString();
             return view.startsWith("forward:") || view.startsWith("redirect:");
         }
         return false;

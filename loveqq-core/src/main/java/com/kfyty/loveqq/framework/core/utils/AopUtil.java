@@ -74,8 +74,8 @@ public abstract class AopUtil {
         }
         if (isJdkProxy(bean)) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-            if (invocationHandler instanceof MethodInterceptorChain chain) {
-                return ofNullable(chain.getTarget()).orElse(bean);
+            if (invocationHandler instanceof MethodInterceptorChain) {
+                return ofNullable(((MethodInterceptorChain) invocationHandler).getTarget()).orElse(bean);
             }
             return invocationHandler;
         }
@@ -115,8 +115,8 @@ public abstract class AopUtil {
     /**
      * 获取接口中声明的方法
      *
-     * @param beanClass   bean class
-     * @param method 方法
+     * @param beanClass bean class
+     * @param method    方法
      * @return 接口中声明的方法
      */
     public static Method getInterfaceMethod(Class<?> beanClass, Method method) {
@@ -147,8 +147,8 @@ public abstract class AopUtil {
         }
         if (isJdkProxy(bean)) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-            if (invocationHandler instanceof MethodInterceptorChain chain) {
-                chain.addInterceptorPoint(methodInterceptorChainPoint);
+            if (invocationHandler instanceof MethodInterceptorChain) {
+                ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
                 return true;
             }
         }
@@ -166,8 +166,8 @@ public abstract class AopUtil {
             throw new ResolvableException("The instance is not a proxy: " + proxy);
         }
         Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) : ProxyFactory.getHandler((javassist.util.proxy.Proxy) proxy);
-        if (interceptorChain instanceof MethodInterceptorChain chain) {
-            return chain;
+        if (interceptorChain instanceof MethodInterceptorChain) {
+            return (MethodInterceptorChain) interceptorChain;
         }
         throw new ResolvableException("The proxy object has no MethodInterceptorChain: " + proxy);
     }

@@ -39,8 +39,9 @@ public class LoveqqEncoder extends FormEncoder {
 
     protected void loadContentProcessor() {
         ContentProcessor processor = this.getContentProcessor(ContentType.MULTIPART);
-        if (processor instanceof MultipartFormContentProcessor formContentProcessor) {
+        if (processor instanceof MultipartFormContentProcessor) {
             MultipartFileWriter writer = new MultipartFileWriter();
+            MultipartFormContentProcessor formContentProcessor = (MultipartFormContentProcessor) processor;
             formContentProcessor.addFirstWriter(writer);
             formContentProcessor.addFirstWriter(new ManyMultipartFileWriter(writer));
         } else {
@@ -51,7 +52,8 @@ public class LoveqqEncoder extends FormEncoder {
     @Override
     @SneakyThrows(IOException.class)
     public void encode(Object object, Type bodyType, RequestTemplate template) {
-        if (bodyType instanceof Class<?> type) {
+        if (bodyType instanceof Class<?>) {
+            Class<?> type = (Class<?>) bodyType;
             if (type == byte[].class) {
                 template.body((byte[]) object, StandardCharsets.UTF_8);
                 return;

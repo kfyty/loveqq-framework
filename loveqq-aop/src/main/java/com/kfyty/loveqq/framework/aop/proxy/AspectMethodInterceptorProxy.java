@@ -97,8 +97,8 @@ public class AspectMethodInterceptorProxy implements MethodInterceptorChainPoint
         Method targetMethod = methodProxy.getTargetMethod();
         Class<?> targetClass = methodProxy.getTargetClass();
         for (Advisor advisor : this.advisors) {
-            if (advisor instanceof PointcutAdvisor pointcutAdvisor) {
-                MethodMatcher methodMatcher = pointcutAdvisor.getPointcut().getMethodMatcher();
+            if (advisor instanceof PointcutAdvisor) {
+                MethodMatcher methodMatcher = ((PointcutAdvisor) advisor).getPointcut().getMethodMatcher();
                 if (methodMatcher.matches(targetMethod, targetClass)) {
                     filteredAdvisors.add(advisor);
                 }

@@ -507,8 +507,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             }
         }
 
-        if (bean instanceof InitializingBean initializingBean) {
-            initializingBean.afterPropertiesSet();
+        if (bean instanceof InitializingBean) {
+            ((InitializingBean) bean).afterPropertiesSet();
             bean = this.getExposedBean(beanDefinition, bean);
         }
 
@@ -540,9 +540,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
         }
 
-        if (bean instanceof DestroyBean destroyBean) {
+        if (bean instanceof DestroyBean) {
             try {
-                destroyBean.destroy();
+                ((DestroyBean) bean).destroy();
             } catch (Throwable e) {
                 log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
             }

@@ -104,30 +104,30 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
 
     @Override
     protected Object applyHandleReturnValueProcessor(Object retValue, MethodParameter returnType, ModelViewContainer container, HandlerMethodReturnValueProcessor returnValueProcessor) throws Exception {
-        if (returnValueProcessor instanceof ReactiveHandlerMethodReturnValueProcessor processor) {
-            return processor.transformReturnValue(retValue, returnType, container);
+        if (returnValueProcessor instanceof ReactiveHandlerMethodReturnValueProcessor) {
+            return ((ReactiveHandlerMethodReturnValueProcessor) returnValueProcessor).transformReturnValue(retValue, returnType, container);
         }
         return super.applyHandleReturnValueProcessor(retValue, returnType, container, returnValueProcessor);
     }
 
     protected Mono<?> adapterReturnValue(MethodParameter returnType, Object invoked, Route route, ServerRequest request, ServerResponse response) {
-        if (invoked instanceof Mono<?> mono) {
-            return mono;
+        if (invoked instanceof Mono<?>) {
+            return (Mono<?>) invoked;
         }
-        if (invoked instanceof Flux<?> flux) {
+        if (invoked instanceof Flux<?>) {
             if (route.isStream()) {
-                return flux.flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
+                return ((Flux<?>) invoked).flatMap(e -> this.handleReturnValue(e, returnType, request, response)).then();
             }
-            return flux.collectList();
+            return ((Flux<?>) invoked).collectList();
         }
-        if (invoked instanceof Callable<?> callable) {
-            return Mono.fromCallable(callable);
+        if (invoked instanceof Callable<?>) {
+            return Mono.fromCallable((Callable<?>) invoked);
         }
-        if (invoked instanceof CompletionStage<?> stage) {
-            return Mono.fromCompletionStage(stage);
+        if (invoked instanceof CompletionStage<?>) {
+            return Mono.fromCompletionStage((CompletionStage<?>) invoked);
         }
-        if (invoked instanceof Publisher<?> publisher) {
-            return Mono.from(publisher);
+        if (invoked instanceof Publisher<?>) {
+            return Mono.from((Publisher<?>) invoked);
         }
         return invoked == null ? Mono.empty() : Mono.just(invoked);
     }

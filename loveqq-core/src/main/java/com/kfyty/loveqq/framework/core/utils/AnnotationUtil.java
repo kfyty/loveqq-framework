@@ -122,8 +122,8 @@ public abstract class AnnotationUtil {
     /* ------------------------------------------ 获取注解 ------------------------------------------ */
 
     public static <T extends Annotation> T findAnnotation(Object source, Class<T> annotationClass) {
-        if (source instanceof AnnotatedElement element) {
-            return findAnnotation(element, annotationClass);
+        if (source instanceof AnnotatedElement) {
+            return findAnnotation((AnnotatedElement) source, annotationClass);
         }
         return findAnnotation(source.getClass(), annotationClass);
     }
@@ -159,7 +159,7 @@ public abstract class AnnotationUtil {
 
     public static Annotation[] findAnnotations(AnnotatedElement element) {
         // 判断是否元注解
-        if (element == null || element instanceof Class<?> clazz && isMetaAnnotation(clazz)) {
+        if (element == null || element instanceof Class<?> && isMetaAnnotation((Class<?>) element)) {
             return CommonUtil.EMPTY_ANNOTATIONS;
         }
 
