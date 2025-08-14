@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.converter;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 
 import java.net.URL;
 
@@ -15,6 +16,10 @@ public class StringToURLConverter implements Converter<String, URL> {
 
     @Override
     public URL apply(String source) {
-        return CommonUtil.empty(source) ? null : this.getClass().getResource(source);
+        if (CommonUtil.empty(source)) {
+            return null;
+        }
+        URL resource = this.getClass().getResource(source);
+        return resource != null ? resource : IOUtil.newURL(source);
     }
 }

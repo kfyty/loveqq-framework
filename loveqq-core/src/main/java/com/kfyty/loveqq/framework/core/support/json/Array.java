@@ -145,12 +145,12 @@ public class Array implements List<Object>, JSONAware {
         if (o == null || clazz.isInstance(o)) {
             return (T) o;
         }
-        return JsonUtil.toObject(o.toString(), clazz);
+        return JsonUtil.toObject(o instanceof CharSequence ? o.toString() : JsonUtil.toJSONString(o), clazz);
     }
 
     public <T> T getObject(int index, Type type) {
         Object o = this.decorate.get(index);
-        return o == null ? null : JsonUtil.toObject(o.toString(), type);
+        return o == null ? null : JsonUtil.toObject(o instanceof CharSequence ? o.toString() : JsonUtil.toJSONString(o), type);
     }
 
     public JSON getJSON(int index) {

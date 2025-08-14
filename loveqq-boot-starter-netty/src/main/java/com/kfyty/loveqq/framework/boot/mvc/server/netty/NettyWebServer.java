@@ -9,10 +9,10 @@ import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractDispatcher;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.DispatcherHandler;
-import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
-import com.kfyty.loveqq.framework.web.mvc.netty.ServerWebServer;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.DispatcherHandler;
+import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ReactiveWebServer;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ws.WebSocketHandler;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +22,7 @@ import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class NettyWebServer implements ServerWebServer {
+public class NettyWebServer implements ReactiveWebServer {
     /**
      * 是否已启动
      */
@@ -141,7 +142,13 @@ public class NettyWebServer implements ServerWebServer {
 
     protected void configNettyServer() {
         // 先设置属性值，否则会因为静态加载而无效
+        // 设置最大 select 线程数
         System.setProperty(ReactorNetty.IO_SELECT_COUNT, this.config.getSelectThreads().toString());
+
+        // 设置转发是否严格验证 DefaultHttpForwardedHeaderHandler#FORWARDED_HEADER_VALIDATION
+        System.setProperty("reactor.netty.http.server.forwarded.strictValidation", this.config.getForwardedStrictValidation().toString());
+
+        // 设置最大工作线程数
         if (this.config.getMaxThreads() != null) {
             System.setProperty(ReactorNetty.IO_WORKER_COUNT, this.config.getMaxThreads().toString());
         }
@@ -190,7 +197,7 @@ public class NettyWebServer implements ServerWebServer {
             });
         }
         if (this.config.getServerConfigure() != null) {
-            this.config.getServerConfigure().accept(this.server);
+            this.server = this.config.getServerConfigure().apply(this.server);
         }
 
         this.server = this.prepareResourceHandler(this.server);
@@ -198,11 +205,11 @@ public class NettyWebServer implements ServerWebServer {
     }
 
     protected HttpServer prepareResourceHandler(HttpServer server) {
-        return server.childObserve(new ResourcesHandler(this.config, this.patternMatcher, this.filters));
+        return server.childObserve(new ResourcesHandler(this.config, this.patternMatcher, Collections.unmodifiableList(this.filters)));
     }
 
     protected HttpServer prepareDispatcherHandler(HttpServer server) {
-        return server.handle(new RequestDispatcherHandler(this.patternMatcher, this.filters, this.dispatcherHandler, this.webSocketHandlerMap));
+        return server.handle(new RequestDispatcherHandler(this.patternMatcher, Collections.unmodifiableList(this.filters), this.dispatcherHandler, this.webSocketHandlerMap));
     }
 
     /**

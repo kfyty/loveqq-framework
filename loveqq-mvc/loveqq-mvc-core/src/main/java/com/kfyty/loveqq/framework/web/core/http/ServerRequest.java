@@ -1,6 +1,9 @@
 package com.kfyty.loveqq.framework.web.core.http;
 
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.net.HttpCookie;
@@ -197,5 +200,115 @@ public interface ServerRequest {
      *
      * @return 原始请求
      */
-    Object getRawRequest();
+    <T> T getRawRequest();
+
+    /*------------------------------------------------- 下面是响应式方法 -------------------------------------------------*/
+
+    /**
+     * 获取原始请求体
+     *
+     * @return request body
+     */
+    default Flux<ByteBuf> getBody() {
+        throw new UnsupportedOperationException("ServerRequest.getBody");
+    }
+
+    /**
+     * 获取聚合数据后的原始请求体
+     *
+     * @return request body
+     */
+    default Mono<ByteBuf> getAggregateBody() {
+        throw new UnsupportedOperationException("ServerRequest.getBody");
+    }
+
+    /**
+     * 接收解码后的请求体
+     * 调用该方法后，{@link this#getParameterMap()}/{@link this#getMultipart()}/{@link this#getInputStream()} 才可用
+     *
+     * @return 解码后的请求体
+     */
+    default Mono<ServerRequest> receive() {
+        throw new UnsupportedOperationException("ServerRequest.receive");
+    }
+
+    /**
+     * 创建请求构建器
+     *
+     * @return {@link ServerRequestBuilder}
+     */
+    default ServerRequestBuilder mutate() {
+        throw new UnsupportedOperationException("ServerRequest.mutate");
+    }
+
+    /**
+     * {@link ServerRequest} 构建器
+     */
+    interface ServerRequestBuilder {
+        /**
+         * 请求路径
+         *
+         * @param path 请求路径
+         * @return this
+         */
+        ServerRequestBuilder path(String path);
+
+        /**
+         * 添加请求头
+         *
+         * @param name   请求头名称
+         * @param values 请求头值
+         * @return this
+         */
+        ServerRequestBuilder headers(String name, String... values);
+
+        /**
+         * 添加请求头
+         *
+         * @param append 是否添加
+         * @param name   请求头名称
+         * @param values 请求头值
+         * @return this
+         */
+        ServerRequestBuilder headers(boolean append, String name, String... values);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(String body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(byte[] body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(InputStream body);
+
+        /**
+         * 请求体
+         *
+         * @param body 请求体
+         * @return this
+         */
+        ServerRequestBuilder body(Flux<ByteBuf> body);
+
+        /**
+         * 构建请求
+         *
+         * @return 新的请求
+         */
+        ServerRequest build();
+    }
 }

@@ -6,7 +6,9 @@ import com.kfyty.loveqq.framework.core.proxy.factory.DynamicProxyFactory;
 import com.kfyty.loveqq.framework.web.core.annotation.ControllerAdvice;
 import com.kfyty.loveqq.framework.web.core.annotation.ExceptionHandler;
 import com.kfyty.loveqq.framework.web.core.handler.AnnotatedExceptionHandler;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.route.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.route.Routes;
+import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +40,17 @@ public class ExceptionHandlerTest {
         Ex proxy = DynamicProxyFactory.create(ExImpl.class).createProxy(new ExImpl());
         AnnotatedExceptionHandler handler = new AnnotatedExceptionHandler(null, null, null, new Lazy<>(() -> proxy));
         handler.afterPropertiesSet();
-        MethodParameter exceptionAdvice = handler.findControllerExceptionAdvice(null, null, new MethodMapping(), new RuntimeException());
+        MethodParameter exceptionAdvice = handler.findControllerExceptionAdvice(null, null, new HandlerMethodRoute(), new RuntimeException());
         Assertions.assertNotNull(exceptionAdvice);
         Assertions.assertEquals(exceptionAdvice.getMethod().getDeclaringClass(), Ex.class);
+    }
+
+    @Test
+    public void routeKeyTest() {
+        Routes.RouteKey routeKey1 = new Routes.RouteKey("122", RequestMethod.GET);
+        Routes.RouteKey routeKey2 = new Routes.RouteKey("122", RequestMethod.GET);
+
+        Assertions.assertEquals(routeKey1, routeKey2);
+        Assertions.assertEquals(routeKey2, routeKey1);
     }
 }

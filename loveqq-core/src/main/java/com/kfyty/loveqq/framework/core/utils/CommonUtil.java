@@ -277,18 +277,18 @@ public abstract class CommonUtil {
     }
 
     public static Map<String, String> resolveURLParameters(String url, String prefix) {
-        if (empty(url) || url.indexOf('=') < 0) {
-            return Collections.emptyMap();
+        if (url == null || url.isEmpty() || url.indexOf('=') < 0) {
+            return new HashMap<>(4);
         }
         int index = url.indexOf('?');
         String parameter = index < 0 ? url : url.substring(index + 1);
-        String paramPrefix = empty(prefix) ? EMPTY_STRING : prefix + '.';
+        String paramPrefix = prefix == null || prefix.isEmpty() ? EMPTY_STRING : prefix + '.';
         Map<String, String> query = new HashMap<>();
         List<String> split = split(parameter, "&");
         for (String params : split) {
             String[] paramPair = params.split("=");
             if (paramPair.length > 1) {
-                query.put(paramPrefix + paramPair[0], paramPair[1]);
+                query.merge(paramPrefix + paramPair[0], paramPair[1], (o, n) -> o + ',' + n);
             }
         }
         return query;
@@ -306,7 +306,7 @@ public abstract class CommonUtil {
 
     public static String underline2CamelCase(String underlineTarget, char lineChar, boolean firstUpper) {
         if (underlineTarget == null || underlineTarget.isEmpty()) {
-            throw new ResolvableException("convert underline to camel case failed, target can't empty !");
+            throw new ResolvableException("Convert underline to camel case failed, target can't empty.");
         }
 
         // 全部都是大写字母或数字，需先转换为小写，包含 lineChar 时也要先转换，因为此时判断大小写无效
@@ -337,7 +337,7 @@ public abstract class CommonUtil {
 
     public static String camelCase2Underline(String target, boolean lower) {
         if (target == null || target.isEmpty()) {
-            throw new ResolvableException("convert camel case to underline failed, target can't empty !");
+            throw new ResolvableException("Convert camel case to underline failed, target can't empty.");
         }
         if (UPPER_CASE_PATTERN.matcher(target).matches()) {
             return lower ? target.toLowerCase() : target.toUpperCase();                                                 // 纯大写字母或数字，无法转换

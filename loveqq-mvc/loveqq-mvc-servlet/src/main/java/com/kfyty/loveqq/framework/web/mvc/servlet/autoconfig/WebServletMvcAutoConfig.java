@@ -7,10 +7,11 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.ComponentScan;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
-import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
+import com.kfyty.loveqq.framework.web.core.route.RouteMatcher;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
@@ -34,6 +35,9 @@ import java.util.List;
 @ConditionalOnBean(ServletWebServer.class)
 @ComponentScan(includeFilter = @ComponentFilter(annotations = {WebFilter.class, WebListener.class, WebServlet.class}))
 public class WebServletMvcAutoConfig {
+    @Autowired
+    private List<RouteMatcher> routeMatchers;
+
     @Autowired(required = false)
     private List<HandlerInterceptor> interceptorChain;
 
@@ -60,17 +64,16 @@ public class WebServletMvcAutoConfig {
     }
 
     @Bean
-    public DispatcherServlet dispatcherServlet(RequestMappingMatcher requestMappingMatcher,
-                                               @Value("${k.server.view.prefix:}") String prefix,
+    public DispatcherServlet dispatcherServlet(@Value("${k.server.view.prefix:}") String prefix,
                                                @Value("${k.server.view.suffix:.jsp}") String suffix) {
         DispatcherServlet dispatcherServlet = new DispatcherServlet();
+        dispatcherServlet.setRouteMatchers(this.routeMatchers);
         dispatcherServlet.setInterceptorChains(this.interceptorChain);
         dispatcherServlet.setArgumentResolvers(this.argumentResolvers);
         dispatcherServlet.setReturnValueProcessors(this.returnValueProcessors);
         dispatcherServlet.setExceptionHandlers(this.exceptionHandlers);
-        dispatcherServlet.setRequestMappingMatcher(requestMappingMatcher);
-        dispatcherServlet.setPrefix(prefix);
-        dispatcherServlet.setSuffix(suffix);
+        Mapping.from(prefix).whenNotNull(dispatcherServlet::setPrefix);
+        Mapping.from(suffix).whenNotNull(dispatcherServlet::setSuffix);
         return dispatcherServlet;
     }
 }

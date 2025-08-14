@@ -30,6 +30,6 @@ public @interface ConditionalOnWebApplication {
     enum WebApplicationType {
         ANY,
         SERVLET,
-        SERVER;
+        REACTOR;
     }
 }

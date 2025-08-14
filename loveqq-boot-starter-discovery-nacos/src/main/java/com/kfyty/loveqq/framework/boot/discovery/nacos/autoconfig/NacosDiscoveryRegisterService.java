@@ -2,8 +2,12 @@ package com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.api.naming.pojo.ListView;
+import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 import com.alibaba.nacos.api.utils.NetUtils;
+import com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
@@ -14,10 +18,16 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBu
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 描述: nacos 服务注册
@@ -26,6 +36,7 @@ import java.util.Map;
  * @date 2024/03/10 10:58
  * @email kfyty725@hotmail.com
  */
+@Slf4j
 public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, ApplicationListener<ContextRefreshedEvent> {
     /**
      * 应用服务名称
@@ -38,6 +49,13 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
      */
     @Value("${k.server.port:-1}")
     private Integer serverPort;
+
+    /**
+     * nacos 服务变更检测间隔
+     * 单位：秒
+     */
+    @Value("${k.nacos.discovery.interval:15}")
+    private Integer discoveryInterval;
 
     /**
      * bean 工厂
@@ -55,6 +73,12 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
      */
     @Autowired(required = false)
     private NacosNamingEventListener nacosNamingEventListener;
+
+    /**
+     * 调度线程池
+     */
+    @Autowired(ThreadPoolExecutorAutoConfig.DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR)
+    private ScheduledExecutorService scheduledExecutorService;
 
     @Override
     public void postProcessBeanFactory(BeanFactory beanFactory) {
@@ -82,10 +106,11 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
             try {
                 namingService.registerInstance(application, groupName, instance);
                 if (this.nacosNamingEventListener != null) {
-                    namingService.subscribe(application, groupName, Collections.singletonList(clusterName), this.nacosNamingEventListener);
+                    this.subscribeAllServerOfNamespace(groupName, namingService);
+                    this.scheduledDiscoveryTask(groupName, namingService);
                 }
             } catch (NacosException e) {
-                throw new ResolvableException("Register service discovery failed", e);
+                throw new ResolvableException("Register service discovery failed.", e);
             }
         }
     }
@@ -97,6 +122,7 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
 
     protected Instance buildInstance(String serverIp, int serverPort, String clusterName, NacosDiscoveryProperties properties) {
         Instance instance = new Instance();
+        instance.setInstanceId(serverIp + ':' + serverPort);
         instance.setIp(serverIp);
         instance.setPort(serverPort);
         instance.setClusterName(clusterName);
@@ -105,6 +131,57 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
         instance.setEnabled(properties.getEnabled());
         instance.setEphemeral(properties.getEphemeral());
         instance.setMetadata(properties.getMetadata());
+        if (instance.getMetadata() != null) {
+            instance.getMetadata().put(ConstantConfig.APPLICATION_NAME_KEY, this.applicationName);
+        } else {
+            Map<String, String> metadata = new HashMap<>(4);
+            instance.getMetadata().put(ConstantConfig.APPLICATION_NAME_KEY, this.applicationName);
+            instance.setMetadata(metadata);
+        }
         return instance;
+    }
+
+    /**
+     * 订阅该命名空间下的所有服务变更事件
+     */
+    protected void subscribeAllServerOfNamespace(String groupName, NamingService namingService) throws NacosException {
+        List<String> serverNames = this.pullAllServerNames(groupName, namingService);
+        List<ServiceInfo> subscribes = namingService.getSubscribeServices();
+        for (String serverName : serverNames) {
+            // 订阅
+            if (subscribes.stream().noneMatch(e -> groupName.equals(e.getGroupName()) && serverName.equals(e.getName()))) {
+                namingService.subscribe(serverName, groupName, this.nacosNamingEventListener);
+            }
+
+            // 手动触发
+            List<Instance> instances = namingService.getAllInstances(serverName);
+            this.nacosNamingEventListener.onEvent(new NamingEvent(serverName, instances));
+        }
+    }
+
+    protected List<String> pullAllServerNames(String groupName, NamingService namingService) throws NacosException {
+        int pageNo = 1;
+        List<String> serverNames = new LinkedList<>();
+        while (true) {
+            ListView<String> services = namingService.getServicesOfServer(pageNo++, 1000, groupName);
+            if (services == null || services.getData() == null || services.getData().isEmpty()) {
+                break;
+            }
+            serverNames.addAll(services.getData());
+            if (serverNames.size() >= services.getCount()) {
+                break;
+            }
+        }
+        return serverNames;
+    }
+
+    protected void scheduledDiscoveryTask(String groupName, NamingService namingService) {
+        this.scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            try {
+                this.subscribeAllServerOfNamespace(groupName, namingService);
+            } catch (NacosException e) {
+                log.error("Nacos.scheduledDiscoveryTask failed.", e);
+            }
+        }, this.discoveryInterval, this.discoveryInterval, TimeUnit.SECONDS);
     }
 }

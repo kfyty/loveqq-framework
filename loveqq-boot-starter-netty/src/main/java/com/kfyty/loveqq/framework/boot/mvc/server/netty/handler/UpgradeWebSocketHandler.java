@@ -1,15 +1,14 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty.handler;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.DefaultSession;
-import com.kfyty.loveqq.framework.web.mvc.netty.ws.WebSocketHandler;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.ws.DefaultSession;
+import com.kfyty.loveqq.framework.web.mvc.reactor.ws.WebSocketHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCounted;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 import reactor.netty.http.websocket.WebsocketInbound;
 import reactor.netty.http.websocket.WebsocketOutbound;
@@ -48,7 +47,6 @@ public class UpgradeWebSocketHandler implements BiFunction<WebsocketInbound, Web
         inbound.aggregateFrames()
                 .receive()
                 .map(ByteBuf::retain)
-                .publishOn(Schedulers.parallel())
                 .doOnDiscard(ByteBuf.class, ReferenceCounted::release)
                 .subscribe(new CoreSubscriber<ByteBuf>() {
 
@@ -59,7 +57,11 @@ public class UpgradeWebSocketHandler implements BiFunction<WebsocketInbound, Web
 
                     @Override
                     public void onNext(ByteBuf byteBuf) {
-                        webSocketHandler.onMessage(session, byteBuf);
+                        try {
+                            webSocketHandler.onMessage(session, byteBuf);
+                        } finally {
+                            byteBuf.release();
+                        }
                     }
 
                     @Override

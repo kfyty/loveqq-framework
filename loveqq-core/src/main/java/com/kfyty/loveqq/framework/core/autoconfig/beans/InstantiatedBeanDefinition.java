@@ -3,7 +3,6 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class InstantiatedBeanDefinition extends GenericBeanDefinition {
 
@@ -28,6 +26,11 @@ public class InstantiatedBeanDefinition extends GenericBeanDefinition {
             return context.getBean(this.getBeanName());
         }
         throw new BeansException("The bean definition doesn't support instantiation: " + this);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 
     public static BeanDefinition from(String beanName, Class<?> beanType) {

@@ -2,7 +2,10 @@ package com.kfyty.loveqq.framework.web.mvc.servlet.http;
 
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.mvc.servlet.request.support.RequestContextHolder;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +23,9 @@ import java.util.Collection;
  */
 @RequiredArgsConstructor
 public class ServletServerResponse implements ServerResponse {
+    /**
+     * servlet response
+     */
     private final HttpServletResponse response;
 
     @Override
@@ -44,16 +50,6 @@ public class ServletServerResponse implements ServerResponse {
     @Override
     public void addCookie(HttpCookie cookie) {
         this.response.addCookie(new Cookie(cookie.getName(), cookie.getValue()));
-    }
-
-    @Override
-    public Object sendRedirect(String location) {
-        try {
-            this.response.sendRedirect(location);
-            return null;
-        } catch (IOException e) {
-            throw ExceptionUtil.wrap(e);
-        }
     }
 
     @Override
@@ -84,6 +80,27 @@ public class ServletServerResponse implements ServerResponse {
     @Override
     public void setStatus(int sc) {
         this.response.setStatus(sc);
+    }
+
+    @Override
+    public Object sendForward(String location) {
+        try {
+            HttpServletRequest request = RequestContextHolder.getRequest();
+            request.getRequestDispatcher(location).forward(request, this.response);
+            return null;
+        } catch (IOException | ServletException e) {
+            throw ExceptionUtil.wrap(e);
+        }
+    }
+
+    @Override
+    public Object sendRedirect(String location) {
+        try {
+            this.response.sendRedirect(location);
+            return null;
+        } catch (IOException e) {
+            throw ExceptionUtil.wrap(e);
+        }
     }
 
     @Override

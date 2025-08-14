@@ -6,6 +6,7 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans;
  * @author kfyty
  * @date 2021/6/12 10:05
  * @email kfyty725@hotmail.com
+ * @see FactoryBeanDefinition
  */
 public interface FactoryBean<T> {
     /**

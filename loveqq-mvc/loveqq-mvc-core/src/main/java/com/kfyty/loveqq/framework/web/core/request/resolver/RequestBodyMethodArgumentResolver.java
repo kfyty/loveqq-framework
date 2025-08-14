@@ -9,7 +9,9 @@ import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.RequestBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.route.Route;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 import java.io.InputStream;
 import java.lang.reflect.TypeVariable;
@@ -33,14 +35,18 @@ public class RequestBodyMethodArgumentResolver implements HandlerMethodArgumentR
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object resolveArgument(MethodParameter parameter, MethodMapping mapping, ServerRequest request) {
-        if (InputStream.class.isAssignableFrom(parameter.getParamType())) {
-            return request.getInputStream();
-        }
-        if (parameter.getParamType() == byte[].class) {
+    public Object resolveArgument(MethodParameter parameter, Route route, ServerRequest request) {
+        Class<?> paramType = parameter.getParamType();
+        if (paramType == byte[].class) {
             return IOUtil.read(request.getInputStream());
         }
-        if (CharSequence.class.isAssignableFrom(parameter.getParamType())) {
+        if (Publisher.class.isAssignableFrom(paramType)) {
+            return Flux.class.isAssignableFrom(paramType) ? request.getBody() : request.getAggregateBody();
+        }
+        if (InputStream.class.isAssignableFrom(paramType)) {
+            return request.getInputStream();
+        }
+        if (CharSequence.class.isAssignableFrom(paramType)) {
             return IOUtil.toString(request.getInputStream());
         }
         String json = IOUtil.toString(request.getInputStream());

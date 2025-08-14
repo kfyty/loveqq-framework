@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.ResourceResolver;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
-import com.kfyty.loveqq.framework.web.mvc.netty.FilterRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -16,7 +16,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * 描述:
@@ -43,6 +43,11 @@ public class NettyProperties extends WebServerProperties {
      * 是否启用转发
      */
     private Boolean forwarded;
+
+    /**
+     * 转发是否严格验证
+     */
+    private Boolean forwardedStrictValidation;
 
     /**
      * 是否启用访问日志
@@ -97,7 +102,7 @@ public class NettyProperties extends WebServerProperties {
     /**
      * 自定义配置
      */
-    private Consumer<HttpServer> serverConfigure;
+    private UnaryOperator<HttpServer> serverConfigure;
 
     /**
      * 过滤器
@@ -112,6 +117,7 @@ public class NettyProperties extends WebServerProperties {
         super(primarySource);
         this.compress = false;
         this.forwarded = true;
+        this.forwardedStrictValidation = true;
         this.accessLog = false;
         this.webFilters = new LinkedList<>();
         this.addStaticPattern("/static/**");

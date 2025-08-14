@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
@@ -38,9 +39,8 @@ public class LoveqqEncoder extends FormEncoder {
 
     protected void loadContentProcessor() {
         ContentProcessor processor = this.getContentProcessor(ContentType.MULTIPART);
-        if (processor instanceof MultipartFormContentProcessor) {
+        if (processor instanceof MultipartFormContentProcessor formContentProcessor) {
             MultipartFileWriter writer = new MultipartFileWriter();
-            MultipartFormContentProcessor formContentProcessor = (MultipartFormContentProcessor) processor;
             formContentProcessor.addFirstWriter(writer);
             formContentProcessor.addFirstWriter(new ManyMultipartFileWriter(writer));
         } else {
@@ -51,21 +51,21 @@ public class LoveqqEncoder extends FormEncoder {
     @Override
     @SneakyThrows(IOException.class)
     public void encode(Object object, Type bodyType, RequestTemplate template) {
-        if (bodyType instanceof Class<?>) {
-            Class<?> type = (Class<?>) bodyType;
-            if (CharSequence.class.isAssignableFrom(type)) {
-                template.body(object.toString());
-                template.header("Content-Type", "application/json; charset=utf-8");
-                return;
-            }
+        if (bodyType instanceof Class<?> type) {
             if (type == byte[].class) {
                 template.body((byte[]) object, StandardCharsets.UTF_8);
-                template.header("Content-Type", "application/octet-stream");
+                return;
+            }
+            if (CharSequence.class.isAssignableFrom(type)) {
+                template.body(object.toString());
                 return;
             }
             if (MultipartFile.class.isAssignableFrom(type)) {
                 template.body(IOUtil.read(((MultipartFile) object).getInputStream()), StandardCharsets.UTF_8);
-                template.header("Content-Type", "application/octet-stream");
+                return;
+            }
+            if (InputStream.class.isAssignableFrom(type)) {
+                template.body(IOUtil.read((InputStream) object), StandardCharsets.UTF_8);
                 return;
             }
         }

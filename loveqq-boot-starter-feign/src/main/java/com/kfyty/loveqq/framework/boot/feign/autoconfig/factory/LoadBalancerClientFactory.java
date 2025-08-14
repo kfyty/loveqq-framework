@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig.factory;
 
 import com.kfyty.loveqq.framework.boot.feign.autoconfig.FeignProperties;
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.override.LoveqqLBClient;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.netflix.client.ClientFactory;
@@ -13,8 +14,6 @@ import com.netflix.config.ConfigurationManager;
 import com.netflix.config.util.ConfigurationUtils;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
-import feign.ribbon.LBClient;
-import feign.ribbon.LBClientFactory;
 import org.apache.commons.configuration.AbstractConfiguration;
 
 import java.util.Map;
@@ -28,11 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2024/3/08 18:55
  * @email kfyty725@hotmail.com
  */
-public class LoadBalancerClientFactory implements LBClientFactory {
+public class LoadBalancerClientFactory {
     /**
      * 客户端缓存
      */
-    private final Map<String, LBClient> clientCache = new ConcurrentHashMap<>();
+    private final Map<String, LoveqqLBClient> clientCache = new ConcurrentHashMap<>();
 
     @Autowired
     private FeignProperties feignProperties;
@@ -40,14 +39,13 @@ public class LoadBalancerClientFactory implements LBClientFactory {
     @Autowired
     private ZoneAwareLoadBalancer<Server> loadBalancer;
 
-    @Override
-    public LBClient create(String clientName) {
-        LBClient client = this.clientCache.get(clientName);
+    public LoveqqLBClient create(String clientName) {
+        LoveqqLBClient client = this.clientCache.get(clientName);
         if (client != null) {
             return client;
         }
         IClientConfig config = this.buildClientConfig(clientName);
-        LBClient newClient = LBClient.create(this.loadBalancer, config);
+        LoveqqLBClient newClient = LoveqqLBClient.create(this.loadBalancer, config);
         clientCache.put(clientName, newClient);
         return newClient;
     }

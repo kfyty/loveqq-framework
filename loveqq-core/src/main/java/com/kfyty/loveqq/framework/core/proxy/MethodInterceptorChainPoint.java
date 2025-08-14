@@ -8,5 +8,12 @@ package com.kfyty.loveqq.framework.core.proxy;
  * @email kfyty725@hotmail.com
  */
 public interface MethodInterceptorChainPoint {
+    /**
+     * 方法代理拦截点
+     *
+     * @param methodProxy 方法代理
+     * @param chain       方法拦截链
+     * @return 结果
+     */
     Object proceed(MethodProxy methodProxy, MethodInterceptorChain chain) throws Throwable;
 }

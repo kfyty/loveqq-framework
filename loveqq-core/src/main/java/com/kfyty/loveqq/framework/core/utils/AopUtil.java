@@ -74,8 +74,8 @@ public abstract class AopUtil {
         }
         if (isJdkProxy(bean)) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-            if (invocationHandler instanceof MethodInterceptorChain) {
-                return of(invocationHandler).map(e -> ((MethodInterceptorChain) e).getTarget()).orElse(bean);
+            if (invocationHandler instanceof MethodInterceptorChain chain) {
+                return ofNullable(chain.getTarget()).orElse(bean);
             }
             return invocationHandler;
         }
@@ -108,7 +108,8 @@ public abstract class AopUtil {
         if (isJdkProxy(targetClass) || declaringClass == targetClass || declaringClass == Object.class) {
             return method;
         }
-        return ofNullable(ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes())).orElse(method);
+        Method target = ReflectUtil.getMethod(targetClass, method.getName(), method.getParameterTypes());
+        return target == null ? method : target;
     }
 
     /**
@@ -146,8 +147,8 @@ public abstract class AopUtil {
         }
         if (isJdkProxy(bean)) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(bean);
-            if (invocationHandler instanceof MethodInterceptorChain) {
-                ((MethodInterceptorChain) invocationHandler).addInterceptorPoint(methodInterceptorChainPoint);
+            if (invocationHandler instanceof MethodInterceptorChain chain) {
+                chain.addInterceptorPoint(methodInterceptorChainPoint);
                 return true;
             }
         }
@@ -165,8 +166,8 @@ public abstract class AopUtil {
             throw new ResolvableException("The instance is not a proxy: " + proxy);
         }
         Object interceptorChain = isJdkProxy(proxy) ? Proxy.getInvocationHandler(proxy) : ProxyFactory.getHandler((javassist.util.proxy.Proxy) proxy);
-        if (interceptorChain instanceof MethodInterceptorChain) {
-            return (MethodInterceptorChain) interceptorChain;
+        if (interceptorChain instanceof MethodInterceptorChain chain) {
+            return chain;
         }
         throw new ResolvableException("The proxy object has no MethodInterceptorChain: " + proxy);
     }

@@ -21,7 +21,9 @@ public abstract class VirtualThreadExecutorHolder {
      */
     static {
         INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
-        Runtime.getRuntime().addShutdownHook(new Thread(INSTANCE::shutdown));
+
+        // 这里不再添加回调，因为需要在 ApplicationContext#close 中销毁。如果不在 loveqq 环境中使用，请手动调用销毁
+        // Runtime.getRuntime().addShutdownHook(new Thread(INSTANCE::shutdown));
     }
 
     /**

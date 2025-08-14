@@ -102,20 +102,13 @@ public class RedissonProperties extends Config {
     }
 
     public Config buildConfig(boolean isVirtual) {
-        if (this.model.equals("single")) {
-            this.setSingleServerConfig(this.single);
-        }
-        if (this.model.equals("sentinel")) {
-            this.setSentinelServersConfig(this.sentinel);
-        }
-        if (this.model.equals("master")) {
-            this.setMasterSlaveServersConfig(this.master);
-        }
-        if (this.model.equals("replicated")) {
-            this.setReplicatedServersConfig(this.replicated);
-        }
-        if (this.model.equals("cluster")) {
-            this.setClusterServersConfig(this.cluster);
+        switch (this.model) {
+            case "single" -> this.setSingleServerConfig(this.single);
+            case "sentinel" -> this.setSentinelServersConfig(this.sentinel);
+            case "master" -> this.setMasterSlaveServersConfig(this.master);
+            case "replicated" -> this.setReplicatedServersConfig(this.replicated);
+            case "cluster" -> this.setClusterServersConfig(this.cluster);
+            default -> throw new IllegalArgumentException("Redisson config error.");
         }
         if (CommonUtil.notEmpty(this.loadBalancer)) {
             LoadBalancer balancer = (LoadBalancer) newInstance(load(this.loadBalancer));

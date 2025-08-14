@@ -17,19 +17,20 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
+import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
-import com.kfyty.loveqq.framework.web.core.annotation.GetMapping;
-import com.kfyty.loveqq.framework.web.core.annotation.PostMapping;
-import com.kfyty.loveqq.framework.web.core.annotation.PutMapping;
-import com.kfyty.loveqq.framework.web.core.annotation.RestController;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +50,6 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefin
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-@RestController
 @BootApplication
 public class AutowiredTest {
     @Value("${id}")
@@ -95,14 +95,42 @@ public class AutowiredTest {
     public void afterPropertiesSet() {
         Method method = ReflectUtil.getMethod(this.autowiredTest.getClass(), "autowiredTest");
         Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, Component.class));
-        Assertions.assertTrue(AnnotationUtil.hasAnnotation(this.autowiredTest, RestController.class));
-        Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, RestController.class, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(this.autowiredTest, Configuration.class, Component.class));
         Assertions.assertTrue(AnnotationUtil.hasAnnotation(method, PostMapping.class));
         Assertions.assertTrue(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PostMapping.class));
         Assertions.assertFalse(AnnotationUtil.hasAnyAnnotation(method, GetMapping.class, PutMapping.class));
-        Assertions.assertEquals(10, AnnotationUtil.findAnnotations(this.autowiredTest).length);
+        Assertions.assertEquals(6, AnnotationUtil.findAnnotations(this.autowiredTest).length);
         Assertions.assertEquals(6, AnnotationUtil.findAnnotations(method).length);
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE, ElementType.METHOD})
+    private @interface RequestMapping {
+        String value() default "";
+    }
+
+    @RequestMapping
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface GetMapping {
+        @AliasFor(annotation = RequestMapping.class)
+        String value() default "";
+    }
+
+    @RequestMapping
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface PostMapping {
+        @AliasFor(annotation = RequestMapping.class)
+        String value() default "";
+    }
+
+    @RequestMapping
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface PutMapping {
+        @AliasFor(annotation = RequestMapping.class)
+        String value() default "";
     }
 }
 

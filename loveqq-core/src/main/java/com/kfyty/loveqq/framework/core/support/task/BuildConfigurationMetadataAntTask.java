@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.support.task;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
@@ -79,7 +80,7 @@ public class BuildConfigurationMetadataAntTask {
                     if (annotations.length > 0) {
                         String[] prefixes = Arrays.stream(annotations).map(ConfigurationProperties::value).toArray(String[]::new);
                         buildConfigurationMetadata(prefixes, clazz, metadata, null);
-                    } else {
+                    } else if (hasAnnotation(clazz, Component.class)) {
                         // 类上没有查找 @Bean 方法
                         for (Method method : ReflectUtil.getMethods(clazz)) {
                             if (hasAnnotation(method, Bean.class)) {

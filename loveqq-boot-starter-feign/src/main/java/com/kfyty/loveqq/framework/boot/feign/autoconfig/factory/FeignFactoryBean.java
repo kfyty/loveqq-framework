@@ -159,18 +159,19 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
 
         @Override
         public Request apply(RequestTemplate input) {
-            if (!input.url().startsWith("http")) {
-                String name = this.name();
-                if (CommonUtil.empty(name)) {                       // 未使用注册中心
-                    name = this.url();
-                } else if (CommonUtil.notEmpty(this.url())) {       // 使用注册中心时，url 作为基础路径
-                    name = name + this.url();
-                }
-                if (!name.startsWith("http")) {
-                    name = "http://" + name;
-                }
-                input.target(name);
+            if (input.url().startsWith("http")) {
+                return input.request();                         // 绝对路径直接返回
             }
+            String name = this.name();
+            if (CommonUtil.empty(name)) {                       // 未使用注册中心
+                name = this.url();
+            } else if (CommonUtil.notEmpty(this.url())) {       // 使用注册中心时，url 作为基础路径
+                name = name + this.url();
+            }
+            if (!name.startsWith("http")) {
+                name = "http://" + name;
+            }
+            input.target(name);
             return input.request();
         }
     }

@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import feign.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 
 /**
@@ -28,13 +29,18 @@ public class LoveqqDecoder extends feign.jackson.JacksonDecoder {
 
     @Override
     public Object decode(Response response, Type type) throws IOException {
-        if (type == byte[].class) {
-            return response.body() == null ? null : IOUtil.read(response.body().asInputStream());
-        }
-        if (type instanceof Class<?> && ReflectUtil.isBaseDataType((Class<?>) type)) {
-            if (response.body() != null) {
-                String body = new String(IOUtil.read(response.body().asInputStream()), response.charset());
-                return ConverterUtil.convert(body, (Class<?>) type);
+        if (response.body() != null) {
+            if (type == byte[].class) {
+                return IOUtil.read(response.body().asInputStream());
+            }
+            if (type instanceof Class<?> clazz) {
+                if (InputStream.class.isAssignableFrom(clazz)) {
+                    return response.body().asInputStream();
+                }
+                if (ReflectUtil.isBaseDataType(clazz)) {
+                    String body = new String(IOUtil.read(response.body().asInputStream()), response.charset());
+                    return ConverterUtil.convert(body, clazz);
+                }
             }
         }
         return super.decode(response, type);

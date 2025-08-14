@@ -7,25 +7,24 @@ import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.web.core.exception.MethodArgumentResolveException;
-import com.kfyty.loveqq.framework.web.core.exception.MissingRequestParameterException;
-import com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.handler.ExceptionHandler;
-import com.kfyty.loveqq.framework.web.core.handler.RequestMappingMatcher;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.interceptor.HandlerInterceptor;
-import com.kfyty.loveqq.framework.web.core.mapping.MethodMapping;
+import com.kfyty.loveqq.framework.web.core.route.Route;
+import com.kfyty.loveqq.framework.web.core.route.RouteMatcher;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodArgumentResolver;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.Model;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -37,6 +36,11 @@ import java.util.List;
  */
 @Data
 public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implements BeanFactoryAware {
+    /**
+     * log
+     */
+    protected static final Logger log = LoggerFactory.getLogger(AbstractDispatcher.class);
+
     /**
      * 视图路径前缀配置 key
      */
@@ -70,27 +74,27 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
     /**
      * 请求匹配器
      */
-    protected RequestMappingMatcher requestMappingMatcher = new DefaultRequestMappingMatcher();
+    protected List<RouteMatcher> routeMatchers = new LinkedList<>();
 
     /**
      * 拦截器链
      */
-    protected List<HandlerInterceptor> interceptorChains = new ArrayList<>(4);
+    protected List<HandlerInterceptor> interceptorChains = new LinkedList<>();
 
     /**
      * 方法参数解析器
      */
-    protected List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(4);
+    protected List<HandlerMethodArgumentResolver> argumentResolvers = new LinkedList<>();
 
     /**
      * 方法返回值处理器
      */
-    protected List<HandlerMethodReturnValueProcessor> returnValueProcessors = new ArrayList<>(4);
+    protected List<HandlerMethodReturnValueProcessor> returnValueProcessors = new LinkedList<>();
 
     /**
      * 控制器异常处理器
      */
-    protected List<ExceptionHandler> exceptionHandlers = new ArrayList<>(4);
+    protected List<ExceptionHandler> exceptionHandlers = new LinkedList<>();
 
     /**
      * 是否应该逐步刷新到客户端
@@ -99,34 +103,30 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
      * @return true/false
      */
     public boolean shouldFlush(String contentType) {
-        if (contentType == null) {
-            return false;
-        }
-        return contentType.contains("text/event-stream") ||
-                contentType.contains("application/stream+json") ||
-                contentType.contains("application/x-ndjson");
+        return Route.isStream(contentType);
     }
 
     /**
      * 匹配请求路由
      *
-     * @param method     请求方法
-     * @param requestURI 请求 uri
+     * @param method  请求方法
+     * @param request 请求
      * @return 路由
      */
-    public MethodMapping matchRoute(RequestMethod method, String requestURI) {
-        // 精确匹配
-        MethodMapping matched = this.requestMappingMatcher.matchRoute(method, requestURI);
-
-        // HEAD 方法，可能是检测，再匹配一下 GET/POST
-        if (matched == null && method == RequestMethod.HEAD) {
-            matched = this.requestMappingMatcher.matchRoute(RequestMethod.GET, requestURI);
-            if (matched == null) {
-                matched = this.requestMappingMatcher.matchRoute(RequestMethod.POST, requestURI);
+    public Route matchRoute(RequestMethod method, ServerRequest request) {
+        for (RouteMatcher routeMatcher : this.routeMatchers) {
+            Route matched = routeMatcher.match(method, request);
+            if (matched != null) {
+                return matched;
             }
         }
+        return null;
+    }
 
-        return matched;
+    @SuppressWarnings("unchecked")
+    public T addRouteMatcher(RouteMatcher routeMatcher) {
+        this.routeMatchers.add(routeMatcher);
+        return (T) this;
     }
 
     @SuppressWarnings("unchecked")
@@ -153,7 +153,42 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return (T) this;
     }
 
-    protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler) {
+    public Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
+        Class<?> parameterType = parameter.getType();
+        if (ServerRequest.class.isAssignableFrom(parameterType)) {
+            return request;
+        }
+        if (ServerResponse.class.isAssignableFrom(parameterType)) {
+            return response;
+        }
+        if (parameterType.isInstance(request.getRawRequest())) {
+            return request.getRawRequest();
+        }
+        if (parameterType.isInstance(response.getRawResponse())) {
+            return response.getRawResponse();
+        }
+        return null;
+    }
+
+    protected Route prepareRequestResponse(Route route, ServerRequest request, ServerResponse response) {
+        if (route.getProduces() != null) {
+            response.setContentType(route.getProduces());
+        }
+        if (route.isStream()) {
+            response.setHeader("Connection", "keep-alive");
+            response.setHeader("Transfer-Encoding", "chunked");
+        }
+        if (route.isEventStream()) {
+            response.setHeader("Connection", "keep-alive");
+            response.setHeader("Cache-Control", "no-cache");
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Matched route uri [{}] to request URI [{}] !", route.getUri(), request.getRequestURI());
+        }
+        return route;
+    }
+
+    protected boolean applyPreInterceptor(ServerRequest request, ServerResponse response, Route handler) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             if (this.shouldApplyInterceptor(request, response, interceptor) && !interceptor.preHandle(request, response, handler)) {
                 return false;
@@ -162,7 +197,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return true;
     }
 
-    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Object value) {
+    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, Route handler, Object value) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             if (this.shouldApplyInterceptor(request, response, interceptor)) {
                 interceptor.postHandle(request, response, handler, value);
@@ -170,7 +205,7 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, MethodMapping handler, Throwable e) {
+    protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, Route handler, Throwable e) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             if (this.shouldApplyInterceptor(request, response, interceptor)) {
                 interceptor.afterCompletion(request, response, handler, e);
@@ -178,60 +213,10 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         }
     }
 
-    protected MethodParameter prepareMethodParameter(ServerRequest request, ServerResponse response, MethodMapping methodMapping) {
-        int index = 0;
-        Parameter[] parameters = methodMapping.getMappingMethod().getParameters();
-        Object[] paramValues = new Object[parameters.length];
-        for (Parameter parameter : parameters) {
-            Object param = this.resolveInternalParameter(parameter, request, response);
-            if (param != null) {
-                paramValues[index++] = param;
-                continue;
-            }
-
-            MethodParameter methodParameter = new MethodParameter(methodMapping.getController(), methodMapping.getMappingMethod(), parameter);
-            MethodParameter arguments = this.resolveMethodArguments(methodParameter, methodMapping, request);
-            if (arguments != null) {
-                paramValues[index++] = arguments.getValue();
-                continue;
-            }
-
-            throw new MethodArgumentResolveException("Can't resolve parameters, there is no suitable parameter resolver available.");
-        }
-        return methodMapping.buildMethodParameter(paramValues).metadata(methodMapping);
-    }
-
-    protected Object resolveInternalParameter(Parameter parameter, ServerRequest request, ServerResponse response) {
-        if (ServerRequest.class.isAssignableFrom(parameter.getType())) {
-            return request;
-        }
-        if (ServerResponse.class.isAssignableFrom(parameter.getType())) {
-            return response;
-        }
-        return null;
-    }
-
-    protected MethodParameter resolveMethodArguments(MethodParameter methodParameter, MethodMapping methodMapping, ServerRequest request) {
-        try {
-            for (HandlerMethodArgumentResolver argumentResolver : this.argumentResolvers) {
-                if (argumentResolver.supportsParameter(methodParameter)) {
-                    methodParameter.setValue(argumentResolver.resolveArgument(methodParameter, methodMapping, request));
-                    return methodParameter;
-                }
-            }
-            return null;
-        } catch (MissingRequestParameterException e) {
-            throw e;
-        } catch (Throwable e) {
-            Parameter parameter = methodParameter.getParameter();
-            throw new MethodArgumentResolveException(parameter, "Method parameter resolve failed: " + parameter.getName(), e);
-        }
-    }
-
-    protected Pair<MethodParameter, Object> obtainExceptionHandleValue(ServerRequest request, ServerResponse response, MethodMapping mapping, Throwable throwable) throws Throwable {
+    protected Pair<MethodParameter, Object> obtainExceptionHandleValue(ServerRequest request, ServerResponse response, Route route, Throwable throwable) throws Throwable {
         for (ExceptionHandler exceptionHandler : this.exceptionHandlers) {
-            if (exceptionHandler.canHandle(mapping, throwable)) {
-                return exceptionHandler.handle(request, response, mapping, throwable);
+            if (exceptionHandler.canHandle(route, throwable)) {
+                return exceptionHandler.handle(request, response, route, throwable);
             }
         }
         throw throwable;

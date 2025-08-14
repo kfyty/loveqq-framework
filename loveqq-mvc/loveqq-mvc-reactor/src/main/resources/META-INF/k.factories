@@ -1,0 +1,10 @@
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.web.mvc.reactor.filter.RequestResponseContextHolderFilter,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.autoconfig.WebReactiveMvcAutoConfig,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ViewForwardHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.TextResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.JSONResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ResponseBodyEmitterHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.StreamJSONResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.SseEventResponseBodyHandlerMethodReturnValueProcessor,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.BinaryResponseBodyHandlerMethodReturnValueProcessor

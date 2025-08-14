@@ -32,6 +32,11 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public abstract class BeanUtil {
     /**
+     * 默认的复制属性断言
+     */
+    public static final BiPredicate<Field, Object> DEFAULT_COPY_PREDICATE = (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers()));
+
+    /**
      * 作用域代理原 bean 名称前缀
      */
     public static final String SCOPE_PROXY_SOURCE_PREFIX = "scopedTarget.";
@@ -85,7 +90,7 @@ public abstract class BeanUtil {
      * @return bean name
      */
     public static String getBeanName(Method method, Bean bean) {
-        return bean != null && CommonUtil.notEmpty(bean.value()) ? bean.value() : method.getName();
+        return bean == null || bean.value().isEmpty() ? method.getName() : bean.value();
     }
 
     /**
@@ -106,8 +111,8 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(Object bean) {
-        if (bean instanceof Ordered) {
-            return ((Ordered) bean).getOrder();
+        if (bean instanceof Ordered ordered) {
+            return ordered.getOrder();
         }
         return ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.DEFAULT_PRECEDENCE);
     }
@@ -119,18 +124,18 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof ConditionalBeanDefinition) {
-            return getBeanOrder(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
+        if (beanDefinition instanceof ConditionalBeanDefinition cdb) {
+            return getBeanOrder(cdb.getBeanDefinition());
         }
-        if (beanDefinition instanceof FactoryBeanDefinition) {
-            return getBeanOrder(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
+        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
+            return getBeanOrder(fbd.getFactoryBeanDefinition());
         }
-        if (beanDefinition instanceof MethodBeanDefinition) {
-            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Order.class);
+        if (beanDefinition instanceof MethodBeanDefinition mbd) {
+            Order order = AnnotationUtil.findAnnotation(mbd.getBeanMethod(), Order.class);
             return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
-        if (beanDefinition instanceof GenericBeanDefinition) {
-            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Order.class);
+        if (beanDefinition instanceof GenericBeanDefinition bd) {
+            Order order = AnnotationUtil.findAnnotation(bd.getBeanType(), Order.class);
             return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
         return Order.DEFAULT_PRECEDENCE;
@@ -143,42 +148,20 @@ public abstract class BeanUtil {
      * @return true is lazy init
      */
     public static boolean isLazyInit(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof ConditionalBeanDefinition) {
-            return isLazyInit(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
+        if (beanDefinition instanceof ConditionalBeanDefinition cbd) {
+            return isLazyInit(cbd.getBeanDefinition());
         }
-        if (beanDefinition instanceof FactoryBeanDefinition) {
-            return isLazyInit(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
+        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
+            return isLazyInit(fbd.getFactoryBeanDefinition());
         }
-        if (beanDefinition instanceof MethodBeanDefinition) {
+        if (beanDefinition instanceof MethodBeanDefinition mbd) {
             boolean isLazyInit = AnnotationUtil.hasAnnotation(beanDefinition.getBeanMethod(), Lazy.class);
-            return isLazyInit || isLazyInit(((MethodBeanDefinition) beanDefinition).getParentDefinition());
+            return isLazyInit || isLazyInit(mbd.getParentDefinition());
         }
-        if (beanDefinition instanceof GenericBeanDefinition) {
-            return AnnotationUtil.hasAnnotation(beanDefinition.getBeanType(), Lazy.class);
+        if (beanDefinition instanceof GenericBeanDefinition bd) {
+            return AnnotationUtil.hasAnnotation(bd.getBeanType(), Lazy.class);
         }
         return false;
-    }
-
-    /**
-     * 复制 bean 属性
-     *
-     * @param source 源对象
-     * @param target 目标对象
-     * @return 目标对象
-     */
-    public static <S, T> T copyProperties(S source, T target) {
-        return copyProperties(source, target, (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers())));
-    }
-
-    /**
-     * 将 Map 中的数据复制到 bean 中
-     *
-     * @param map   Map
-     * @param clazz 目标 bean class 类型
-     * @return 目标对象
-     */
-    public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz) {
-        return copyProperties(map, clazz, (f, v) -> !(isStatic(f.getModifiers()) && isFinal(f.getModifiers())));
     }
 
     /**
@@ -192,58 +175,25 @@ public abstract class BeanUtil {
     }
 
     /**
-     * 使用反射复制 bean 属性，允许通过属性过滤器控制
+     * 复制 bean 属性
      *
-     * @param source       源对象
-     * @param target       目标对象
-     * @param fieldValTest 属性过滤器
+     * @param source 源对象
+     * @param target 目标对象
      * @return 目标对象
      */
-    public static <S, T> T copyProperties(S source, T target, BiPredicate<Field, Object> fieldValTest) {
-        Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
-        Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
-        for (Map.Entry<String, Field> fieldEntry : sourceFileMap.entrySet()) {
-            if (!targetFieldMap.containsKey(fieldEntry.getKey())) {
-                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy bean from [{}] to [{}], no field found from target bean !", source.getClass(), target.getClass()));
-                continue;
-            }
-            Field field = targetFieldMap.get(fieldEntry.getKey());
-            Object fieldValue = ReflectUtil.getFieldValue(source, fieldEntry.getValue());
-            if (!fieldValTest.test(field, fieldValue)) {
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", fieldEntry.getValue()));
-                continue;
-            }
-            ReflectUtil.setFieldValue(target, field, fieldValue);
-        }
-        return target;
+    public static <S, T> T copyProperties(S source, T target) {
+        return copyProperties(source, target, DEFAULT_COPY_PREDICATE);
     }
 
     /**
-     * 将 Map 中的数据复制到 bean 中，允许通过属性过滤器控制
+     * 将 Map 中的数据复制到 bean 中
      *
-     * @param map          Map
-     * @param clazz        目标 bean class 类型
-     * @param fieldValTest 属性过滤器
+     * @param map   Map
+     * @param clazz 目标 bean class 类型
      * @return 目标对象
      */
-    public static <T> T copyProperties(Map<String, Object> map, Class<T> clazz, BiPredicate<Field, Object> fieldValTest) {
-        if (CommonUtil.empty(map) || clazz == null) {
-            return null;
-        }
-        T o = ReflectUtil.newInstance(clazz);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            Field field = ReflectUtil.getField(clazz, entry.getKey());
-            if (field == null) {
-                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
-                continue;
-            }
-            if (!fieldValTest.test(field, entry.getValue())) {
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", field));
-                continue;
-            }
-            ReflectUtil.setFieldValue(o, field, entry.getValue());
-        }
-        return o;
+    public static <T> T bindProperties(Map<String, Object> map, Class<T> clazz) {
+        return bindProperties(map, clazz, DEFAULT_COPY_PREDICATE);
     }
 
     /**
@@ -264,12 +214,71 @@ public abstract class BeanUtil {
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {
             Object fieldValue = ReflectUtil.getFieldValue(obj, entry.getValue());
-            if (!fieldValTest.test(entry.getValue(), fieldValue)) {
+            if (fieldValTest.test(entry.getValue(), fieldValue)) {
+                map.put(entry.getKey(), fieldValue);
+            } else {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
-                continue;
             }
-            map.put(entry.getKey(), fieldValue);
         }
         return map;
+    }
+
+    /**
+     * 使用反射复制 bean 属性，允许通过属性过滤器控制
+     *
+     * @param source       源对象
+     * @param target       目标对象
+     * @param fieldValTest 属性过滤器
+     * @return 目标对象
+     */
+    public static <S, T> T copyProperties(S source, T target, BiPredicate<Field, Object> fieldValTest) {
+        Map<String, Field> sourceFileMap = ReflectUtil.getFieldMap(source.getClass());
+        Map<String, Field> targetFieldMap = ReflectUtil.getFieldMap(target.getClass());
+        for (Map.Entry<String, Field> entry : sourceFileMap.entrySet()) {
+            if (!targetFieldMap.containsKey(entry.getKey())) {
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot copy bean from [{}] to [{}], there's not field found from target bean !", source.getClass(), target.getClass()));
+                continue;
+            }
+            Field field = targetFieldMap.get(entry.getKey());
+            Object fieldValue = ReflectUtil.getFieldValue(source, entry.getValue());
+            if (fieldValTest.test(field, fieldValue)) {
+                ReflectUtil.setFieldValue(target, field, fieldValue);
+            } else {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("copy properties skip field: {}", entry.getValue()));
+            }
+        }
+        return target;
+    }
+
+    /**
+     * 将 Map 中的数据复制到 bean 中，允许通过属性过滤器控制
+     *
+     * @param map          Map
+     * @param clazz        目标 bean class 类型
+     * @param fieldValTest 属性过滤器
+     * @return 目标对象
+     */
+    public static <T> T bindProperties(Map<String, Object> map, Class<T> clazz, BiPredicate<Field, Object> fieldValTest) {
+        if (CommonUtil.empty(map) || clazz == null) {
+            return null;
+        }
+        T o = ReflectUtil.newInstance(clazz);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Field field = ReflectUtil.getField(clazz, entry.getKey());
+            if (field == null) {
+                LogUtil.logIfWarnEnabled(log, log -> log.warn("cannot bind properties [{}], no field found from target class [{}] !", entry.getKey(), clazz));
+                continue;
+            }
+            if (fieldValTest.test(field, entry.getValue())) {
+                if (field.getType().isInstance(entry.getValue())) {
+                    ReflectUtil.setFieldValue(o, field, entry.getValue());
+                } else {
+                    ReflectUtil.setFieldValue(o, field, ConverterUtil.convert(entry.getValue(), field.getType()));
+                }
+            } else {
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("bind properties skip field: {}", field));
+            }
+        }
+        return o;
     }
 }

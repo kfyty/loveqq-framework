@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.boot.feign.autoconfig;
 
+import com.kfyty.loveqq.framework.boot.feign.autoconfig.rule.DefaultRoundRobinRule;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
 import com.netflix.loadbalancer.IRule;
@@ -22,7 +23,7 @@ public class FeignProperties {
     /**
      * ribbon 轮训规则
      */
-    private IRule rule;
+    private IRule rule = new DefaultRoundRobinRule();
 
     /**
      * 请求选项配置

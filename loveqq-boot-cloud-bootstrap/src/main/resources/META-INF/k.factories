@@ -1,1 +1,5 @@
 com.kfyty.loveqq.framework.core.autoconfig.boostrap.Bootstrap=com.kfyty.loveqq.framework.cloud.bootstrap.BeanFactoryBootstrap
+
+com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
+    com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.DefaultLoadBalanceService,\
+    com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.DefaultLoadBalanceChooser
