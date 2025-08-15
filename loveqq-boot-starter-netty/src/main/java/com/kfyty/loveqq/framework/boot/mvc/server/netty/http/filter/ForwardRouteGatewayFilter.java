@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.route.GatewayRoute;
+import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilter;
 import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilterChain;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
@@ -27,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Order(Order.LOWEST_PRECEDENCE)
 @Component(GatewayRoute.DEFAULT_FORWARD_FILTER_NAME)
-public class ForwardRouteGatewayFilter extends AbstractNettyRouteGatewayFilter {
+public class ForwardRouteGatewayFilter implements GatewayFilter {
     /**
      * 默认的 http client
      */
@@ -35,6 +36,9 @@ public class ForwardRouteGatewayFilter extends AbstractNettyRouteGatewayFilter {
 
     @Override
     public Mono<Void> doFilter(GatewayRoute route, ServerRequest request, ServerResponse response, GatewayFilterChain chain) {
+        if (this.isWebSocket(request, response)) {
+            return chain.doFilter(request, response);
+        }
         final URI routeURI = this.createRouteURI(route, request);
         final Flux<Void> flux = this.client.headers(headers -> {
                     for (String headerName : request.getHeaderNames()) {
@@ -52,6 +56,6 @@ public class ForwardRouteGatewayFilter extends AbstractNettyRouteGatewayFilter {
                     }
                     return Mono.from(nettyResponse.send(connection.inbound().receive().retain())).doFinally(s -> connection.dispose());
                 });
-        return chain.doFilter(request, response).then(flux.then());
+        return flux.then(chain.doFilter(request, response));
     }
 }

@@ -1,5 +1,5 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyHttpClientAutoConfig,\
+    com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyClientAutoConfig,\
     com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyServerAutoConfig,\
     com.kfyty.loveqq.framework.boot.mvc.server.netty.http.filter.WebSocketForwardRouteGatewayFilter,\
     com.kfyty.loveqq.framework.boot.mvc.server.netty.http.filter.ForwardRouteGatewayFilter,\

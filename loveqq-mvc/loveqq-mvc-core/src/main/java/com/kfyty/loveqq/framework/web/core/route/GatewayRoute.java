@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
@@ -194,5 +195,38 @@ public class GatewayRoute implements Route, Ordered {
         Mapping.from(beanFactory.getBean(DEFAULT_FORWARD_FILTER_NAME)).whenNotNull(e -> gatewayFilters.add((GatewayFilter) e));
 
         return gatewayFilters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
+    }
+
+    public static GatewayRoute addDefaultFilter(GatewayRoute gatewayRoute,
+                                                List<GatewayFilter> defaultFilters) {
+        long mark = 0L;
+        final long matched = Long.MAX_VALUE >> (63 - defaultFilters.size());
+        final List<GatewayFilter> filters = gatewayRoute.getFilters();
+        for (int i = 0; i < defaultFilters.size(); i++) {
+            GatewayFilter defaultFilter = defaultFilters.get(i);
+            if (defaultFilter == null) {
+                mark |= (0x01L << i);
+                continue;                                                               // 不存在设置为 1，以通过后续检验
+            }
+            for (GatewayFilter filter : filters) {
+                if (filter == defaultFilter) {
+                    mark |= (0x01L << i);
+                }
+            }
+        }
+
+        // 存在不存在的默认过滤器
+        if (mark != matched) {
+            List<GatewayFilter> newFilters = new ArrayList<>(Optional.ofNullable(gatewayRoute.getFilters()).orElse(Collections.emptyList()));
+            for (int i = 0; i < defaultFilters.size(); i++) {
+                GatewayFilter defaultFilter = defaultFilters.get(i);
+                if (defaultFilter != null && (mark & (0x01L << i)) >> i == 0L) {
+                    newFilters.add(defaultFilter);
+                }
+            }
+            gatewayRoute.setFilters(newFilters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList()));
+        }
+
+        return gatewayRoute;
     }
 }

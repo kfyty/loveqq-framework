@@ -260,7 +260,12 @@ public abstract class ReflectUtil {
         if (clazz.isPrimitive() || clazz.isEnum()) {
             return true;
         }
-        return ConverterUtil.getTypeConverters().keySet().stream().map(Pair::getValue).anyMatch(e -> e == clazz);
+        return ConverterUtil.getTypeConverters()
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().isBaseDataType())
+                .map(e -> e.getKey().getValue())
+                .anyMatch(e -> e == clazz);
     }
 
     /*--------------------------------------------- 创建实例相关方法 ---------------------------------------------*/

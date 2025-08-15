@@ -26,11 +26,6 @@ import java.net.URI;
 @ConditionalOnClass("com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.LoadBalanceChooser")
 public class LoadBalanceGatewayFilter implements GatewayFilter {
     /**
-     * web socket 升级
-     */
-    public static final String UPGRADE = "upgrade";
-
-    /**
      * 负载均衡协议
      */
     public static final String LOAD_BALANCE_SCHEME = "lb";

@@ -13,8 +13,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
 import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
-import com.kfyty.loveqq.framework.core.lang.util.Mapping;
-import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.annotation.Controller;
 import com.kfyty.loveqq.framework.web.core.cors.CorsConfiguration;
@@ -29,12 +27,10 @@ import com.kfyty.loveqq.framework.web.core.route.gateway.LoadBalanceGatewayFilte
 import com.kfyty.loveqq.framework.web.core.route.gateway.RouteDefinition;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.web.core.route.GatewayRoute.DEFAULT_FORWARD_FILTER_NAME;
 import static com.kfyty.loveqq.framework.web.core.route.GatewayRoute.DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME;
@@ -109,12 +105,13 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
         // 这里要先判断，避免默认过滤器不存在
         if (!gatewayRoutes.isEmpty()) {
-            final GatewayFilter balanceGatewayFilter = applicationContext.getBean(LoadBalanceGatewayFilter.class);
-            final GatewayFilter defaultWebSocketForwardFilter = applicationContext.getBean(DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME);
-            final GatewayFilter defaultForwardFilter = applicationContext.getBean(DEFAULT_FORWARD_FILTER_NAME);
+            final List<GatewayFilter> defaultFilters = Arrays.asList(
+                    applicationContext.getBean(LoadBalanceGatewayFilter.class),
+                    applicationContext.getBean(DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME),
+                    applicationContext.getBean(DEFAULT_FORWARD_FILTER_NAME)
+            );
             for (GatewayRoute gatewayRoute : gatewayRoutes.values()) {
-                this.addDefaultFilter(gatewayRoute, balanceGatewayFilter, defaultWebSocketForwardFilter, defaultForwardFilter);
-                gatewayRoutesList.add(gatewayRoute);
+                gatewayRoutesList.add(GatewayRoute.addDefaultFilter(gatewayRoute, defaultFilters));
             }
         }
 
@@ -125,44 +122,6 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
         WebServer server = applicationContext.getBean(WebServer.class);
         if (server != null && !server.isStart()) {
             server.start();
-        }
-    }
-
-    protected void addDefaultFilter(GatewayRoute gatewayRoute,
-                                    GatewayFilter balanceGatewayFilter,
-                                    GatewayFilter defaultWebSocketForwardFilter,
-                                    GatewayFilter defaultForwardFilter) {
-        boolean hasLoadBalanceFilter = false;
-        boolean hasWebsocketForwardFilter = false;
-        boolean hasForwardFilter = false;
-        if (gatewayRoute.getFilters() != null) {
-            for (GatewayFilter filter : gatewayRoute.getFilters()) {
-                if (balanceGatewayFilter != null && filter == balanceGatewayFilter) {
-                    hasLoadBalanceFilter = true;
-                    continue;
-                }
-                if (filter == defaultWebSocketForwardFilter) {
-                    hasWebsocketForwardFilter = true;
-                    continue;
-                }
-                if (filter == defaultForwardFilter) {
-                    hasForwardFilter = true;
-                    continue;
-                }
-            }
-        }
-        if (balanceGatewayFilter != null && !hasLoadBalanceFilter || !hasWebsocketForwardFilter || !hasForwardFilter) {
-            List<GatewayFilter> filters = new ArrayList<>(Optional.ofNullable(gatewayRoute.getFilters()).orElse(Collections.emptyList()));
-            if (balanceGatewayFilter != null && !hasLoadBalanceFilter) {
-                Mapping.from(balanceGatewayFilter).whenNotNull(filters::add);
-            }
-            if (!hasWebsocketForwardFilter) {
-                Mapping.from(defaultWebSocketForwardFilter).whenNotNull(filters::add);
-            }
-            if (!hasForwardFilter) {
-                Mapping.from(defaultForwardFilter).whenNotNull(filters::add);
-            }
-            gatewayRoute.setFilters(filters.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList()));
         }
     }
 }
