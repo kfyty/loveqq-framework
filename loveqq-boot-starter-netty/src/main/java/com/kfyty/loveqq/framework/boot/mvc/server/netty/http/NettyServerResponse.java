@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.mvc.reactor.DispatcherHandler;
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.support.RequestContextHolder;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import lombok.RequiredArgsConstructor;
@@ -117,19 +118,16 @@ public class NettyServerResponse implements ServerResponse {
 
         @Override
         public void flush() {
-            ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
-            NettyServerResponse.this.response.send(Mono.just(NIOUtil.from(outputStream.toByteArray())), e -> true).then().subscribe();
-            outputStream.reset();
+            ByteBuf byteBuf = NIOUtil.from(toByteArray());
+            NettyServerResponse.this.response.send(Mono.just(byteBuf), e -> true).then().subscribe();
+            count = 0;
         }
 
         @Override
         public void close() {
-            ByteArrayOutputStream outputStream = NettyServerResponse.this.outputStream;
-            byte[] bytes = outputStream.toByteArray();
-            if (bytes.length > 0) {
-                NettyServerResponse.this.response.sendByteArray(Mono.just(bytes)).then().subscribe();
+            if (count > 0) {
+                NettyServerResponse.this.response.sendByteArray(Mono.just(toByteArray())).then().subscribe();
             }
-            outputStream.reset();
         }
     }
 }

@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
+import com.kfyty.loveqq.framework.core.utils.reactor.ReactiveIOUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -21,6 +22,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileChannel;
@@ -52,6 +54,20 @@ import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.TEMP_PATH;
  */
 @Slf4j
 public abstract class IOUtil {
+    /**
+     * {@link java.net.http.HttpClient} 是否可用
+     */
+    private static boolean HTTP_CLIENT_AVAILABLE;
+
+    static {
+        try {
+            Class.forName("java.net.http.HttpClient", false, IOUtil.class.getClassLoader());
+            HTTP_CLIENT_AVAILABLE = true;
+        } catch (Throwable e) {
+            //ignored
+        }
+    }
+
     /**
      * 返回一个新的监听服务
      *
@@ -477,6 +493,20 @@ public abstract class IOUtil {
     }
 
     /**
+     * 获取文件后缀
+     *
+     * @param path 文件路径
+     * @return 后缀，不包含 .
+     */
+    public static String getFileExtension(String path) {
+        if (path == null) {
+            return null;
+        }
+        int index = path.lastIndexOf('.');
+        return index < 0 ? null : path.substring(index + 1);
+    }
+
+    /**
      * 下载到指定目录
      *
      * @param url     url
@@ -484,7 +514,9 @@ public abstract class IOUtil {
      * @return 文件
      */
     public static File download(String url, String dirName) {
-        return download(url, dirName, UUID.randomUUID().toString().replace("-", ""));
+        String extension = getFileExtension(url);
+        String randomName = UUID.randomUUID().toString().replace("-", "");
+        return download(url, dirName, extension == null ? randomName : randomName + '.' + extension);
     }
 
     /**
@@ -497,7 +529,11 @@ public abstract class IOUtil {
      */
     public static File download(String url, String dirName, String fileName) {
         ensureFolderExists(dirName);
-        File file = new File(dirName + "/" + fileName);
+        File file = new File(dirName, fileName);
+        if (HTTP_CLIENT_AVAILABLE) {
+            URI uri = URI.create(url.replace(" ", "%20"));
+            return CompletableFutureUtil.get(ReactiveIOUtil.downloadAsync(uri, file.toPath()));
+        }
         try {
             URL httpUrl = new URL(url.replace(" ", "%20"));
             URLConnection conn = httpUrl.openConnection();
@@ -594,16 +630,19 @@ public abstract class IOUtil {
         if (closeTarget == null) {
             return;
         }
-        if (!(closeTarget instanceof AutoCloseable closeable)) {
-            throw new ResolvableException("The resource can't close: " + closeTarget);
-        }
-        try {
-            if (closeTarget instanceof Flushable flushable) {
-                flushable.flush();
+
+        if (closeTarget instanceof AutoCloseable closeable) {
+            try {
+                if (closeTarget instanceof Flushable flushable) {
+                    flushable.flush();
+                }
+                closeable.close();
+                return;
+            } catch (Exception e) {
+                throw ExceptionUtil.wrap(e);
             }
-            closeable.close();
-        } catch (Exception e) {
-            throw ExceptionUtil.wrap(e);
         }
+
+        throw new ResolvableException("The resource can't close: " + closeTarget);
     }
 }

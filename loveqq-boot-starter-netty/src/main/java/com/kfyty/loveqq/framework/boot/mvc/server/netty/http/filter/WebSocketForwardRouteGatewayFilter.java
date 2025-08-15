@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.route.GatewayRoute;
+import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilter;
 import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilterChain;
 import io.netty.handler.codec.http.websocketx.WebSocketCloseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
@@ -25,7 +26,6 @@ import reactor.netty.http.websocket.WebsocketOutbound;
 import java.net.URI;
 import java.util.function.BiFunction;
 
-import static com.kfyty.loveqq.framework.web.core.route.gateway.LoadBalanceGatewayFilter.UPGRADE;
 import static io.netty.handler.codec.http.websocketx.WebSocketCloseStatus.INTERNAL_SERVER_ERROR;
 
 /**
@@ -36,9 +36,9 @@ import static io.netty.handler.codec.http.websocketx.WebSocketCloseStatus.INTERN
  * @since JDK 1.8
  */
 @RequiredArgsConstructor
-@Order(Order.LOWEST_PRECEDENCE + 1)
+@Order(Order.LOWEST_PRECEDENCE - 1)
 @Component(GatewayRoute.DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME)
-public class WebSocketForwardRouteGatewayFilter extends AbstractNettyRouteGatewayFilter {
+public class WebSocketForwardRouteGatewayFilter implements GatewayFilter {
     /**
      * 默认的 http client
      */
@@ -46,12 +46,12 @@ public class WebSocketForwardRouteGatewayFilter extends AbstractNettyRouteGatewa
 
     @Override
     public Mono<Void> doFilter(GatewayRoute route, ServerRequest request, ServerResponse response, GatewayFilterChain chain) {
-        if (!UPGRADE.equalsIgnoreCase(request.getHeader("connection"))) {
-            return chain.doFilter(request, response);
+        if (this.isWebSocket(request, response)) {
+            final URI routeURI = this.createRouteURI(route, request);
+            final HttpServerResponse rawResponse = response.getRawResponse();
+            return rawResponse.sendWebsocket(new ForwardWebSocketHandler(routeURI, request, response)).then(chain.doFilter(request, response));
         }
-        final URI routeURI = this.createRouteURI(route, request);
-        final HttpServerResponse rawResponse = response.getRawResponse();
-        return rawResponse.sendWebsocket(new ForwardWebSocketHandler(routeURI, request, response));
+        return chain.doFilter(request, response);
     }
 
     @RequiredArgsConstructor

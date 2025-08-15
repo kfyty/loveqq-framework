@@ -31,6 +31,11 @@ public class GatewayRouteProperties {
     public static class StringToPredicatesConverter implements Converter<String, RouteDefinition.Predicates> {
 
         @Override
+        public boolean isBaseDataType() {
+            return false;
+        }
+
+        @Override
         public RouteDefinition.Predicates apply(String source) {
             int equalsIndex = source.indexOf('=');
             String id = source.substring(0, equalsIndex);
@@ -60,6 +65,11 @@ public class GatewayRouteProperties {
      */
     @Component
     public static class StringToFiltersConverter implements Converter<String, RouteDefinition.Filters> {
+
+        @Override
+        public boolean isBaseDataType() {
+            return false;
+        }
 
         @Override
         public RouteDefinition.Filters apply(String source) {
