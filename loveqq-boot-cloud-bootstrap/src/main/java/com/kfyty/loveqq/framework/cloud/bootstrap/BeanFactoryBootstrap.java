@@ -1,7 +1,7 @@
 package com.kfyty.loveqq.framework.cloud.bootstrap;
 
-import com.kfyty.loveqq.framework.boot.context.factory.ApplicationContextFactory;
 import com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BeanFactoryBootstrapApplication;
+import com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BootstrapApplicationContextFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
@@ -39,11 +39,8 @@ public class BeanFactoryBootstrap implements Bootstrap {
 
     @Override
     public void bootstrap(ConfigurableApplicationContext applicationContext) throws Exception {
-        if (applicationContext.getPrimarySource() == BeanFactoryBootstrapApplication.class) {
-            return;
-        }
         log.info("Bootstrap starting...");
-        try (ApplicationContext bootstrapContext = new ApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
+        try (ApplicationContext bootstrapContext = new BootstrapApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
             bootstrapContext.refresh();
             this.copyBootstrapConfiguration(bootstrapContext, applicationContext);
         }

@@ -8,7 +8,6 @@ import java.lang.annotation.Target;
 
 /**
  * 描述: 延迟初始化
- * 使用该注解的 bean 将生成代理类
  *
  * @author kfyty725
  * @date 2021/6/12 11:28
@@ -19,4 +18,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 public @interface Lazy {
+    /**
+     * 是否使用懒加载代理
+     * false 时，不使用懒加载代理，若没有其他 bean 依赖，则不会自动初始化，否则懒加载无效
+     * true 时，使用懒加载代理，如果有其他 bean 依赖，则注入代理实例，实际的 bean 仍然是懒加载
+     *
+     * @return true/false
+     */
+    boolean lazyProxy() default true;
 }

@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.autoconfig.Ordered;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionalBeanDefinition;
@@ -139,29 +138,6 @@ public abstract class BeanUtil {
             return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
         return Order.DEFAULT_PRECEDENCE;
-    }
-
-    /**
-     * 判断给定 BeanDefinition 是否延迟初始化
-     *
-     * @param beanDefinition bean 定义
-     * @return true is lazy init
-     */
-    public static boolean isLazyInit(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof ConditionalBeanDefinition cbd) {
-            return isLazyInit(cbd.getBeanDefinition());
-        }
-        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
-            return isLazyInit(fbd.getFactoryBeanDefinition());
-        }
-        if (beanDefinition instanceof MethodBeanDefinition mbd) {
-            boolean isLazyInit = AnnotationUtil.hasAnnotation(beanDefinition.getBeanMethod(), Lazy.class);
-            return isLazyInit || isLazyInit(mbd.getParentDefinition());
-        }
-        if (beanDefinition instanceof GenericBeanDefinition bd) {
-            return AnnotationUtil.hasAnnotation(bd.getBeanType(), Lazy.class);
-        }
-        return false;
     }
 
     /**

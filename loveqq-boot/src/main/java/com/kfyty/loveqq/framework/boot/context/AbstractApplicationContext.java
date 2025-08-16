@@ -17,7 +17,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionBeanDefinitionRegistry;
-import com.kfyty.loveqq.framework.core.autoconfig.boostrap.Bootstrap;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.ApplicationEventPublisher;
@@ -29,7 +28,6 @@ import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
-import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -179,6 +177,10 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         }
     }
 
+    protected boolean isBootstrap() {
+        return false;
+    }
+
     protected void finishRefresh() {
         // 添加回调
         Runtime.getRuntime().addShutdownHook(this.shutdownHook);
@@ -193,16 +195,6 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
 
         // 发布刷新成功事件
         this.publishEvent(new ContextRefreshedEvent(this));
-    }
-
-    protected boolean isBootstrap() {
-        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
-            Class<?> loaded = ReflectUtil.load(element.getClassName());
-            if (Bootstrap.class.isAssignableFrom(loaded)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     protected void invokeBeanFactoryPreProcessor() {
