@@ -14,7 +14,6 @@ import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
 
 import java.lang.reflect.Method;
 
@@ -121,16 +120,10 @@ public class BeanDefinitionBuilder {
 
     public void validate() {
         if (CommonUtil.empty(this.beanDefinition.getBeanName())) {
-            throw new IllegalStateException("bean name can't empty !");
+            throw new IllegalStateException("The bean name can't empty !");
         }
         if (this.beanDefinition.getBeanType() == null) {
-            throw new IllegalStateException("bean type can't empty !");
-        }
-        if (!this.beanDefinition.isLazyInit()) {
-            this.setLazyInit(BeanUtil.isLazyInit(this.beanDefinition));
-        }
-        if (CommonUtil.empty(this.beanDefinition.getScope())) {
-            this.setScope(BeanDefinition.SCOPE_SINGLETON);
+            throw new IllegalStateException("The bean type can't empty !");
         }
         if (this.beanDefinition.isFactoryBean()) {
             FactoryBean<?> factoryBean = (FactoryBean<?>) newInstance(this.beanDefinition.getBeanType(), this.beanDefinition.getDefaultConstructArgs());
@@ -151,7 +144,7 @@ public class BeanDefinitionBuilder {
     }
 
     public static BeanDefinitionBuilder genericBeanDefinition(String beanName, Class<?> beanType) {
-        return new BeanDefinitionBuilder(new GenericBeanDefinition(beanName, beanType, ScopeUtil.resolveScope(beanType)));
+        return new BeanDefinitionBuilder(new GenericBeanDefinition(beanName, beanType));
     }
 
     public static BeanDefinitionBuilder genericBeanDefinition(BeanDefinition source, Method beanMethod, Bean bean) {
@@ -165,7 +158,7 @@ public class BeanDefinitionBuilder {
         return new BeanDefinitionBuilder(beanDefinition);
     }
 
-    public static BeanDefinitionBuilder factoryBeanDefinition(BeanDefinition factoryBeanDefinition) {
+    public static BeanDefinitionBuilder genericBeanDefinition(BeanDefinition factoryBeanDefinition) {
         return new BeanDefinitionBuilder(new FactoryBeanDefinition(factoryBeanDefinition));
     }
 

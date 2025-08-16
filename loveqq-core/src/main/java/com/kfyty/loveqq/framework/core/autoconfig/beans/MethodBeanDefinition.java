@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
@@ -9,6 +10,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredDescr
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
+import com.kfyty.loveqq.framework.core.utils.LazyUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
@@ -49,11 +51,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
-        this(beanName, beanType, parentDefinition, beanMethod, ScopeUtil.resolveScope(beanMethod));
+        this(beanName, beanType, parentDefinition, beanMethod, ScopeUtil.resolveScope(beanMethod), LazyUtil.resolveLazy(beanMethod));
     }
 
-    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, Scope scope) {
-        super(beanName, beanType, scope);
+    public MethodBeanDefinition(String beanName, Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod, Scope scope, Lazy lazy) {
+        super(beanName, beanType, scope, lazy);
         this.parentDefinition = parentDefinition;
         this.beanMethod = Objects.requireNonNull(beanMethod, "Bean method can't be null");
     }

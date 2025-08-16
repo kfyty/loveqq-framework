@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.factoryBeanDefinition;
+import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 
 /**
  * 描述: {@link FactoryBean} 处理
@@ -40,7 +40,7 @@ public class FactoryBeanBeanFactoryPostProcessor extends HardCodeBeanFactoryPost
     public BeanDefinition postProcessBeanDefinition(BeanDefinition beanDefinition, BeanFactory beanFactory) {
         if (beanDefinition.isAutowireCandidate() && beanDefinition.isFactoryBean()) {
             if (!this.addPostProcessed(beanDefinition.getBeanName())) {
-                BeanDefinition factoryBeanDefinition = factoryBeanDefinition(beanDefinition).getBeanDefinition();
+                BeanDefinition factoryBeanDefinition = genericBeanDefinition(beanDefinition).getBeanDefinition();
                 beanFactory.registerBeanDefinition(factoryBeanDefinition, false);
                 return factoryBeanDefinition;
             }

@@ -37,7 +37,6 @@ import static com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition.BE
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.StreamUtil.throwMergeFunction;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -251,7 +250,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public <T> T getBean(Class<T> clazz, boolean isLazyInit) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz, true);
         if (beanDefinitions.size() > 1) {
-            throw new BeansException("more than one instance of type: " + clazz.getName());
+            throw new BeansException("There is more than one instance of type: " + clazz.getName());
         }
         return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next(), isLazyInit);
     }
@@ -325,19 +324,21 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     public Object registerBean(BeanDefinition beanDefinition, boolean isLazyInit) {
         String beanName = beanDefinition.getBeanName();
-        if (this.contains(beanName)) {
-            return this.getBean(beanName);
+        Object instance = this.beanInstances.get(beanName);
+        if (instance != null) {
+            return instance;
         }
         if (isLazyInit) {
             return new LazyProxyFactoryBean<>(beanDefinition).withBeanFactory(this).getObject();
         }
         synchronized (this.beanInstances) {
-            if (this.contains(beanName)) {
-                return this.getBean(beanName);
+            if ((instance = this.beanInstances.get(beanName)) != null) {
+                return instance;
             }
-            Object bean = ofNullable(this.beanReference.remove(beanName)).orElseGet(() -> this.doCreateBean(beanDefinition));
-            if (this.contains(beanName)) {
-                return this.getBean(beanName);
+            final Object reference = this.beanReference.remove(beanName);
+            final Object bean = reference != null ? reference : this.doCreateBean(beanDefinition);
+            if ((instance = this.beanInstances.get(beanName)) != null) {
+                return instance;
             }
             return this.registerBean(beanName, bean);
         }
@@ -360,7 +361,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void replaceBean(String name, Object bean) {
-        if (bean != null && this.containsBeanDefinition(name)) {
+        if (bean != null && this.beanDefinitions.containsKey(name)) {
             this.beanInstances.put(name, bean);
         }
     }
@@ -465,7 +466,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
      * @return 最新的 bean
      */
     protected Object getExposedBean(BeanDefinition beanDefinition, Object bean) {
-        return beanDefinition.isSingleton() ? this.getBean(beanDefinition.getBeanName()) : bean;
+        return beanDefinition.isSingleton() ? this.beanInstances.get(beanDefinition.getBeanName()) : bean;
     }
 
     protected void invokeAwareMethod(String beanName, Object bean) {
@@ -474,7 +475,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
     }
 
-    protected Object invokeBeanPostProcessAfterInstantiation(String beanName, Object bean, BeanDefinition beanDefinition) {
+    protected void invokeBeanPostProcessAfterInstantiation(String beanName, Object bean, BeanDefinition beanDefinition) {
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
             if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
                 Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName, beanDefinition);
@@ -485,15 +486,13 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 }
             }
         }
-        return bean;
     }
 
     protected Object invokeLifecycleMethod(BeanDefinition beanDefinition, Object bean) {
         if (bean instanceof ApplicationContext) {
             return bean;
         }
-        bean = this.initializingBean(beanDefinition, bean);
-        return bean;
+        return this.initializingBean(beanDefinition, bean);
     }
 
     protected Object initializingBean(BeanDefinition beanDefinition, Object bean) {

@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPreProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Primary;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Scope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
@@ -17,6 +18,7 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.LazyUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.core.utils.ScopeUtil;
@@ -124,11 +126,11 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType) {
-        this(beanName, beanType, ScopeUtil.resolveScope(beanType));
+        this(beanName, beanType, ScopeUtil.resolveScope(beanType), LazyUtil.resolveLazy(beanType));
     }
 
-    public GenericBeanDefinition(String beanName, Class<?> beanType, Scope scope) {
-        this(beanName, beanType, scope.value(), scope.scopeProxy());
+    public GenericBeanDefinition(String beanName, Class<?> beanType, Scope scope, Lazy lazy) {
+        this(beanName, beanType, scope.value(), scope.scopeProxy(), lazy != null, lazy != null && lazy.lazyProxy());
     }
 
     public GenericBeanDefinition(String beanName, Class<?> beanType, String scope, boolean isScopeProxy) {
