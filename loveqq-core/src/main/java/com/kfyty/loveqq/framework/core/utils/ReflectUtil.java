@@ -564,10 +564,22 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isSuperMethod(Method superMethod, Method method) {
-        return !Modifier.isPrivate(superMethod.getModifiers()) &&
+        boolean match = !Modifier.isPrivate(method.getModifiers()) &&
                 superMethod.isBridge() == method.isBridge() &&
-                superMethod.getName().equals(method.getName()) &&
-                Arrays.equals(superMethod.getParameterTypes(), method.getParameterTypes());
+                superMethod.getName().equals(method.getName());
+        if (match) {
+            Class<?>[] superTypes = superMethod.getParameterTypes();
+            Class<?>[] types = method.getParameterTypes();
+            if (superTypes.length == types.length) {
+                for (int i = 0; i < superTypes.length; i++) {
+                    if (!superTypes[i].isAssignableFrom(types[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     /*--------------------------------------------- 父类泛型相关方法 ---------------------------------------------*/
