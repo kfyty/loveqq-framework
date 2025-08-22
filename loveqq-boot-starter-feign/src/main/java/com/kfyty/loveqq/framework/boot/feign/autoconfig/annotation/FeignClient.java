@@ -33,4 +33,11 @@ public @interface FeignClient {
      * @return host
      */
     String url() default "";
+
+    /**
+     * 是否懒加载
+     *
+     * @return true if lazy
+     */
+    boolean lazy() default true;
 }

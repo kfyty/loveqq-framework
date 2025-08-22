@@ -27,6 +27,9 @@ public class RibbonFeignFactoryBean<T> extends FeignFactoryBean<T> {
             super.afterConfig(annotation, builder);
             return;
         }
+        if (!annotation.lazy()) {
+            this.lbClientFactory.create(this.placeholdersResolver.resolvePlaceholders(annotation.value()));
+        }
         LoveqqRibbonClient ribbonClient = new LoveqqRibbonClient(this.client, this.lbClientFactory);
         super.afterConfig(annotation, builder.client(ribbonClient));
     }
