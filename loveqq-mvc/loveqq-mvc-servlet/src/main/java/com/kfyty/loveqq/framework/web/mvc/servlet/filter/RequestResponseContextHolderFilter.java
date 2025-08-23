@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.mvc.servlet.filter;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.mvc.servlet.http.ServletServerRequest;
@@ -15,6 +16,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 
@@ -34,6 +36,7 @@ public class RequestResponseContextHolderFilter implements Filter {
         ServerRequest prevRequest = null;
         ServerResponse prevResponse = null;
         try {
+            MDC.put(ConstantConfig.TRACK_ID, ConstantConfig.traceId());
             if (request instanceof HttpServletRequest) {
                 prevRequest = RequestContextHolder.set(new ServletServerRequest((HttpServletRequest) request));
             }
@@ -44,6 +47,7 @@ public class RequestResponseContextHolderFilter implements Filter {
         } finally {
             RequestContextHolder.set(prevRequest);
             ResponseContextHolder.set(prevResponse);
+            MDC.remove(ConstantConfig.TRACK_ID);
         }
     }
 }
