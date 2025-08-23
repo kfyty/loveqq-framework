@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * 描述: 系统常量配置
@@ -41,6 +42,11 @@ public interface ConstantConfig {
      * {@link com.kfyty.loveqq.framework.core.utils.IOUtil} 读取流缓冲区大小
      */
     int IO_STREAM_READ_BUFFER_SIZE = Integer.parseInt(System.getProperty("k.config.io-buffer-size", "8192"));
+
+    /**
+     * {@link org.slf4j.MDC} traceId
+     */
+    String TRACK_ID = "traceId";
 
     /**
      * 临时文件夹位置
@@ -98,4 +104,13 @@ public interface ConstantConfig {
      * @see System#getProperties()
      */
     String LOAD_SYSTEM_PROPERTY_KEY = "k.config.load-system-property";
+
+    /**
+     * 生成一个 traceId
+     *
+     * @return id
+     */
+    static String traceId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
 }

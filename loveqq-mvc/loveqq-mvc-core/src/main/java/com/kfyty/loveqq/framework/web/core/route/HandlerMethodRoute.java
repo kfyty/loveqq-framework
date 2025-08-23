@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.web.core.route;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -26,6 +27,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
+import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
@@ -126,6 +128,7 @@ public class HandlerMethodRoute implements Route {
     @Override
     public Publisher<Pair<MethodParameter, Object>> applyRouteAsync(ServerRequest request, ServerResponse response, AbstractDispatcher<?> dispatcher) {
         Function<MethodParameter, ?> routeFunction = methodParameter -> {
+            MDC.put(ConstantConfig.TRACK_ID, ConstantConfig.traceId());
             ServerRequest prevRequest = RequestContextHolder.set(request);
             ServerResponse prevResponse = ResponseContextHolder.set(response);
             try {
@@ -133,6 +136,7 @@ public class HandlerMethodRoute implements Route {
             } finally {
                 RequestContextHolder.set(prevRequest);
                 ResponseContextHolder.set(prevResponse);
+                MDC.remove(ConstantConfig.TRACK_ID);
             }
         };
         return this.prepareMethodParameterAsync(request, response, dispatcher)

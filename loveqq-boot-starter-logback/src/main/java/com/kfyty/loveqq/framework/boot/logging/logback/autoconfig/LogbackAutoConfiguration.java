@@ -11,7 +11,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.SneakyThrows;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -62,12 +61,12 @@ public class LogbackAutoConfiguration implements BeanFactoryPreProcessor {
     }
 
     protected void doConfigure() {
-        if (CommonUtil.notEmpty(this.config)) {
+        if (this.config != null && !this.config.isEmpty()) {
             URL url = Objects.requireNonNull(this.getClass().getResource(config), "Logback config load failed.");
             this.doConfigure(url);
         }
 
-        if (CommonUtil.notEmpty(this.loggingLevel)) {
+        if (this.loggingLevel != null && !this.loggingLevel.isEmpty()) {
             for (Map.Entry<String, String> entry : this.loggingLevel.entrySet()) {
                 Logger logger = this.loggerContext.getLogger(entry.getKey());
                 if (logger != null) {
