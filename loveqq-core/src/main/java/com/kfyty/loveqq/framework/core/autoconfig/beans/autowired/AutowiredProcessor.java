@@ -310,6 +310,10 @@ public class AutowiredProcessor {
      * @param targetBeanDefinitions 全部 bean 定义
      */
     private void removeCreatingBeanIfNecessary(Map<String, BeanDefinition> targetBeanDefinitions) {
+        if (targetBeanDefinitions.size() < 2) {
+            return;
+        }
+
         String creatingBean = CURRENT_CREATING_BEAN.get();
 
         if (creatingBean == null || !targetBeanDefinitions.containsKey(creatingBean) || this.context.contains(creatingBean)) {

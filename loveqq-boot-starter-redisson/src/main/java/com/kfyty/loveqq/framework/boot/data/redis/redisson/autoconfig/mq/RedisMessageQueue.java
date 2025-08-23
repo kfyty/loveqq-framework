@@ -75,9 +75,27 @@ public interface RedisMessageQueue {
     }
 
     /**
-     * 注册消息监听器
+     * 移除监听器
      *
      * @param listener 监听器
      */
+    default void removeMessageListener(MessageListener listener) {
+        this.removeMessageListener(DEFAULT_QUEUE, listener);
+    }
+
+    /**
+     * 注册消息监听器
+     *
+     * @param topic    话题
+     * @param listener 监听器
+     */
     void registryMessageListener(String topic, MessageListener listener);
+
+    /**
+     * 移除监听器
+     *
+     * @param topic    话题
+     * @param listener 监听器
+     */
+    void removeMessageListener(String topic, MessageListener listener);
 }
