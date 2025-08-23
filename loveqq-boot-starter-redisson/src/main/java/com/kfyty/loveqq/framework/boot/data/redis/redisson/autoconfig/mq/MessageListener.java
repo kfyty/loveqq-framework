@@ -9,6 +9,13 @@ package com.kfyty.loveqq.framework.boot.data.redis.redisson.autoconfig.mq;
  */
 public interface MessageListener {
     /**
+     * 消费模式
+     *
+     * @return {@link MessageConsumeMode}
+     */
+    MessageConsumeMode getMode();
+
+    /**
      * 消息回调
      *
      * @param message 消息
