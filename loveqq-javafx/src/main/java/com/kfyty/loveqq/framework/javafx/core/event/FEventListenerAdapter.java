@@ -10,8 +10,6 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.EventListenerAdapter;
 import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListener;
 import com.kfyty.loveqq.framework.core.support.Pair;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import javafx.scene.Node;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -75,12 +73,18 @@ public class FEventListenerAdapter implements EventListenerAdapter, ApplicationC
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
     public ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, ApplicationListener<ApplicationEvent<?>> listener) {
-        if (EventListenerAnnotationListener.class.isInstance(listener)) {
-            return new FEventAnnotationListener((EventListenerAnnotationListener) (ApplicationListener) listener);
+        if (!(listener instanceof EventListenerAnnotationListener)) {
+            log.debug("JavaFx event listener doesn't adapt listener type of: {}", listener.getClass());
         }
-        LogUtil.logIfDebugEnabled(log, log -> log.debug("JavaFx event listener doesn't adapt listener type of: {}", listener.getClass()));
+        return EventListenerAdapter.super.adapt(source, listener);
+    }
+
+    @Override
+    public ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, EventListenerAnnotationListener listener) {
+        if (listener.getListenerMethod() != null && this.viewController.containsKey(listener.getBeanName())) {
+            return new FEventAnnotationListener(listener);
+        }
         return listener;
     }
 
@@ -100,7 +104,7 @@ public class FEventListenerAdapter implements EventListenerAdapter, ApplicationC
         @Override
         public void onApplicationEvent(ApplicationEvent<Object> event) {
             Queue<Pair<Node, Object>> controllers = FEventListenerAdapter.this.viewController.get(this.listener.getBeanName());
-            if (this.listener.getListenerMethod() == null || CommonUtil.empty(controllers)) {
+            if (controllers == null || controllers.isEmpty()) {
                 this.listener.onApplicationEvent(event);
                 return;
             }

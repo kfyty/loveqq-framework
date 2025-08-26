@@ -17,6 +17,17 @@ public class GenericApplicationEvent<T, S> extends ApplicationEvent<S> {
     private final T event;
 
     /**
+     * 该构造器将数据源同时作为事件类型
+     *
+     * @param source The object on which the Event initially occurred.
+     * @throws IllegalArgumentException if source is null.
+     */
+    @SuppressWarnings("unchecked")
+    public GenericApplicationEvent(S source) {
+        this((T) source, source);
+    }
+
+    /**
      * Constructs a prototypical Event.
      *
      * @param source The object on which the Event initially occurred.

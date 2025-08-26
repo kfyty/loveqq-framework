@@ -22,9 +22,9 @@ import lombok.RequiredArgsConstructor;
 public class TransactionEventListenerAdapter implements EventListenerAdapter {
 
     @Override
-    public ApplicationListener<?> adapt(EventListenerAnnotationListener source, ApplicationListener<ApplicationEvent<?>> listener) {
-        if (source.getListenerMethod() != null) {
-            TransactionalEventListener annotation = AnnotationUtil.findAnnotation(source.getListenerMethod(), TransactionalEventListener.class);
+    public ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, EventListenerAnnotationListener listener) {
+        if (listener.getListenerMethod() != null) {
+            TransactionalEventListener annotation = AnnotationUtil.findAnnotation(listener.getListenerMethod(), TransactionalEventListener.class);
             if (annotation != null) {
                 return new TransactionEventListener(annotation, listener);
             }

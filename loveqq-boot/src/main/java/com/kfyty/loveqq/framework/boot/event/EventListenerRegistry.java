@@ -19,11 +19,11 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.function.Predicate;
 
+import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher.GENERIC_EVENT_GENERIC_FILTER;
+import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher.GENERIC_EVENT_GENERIC_MAPPING;
 import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPublisher.SUPER_GENERIC_FILTER;
 
 /**
@@ -36,11 +36,6 @@ import static com.kfyty.loveqq.framework.boot.event.DefaultApplicationEventPubli
 @Slf4j
 @Component
 public class EventListenerRegistry implements ContextOnRefresh, InternalPriority {
-    /**
-     * 泛型事件断言
-     */
-    private static final Predicate<ParameterizedType> GENERIC_EVENT_GENERIC_FILTER = e -> e.getRawType().equals(GenericApplicationEvent.class);
-
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 
@@ -61,9 +56,12 @@ public class EventListenerRegistry implements ContextOnRefresh, InternalPriority
             if (entry.getValue().isSingleton()) {
                 this.applicationEventPublisher.registerEventListener(applicationContext.getBean(entry.getKey()));
             } else {
-                Class<?> listenerType = ReflectUtil.getSuperGeneric(entry.getValue().getBeanType(), SUPER_GENERIC_FILTER);
-                ApplicationListener<?> eventListener = this.createEventListener(entry.getKey(), null, listenerType, null, applicationContext);
-                this.applicationEventPublisher.registerEventListener(eventListener);
+                Class<?> listenerClass = entry.getValue().getBeanType();
+                Class<?> listenerType = ReflectUtil.getSuperGeneric(listenerClass, SUPER_GENERIC_FILTER);
+                if (GenericApplicationEvent.class.isAssignableFrom(listenerType)) {
+                    listenerType = ReflectUtil.getSuperGeneric(listenerType, GENERIC_EVENT_GENERIC_MAPPING.apply(listenerClass), 0, GENERIC_EVENT_GENERIC_FILTER);
+                }
+                this.applicationEventPublisher.registerEventListener(this.createEventListener(entry.getKey(), null, listenerType, null, applicationContext));
             }
             log.info("Register event listener: {}", entry.getValue().getBeanType());
         }

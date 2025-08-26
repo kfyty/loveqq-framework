@@ -283,7 +283,7 @@ public class Main implements ApplicationListener<ContextRefreshedEvent> {
 <parent>
     <groupId>com.kfyty</groupId>
     <artifactId>loveqq-framework</artifactId>
-    <version>1.1.3</version>
+    <version>1.1.5</version>
 </parent>
 
 <dependencies>
@@ -405,4 +405,25 @@ ENTRYPOINT ["java", "--add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED", 
 
 # -p 表示端口映射，将 9090(容器对外端口) 转发到 8080(容器内端口即应用实际的被docker管理的端口)
 # docker run -p 9090:8080 demo:1.0
+```
+
+### 接口文档
+接口文档建议使用 smart-doc，仅需编写正常的 javadoc 注释即可，无法大量额外的注解，
+因此框架内置了 smart-doc maven 插件，开发者仅需添加 smart-doc 配置即可。
+配置应添加到项目的下述位置
+```txt
+./src/main/resources/smart-doc.json
+```
+参考配置文件示例
+```json
+{
+  "isStrict": false,                                // 关闭严格模式，否则会强制检查代码注释
+  "allInOne": true,                                 // 将文档合并到一个文件中
+  "coverOld": true,                                 // 每次生成文档都覆盖旧文档
+  "createDebugPage": true,                          // 创建 html debug 页面
+  "outPath": "./src/main/resources/static/doc",     // 文档输出路径，建议使用该配置，则访问 /doc/debug-all.html 即可。若修改配置，则可能配置 mvc 映射路径
+  "packageFilters": "com.demo.controller.*",        // 控制器包名扫描配置
+  "requestFieldToUnderline": false,
+  "responseFieldToUnderline": false
+}
 ```

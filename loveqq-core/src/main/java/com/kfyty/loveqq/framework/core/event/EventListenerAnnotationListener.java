@@ -29,7 +29,7 @@ import java.util.concurrent.CompletionStage;
 @Getter
 @ToString(exclude = "context")
 @EqualsAndHashCode(exclude = "context")
-public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<Object>> {
+public class EventListenerAnnotationListener implements ApplicationListener<ApplicationEvent<?>> {
     /**
      * 响应式库是否可用
      */
@@ -82,7 +82,7 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      */
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void onApplicationEvent(ApplicationEvent<Object> event) {
+    public void onApplicationEvent(ApplicationEvent<?> event) {
         if (this.listenerMethod != null) {
             this.invokeListener(this.context.getBean(this.beanName), event);
         } else {
@@ -97,17 +97,17 @@ public class EventListenerAnnotationListener implements ApplicationListener<Appl
      * @param target 监听器实例
      * @param event  监听事件
      */
-    public void invokeListener(Object target, ApplicationEvent<Object> event) {
-        int index = 0;
+    public void invokeListener(Object target, ApplicationEvent<?> event) {
         Parameter[] parameters = this.listenerMethod.getParameters();
         Object[] parameterArgs = new Object[parameters.length];
-        for (Parameter parameter : parameters) {
+        for (int i = 0, length = parameters.length; i < length; i++) {
+            Parameter parameter = parameters[i];
             if (BeanFactory.class.isAssignableFrom(parameter.getType())) {
-                parameterArgs[index++] = this.context;
+                parameterArgs[i] = this.context;
                 continue;
             }
-            if (event.getClass().equals(parameter.getType())) {
-                parameterArgs[index++] = event;
+            if (event.getClass() == parameter.getType()) {
+                parameterArgs[i] = event;
                 continue;
             }
         }

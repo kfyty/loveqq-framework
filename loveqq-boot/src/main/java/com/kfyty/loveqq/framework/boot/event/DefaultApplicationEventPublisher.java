@@ -10,15 +10,19 @@ import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.EventListenerAdapter;
 import com.kfyty.loveqq.framework.core.event.EventListenerAnnotationListener;
 import com.kfyty.loveqq.framework.core.event.GenericApplicationEvent;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -36,6 +40,22 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
      * 父类泛型过滤器
      */
     public static final Predicate<ParameterizedType> SUPER_GENERIC_FILTER = type -> type.getRawType().equals(ApplicationListener.class);
+
+    /**
+     * 泛型事件过滤器
+     */
+    public static final Predicate<ParameterizedType> GENERIC_EVENT_GENERIC_FILTER = e -> e.getRawType().equals(GenericApplicationEvent.class);
+
+    /**
+     * 泛型事件类型映射器
+     */
+    public static final Function<Class<?>, Type> GENERIC_EVENT_GENERIC_MAPPING = listenerClass -> Arrays.stream(listenerClass.getGenericInterfaces())
+            .filter(e -> e instanceof ParameterizedType)
+            .map(e -> (ParameterizedType) e)
+            .filter(SUPER_GENERIC_FILTER)
+            .map(e -> e.getActualTypeArguments()[0])
+            .findAny()
+            .orElseThrow(() -> new ResolvableException("The generic doesn't exists."));
 
     /**
      * 上下文是否刷新完成
@@ -70,12 +90,15 @@ public class DefaultApplicationEventPublisher implements ContextAfterRefreshed, 
 
     @Override
     public void registerEventListener(ApplicationListener<?> applicationListener) {
-        final Class<?> listenerType;
+        Class<?> listenerType;
         if (applicationListener instanceof EventListenerAnnotationListener) {
             listenerType = ((EventListenerAnnotationListener) applicationListener).getListenerType();
         } else {
             Class<?> listenerClass = AopUtil.getTargetClass(applicationListener);
             listenerType = ReflectUtil.getSuperGeneric(listenerClass, SUPER_GENERIC_FILTER);
+            if (GenericApplicationEvent.class.isAssignableFrom(listenerType)) {
+                listenerType = ReflectUtil.getSuperGeneric(listenerType, GENERIC_EVENT_GENERIC_MAPPING.apply(listenerClass), 0, GENERIC_EVENT_GENERIC_FILTER);
+            }
         }
         this.applicationListeners.add(new Pair<>(listenerType, applicationListener));
     }
