@@ -15,10 +15,9 @@ public interface EventListenerAdapter {
      * @param listener 事件监听器，可能是适配后的
      * @return 适配后的监听器
      */
-    @SuppressWarnings("rawtypes")
     default ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, ApplicationListener<ApplicationEvent<?>> listener) {
-        if (EventListenerAnnotationListener.class.isInstance(source)) {
-            return this.adapt((EventListenerAnnotationListener) (ApplicationListener) source, listener);
+        if (listener instanceof EventListenerAnnotationListener eventListenerAnnotationListener) {
+            return this.adapt(source, eventListenerAnnotationListener);
         }
         return listener;
     }
@@ -30,7 +29,7 @@ public interface EventListenerAdapter {
      * @param listener 事件监听器，可能是适配后的
      * @return 适配后的监听器
      */
-    default ApplicationListener<?> adapt(EventListenerAnnotationListener source, ApplicationListener<ApplicationEvent<?>> listener) {
+    default ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, EventListenerAnnotationListener listener) {
         return listener;
     }
 }

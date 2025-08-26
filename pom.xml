@@ -123,7 +123,7 @@
         <central.publishing.plugin.version>0.7.0</central.publishing.plugin.version>
         <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <os.maven.version>1.5.0.Final</os.maven.version>
-        <smart.doc.maven.version>3.0.5</smart.doc.maven.version>
+        <smart.doc.maven.version>3.1.1</smart.doc.maven.version>
         <protobuf.maven.version>0.5.1</protobuf.maven.version>
         <dependency.plugin.version>3.7.1</dependency.plugin.version>
         <surefire.plugin.version>3.3.1</surefire.plugin.version>
