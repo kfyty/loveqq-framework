@@ -7,5 +7,5 @@ package com.kfyty.loveqq.framework.core.autoconfig;
  * @date 2024/6/02 16:47
  * @email kfyty725@hotmail.com
  */
-public interface SerializableInitialize {
+public interface SerialInitialize {
 }
