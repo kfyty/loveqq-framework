@@ -3,7 +3,7 @@ package com.kfyty.async;
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
-import com.kfyty.loveqq.framework.core.autoconfig.SerializableInitialize;
+import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Async;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.BootApplication;
@@ -84,7 +84,7 @@ class AsyncEvent extends ApplicationEvent<Integer> {
 @Getter
 @Component
 @EventListener
-class AsyncTaskImpl implements AsyncTask, SerializableInitialize {
+class AsyncTaskImpl implements AsyncTask, SerialInitialize {
     @Autowired
     private AsyncTest asyncTest;
 

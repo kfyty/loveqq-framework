@@ -2,6 +2,8 @@ package com.kfyty.loveqq.framework.boot.test;
 
 import com.kfyty.loveqq.framework.boot.context.DefaultConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.boot.test.annotation.LoveqqTest;
+import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -59,6 +61,16 @@ public class LoveqqExtension extends DefaultConfigurableApplicationContext imple
             this.propertiesContext.loadProperties(property);
         }
         super.invokeBeanFactoryPostProcessor();
+    }
+
+    @Override
+    protected void finishBeanFactoryInitialization() {
+        // 单元测试全局懒加载，仅初始化串行初始化的 bean，避免实例化不必要的 bean
+        for (BeanDefinition value : this.getBeanDefinitions(SerialInitialize.class).values()) {
+            if (value.isSingleton() && value.isAutowireCandidate() && !value.isLazyInit()) {
+                this.registerBean(value);
+            }
+        }
     }
 
     protected void refreshApplicationContext(Class<?> testClass, Class<?> primarySource) {
