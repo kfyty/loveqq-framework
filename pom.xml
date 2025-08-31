@@ -67,7 +67,7 @@
 
     <properties>
         <!-- 版本号统一管理，只能用 revision -->
-        <revision>1.1.5</revision>
+        <revision>1.1.6-M1</revision>
 
         <aspectj.version>1.9.23</aspectj.version>
         <asm.version>9.6</asm.version>
@@ -106,7 +106,7 @@
         <lettuce.version>6.6.0.RELEASE</lettuce.version>
         <mybatis.version>3.5.19</mybatis.version>
 
-        <k-jte.version>1.0-SNAPSHOT</k-jte.version>
+        <k-jte.version>1.0.0</k-jte.version>
         <loveqq.framework.version>${revision}</loveqq.framework.version>
 
         <slf4j.version>2.0.13</slf4j.version>
@@ -518,6 +518,24 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${jar.plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>${boot-lib-output}/</classpathPrefix>
+                            <mainClass>${boot-main-class}</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Start-Class>${boot-start-class}</Start-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>${antrun.plugin.version}</version>
                 <executions>
@@ -577,24 +595,6 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${jar.plugin.version}</version>
-                    <configuration>
-                        <archive>
-                            <manifest>
-                                <addClasspath>true</addClasspath>
-                                <classpathPrefix>${boot-lib-output}/</classpathPrefix>
-                                <mainClass>${boot-main-class}</mainClass>
-                            </manifest>
-                            <manifestEntries>
-                                <Start-Class>${boot-start-class}</Start-Class>
-                            </manifestEntries>
-                        </archive>
-                    </configuration>
-                </plugin>
-
-                <plugin>
                     <groupId>com.ly.smart-doc</groupId>
                     <artifactId>smart-doc-maven-plugin</artifactId>
                     <version>${smart.doc.maven.version}</version>
@@ -633,12 +633,43 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <build>
+                <plugins>
+                    <!-- dev 时不添加 Class-Path -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>${jar.plugin.version}</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>false</addClasspath>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
         <profile>
             <id>deploy</id>
             <build>
                 <plugins>
+                    <!-- deploy 时不添加 Class-Path -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>${jar.plugin.version}</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>false</addClasspath>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
