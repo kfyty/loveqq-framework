@@ -306,15 +306,6 @@ public class Main implements ApplicationListener<ContextRefreshedEvent> {
 <properties>
     <boot-start-class>com.kfyty.demo.Main</boot-start-class>
 </properties>
-
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-        </plugin>
-    </plugins>
-</build>
 ```
 ### gradle
 需要添加以下依赖
