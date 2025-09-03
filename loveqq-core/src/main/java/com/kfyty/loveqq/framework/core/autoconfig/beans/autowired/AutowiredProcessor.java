@@ -136,10 +136,6 @@ public class AutowiredProcessor {
      * @return 自动装配的实例
      */
     public Object doResolve(Object bean, Field field, AutowiredDescription description) {
-        Object value = ReflectUtil.getFieldValue(bean, field);
-        if (value != null) {
-            return value;
-        }
         SimpleGeneric simpleGeneric = SimpleGeneric.from(bean.getClass(), field);
         Object targetBean = doResolve(simpleGeneric, description, field.getType());
         if (targetBean != null) {
@@ -206,7 +202,7 @@ public class AutowiredProcessor {
 
         Object targetBean =
                 simpleGeneric.isGeneric(LaziedObject.class)
-                        ? new Lazy<>(() -> doResolveBean(beanName, simpleGeneric, description))
+                        ? Lazy.of(() -> doResolveBean(beanName, simpleGeneric, description))
                         : doResolveBean(beanName, simpleGeneric, description);
 
         if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {
@@ -328,7 +324,7 @@ public class AutowiredProcessor {
     private Map<String, Object> doGetBean(String targetBeanName, Class<?> targetType, SimpleGeneric returnType, AutowiredDescription autowired) {
         final boolean isGeneric = returnType.isSimpleGeneric();
         Map<String, Object> beanOfType = new LinkedHashMap<>(2);
-        Map<String, BeanDefinition> targetBeanDefinitions = new LinkedHashMap<>();
+        Map<String, BeanDefinition> targetBeanDefinitions = new LinkedHashMap<>(2);
         if (!isGeneric && this.context.containsBeanDefinition(targetBeanName)) {
             Optional.of(this.context.getBeanDefinition(targetBeanName)).ifPresent(bd -> targetBeanDefinitions.put(bd.getBeanName(), bd));
         } else {
@@ -382,9 +378,11 @@ public class AutowiredProcessor {
             }
         }
         if (AutowiredDescription.isRequired(autowired)) {
+            // 不存在 bean 定义时会走到这里
             if (beanOfType.isEmpty()) {
                 throw new BeansException("Resolve target bean failed, the bean doesn't exists of name: " + targetBeanName);
             }
+            // 所有的 bean 已经被提前实例化时，会走到这里
             if (!isGeneric && beanOfType.size() > 1 && !beanOfType.containsKey(targetBeanName)) {
                 Map<String, Object> primaryBeanOfType = beanOfType.entrySet().stream().filter(e -> this.context.getBeanDefinition(e.getKey()).isPrimary()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 if (primaryBeanOfType.size() > 1) {

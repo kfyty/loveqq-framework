@@ -13,7 +13,15 @@ import com.kfyty.loveqq.framework.core.lang.Lazy;
  */
 public interface LaziedObject<T> {
     /**
+     * 创建新的值
+     *
+     * @return value
+     */
+    T create();
+
+    /**
      * 获取实际对象
+     * 如果已创建过，则返回创建过的值
      *
      * @return 实际对象
      */

@@ -3,13 +3,15 @@ package com.kfyty.loveqq.framework.core.autoconfig.beans.autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.empty;
@@ -62,9 +64,8 @@ public class DefaultAutowiredDescriptionResolver implements AutowiredDescription
             return null;
         }
 
-        Named named = AnnotationUtil.findAnnotation(element, Named.class);
-        String accessObjectName = element instanceof Field ? ((Field) element).getName() : ((Executable) element).getName();
-        String beanName = named == null || empty(named.value()) ? accessObjectName : named.value();
+        final Named named = AnnotationUtil.findAnnotation(element, Named.class);
+        final String beanName = named == null || empty(named.value()) ? resolveResourceName(element) : named.value();
         return new AutowiredDescription(beanName, true).markLazied(hasAnnotation(element, Lazy.class));
     }
 
@@ -79,8 +80,21 @@ public class DefaultAutowiredDescriptionResolver implements AutowiredDescription
             return null;
         }
 
-        String accessObjectName = element instanceof Field ? ((Field) element).getName() : ((Executable) element).getName();
-        String beanName = empty(resource.name()) ? accessObjectName : resource.name();
+        final String beanName = empty(resource.name()) ? resolveResourceName(element) : resource.name();
         return new AutowiredDescription(beanName, true).markLazied(hasAnnotation(element, Lazy.class));
+    }
+
+    public static String resolveResourceName(AnnotatedElement element) {
+        if (element instanceof Field field) {
+            return field.getName();
+        }
+        if (element instanceof Parameter parameter) {
+            return parameter.getName();
+        }
+        if (element instanceof Method method) {
+            String name = method.getName();
+            return name.startsWith("set") ? BeanUtil.getBeanName(name.substring(3)) : name;
+        }
+        throw new IllegalArgumentException("Unsupported element type: " + element.getClass());
     }
 }
