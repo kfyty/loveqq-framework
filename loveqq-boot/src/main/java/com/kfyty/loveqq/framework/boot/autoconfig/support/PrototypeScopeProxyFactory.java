@@ -1,14 +1,19 @@
 package com.kfyty.loveqq.framework.boot.autoconfig.support;
 
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeProxyFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeRefreshed;
 import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 描述: 原型代理工厂
@@ -17,11 +22,25 @@ import java.util.Objects;
  * @date 2022/10/22 10:17
  * @email kfyty725@hotmail.com
  */
-public class PrototypeScopeProxyFactory implements ScopeProxyFactory {
+public class PrototypeScopeProxyFactory implements ScopeProxyFactory, PropertyContextAware {
+    /**
+     * bean 缓存
+     */
+    protected final Map<String, Object> cache = new ConcurrentHashMap<>();
+
+    /**
+     * 配置上下文
+     */
+    protected GenericPropertiesContext propertiesContext;
+
+    @Override
+    public void setPropertyContext(GenericPropertiesContext propertiesContext) {
+        this.propertiesContext = propertiesContext;
+    }
 
     @Override
     public Object getObject(BeanDefinition beanDefinition, BeanFactory beanFactory) {
-        return beanFactory.registerBean(beanDefinition);
+        return this.cache.computeIfAbsent(beanDefinition.getBeanName(), beanName -> beanFactory.registerBean(beanDefinition));
     }
 
     /**
@@ -50,6 +69,11 @@ public class PrototypeScopeProxyFactory implements ScopeProxyFactory {
             }
         }
 
-        beanFactory.destroyBean(beanDefinition.getBeanName(), bean);
+        if (bean instanceof ScopeRefreshed scopeRefreshed) {
+            scopeRefreshed.onRefreshed(this.propertiesContext);
+        } else {
+            this.cache.remove(beanDefinition.getBeanName());
+            beanFactory.destroyBean(beanDefinition.getBeanName(), bean);
+        }
     }
 }

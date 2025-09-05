@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.boot.context;
 
+import com.kfyty.loveqq.framework.boot.context.factory.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
@@ -25,12 +26,12 @@ public class ContextRefresher {
     public static void refresh(ApplicationContext context) {
         refresh(context, 200);
     }
-    
+
     /**
      * 刷新上下文
      *
      * @param context 上下文
-     * @param delay 延迟刷新毫秒数
+     * @param delay   延迟刷新毫秒数
      */
     public static void refresh(ApplicationContext context, int delay) {
         // start daemon
@@ -49,7 +50,7 @@ public class ContextRefresher {
      * @param context 上下文
      */
     public static void refresh(RefreshContextDaemon daemon, ApplicationContext context) {
-        new Thread(() -> {
+        new ContextRefreshThread(() -> {
             try {
                 // 等待一秒，让响应能够返回
                 CommonUtil.sleep(daemon.getDelay());

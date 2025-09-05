@@ -5,7 +5,10 @@ import com.kfyty.loveqq.framework.boot.config.nacos.autoconfig.NacosPropertyLoad
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
-import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
+import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 
 /**
@@ -15,7 +18,12 @@ import com.kfyty.loveqq.framework.core.exception.ResolvableException;
  * @date 2022/5/30 14:55
  * @email kfyty725@hotmail.com
  */
-public class NacosConfigListener extends AbstractSharedListener implements ApplicationContextAware {
+public class NacosConfigListener extends AbstractSharedListener implements PropertyContextAware, ApplicationContextAware {
+    /**
+     * 配置上下文
+     */
+    private PropertyContext propertyContext;
+
     /**
      * 应用上下文
      */
@@ -28,6 +36,11 @@ public class NacosConfigListener extends AbstractSharedListener implements Appli
     private NacosPropertyLoaderBeanPostProcessor nacosPropertyLoaderBeanPostProcessor;
 
     @Override
+    public void setPropertyContext(GenericPropertiesContext propertiesContext) {
+        this.propertyContext = propertiesContext;
+    }
+
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
@@ -36,7 +49,7 @@ public class NacosConfigListener extends AbstractSharedListener implements Appli
     public void innerReceive(String dataId, String group, String configInfo) {
         try {
             this.nacosPropertyLoaderBeanPostProcessor.loadConfig(configInfo, group, true);
-            this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
+            this.applicationContext.publishEvent(new PropertyContextRefreshedEvent(this.propertyContext));
         } catch (Exception e) {
             throw new ResolvableException("refresh config failed", e);
         }

@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.boot.context.env;
 
+import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
@@ -7,9 +8,10 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.converter.Converter;
-import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
+import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
+import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.io.FileListener;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
@@ -46,7 +48,7 @@ import static java.util.Collections.unmodifiableMap;
  * @email kfyty725@hotmail.com
  */
 @Slf4j
-public class DefaultPropertiesContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
+public class DefaultPropertyContext implements ConfigurableApplicationContextAware, PropertyContext, InitializingBean, DestroyBean {
     /**
      * 默认配置文件
      */
@@ -87,7 +89,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
      */
     protected final Map<String, String> propertySources;
 
-    public DefaultPropertiesContext() {
+    public DefaultPropertyContext() {
         this.configs = new LinkedList<>();
         this.fileListeners = new LinkedList<>();
         this.propertySources = new ConcurrentHashMap<>();
@@ -174,7 +176,17 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
         this.setProperty(key, value);
 
-        this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
+        this.applicationContext.publishEvent(new PropertyContextRefreshedEvent(this));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void setRefreshProperty(Pair<String, String>... properties) {
+        for (Pair<String, String> property : properties) {
+            System.setProperty(REFRESH_PROPERTY_PREFIX + '.' + property.getKey(), property.getValue());
+            this.setProperty(property.getKey(), property.getValue());
+        }
+        this.applicationContext.publishEvent(new PropertyContextRefreshedEvent(this));
     }
 
     @Override
@@ -233,6 +245,11 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
     }
 
     @Override
+    public ApplicationContext getApplicationContext() {
+        return this.applicationContext;
+    }
+
+    @Override
     public void afterPropertiesSet() {
         // 添加默认读取的配置
         this.addConfig(DEFAULT_YML_LOCATION);
@@ -251,7 +268,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
 
     @Override
     public PropertyContext clone() {
-        DefaultPropertiesContext clone = new DefaultPropertiesContext();
+        DefaultPropertyContext clone = new DefaultPropertyContext();
         clone.setConfigurableApplicationContext(this.applicationContext);
         return clone;
     }
@@ -303,7 +320,7 @@ public class DefaultPropertiesContext implements ConfigurableApplicationContextA
                     .then(e -> e.onModify((path, event) -> {
                         Properties loaded = load(locationKey, classLoader(this.getClass()), before, (p, c) -> include(p, c, before));
                         loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));
-                        this.applicationContext.publishEvent(new PropertyConfigRefreshedEvent(this.applicationContext));
+                        this.applicationContext.publishEvent(new PropertyContextRefreshedEvent(this));
                     }))
                     .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).registry().start())
                     .then(this.fileListeners::add);

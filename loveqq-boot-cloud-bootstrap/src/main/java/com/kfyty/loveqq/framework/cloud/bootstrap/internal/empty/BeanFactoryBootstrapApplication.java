@@ -18,15 +18,17 @@ import com.kfyty.loveqq.framework.core.autoconfig.boostrap.BootstrapConfiguratio
  * @email kfyty725@hotmail.com
  */
 @Component
-@ComponentScan(includeFilter = @ComponentFilter(annotations = BootstrapConfiguration.class, value = {
-        "com.kfyty.loveqq.framework.core.autoconfig.**",
-        "com.kfyty.loveqq.framework.aop.processor.**",
-        "com.kfyty.loveqq.framework.aop.aspectj.creator.**",
-        "com.kfyty.loveqq.framework.aop.aspectj.adapter.**",
-        "com.kfyty.loveqq.framework.boot.autoconfig.**",
-        "com.kfyty.loveqq.framework.boot.context.**",
-        "com.kfyty.loveqq.framework.boot.event.**",
-        "com.kfyty.loveqq.framework.boot.processor.**"
-}))
+@ComponentScan(includeFilter = @ComponentFilter(
+        annotations = BootstrapConfiguration.class,
+        value = {
+                "com.kfyty.loveqq.framework.core.autoconfig.**",
+                "com.kfyty.loveqq.framework.aop.processor.**",
+                "com.kfyty.loveqq.framework.aop.aspectj.creator.**",
+                "com.kfyty.loveqq.framework.aop.aspectj.adapter.**",
+                "com.kfyty.loveqq.framework.boot.autoconfig.**",
+                "com.kfyty.loveqq.framework.boot.context.**",
+                "com.kfyty.loveqq.framework.boot.event.**",
+                "com.kfyty.loveqq.framework.boot.processor.**"
+        }))
 public class BeanFactoryBootstrapApplication {
 }

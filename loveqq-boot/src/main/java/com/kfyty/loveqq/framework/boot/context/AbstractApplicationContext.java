@@ -12,7 +12,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextOnRefresh;
 import com.kfyty.loveqq.framework.core.autoconfig.SerialInitialize;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
-import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinitionRegistry;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
@@ -142,11 +142,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     protected void invokeAwareMethod(String beanName, Object bean) {
         super.invokeAwareMethod(beanName, bean);
-        if (bean instanceof PropertyContextContextAware) {
-            ((PropertyContextContextAware) bean).setPropertyContext(this.propertiesContext);
+        if (bean instanceof ApplicationContextAware aware) {
+            aware.setApplicationContext(this);
         }
-        if (bean instanceof ApplicationContextAware) {
-            ((ApplicationContextAware) bean).setApplicationContext(this);
+        if (bean instanceof PropertyContextAware aware) {
+            aware.setPropertyContext(this.propertiesContext);
         }
     }
 

@@ -5,6 +5,7 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
@@ -48,6 +49,8 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
 
     /**
      * 属性配置上下文
+     * 该属性不可用 {@link PropertyContextAware} 设置
+     * 只能使用 {@link #postProcessAfterInitialization(Object, String)}，因为要保证尽可能早的感知并加载配置
      */
     private PropertyContext propertyContext;
 
@@ -68,8 +71,8 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
-        if (this.propertyContext == null && bean instanceof PropertyContext) {
-            this.propertyContext = (PropertyContext) bean;
+        if (this.propertyContext == null && bean instanceof PropertyContext propertyContext) {
+            this.propertyContext = propertyContext;
             this.loadNacosPropertyConfig(this.propertyContext);
         }
         return null;

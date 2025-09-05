@@ -11,7 +11,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
-import com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent;
+import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.annotation.Controller;
@@ -69,8 +69,8 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
     }
 
     @EventListener
-    public void onPropertiesRefresh(PropertyConfigRefreshedEvent event) {
-        ApplicationContext applicationContext = event.getSource();
+    public void onPropertyRefreshEvent(PropertyContextRefreshedEvent event) {
+        ApplicationContext applicationContext = event.getSource().getApplicationContext();
         RouteRegistry routeRegistry = applicationContext.getBean(RouteRegistry.class);
         routeRegistry.removeRoute(r -> r instanceof GatewayRoute);
         this.registryGatewayRoute(applicationContext);

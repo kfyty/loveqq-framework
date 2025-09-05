@@ -74,6 +74,11 @@ public interface ConstantConfig {
     String CONCURRENT_INIT_KEY = "k.application.concurrent-init";
 
     /**
+     * 线程作用域监听周期
+     */
+    String THREAD_SCOPE_MONITOR_INTERNAL = "k.application.thread-scope.monitor-internal";
+
+    /**
      * web 服务器端口的配置 key
      */
     String SERVER_PORT_KEY = "k.server.port";

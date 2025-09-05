@@ -33,4 +33,14 @@ public interface FactoryBean<T> {
     default boolean isSingleton() {
         return true;
     }
+
+    /**
+     * 该工厂 bean 生产的 bean 是否应该应用完整的生命周期
+     * 某些实现不应用应用，因为仅仅是代理
+     *
+     * @return true/false
+     */
+    default boolean shouldApplyLifecycle() {
+        return true;
+    }
 }

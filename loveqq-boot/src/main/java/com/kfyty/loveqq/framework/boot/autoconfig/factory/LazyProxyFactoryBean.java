@@ -50,4 +50,9 @@ public class LazyProxyFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware
                 .addInterceptorPoint(new LazyProxyInterceptorProxy(this.lazedTarget.getBeanName(), this.beanFactory))
                 .createProxy(this.getBeanType());
     }
+
+    @Override
+    public boolean shouldApplyLifecycle() {
+        return false;
+    }
 }

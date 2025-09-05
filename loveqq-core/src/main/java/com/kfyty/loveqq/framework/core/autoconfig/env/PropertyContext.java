@@ -1,6 +1,8 @@
 package com.kfyty.loveqq.framework.core.autoconfig.env;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
+import com.kfyty.loveqq.framework.core.support.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -73,12 +75,21 @@ public interface PropertyContext extends AutoCloseable, Cloneable {
 
     /**
      * 设置刷新属性，该属性在 {@link ApplicationContext#refresh()} 时不会被清空
-     * 调用该方法会触发 {@link com.kfyty.loveqq.framework.core.event.PropertyConfigRefreshedEvent} 事件
+     * 调用该方法会触发 {@link PropertyContextRefreshedEvent} 事件
+     * 设置多个属性请使用 {@link #setRefreshProperty(Pair[])}
      *
      * @param key   属性 key
      * @param value 属性 value
      */
     void setRefreshProperty(String key, String value);
+
+    /**
+     * 设置刷新属性，该属性在 {@link ApplicationContext#refresh()} 时不会被清空
+     * 调用该方法会触发 {@link PropertyContextRefreshedEvent} 事件
+     *
+     * @param properties 属性集合
+     */
+    void setRefreshProperty(Pair<String, String>... properties);
 
     /**
      * 移除属性
@@ -133,6 +144,13 @@ public interface PropertyContext extends AutoCloseable, Cloneable {
      * value: 属性配置值: [0].id -> unique_list_list
      */
     Map<String, Map<String, String>> searchCollectionProperties(String prefix);
+
+    /**
+     * 获取应用上下文
+     *
+     * @return 应用上下文
+     */
+    ApplicationContext getApplicationContext();
 
     /**
      * 克隆属性上下文，但清空属性配置

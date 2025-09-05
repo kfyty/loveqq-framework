@@ -65,6 +65,12 @@
       "description": "应用是否并行初始化，true 时将使用线程池初始化所有的单例 bean"
     },
     {
+      "name": "k.application.thread-scope.monitor-internal",
+      "type": "java.lang.Integer",
+      "defaultValue" : "200",
+      "description": "线程作用域监听周期，用于监听线程状态从而销毁 bean"
+    },
+    {
       "name": "k.config.include",
       "type": "java.util.List<java.lang.String>",
       "description": "配置文件中包含其他配置的配置 key"

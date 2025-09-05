@@ -5,18 +5,22 @@ import com.kfyty.loveqq.framework.cloud.bootstrap.internal.empty.BootstrapApplic
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.ConfigurableApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.Ordered;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ConfigurableApplicationContextAware;
-import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextContextAware;
+import com.kfyty.loveqq.framework.core.autoconfig.aware.PropertyContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.loveqq.framework.core.autoconfig.boostrap.Bootstrap;
 import com.kfyty.loveqq.framework.core.autoconfig.boostrap.BootstrapConfiguration;
+import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -42,20 +46,21 @@ public class BeanFactoryBootstrap implements Bootstrap {
         log.info("Bootstrap starting...");
         try (ApplicationContext bootstrapContext = new BootstrapApplicationContextFactory().create(applicationContext.getCommandLineArgs(), BeanFactoryBootstrapApplication.class)) {
             bootstrapContext.refresh();
-            this.copyBootstrapConfiguration(bootstrapContext, applicationContext);
+            this.mergeBootstrapConfiguration(bootstrapContext, applicationContext);
         }
         log.info("Bootstrap succeed completed.");
     }
 
     /**
-     * 复制 {@link BootstrapConfiguration} 标注的 bean
+     * 合并 {@link BootstrapConfiguration} 标注的 bean
+     * 将引导上下文中的 {@link BootstrapConfiguration} 标注的 bean 合并到主应用上下文
      *
      * @param bootstrapContext   引导 BeanFactory
-     * @param applicationContext 启动 BeanFactory
+     * @param applicationContext 主应用 BeanFactory
      */
-    protected void copyBootstrapConfiguration(ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
+    protected void mergeBootstrapConfiguration(ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
         for (Map.Entry<String, BeanDefinition> entry : bootstrapContext.getBeanDefinitionWithAnnotation(BootstrapConfiguration.class).entrySet()) {
-            this.registerBootstrapBean(entry.getKey(), entry.getValue(), bootstrapContext, applicationContext);
+            this.registryBootstrapBean(entry.getKey(), entry.getValue(), bootstrapContext, applicationContext);
         }
     }
 
@@ -68,21 +73,28 @@ public class BeanFactoryBootstrap implements Bootstrap {
      * @param bootstrapContext   引导上下文
      * @param applicationContext 应用上下文
      */
-    protected void registerBootstrapBean(String beanName, BeanDefinition beanDefinition, ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
+    protected void registryBootstrapBean(String beanName, BeanDefinition beanDefinition, ApplicationContext bootstrapContext, ConfigurableApplicationContext applicationContext) {
+        // 注册到应用上下文
         Object bean = bootstrapContext.getBean(beanName);
         applicationContext.registerBeanDefinition(beanName, beanDefinition);
         applicationContext.replaceBean(beanName, bean);
-        bootstrapContext.replaceBean(beanName, EMPTY_BEAN);
         if (bean instanceof BeanPostProcessor) {
             applicationContext.registerBeanPostProcessors(beanName, (BeanPostProcessor) bean);
         }
-        this.invokeAware(bean, applicationContext);
+
+        // 替换引导上下文的中 bean，避免被销毁
+        bootstrapContext.replaceBean(beanName, EMPTY_BEAN);
+
+        // 使用应用上下文重新回调 aware 接口
+        this.invokeAware(beanName, bean, applicationContext);
+
+        // 注册嵌套的引导配置 bean
         for (Method method : ReflectUtil.getMethods(beanDefinition.getBeanType())) {
             Bean beanAnnotation = AnnotationUtil.findAnnotation(method, Bean.class);
             if (beanAnnotation != null) {
                 String nestedBeanName = BeanUtil.getBeanName(method, beanAnnotation);
                 if (bootstrapContext.containsBeanDefinition(nestedBeanName)) {
-                    this.registerBootstrapBean(nestedBeanName, bootstrapContext.getBeanDefinition(nestedBeanName), bootstrapContext, applicationContext);
+                    this.registryBootstrapBean(nestedBeanName, bootstrapContext.getBeanDefinition(nestedBeanName), bootstrapContext, applicationContext);
                 }
             }
         }
@@ -94,18 +106,44 @@ public class BeanFactoryBootstrap implements Bootstrap {
      * @param bean               引导 bean
      * @param applicationContext 应用上下文
      */
-    protected void invokeAware(Object bean, ConfigurableApplicationContext applicationContext) {
-        if (bean instanceof BeanFactoryAware) {
-            ((BeanFactoryAware) bean).setBeanFactory(applicationContext);
+    protected void invokeAware(String beanName, Object bean, ConfigurableApplicationContext applicationContext) {
+        if (bean instanceof BeanFactoryAware aware) {
+            aware.setBeanFactory(applicationContext);
         }
-        if (bean instanceof PropertyContextContextAware) {
-            throw new IllegalStateException("The application context has not init yet, can't invoke this method.");
+
+        if (bean instanceof ApplicationContextAware aware) {
+            aware.setApplicationContext(applicationContext);
         }
-        if (bean instanceof ApplicationContextAware) {
-            ((ApplicationContextAware) bean).setApplicationContext(applicationContext);
+
+        if (bean instanceof ConfigurableApplicationContextAware aware) {
+            aware.setConfigurableApplicationContext(applicationContext);
         }
-        if (bean instanceof ConfigurableApplicationContextAware) {
-            ((ConfigurableApplicationContextAware) bean).setConfigurableApplicationContext(applicationContext);
+
+        // 主应用还未启动，配置上下文还不存在，注册一个回调 bean 定义
+        if (bean instanceof PropertyContextAware) {
+            BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(PropertyContextAwareCallback.class)
+                    .setBeanName(beanName.concat("_PropertyContextAwareCallback"))
+                    .addConstructorArgs(PropertyContextAware.class, bean)
+                    .getBeanDefinition();
+            applicationContext.registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition, false);
+        }
+    }
+
+    @RequiredArgsConstructor
+    static class PropertyContextAwareCallback implements PropertyContextAware, Ordered {
+        /**
+         * bean
+         */
+        private final PropertyContextAware bean;
+
+        @Override
+        public void setPropertyContext(GenericPropertiesContext propertiesContext) {
+            this.bean.setPropertyContext(propertiesContext);
+        }
+
+        @Override
+        public int getOrder() {
+            return Integer.MIN_VALUE;
         }
     }
 }

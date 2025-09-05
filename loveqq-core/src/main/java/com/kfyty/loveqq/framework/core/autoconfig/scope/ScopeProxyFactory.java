@@ -11,6 +11,10 @@ import com.kfyty.loveqq.framework.core.proxy.MethodProxy;
  * @author kfyty725
  * @date 2022/10/22 9:39
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.loveqq.framework.boot.autoconfig.support.PrototypeScopeProxyFactory
+ * @see com.kfyty.loveqq.framework.boot.autoconfig.support.RefreshScopeProxyFactory
+ * @see com.kfyty.loveqq.framework.boot.autoconfig.support.ThreadScopeProxyFactory
+ * @see com.kfyty.loveqq.framework.boot.autoconfig.support.SingletonScopeProxyFactory
  */
 public interface ScopeProxyFactory {
     /**

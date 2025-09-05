@@ -43,6 +43,11 @@ public interface BeanDefinition {
     String SCOPE_REFRESH = "refresh";
 
     /**
+     * 线程作用域
+     */
+    String SCOPE_THREAD = "thread";
+
+    /**
      * bean name，唯一
      */
     String getBeanName();

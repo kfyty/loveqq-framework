@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.boot.autoconfig.support.DefaultScopeProxyFacto
 import com.kfyty.loveqq.framework.boot.autoconfig.support.PrototypeScopeProxyFactory;
 import com.kfyty.loveqq.framework.boot.autoconfig.support.RefreshScopeProxyFactory;
 import com.kfyty.loveqq.framework.boot.autoconfig.support.SingletonScopeProxyFactory;
+import com.kfyty.loveqq.framework.boot.autoconfig.support.ThreadScopeProxyFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -18,7 +19,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
  */
 @Configuration
 public class ScopeProxyFactoryAutoConfig {
-
     @Bean
     @ConditionalOnMissingBean(name = "scopeProxyFactory")
     public DefaultScopeProxyFactory scopeProxyFactory() {
@@ -41,5 +41,11 @@ public class ScopeProxyFactoryAutoConfig {
     @Bean(BeanDefinition.SCOPE_REFRESH)
     public RefreshScopeProxyFactory refreshScopeProxyFactory() {
         return new RefreshScopeProxyFactory();
+    }
+
+    @ConditionalOnMissingBean
+    @Bean(BeanDefinition.SCOPE_THREAD)
+    public ThreadScopeProxyFactory threadScopeProxyFactory() {
+        return new ThreadScopeProxyFactory();
     }
 }

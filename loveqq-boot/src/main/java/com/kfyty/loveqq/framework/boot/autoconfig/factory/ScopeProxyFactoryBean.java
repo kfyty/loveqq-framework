@@ -42,4 +42,9 @@ public class ScopeProxyFactoryBean<T> implements FactoryBean<T> {
                 .addInterceptorPoint(new ScopeProxyInterceptorProxy(this.scopedTarget, this.beanFactory, this.scopeProxyFactory))
                 .createProxy(this.getBeanType());
     }
+
+    @Override
+    public boolean shouldApplyLifecycle() {
+        return false;
+    }
 }

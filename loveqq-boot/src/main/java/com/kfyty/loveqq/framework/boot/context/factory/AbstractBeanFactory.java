@@ -10,6 +10,8 @@ import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBean;
+import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
@@ -355,7 +357,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             BeanDefinition beanDefinition = this.doRegisterBean(name, bean);
             bean = this.getExposedBean(beanDefinition, bean);
             this.autowiredBean(name, bean);
-            return this.invokeLifecycleMethod(beanDefinition, bean);
+            return this.invokeLifecycle(beanDefinition, bean);
         }
     }
 
@@ -470,8 +472,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     protected void invokeAwareMethod(String beanName, Object bean) {
-        if (bean instanceof BeanFactoryAware) {
-            ((BeanFactoryAware) bean).setBeanFactory(this);
+        if (bean instanceof BeanFactoryAware aware) {
+            aware.setBeanFactory(this);
         }
     }
 
@@ -488,9 +490,15 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
     }
 
-    protected Object invokeLifecycleMethod(BeanDefinition beanDefinition, Object bean) {
+    protected Object invokeLifecycle(BeanDefinition beanDefinition, Object bean) {
         if (bean instanceof ApplicationContext) {
             return bean;
+        }
+        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
+            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(fbd.getFactoryBeanDefinition());
+            if (!factoryBeanCache.shouldApplyLifecycle()) {
+                return bean;
+            }
         }
         return this.initializingBean(beanDefinition, bean);
     }
@@ -529,30 +537,38 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     protected void destroyBean(BeanDefinition beanDefinition, Object bean) {
-        String beanName = beanDefinition.getBeanName();
+        boolean applyLifeCycle = true;
+        final String beanName = beanDefinition.getBeanName();
 
-        try {
-            for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
-                beanPostProcessor.postProcessBeforeDestroy(bean, beanName);
-            }
-        } catch (Throwable e) {
-            log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
+            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(fbd.getFactoryBeanDefinition());
+            applyLifeCycle = factoryBeanCache.shouldApplyLifecycle();
         }
 
-        if (bean instanceof DestroyBean destroyBean) {
+        if (applyLifeCycle) {
             try {
-                destroyBean.destroy();
+                for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
+                    beanPostProcessor.postProcessBeforeDestroy(bean, beanName);
+                }
             } catch (Throwable e) {
                 log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
             }
-        }
 
-        Method destroyMethod = beanDefinition.getDestroyMethod(bean);
-        if (destroyMethod != null) {
-            try {
-                ReflectUtil.invokeMethod(bean, destroyMethod);
-            } catch (Throwable e) {
-                log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+            if (bean instanceof DestroyBean destroyBean) {
+                try {
+                    destroyBean.destroy();
+                } catch (Throwable e) {
+                    log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+                }
+            }
+
+            Method destroyMethod = beanDefinition.getDestroyMethod(bean);
+            if (destroyMethod != null) {
+                try {
+                    ReflectUtil.invokeMethod(bean, destroyMethod);
+                } catch (Throwable e) {
+                    log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
+                }
             }
         }
 

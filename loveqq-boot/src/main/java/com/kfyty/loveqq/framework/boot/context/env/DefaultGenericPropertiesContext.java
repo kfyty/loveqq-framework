@@ -33,7 +33,7 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
  * @email kfyty725@hotmail.com
  */
 @Component
-public class DefaultGenericPropertiesContext extends DefaultPropertiesContext implements GenericPropertiesContext {
+public class DefaultGenericPropertiesContext extends DefaultPropertyContext implements GenericPropertiesContext {
     /**
      * 数据绑定器
      */
@@ -108,7 +108,7 @@ public class DefaultGenericPropertiesContext extends DefaultPropertiesContext im
 
     @Override
     public PropertyContext clone() {
-        DefaultPropertiesContext clone = new DefaultGenericPropertiesContext();
+        DefaultPropertyContext clone = new DefaultGenericPropertiesContext();
         clone.setConfigurableApplicationContext(this.applicationContext);
         return clone;
     }
