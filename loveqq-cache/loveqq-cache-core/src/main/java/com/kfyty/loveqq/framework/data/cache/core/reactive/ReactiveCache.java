@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.data.cache.core.reactive;
 
+import com.kfyty.loveqq.framework.core.utils.reactor.ReactiveUtil;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import reactor.core.publisher.Mono;
 
@@ -110,33 +111,32 @@ public interface ReactiveCache extends Cache {
     /*-------------------------------------------------- 同步操作适配 --------------------------------------------------*/
 
     @Override
-    @SuppressWarnings("unchecked")
     default <T> T get(String name) {
-        return (T) this.getAsync(name).block();
+        return ReactiveUtil.block(this.getAsync(name));
     }
 
     @Override
     default <T> T get(String name, Class<T> clazz) {
-        return this.getAsync(name, clazz).block();
+        return ReactiveUtil.block(this.getAsync(name, clazz));
     }
 
     @Override
     default void put(String name, Object value, long ttl, TimeUnit timeUnit) {
-        this.putAsync(name, value, ttl, timeUnit).block();
+        ReactiveUtil.block(this.putAsync(name, value, ttl, timeUnit));
     }
 
     @Override
     default Object putIfAbsent(String name, Object value, long ttl, TimeUnit timeUnit) {
-        return this.putIfAbsentAsync(name, value, ttl, timeUnit).block();
+        return ReactiveUtil.block(this.putIfAbsentAsync(name, value, ttl, timeUnit));
     }
 
     @Override
     default void clear(String name) {
-        this.clearAsync(name).block();
+        ReactiveUtil.block(this.clearAsync(name));
     }
 
     @Override
     default void clear() {
-        this.clearAsync().block();
+        ReactiveUtil.block(this.clearAsync());
     }
 }

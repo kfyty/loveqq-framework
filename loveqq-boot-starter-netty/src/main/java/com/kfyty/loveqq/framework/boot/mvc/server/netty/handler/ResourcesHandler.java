@@ -1,6 +1,8 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty.handler;
 
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyProperties;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerRequest;
+import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerResponse;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
@@ -14,10 +16,7 @@ import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBody
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.FileRandomAccessStream;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
-import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerRequest;
-import com.kfyty.loveqq.framework.boot.mvc.server.netty.http.NettyServerResponse;
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ReactiveHandlerMethodReturnValueProcessor;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.netty.Connection;
@@ -101,12 +100,14 @@ public class ResourcesHandler implements ConnectionObserver {
 
     protected void sendResource(HttpServerRequest request, HttpServerResponse response, HttpOperations<?, ?> operations, URL url) {
         // 设置 content-type
-        String contentType = URLConnection.getFileNameMap().getContentTypeFor(url.getFile());
-        if (contentType != null) {
-            if (!contentType.contains("charset")) {
-                contentType += "; charset=utf-8";
-            }
-            response.header(HttpHeaderNames.CONTENT_TYPE, contentType);
+        final String contentType;
+        String extension = IOUtil.getFileExtension(url.getFile());
+        if (extension != null && extension.contains("css")) {
+            contentType = "text/css";
+        } else if (extension != null && extension.contains("js")) {
+            contentType = "application/javascript";
+        } else {
+            contentType = URLConnection.getFileNameMap().getContentTypeFor(url.getFile());
         }
 
         // 构建通用请求/响应对象

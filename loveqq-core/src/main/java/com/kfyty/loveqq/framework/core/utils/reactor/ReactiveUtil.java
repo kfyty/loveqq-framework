@@ -2,9 +2,11 @@ package com.kfyty.loveqq.framework.core.utils.reactor;
 
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.NonBlocking;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -16,7 +18,17 @@ import java.util.function.Consumer;
  */
 public abstract class ReactiveUtil {
     /**
-     * 堵塞获取发布者的值，避免出现 {@link IllegalStateException}
+     * 默认异常消费者
+     */
+    private static final BiConsumer<Throwable, CountDownLatch> THROWABLE_CONSUMER = (e, latch) -> {
+        if (latch != null) {
+            latch.countDown();
+        }
+        throw ExceptionUtil.wrap(e);
+    };
+
+    /**
+     * 堵塞获取发布者的值，避免 {@link NonBlocking} 线程中出现 {@link IllegalStateException}
      *
      * @param mono 发布者
      * @return 值
@@ -25,10 +37,7 @@ public abstract class ReactiveUtil {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<T> reference = new AtomicReference<>();
 
-        mono.subscribe(e -> {
-            reference.set(e);
-            latch.countDown();
-        });
+        mono.subscribe(reference::set, ex -> THROWABLE_CONSUMER.accept(ex, latch), latch::countDown);
 
         try {
             latch.await();
