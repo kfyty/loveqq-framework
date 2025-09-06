@@ -35,7 +35,9 @@ public class ServletServerResponse implements ServerResponse {
 
     @Override
     public void setContentType(String type) {
-        this.response.setContentType(type);
+        if (type != null) {
+            this.response.setContentType(type);
+        }
     }
 
     @Override

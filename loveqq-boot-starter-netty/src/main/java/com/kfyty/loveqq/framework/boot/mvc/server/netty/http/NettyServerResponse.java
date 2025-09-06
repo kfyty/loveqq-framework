@@ -48,7 +48,9 @@ public class NettyServerResponse implements ServerResponse {
 
     @Override
     public void setContentType(String type) {
-        this.response.header(HttpHeaderNames.CONTENT_TYPE, type);
+        if (type != null) {
+            this.response.header(HttpHeaderNames.CONTENT_TYPE, type);
+        }
     }
 
     @Override
