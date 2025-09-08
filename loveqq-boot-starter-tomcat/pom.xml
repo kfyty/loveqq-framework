@@ -15,7 +15,7 @@
     <description>loveqq tomcat web server</description>
 
     <properties>
-        <tomcat.version>11.0.3</tomcat.version>
+        <tomcat.version>11.0.7</tomcat.version>
     </properties>
 
     <dependencies>
