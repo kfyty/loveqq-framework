@@ -104,7 +104,7 @@ public class ResourcesHandler implements ConnectionObserver {
         String extension = IOUtil.getFileExtension(url.getFile());
         if (extension != null && extension.contains("css")) {
             contentType = "text/css";
-        } else if (extension != null && extension.contains("js")) {
+        } else if (extension != null && extension.equals("js")) {
             contentType = "application/javascript";
         } else {
             contentType = URLConnection.getFileNameMap().getContentTypeFor(url.getFile());
