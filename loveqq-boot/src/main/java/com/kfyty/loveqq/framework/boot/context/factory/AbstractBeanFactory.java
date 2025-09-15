@@ -491,9 +491,6 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     protected Object invokeLifecycle(BeanDefinition beanDefinition, Object bean) {
-        if (bean instanceof ApplicationContext) {
-            return bean;
-        }
         if (beanDefinition instanceof FactoryBeanDefinition fbd) {
             FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(fbd.getFactoryBeanDefinition());
             if (!factoryBeanCache.shouldApplyLifecycle()) {

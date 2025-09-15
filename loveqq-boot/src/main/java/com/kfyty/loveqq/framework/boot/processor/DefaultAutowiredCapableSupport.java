@@ -16,6 +16,7 @@ import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.AopUtil;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -64,15 +65,15 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
         if (this.autowiredProcessor == null) {
             this.autowiredProcessor = new AutowiredProcessor(applicationContext, resolver);
         }
-        this.autowiredBean(null, applicationContext);
+        this.autowiredBean(BeanUtil.getBeanName(ApplicationContext.class), applicationContext);
     }
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
         Object target = AopUtil.getTarget(bean);
         BeanDefinition beanDefinition = this.preprocess(beanName, bean);
-        this.resolvePropertyAutowired(beanName, beanDefinition, target, bean);
-        this.resolveBeanPropertyAutowired(beanName, beanDefinition, target, bean);
+        this.autowiredPropertyValues(beanName, beanDefinition, target, bean);
+        this.autowiredBeanProperty(beanName, beanDefinition, target, bean);
     }
 
     protected BeanDefinition preprocess(String beanName, Object bean) {
@@ -81,13 +82,10 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
                 this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
             }
         }
-        return beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);
+        return this.applicationContext.getBeanDefinition(beanName);
     }
 
-    protected void resolvePropertyAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
-        if (beanName == null) {
-            return;
-        }
+    protected void autowiredPropertyValues(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
         Class<?> targetClass = target.getClass();
         for (PropertyValue propertyValue : beanDefinition.getPropertyValues()) {
             Field field = ReflectUtil.getField(targetClass, propertyValue.getName());
@@ -115,16 +113,16 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
         }
     }
 
-    protected void resolveBeanPropertyAutowired(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
-        if (beanName != null && isIgnoredAutowired(beanDefinition)) {
+    protected void autowiredBeanProperty(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
+        if (isIgnoredAutowired(beanDefinition)) {
             return;
         }
         Class<?> targetClass = target.getClass();
-        this.resolveFieldAutowired(targetClass, target, exposedBean);
-        this.resolveMethodAutowired(targetClass, target, exposedBean);
+        this.autowiredBeanField(targetClass, target, exposedBean);
+        this.autowiredBeanMethod(targetClass, target, exposedBean);
     }
 
-    protected void resolveFieldAutowired(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void autowiredBeanField(Class<?> clazz, Object bean, Object exposedBean) {
         // 如果注入的字段的类型，和当前 bean 中的 @Bean 方法返回值类型相同，则最后注入
         List<Pair<Field, AutowiredDescription>> laziedFields = new LinkedList<>();
         Collection<Method> beanMethods = Arrays.stream(ReflectUtil.getMethods(clazz)).filter(e -> hasAnnotation(e, Bean.class)).collect(Collectors.toList());
@@ -156,7 +154,7 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
         }
     }
 
-    protected void resolveMethodAutowired(Class<?> clazz, Object bean, Object exposedBean) {
+    protected void autowiredBeanMethod(Class<?> clazz, Object bean, Object exposedBean) {
         AutowiredDescriptionResolver resolver = this.autowiredProcessor.getResolver();
         for (Method method : ReflectUtil.getMethods(clazz)) {
             AutowiredDescription description = resolver.resolve(method);
