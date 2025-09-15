@@ -19,13 +19,13 @@ public abstract class IOC {
     /**
      * true if servlet based web server
      */
-    private static Boolean isServletWeb;
+    private static volatile Boolean isServletWeb;
 
     /**
      * bean factory
      */
     @Getter
-    private static BeanFactory beanFactory;
+    private static volatile BeanFactory beanFactory;
 
     /**
      * 设置 bean 工厂
@@ -43,8 +43,11 @@ public abstract class IOC {
      */
     public static boolean isServletWeb() {
         if (isServletWeb == null) {
-            Class<?> servletServerClass = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
-            isServletWeb = servletServerClass != null && !beanFactory.getBeanDefinitions(servletServerClass).isEmpty();
+            isServletWeb = ReflectUtil.isPresent("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer");
+            if (isServletWeb) {
+                Class<?> servletServerClass = ReflectUtil.load("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer", false, false);
+                isServletWeb = servletServerClass != null && !beanFactory.getBeanDefinitions(servletServerClass).isEmpty();
+            }
         }
         return isServletWeb;
     }

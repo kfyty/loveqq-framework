@@ -176,9 +176,9 @@ public abstract class ReflectUtil {
             return Class.forName(className, initialize, classLoader);
         } catch (ClassNotFoundException e) {
             if (throwIfFailed) {
-                throw new ResolvableException("load class failed, class does not exist !", e);
+                throw new ResolvableException("load class failed, class doesn't exist: " + className, e);
             }
-            log.error("load class failed, class does not exist: [{}]", className);
+            log.error("load class failed, class doesn't exist: [{}]", className);
             return null;
         }
     }
