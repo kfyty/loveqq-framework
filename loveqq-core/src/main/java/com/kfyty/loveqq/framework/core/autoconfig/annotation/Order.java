@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,10 +10,13 @@ import java.lang.annotation.Target;
 
 /**
  * 描述: 标记优先级
+ * 可以用于 bean 实例排序，也可以用于 {@link BeanDefinition} 排序
  *
  * @author kfyty725
  * @date 2021/6/13 11:28
  * @email kfyty725@hotmail.com
+ * @see com.kfyty.loveqq.framework.core.utils.BeanUtil#getBeanOrder(BeanDefinition)
+ * @see com.kfyty.loveqq.framework.core.utils.BeanUtil#getBeanOrder(Object)
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

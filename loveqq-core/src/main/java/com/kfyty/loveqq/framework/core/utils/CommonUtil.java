@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -357,6 +358,14 @@ public abstract class CommonUtil {
     }
 
     /* ------------------------------------------ 集合排序操作 ------------------------------------------ */
+
+    public static <K, V> Map<K, V> sortBeanOrder(Map<K, V> unsortedMap) {
+        return sort(unsortedMap, Comparator.comparingInt(e -> BeanUtil.getBeanOrder(e.getValue())));
+    }
+
+    public static <K, V extends BeanDefinition> Map<K, V> sortBeanDefinition(Map<K, V> unsortedMap) {
+        return sort(unsortedMap, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
+    }
 
     public static <K, V> Map<K, V> sort(Map<K, V> unsortedMap, Comparator<Map.Entry<K, V>> comparator) {
         Supplier<Map<K, V>> mapFactory = () -> new LinkedHashMap<>((int) (unsortedMap.size() / .75F) + 1);

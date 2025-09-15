@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 @Getter
-public class AnnotationInvocationHandler implements InvocationHandler {
+public class AnnotationInvocationHandler implements InvocationHandler, Serializable {
     /**
      * 注解类型
      */

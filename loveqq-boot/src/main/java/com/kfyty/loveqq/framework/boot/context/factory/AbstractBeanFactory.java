@@ -252,7 +252,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     public <T> T getBean(Class<T> clazz, boolean isLazyInit) {
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitions(clazz, true);
         if (beanDefinitions.size() > 1) {
-            throw new BeansException("There is more than one instance of type: " + clazz.getName());
+            throw new BeansException("There's more than one instance of type: " + clazz.getName());
         }
         return beanDefinitions.isEmpty() ? null : this.getBean(beanDefinitions.values().iterator().next(), isLazyInit);
     }

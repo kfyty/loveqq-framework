@@ -141,7 +141,7 @@ public class ThreadScopeProxyFactory implements ScopeProxyFactory, InitializingB
                 Thread.State state = entry.getKey().getState();
                 if (state == Thread.State.TERMINATED) {
                     iterator.remove();
-                    destroyThreadScope(entry.getValue());
+                    destroyThreadScope(CommonUtil.sortBeanOrder(entry.getValue()));
                 }
             }
         }

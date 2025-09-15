@@ -8,9 +8,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeProxyFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeRefreshed;
 import com.kfyty.loveqq.framework.core.event.ApplicationEvent;
 import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
+import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,7 +36,7 @@ public class RefreshScopeProxyFactory implements ScopeProxyFactory {
     @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
         if (event instanceof PropertyContextRefreshedEvent refreshedEvent) {
-            Map<String, Object> cached = new HashMap<>(this.cache);
+            Map<String, Object> cached = CommonUtil.sortBeanOrder(this.cache);
             PropertyContext propertyContext = refreshedEvent.getSource();
             ApplicationContext applicationContext = propertyContext.getApplicationContext();
             for (Map.Entry<String, Object> entry : cached.entrySet()) {

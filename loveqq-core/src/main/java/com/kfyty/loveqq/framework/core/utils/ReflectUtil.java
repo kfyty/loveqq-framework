@@ -67,6 +67,7 @@ import static java.util.Optional.ofNullable;
 public abstract class ReflectUtil {
     /**
      * 反射数据过滤器
+     * 去除桥接方法、合成方法
      */
     private static final Predicate<Member> REFLECT_DATA_FILTER = (member) -> member != null && ((member.getModifiers() & 0x00001000) == 0) && ((member.getModifiers() & 0x00000040) == 0);
 
@@ -552,10 +553,16 @@ public abstract class ReflectUtil {
     }
 
     public static void mergeSuperMethod(List<Method> methods, Method[] superMethods) {
+        final int size = methods.size();
         loop:
         for (Method superMethod : superMethods) {
-            for (Method method : methods) {
-                if (isSuperMethod(superMethod, method)) {
+            int modifiers = superMethod.getModifiers();
+            if (Modifier.isFinal(modifiers) || Modifier.isPrivate(modifiers)) {
+                methods.add(superMethod);
+                continue;
+            }
+            for (int i = 0; i < size; i++) {
+                if (isSuperMethod(superMethod, methods.get(i))) {
                     continue loop;
                 }
             }
@@ -564,15 +571,13 @@ public abstract class ReflectUtil {
     }
 
     public static boolean isSuperMethod(Method superMethod, Method method) {
-        boolean match = !Modifier.isPrivate(method.getModifiers()) &&
-                superMethod.isBridge() == method.isBridge() &&
-                superMethod.getName().equals(method.getName());
+        boolean match = !Modifier.isPrivate(method.getModifiers()) && superMethod.isBridge() == method.isBridge() && superMethod.getName().equals(method.getName());
         if (match) {
             Class<?>[] superTypes = superMethod.getParameterTypes();
             Class<?>[] types = method.getParameterTypes();
             if (superTypes.length == types.length) {
                 for (int i = 0; i < superTypes.length; i++) {
-                    if (!superTypes[i].isAssignableFrom(types[i])) {
+                    if (!superTypes[i].isAssignableFrom(types[i])) {                                                    // 父类为泛型参数时匹配此逻辑
                         return false;
                     }
                 }
