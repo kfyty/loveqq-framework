@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition.isIgnoredAutowired;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -71,23 +72,26 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
     @Override
     public void autowiredBean(String beanName, Object bean) {
         Object target = AopUtil.getTarget(bean);
+
         BeanDefinition beanDefinition = this.preprocess(beanName, bean);
-        this.autowiredPropertyValues(beanName, beanDefinition, target, bean);
-        this.autowiredBeanProperty(beanName, beanDefinition, target, bean);
+
+        this.autowiredPropertyValues(beanDefinition == null ? emptyList() : beanDefinition.getPropertyValues(), target, bean);
+
+        this.autowiredBeanProperty(isIgnoredAutowired(beanDefinition), target, bean);
     }
 
     protected BeanDefinition preprocess(String beanName, Object bean) {
         if (this.autowiredProcessor == null) {
-            if (bean instanceof AutowiredDescriptionResolver) {
-                this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
+            if (bean instanceof AutowiredDescriptionResolver resolver) {
+                this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, resolver);
             }
         }
-        return this.applicationContext.getBeanDefinition(beanName);
+        return beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);
     }
 
-    protected void autowiredPropertyValues(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
+    protected void autowiredPropertyValues(List<PropertyValue> propertyValues, Object target, Object exposedBean) {
         Class<?> targetClass = target.getClass();
-        for (PropertyValue propertyValue : beanDefinition.getPropertyValues()) {
+        for (PropertyValue propertyValue : propertyValues) {
             Field field = ReflectUtil.getField(targetClass, propertyValue.getName());
             if (field == null) {
                 throw new IllegalArgumentException(CommonUtil.format("The field of name: {} doesn't exists", propertyValue.getName()));
@@ -113,8 +117,8 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
         }
     }
 
-    protected void autowiredBeanProperty(String beanName, BeanDefinition beanDefinition, Object target, Object exposedBean) {
-        if (isIgnoredAutowired(beanDefinition)) {
+    protected void autowiredBeanProperty(boolean ignored, Object target, Object exposedBean) {
+        if (ignored) {
             return;
         }
         Class<?> targetClass = target.getClass();

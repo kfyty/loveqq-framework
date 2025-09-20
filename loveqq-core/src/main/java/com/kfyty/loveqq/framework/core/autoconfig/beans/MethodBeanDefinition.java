@@ -123,10 +123,16 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     public static boolean isIgnoredAutowired(BeanDefinition beanDefinition) {
+        if (beanDefinition == null) {
+            return false;
+        }
+
         Method method = beanDefinition.getBeanMethod();
+
         if (method == null) {
             return false;
         }
+
         return AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Bean.class).independent();
     }
 }
