@@ -356,8 +356,8 @@ public class Array implements List<Object>, JSONAware {
         if (o == this) {
             return true;
         }
-        if (o instanceof Array array) {
-            return this.decorate.equals(array.decorate);
+        if (o instanceof Array) {
+            return this.decorate.equals(((Array) o).decorate);
         }
         return false;
     }

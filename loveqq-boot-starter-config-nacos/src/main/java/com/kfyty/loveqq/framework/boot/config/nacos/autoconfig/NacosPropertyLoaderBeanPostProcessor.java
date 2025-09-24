@@ -71,8 +71,8 @@ public class NacosPropertyLoaderBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
-        if (this.propertyContext == null && bean instanceof PropertyContext propertyContext) {
-            this.propertyContext = propertyContext;
+        if (this.propertyContext == null && bean instanceof PropertyContext) {
+            this.propertyContext = ((PropertyContext) bean);
             this.loadNacosPropertyConfig(this.propertyContext);
         }
         return null;

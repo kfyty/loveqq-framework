@@ -87,8 +87,8 @@ public class AnnotationInvocationHandler implements InvocationHandler {
     public int hashCode() {
         int result = 0;
         for (Map.Entry<String, Object> e : this.memberValues.entrySet()) {
-            if (e.getValue() instanceof Object[] objects) {
-                result += (127 * e.getKey().hashCode()) ^ Arrays.hashCode(objects);
+            if (e.getValue() instanceof Object[]) {
+                result += (127 * e.getKey().hashCode()) ^ Arrays.hashCode((Object[]) e.getValue());
             } else {
                 result += (127 * e.getKey().hashCode()) ^ CommonUtil.hashCode(e.getValue());
             }

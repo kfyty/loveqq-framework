@@ -41,9 +41,11 @@ public class BootstrapApplication extends AbstractApplication implements Command
             if (annotation != null && annotation.main()) {
                 Stage root = IOC.getBean(annotation.value());
                 IOC.publishEvent(new PrimaryStageLoadedEvent(primaryStage));
-                if (((FXMLLoader) root.getScene().getRoot().getProperties().get(root.getScene().getRoot())).getController() instanceof AbstractController<?> controller) {
-                    controller.setInit(true);
-                    controller.show();
+                Object controller = ((FXMLLoader) root.getScene().getRoot().getProperties().get(root.getScene().getRoot())).getController();
+                if (controller instanceof AbstractController<?>) {
+                    AbstractController<?> abstractController = (AbstractController<?>) controller;
+                    abstractController.setInit(true);
+                    abstractController.show();
                 }
                 break;
             }

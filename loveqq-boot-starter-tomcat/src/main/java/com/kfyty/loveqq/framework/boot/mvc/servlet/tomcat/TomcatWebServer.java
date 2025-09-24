@@ -166,13 +166,14 @@ public class TomcatWebServer implements ServletWebServer {
         connector.setURIEncoding("UTF-8");
         connector.setThrowOnFailure(true);
         ProtocolHandler protocolHandler = connector.getProtocolHandler();
-        if (protocolHandler instanceof AbstractHttp11Protocol<?> protocol) {
-            this.configCompression(protocol);
+        if (protocolHandler instanceof AbstractHttp11Protocol<?>) {
+            this.configCompression((AbstractHttp11Protocol<?>) protocolHandler);
         }
         if (this.config.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             protocolHandler.setExecutor(Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("tomcat-handler-", 1).factory()));
         }
-        if (protocolHandler instanceof AbstractProtocol<?> protocol) {
+        if (protocolHandler instanceof AbstractProtocol<?>) {
+            AbstractProtocol<?> protocol = (AbstractProtocol<?>) protocolHandler;
             Mapping.from(this.config.getMaxThreads()).whenNotNull(protocol::setMaxThreads);
             Mapping.from(this.config.getMinSpareThreads()).whenNotNull(protocol::setMinSpareThreads);
             Mapping.from(this.config.getMaxConnections()).whenNotNull(protocol::setMaxConnections);
@@ -398,7 +399,7 @@ public class TomcatWebServer implements ServletWebServer {
             for (ServletRegistrationBean webServlet : this.tomcatConfig.getWebServlets()) {
                 String name = CommonUtil.notEmpty(webServlet.getName()) ? webServlet.getName() : webServlet.getServlet().getClass().getName();
                 ServletRegistration.Dynamic dynamic = context.addServlet(name, webServlet.getServlet());
-                dynamic.addMapping(webServlet.getUrlPatterns().toArray(String[]::new));
+                dynamic.addMapping(webServlet.getUrlPatterns().toArray(new String[0]));
                 dynamic.setLoadOnStartup(webServlet.getLoadOnStartup());
                 dynamic.setAsyncSupported(webServlet.isAsyncSupported());
                 dynamic.setInitParameters(webServlet.getInitParam().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Pair::getKey, Pair::getValue)));

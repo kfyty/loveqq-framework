@@ -151,8 +151,8 @@ public class ThreadScopeProxyFactory implements ScopeProxyFactory, InitializingB
             while (iterator.hasNext()) {
                 Map.Entry<String, Object> entry = iterator.next();
                 try {
-                    if (entry.getValue() instanceof ScopeRefreshed scopeRefreshed) {
-                        scopeRefreshed.onRefreshed(propertiesContext);
+                    if (entry.getValue() instanceof ScopeRefreshed) {
+                        ((ScopeRefreshed) entry.getValue()).onRefreshed(propertiesContext);
                     } else if (!cache.containsKey(entry.getKey())) {
                         beanFactory.destroyBean(entry.getKey(), entry.getValue());
                     }

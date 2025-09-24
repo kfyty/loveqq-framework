@@ -69,8 +69,8 @@ public class PrototypeScopeProxyFactory implements ScopeProxyFactory, PropertyCo
             }
         }
 
-        if (bean instanceof ScopeRefreshed scopeRefreshed) {
-            scopeRefreshed.onRefreshed(this.propertiesContext);
+        if (bean instanceof ScopeRefreshed) {
+            ((ScopeRefreshed) bean).onRefreshed(this.propertiesContext);
         } else {
             this.cache.remove(beanDefinition.getBeanName());
             beanFactory.destroyBean(beanDefinition.getBeanName(), bean);

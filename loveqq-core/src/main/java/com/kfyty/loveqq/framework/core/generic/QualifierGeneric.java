@@ -447,7 +447,7 @@ public class QualifierGeneric {
                 if (Objects.equals(currentDeclare, targetDeclaration)) {
                     return i;
                 }
-                if (targetDeclaration instanceof Class<?> parent && parent.isAssignableFrom(currentDeclare)) {
+                if (targetDeclaration instanceof Class<?> && ((Class<?>) targetDeclaration).isAssignableFrom(currentDeclare)) {
                     return i;
                 }
             }

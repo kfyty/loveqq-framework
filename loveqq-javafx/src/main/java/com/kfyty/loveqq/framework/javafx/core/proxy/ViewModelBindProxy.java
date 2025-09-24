@@ -56,9 +56,9 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
         final int proceedHashCode = methodProxy.getTarget().hashCode();
         if (hashCode != proceedHashCode) {
             this.viewBind(methodProxy);
-        } else if (proceed instanceof ViewModelBindAware viewModelBindAware && viewModelBindAware.isMarkBind()) {
+        } else if (proceed instanceof ViewModelBindAware && ((ViewModelBindAware) proceed).isMarkBind()) {
             this.viewBind(methodProxy);
-            viewModelBindAware.unmarkBind();
+            ((ViewModelBindAware) proceed).unmarkBind();
         }
         return proceed;
     }
@@ -79,8 +79,8 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
                 try {
                     this.viewBind(bindView.getValue(), modelValue);
                 } catch (Throwable e) {
-                    if (this.controller instanceof LifeCycleController lifeCycleController) {
-                        lifeCycleController.onViewBindCause(bindView.getValue(), modelValue, e);
+                    if (this.controller instanceof LifeCycleController) {
+                        ((LifeCycleController) this.controller).onViewBindCause(bindView.getValue(), modelValue, e);
                         return;
                     }
                     throw e;
@@ -92,7 +92,8 @@ public class ViewModelBindProxy implements MethodInterceptorChainPoint {
     public void viewBind(ObservableValue<?> view, Object value) {
         this.obtainViewPropertyBinder();
         for (ViewPropertyBinder binder : viewPropertyBinders) {
-            if (view instanceof WritableValue<?> writableValue) {
+            if (view instanceof WritableValue<?>) {
+                WritableValue<?> writableValue = (WritableValue<?>) view;
                 if (binder.support(writableValue, view.getClass())) {
                     binder.bind(writableValue, value);
                     return;

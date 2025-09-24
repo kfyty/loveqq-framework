@@ -150,9 +150,11 @@ public abstract class AbstractController<View extends Parent> extends AbstractVi
     public <V extends Parent, T extends AbstractController<V>> T openWindow(Stage child, Map<String, Object> parameters) {
         Parent component = child.getScene().getRoot();
         Object componentController = this.getController(component);
-        if (!(componentController instanceof AbstractController<?> controller)) {
+        if (!(componentController instanceof AbstractController<?>)) {
             throw new IllegalArgumentException("The controller is not subclass of " + AbstractController.class.getName());
         }
+
+        AbstractController<?> controller = (AbstractController<?>) componentController;
 
         if (controller.isInit()) {
             controller.show();

@@ -62,9 +62,10 @@ public class Lazy<T> implements LaziedObject<T> {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof Lazy<?> other)) {
+        if (!(obj instanceof Lazy<?>)) {
             return false;
         }
+        Lazy<?> other = (Lazy<?>) obj;
         if (this.isCreated() && other.isCreated()) {
             return Objects.equals(this.value, other.value);
         }

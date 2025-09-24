@@ -79,8 +79,8 @@ public class Instance {
                 final int index = resolveTypeVariableIndex((TypeVariable<?>) target.getResolveType(), target.getSourceType());
                 final Generic generic = sourceIndex.get(index);
                 final QualifierGeneric nested = source.getNested(generic);
-                if (nested != null && source.getResolveType() instanceof ParameterizedType parameterizedType) {
-                    target.setActualResolveType(parameterizedType.getActualTypeArguments()[index], generic.get());
+                if (nested != null && source.getResolveType() instanceof ParameterizedType) {
+                    target.setActualResolveType(((ParameterizedType) source.getResolveType()).getActualTypeArguments()[index], generic.get());
                     target.getGenericInfo().putAll(nested.getGenericInfo());
                 } else {
                     target.setActualResolveType(target.getResolveType(), generic.get());

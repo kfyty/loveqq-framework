@@ -59,13 +59,13 @@ public class MapMethodArgumentResolver extends AbstractHandlerMethodArgumentReso
     }
 
     protected boolean isTargetValueType(Type mapGeneric, Class<?> target) {
-        if (mapGeneric instanceof ParameterizedType parameterizedType) {
-            Type valueType = parameterizedType.getActualTypeArguments()[1];
-            if (valueType instanceof ParameterizedType type) {
-                return target.isAssignableFrom(QualifierGeneric.getRawType(type.getRawType()));
+        if (mapGeneric instanceof ParameterizedType) {
+            Type valueType = ((ParameterizedType) mapGeneric).getActualTypeArguments()[1];
+            if (valueType instanceof ParameterizedType) {
+                return target.isAssignableFrom(QualifierGeneric.getRawType(((ParameterizedType) valueType).getRawType()));
             }
-            if (valueType instanceof Class<?> clazz) {
-                return target.isAssignableFrom(clazz);
+            if (valueType instanceof Class<?>) {
+                return target.isAssignableFrom((Class<?>) valueType);
             }
         }
         return false;

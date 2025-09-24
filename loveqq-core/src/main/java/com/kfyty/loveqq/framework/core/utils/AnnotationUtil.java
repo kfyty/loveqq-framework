@@ -122,8 +122,8 @@ public abstract class AnnotationUtil {
     /* ------------------------------------------ 获取注解 ------------------------------------------ */
 
     public static <T extends Annotation> T findAnnotation(Object source, Class<T> annotationClass) {
-        if (source instanceof AnnotatedElement element) {
-            return findAnnotation(element, annotationClass);
+        if (source instanceof AnnotatedElement) {
+            return findAnnotation((AnnotatedElement) source, annotationClass);
         }
         return findAnnotation(source.getClass(), annotationClass);
     }
@@ -159,7 +159,7 @@ public abstract class AnnotationUtil {
 
     public static Annotation[] findAnnotations(AnnotatedElement element) {
         // 判断是否元注解
-        if (element == null || element instanceof Class<?> clazz && isMetaAnnotation(clazz)) {
+        if (element == null || element instanceof Class<?> && isMetaAnnotation((Class<?>) element)) {
             return CommonUtil.EMPTY_ANNOTATIONS;
         }
 
@@ -186,7 +186,8 @@ public abstract class AnnotationUtil {
                 }
             }
             // 构造器
-            else if (element instanceof Constructor<?> constructor) {
+            else if (element instanceof Constructor<?>) {
+                Constructor<?> constructor = (Constructor<?>) element;
                 Class<?> declaringClass = constructor.getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperConstructor(constructor));
@@ -195,7 +196,8 @@ public abstract class AnnotationUtil {
                 }
             }
             // 方法
-            else if (element instanceof Method method) {
+            else if (element instanceof Method) {
+                Method method = (Method) element;
                 Class<?> declaringClass = method.getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperMethod((Method) element));
@@ -204,7 +206,8 @@ public abstract class AnnotationUtil {
                 }
             }
             // 参数
-            else if (element instanceof Parameter parameter) {
+            else if (element instanceof Parameter) {
+                Parameter parameter = (Parameter) element;
                 Class<?> declaringClass = parameter.getDeclaringExecutable().getDeclaringClass();
                 if (Inherited.class.isAssignableFrom(declaringClass) || AopUtil.isProxy(declaringClass) && declaringClass != Object.class && declaringClass.getSuperclass() != Object.class) {
                     resolvedAnnotations = findAnnotations(ReflectUtil.getSuperParameters((Parameter) element));

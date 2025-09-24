@@ -29,8 +29,8 @@ public class GatewayRouteMatcher implements RouteMatcher {
     public Route match(RequestMethod method, ServerRequest request) {
         for (Map<Routes.RouteKey, Route> routeMap : this.routeRegistry.getRoutes().getRouteIndex().values()) {
             for (Route route : routeMap.values()) {
-                if (route instanceof GatewayRoute gatewayRoute) {
-                    if (this.isMatch(gatewayRoute, request)) {
+                if (route instanceof GatewayRoute) {
+                    if (this.isMatch((GatewayRoute) route, request)) {
                         return route;
                     }
                 }

@@ -15,7 +15,7 @@
     <description>loveqq 定时器模块</description>
 
     <properties>
-        <quartz.version>2.5.0</quartz.version>
+        <quartz.version>2.4.0</quartz.version>
     </properties>
 
     <dependencies>

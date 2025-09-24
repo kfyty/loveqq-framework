@@ -16,8 +16,8 @@ public interface EventListenerAdapter {
      * @return 适配后的监听器
      */
     default ApplicationListener<?> adapt(ApplicationListener<ApplicationEvent<?>> source, ApplicationListener<ApplicationEvent<?>> listener) {
-        if (listener instanceof EventListenerAnnotationListener eventListenerAnnotationListener) {
-            return this.adapt(source, eventListenerAnnotationListener);
+        if (listener instanceof EventListenerAnnotationListener) {
+            return this.adapt(source, (EventListenerAnnotationListener) listener);
         }
         return listener;
     }

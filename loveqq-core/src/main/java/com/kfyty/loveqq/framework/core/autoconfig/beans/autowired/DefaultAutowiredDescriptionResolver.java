@@ -85,14 +85,14 @@ public class DefaultAutowiredDescriptionResolver implements AutowiredDescription
     }
 
     public static String resolveResourceName(AnnotatedElement element) {
-        if (element instanceof Field field) {
-            return field.getName();
+        if (element instanceof Field) {
+            return ((Field) element).getName();
         }
-        if (element instanceof Parameter parameter) {
-            return parameter.getName();
+        if (element instanceof Parameter) {
+            return ((Parameter) element).getName();
         }
-        if (element instanceof Method method) {
-            String name = method.getName();
+        if (element instanceof Method) {
+            String name = ((Method) element).getName();
             return name.startsWith("set") ? BeanUtil.getBeanName(name.substring(3)) : name;
         }
         throw new IllegalArgumentException("Unsupported element type: " + element.getClass());

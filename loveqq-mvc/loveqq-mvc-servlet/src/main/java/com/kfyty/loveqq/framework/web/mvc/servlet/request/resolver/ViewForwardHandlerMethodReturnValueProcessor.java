@@ -26,8 +26,8 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements HandlerMeth
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType.getMetadata() instanceof HandlerMethodRoute route) {
-            String contentType = route.getProduces();
+        if (returnType.getMetadata() instanceof HandlerMethodRoute) {
+            String contentType = ((HandlerMethodRoute) returnType.getMetadata()).getProduces();
             if (contentType != null && contentType.contains("text/html")) {
                 return true;
             }

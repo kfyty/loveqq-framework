@@ -87,8 +87,8 @@ public class DefaultGenericPropertiesContext extends DefaultPropertyContext impl
         }
 
         final Class<?> clazz;
-        if (resolveType instanceof Class<?> c) {
-            clazz = c;
+        if (resolveType instanceof Class<?>) {
+            clazz = (Class<?>) resolveType;
         } else if (resolveType instanceof ParameterizedType) {
             clazz = targetType.getRawType();
         } else {

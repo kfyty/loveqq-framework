@@ -71,14 +71,14 @@ public class ConditionContext implements AutoCloseable {
         this.conditionBeanMap = conditionBeanMap;
         this.nestedConditionReference = nestedConditionReference;
         this.resolvedCondition = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.matchedCondition = Collections.synchronizedSet(new HashSet<>() {
+        this.matchedCondition = Collections.synchronizedSet(new HashSet<String>() {
             @Override
             public boolean add(String s) {
                 LogUtil.logIfDebugEnabled(log, log -> log.debug("The bean condition match succeed and will register bean: {}", conditionBeanMap.get(s)));
                 return super.add(s);
             }
         });
-        this.skippedCondition = Collections.synchronizedSet(new HashSet<>() {
+        this.skippedCondition = Collections.synchronizedSet(new HashSet<String>() {
             @Override
             public boolean add(String s) {
                 if (super.contains(s)) {

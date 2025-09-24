@@ -87,11 +87,11 @@ public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint,
         if (async == null) {
             Object proceed = chain.proceed(methodProxy);
             if (isAwait()) {
-                if (proceed instanceof Future<?> future) {
-                    return CompletableFuture.completedFuture(CompletableFutureUtil.get(future));
+                if (proceed instanceof Future<?>) {
+                    return CompletableFuture.completedFuture(CompletableFutureUtil.get((Future<?>) proceed));
                 }
-                if (proceed instanceof CompletionStage<?> stage) {
-                    return CompletableFuture.completedFuture(CompletableFutureUtil.get(stage.toCompletableFuture()));
+                if (proceed instanceof CompletionStage<?>) {
+                    return CompletableFuture.completedFuture(CompletableFutureUtil.get(((CompletionStage<?>) proceed).toCompletableFuture()));
                 }
             }
             return proceed;
@@ -114,8 +114,8 @@ public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint,
         final Callable<?> task = () -> {
             try {
                 Object retValue = chain.proceed(methodProxy);
-                if (retValue instanceof CompletionStage<?> stage) {
-                    retValue = stage.toCompletableFuture();
+                if (retValue instanceof CompletionStage<?>) {
+                    retValue = ((CompletionStage<?>) retValue).toCompletableFuture();
                 }
                 return retValue instanceof Future ? ((Future<?>) retValue).get(Integer.MAX_VALUE, TimeUnit.SECONDS) : null;
             } catch (Throwable throwable) {

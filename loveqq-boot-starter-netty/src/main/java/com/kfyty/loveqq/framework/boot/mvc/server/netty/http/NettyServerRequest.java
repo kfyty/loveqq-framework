@@ -257,8 +257,8 @@ public class NettyServerRequest implements ServerRequest {
 
     @Override
     public Mono<ByteBuf> getAggregateBody() {
-        if (this.body instanceof ByteBufFlux bufFlux) {
-            return bufFlux.aggregate();
+        if (this.body instanceof ByteBufFlux) {
+            return ((ByteBufFlux) this.body).aggregate();
         }
         return ByteBufFlux.fromInbound(this.body).aggregate();
     }
@@ -275,8 +275,8 @@ public class NettyServerRequest implements ServerRequest {
                     .flatMap(formData -> Mono.just(formData).doFinally(s -> formData.stream().map(Value::getValue).filter(e -> e instanceof MultipartFile).forEach(IOUtil::close)))
                     .doOnNext(formData -> {
                         for (Pair<String, Object> form : formData) {
-                            if (form.getValue() instanceof MultipartFile file) {
-                                this.multipart.put(form.getKey(), file);
+                            if (form.getValue() instanceof MultipartFile) {
+                                this.multipart.put(form.getKey(), (MultipartFile) form.getValue());
                             } else {
                                 this.parameters.put(form.getKey(), form.getValue().toString());
                             }
@@ -308,9 +308,10 @@ public class NettyServerRequest implements ServerRequest {
     }
 
     public static Pair<String, Object> buildForm(HttpData form) {
-        if (!(form instanceof FileUpload upload)) {
+        if (!(form instanceof FileUpload)) {
             return new Pair<>(form.getName(), new String(getBytes(form)));
         }
+        FileUpload upload = (FileUpload) form;
         Lazy<InputStream> lazyInputStream = new Lazy<>(newInputStream(form));
         return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.length(), lazyInputStream));
     }

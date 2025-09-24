@@ -233,8 +233,8 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
             if (this == obj) {
                 return true;
             }
-            if (obj instanceof SoftKey<?> other) {
-                return Objects.equals(this.get(), other.get());
+            if (obj instanceof SoftKey<?>) {
+                return Objects.equals(this.get(), ((SoftKey<?>) obj).get());
             }
             return false;
         }
@@ -264,8 +264,8 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
             if (this == obj) {
                 return true;
             }
-            if (obj instanceof WeakKey<?> other) {
-                return Objects.equals(this.get(), other.get());
+            if (obj instanceof WeakKey<?>) {
+                return Objects.equals(this.get(), ((WeakKey<?>) obj).get());
             }
             return false;
         }

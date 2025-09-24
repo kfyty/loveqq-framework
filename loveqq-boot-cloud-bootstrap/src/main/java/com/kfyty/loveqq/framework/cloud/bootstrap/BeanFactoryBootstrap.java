@@ -107,16 +107,16 @@ public class BeanFactoryBootstrap implements Bootstrap {
      * @param applicationContext 应用上下文
      */
     protected void invokeAware(String beanName, Object bean, ConfigurableApplicationContext applicationContext) {
-        if (bean instanceof BeanFactoryAware aware) {
-            aware.setBeanFactory(applicationContext);
+        if (bean instanceof BeanFactoryAware) {
+            ((BeanFactoryAware) bean).setBeanFactory(applicationContext);
         }
 
-        if (bean instanceof ApplicationContextAware aware) {
-            aware.setApplicationContext(applicationContext);
+        if (bean instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) bean).setApplicationContext(applicationContext);
         }
 
-        if (bean instanceof ConfigurableApplicationContextAware aware) {
-            aware.setConfigurableApplicationContext(applicationContext);
+        if (bean instanceof ConfigurableApplicationContextAware) {
+            ((ConfigurableApplicationContextAware) bean).setConfigurableApplicationContext(applicationContext);
         }
 
         // 主应用还未启动，配置上下文还不存在，注册一个回调 bean 定义

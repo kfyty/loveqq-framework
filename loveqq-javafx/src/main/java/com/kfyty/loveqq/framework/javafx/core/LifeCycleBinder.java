@@ -39,7 +39,8 @@ public interface LifeCycleBinder {
     default Stage bindLifeCycle(Stage window) {
         Parent component = window.getScene().getRoot();
         Object controller = ((FXMLLoader) component.getProperties().get(component)).getController();
-        if (controller instanceof LifeCycleController lifeCycleController) {
+        if (controller instanceof LifeCycleController) {
+            LifeCycleController lifeCycleController = (LifeCycleController) controller;
             window.setOnShowing(lifeCycleController::onShowing);
             window.setOnShown(lifeCycleController::onShown);
             window.setOnHiding(lifeCycleController::onHiding);
@@ -66,20 +67,21 @@ public interface LifeCycleBinder {
     default Stage registerChild(Stage child) {
         Parent component = child.getScene().getRoot();
         Object controller = ((FXMLLoader) component.getProperties().get(component)).getController();
-        if (this instanceof AbstractController<?> parent) {
+        if (this instanceof AbstractController<?>) {
+            AbstractController<?> parent = (AbstractController<?>) this;
             parent.addChild(component.getId(), component);
-            if (controller instanceof AbstractController<?> childController) {
-                childController.setParent(parent);
+            if (controller instanceof AbstractController<?>) {
+                ((AbstractController<?>) controller).setParent(parent);
             }
         }
         EventHandler<WindowEvent> childEventHandler = child.getOnCloseRequest();
         child.setOnCloseRequest(event -> {
             childEventHandler.handle(event);
-            if (this instanceof LifeCycleController parent && controller instanceof AbstractController<?> childController) {
-                parent.onChildClose(component.getId(), component, childController);
+            if (this instanceof LifeCycleController && controller instanceof AbstractController<?>) {
+                ((LifeCycleController) this).onChildClose(component.getId(), component, (AbstractController<?>) controller);
             }
-            if (this instanceof AbstractController<?> parent) {
-                parent.removeChild(component.getId(), component);
+            if (this instanceof AbstractController<?>) {
+                ((AbstractController<?>) this).removeChild(component.getId(), component);
             }
         });
         return child;

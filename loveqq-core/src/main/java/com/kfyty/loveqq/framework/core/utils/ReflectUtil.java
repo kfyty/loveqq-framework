@@ -658,7 +658,7 @@ public abstract class ReflectUtil {
         final List<Deque<QualifierGeneric[]>> stacks;
         final QualifierGeneric resolved = new QualifierGeneric(clazz, type).resolve();
         if (type instanceof ParameterizedType && superGenericFilter.test((ParameterizedType) type)) {
-            stacks = Collections.singletonList(new ArrayDeque<>(2) {{
+            stacks = Collections.singletonList(new ArrayDeque<QualifierGeneric[]>(2) {{
                 push(new QualifierGeneric[]{resolved});
             }});
         } else {

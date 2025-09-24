@@ -38,16 +38,16 @@ public class StreamJSONResponseBodyHandlerMethodReturnValueProcessor extends Abs
 
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        if (returnValue instanceof Collection<?> collection) {
+        if (returnValue instanceof Collection<?>) {
             try (OutputStream out = container.getResponse().getOutputStream()) {
                 ReturnValueSubscriber subscriber = new ReturnValueSubscriber(out);
-                collection.forEach(subscriber::onNext);
+                ((Collection<?>) returnValue).forEach(subscriber::onNext);
                 return;
             }
         }
-        if (returnValue instanceof Publisher<?> publisher) {
+        if (returnValue instanceof Publisher<?>) {
             try (OutputStream out = container.getResponse().getOutputStream()) {
-                publisher.subscribe(new ReturnValueSubscriber(out));
+                ((Publisher<?>) returnValue).subscribe(new ReturnValueSubscriber(out));
                 return;
             }
         }

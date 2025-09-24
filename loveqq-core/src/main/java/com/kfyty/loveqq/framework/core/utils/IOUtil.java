@@ -208,9 +208,9 @@ public abstract class IOUtil {
                     alreadyWriteManifest = true;
                 }
             }
-            if (!alreadyWriteManifest && in instanceof JarInputStream jarInputStream) {
+            if (!alreadyWriteManifest && in instanceof JarInputStream) {
                 out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
-                jarInputStream.getManifest().write(out);
+                ((JarInputStream) in).getManifest().write(out);
                 out.closeEntry();
             }
             out.flush();
@@ -228,9 +228,9 @@ public abstract class IOUtil {
      * @return 输出流
      */
     public static <T extends OutputStream> T copy(InputStream in, T out) {
-        if (in instanceof FileInputStream fis && out instanceof FileOutputStream fos) {
-            try (FileChannel inChannel = fis.getChannel();
-                 FileChannel outChannel = fos.getChannel()) {
+        if (in instanceof FileInputStream && out instanceof FileOutputStream) {
+            try (FileChannel inChannel = ((FileInputStream) in).getChannel();
+                 FileChannel outChannel = ((FileOutputStream) out).getChannel()) {
                 NIOUtil.copy(inChannel, outChannel);
                 return out;
             } catch (IOException e) {
@@ -631,12 +631,12 @@ public abstract class IOUtil {
             return;
         }
 
-        if (closeTarget instanceof AutoCloseable closeable) {
+        if (closeTarget instanceof AutoCloseable) {
             try {
-                if (closeTarget instanceof Flushable flushable) {
-                    flushable.flush();
+                if (closeTarget instanceof Flushable) {
+                    ((Flushable) closeTarget).flush();
                 }
-                closeable.close();
+                ((AutoCloseable) closeTarget).close();
                 return;
             } catch (Exception e) {
                 throw ExceptionUtil.wrap(e);

@@ -472,8 +472,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     }
 
     protected void invokeAwareMethod(String beanName, Object bean) {
-        if (bean instanceof BeanFactoryAware aware) {
-            aware.setBeanFactory(this);
+        if (bean instanceof BeanFactoryAware) {
+            ((BeanFactoryAware) bean).setBeanFactory(this);
         }
     }
 
@@ -494,8 +494,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         if (bean instanceof ApplicationContext) {
             return bean;
         }
-        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
-            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(fbd.getFactoryBeanDefinition());
+        if (beanDefinition instanceof FactoryBeanDefinition) {
+            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
             if (!factoryBeanCache.shouldApplyLifecycle()) {
                 return bean;
             }
@@ -514,8 +514,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
             }
         }
 
-        if (bean instanceof InitializingBean initializingBean) {
-            initializingBean.afterPropertiesSet();
+        if (bean instanceof InitializingBean) {
+            ((InitializingBean) bean).afterPropertiesSet();
             bean = this.getExposedBean(beanDefinition, bean);
         }
 
@@ -540,8 +540,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         boolean applyLifeCycle = true;
         final String beanName = beanDefinition.getBeanName();
 
-        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
-            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(fbd.getFactoryBeanDefinition());
+        if (beanDefinition instanceof FactoryBeanDefinition) {
+            FactoryBean<?> factoryBeanCache = FactoryBeanDefinition.getFactoryBeanCache(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
             applyLifeCycle = factoryBeanCache.shouldApplyLifecycle();
         }
 
@@ -554,9 +554,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
                 log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
             }
 
-            if (bean instanceof DestroyBean destroyBean) {
+            if (bean instanceof DestroyBean) {
                 try {
-                    destroyBean.destroy();
+                    ((DestroyBean) bean).destroy();
                 } catch (Throwable e) {
                     log.error("Destroy bean error: {} -> {}", beanName, e.getMessage(), e);
                 }

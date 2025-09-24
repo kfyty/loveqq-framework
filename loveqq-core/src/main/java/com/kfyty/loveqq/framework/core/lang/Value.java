@@ -46,7 +46,7 @@ public class Value<V> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Value<?> other && Objects.deepEquals(this.value, other.value);
+        return obj instanceof Value<?> && Objects.deepEquals(this.value, ((Value<?>) obj).value);
     }
 
     @Override

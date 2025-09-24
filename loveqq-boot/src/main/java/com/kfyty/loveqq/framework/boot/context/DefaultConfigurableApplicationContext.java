@@ -197,8 +197,8 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     @Override
     protected void invokeAwareMethod(String beanName, Object bean) {
         super.invokeAwareMethod(beanName, bean);
-        if (bean instanceof ConfigurableApplicationContextAware aware) {
-            aware.setConfigurableApplicationContext(this);
+        if (bean instanceof ConfigurableApplicationContextAware) {
+            ((ConfigurableApplicationContextAware) bean).setConfigurableApplicationContext(this);
         }
     }
 

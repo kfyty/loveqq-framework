@@ -26,8 +26,8 @@ public class RequestResponseContextHolderFilter implements Filter {
     @Override
     public Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
         Publisher<Void> publisher = chain.doFilter(request, response);
-        if (publisher instanceof Mono<Void> mono) {
-            return mono.contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response));
+        if (publisher instanceof Mono<?>) {
+            return ((Mono<Void>) publisher).contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response));
         }
         return Mono.from(publisher).contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response));
     }

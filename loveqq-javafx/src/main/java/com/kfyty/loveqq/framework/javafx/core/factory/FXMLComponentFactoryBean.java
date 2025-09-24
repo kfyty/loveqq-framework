@@ -76,14 +76,15 @@ public class FXMLComponentFactoryBean implements FactoryBean<Object> {
             initWindowProperties(window, this.fController);
 
             // 绑定视图和控制器的对应关系
-            if (fxmlLoader.getController() instanceof AbstractController controller) {
+            if (fxmlLoader.getController() instanceof AbstractController) {
+                AbstractController controller = fxmlLoader.getController();
                 controller.setView(component);
                 controller.setWindow(window);
             }
 
             // 绑定生命周期
-            if (fxmlLoader.getController() instanceof LifeCycleController controller) {
-                controller.bindLifeCycle(window, this.createScene(component));
+            if (fxmlLoader.getController() instanceof LifeCycleController) {
+                ((LifeCycleController) fxmlLoader.getController()).bindLifeCycle(window, this.createScene(component));
             } else {
                 window.setScene(this.createScene(component));
             }

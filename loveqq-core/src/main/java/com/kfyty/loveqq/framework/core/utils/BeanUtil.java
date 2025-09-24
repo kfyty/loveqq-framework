@@ -110,8 +110,8 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(Object bean) {
-        if (bean instanceof Ordered ordered) {
-            return ordered.getOrder();
+        if (bean instanceof Ordered) {
+            return ((Ordered) bean).getOrder();
         }
         return ofNullable(AnnotationUtil.findAnnotation(bean, Order.class)).map(Order::value).orElse(Order.DEFAULT_PRECEDENCE);
     }
@@ -123,18 +123,18 @@ public abstract class BeanUtil {
      * @return order，默认 {@link Order#DEFAULT_PRECEDENCE}
      */
     public static int getBeanOrder(BeanDefinition beanDefinition) {
-        if (beanDefinition instanceof ConditionalBeanDefinition cdb) {
-            return getBeanOrder(cdb.getBeanDefinition());
+        if (beanDefinition instanceof ConditionalBeanDefinition) {
+            return getBeanOrder(((ConditionalBeanDefinition) beanDefinition).getBeanDefinition());
         }
-        if (beanDefinition instanceof FactoryBeanDefinition fbd) {
-            return getBeanOrder(fbd.getFactoryBeanDefinition());
+        if (beanDefinition instanceof FactoryBeanDefinition) {
+            return getBeanOrder(((FactoryBeanDefinition) beanDefinition).getFactoryBeanDefinition());
         }
-        if (beanDefinition instanceof MethodBeanDefinition mbd) {
-            Order order = AnnotationUtil.findAnnotation(mbd.getBeanMethod(), Order.class);
+        if (beanDefinition instanceof MethodBeanDefinition) {
+            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanMethod(), Order.class);
             return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
-        if (beanDefinition instanceof GenericBeanDefinition bd) {
-            Order order = AnnotationUtil.findAnnotation(bd.getBeanType(), Order.class);
+        if (beanDefinition instanceof GenericBeanDefinition) {
+            Order order = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), Order.class);
             return order != null ? order.value() : Order.DEFAULT_PRECEDENCE;
         }
         return Order.DEFAULT_PRECEDENCE;
@@ -184,8 +184,8 @@ public abstract class BeanUtil {
         if (obj == null) {
             return Collections.emptyMap();
         }
-        if (obj instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
+        if (obj instanceof Map<?, ?>) {
+            return (Map<String, Object>) obj;
         }
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(obj.getClass()).entrySet()) {

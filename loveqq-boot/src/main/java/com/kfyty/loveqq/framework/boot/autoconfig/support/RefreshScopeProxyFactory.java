@@ -35,13 +35,13 @@ public class RefreshScopeProxyFactory implements ScopeProxyFactory {
 
     @Override
     public void onApplicationEvent(ApplicationEvent<?> event) {
-        if (event instanceof PropertyContextRefreshedEvent refreshedEvent) {
+        if (event instanceof PropertyContextRefreshedEvent) {
             Map<String, Object> cached = new HashMap<>(this.cache);
-            PropertyContext propertyContext = refreshedEvent.getSource();
+            PropertyContext propertyContext = ((PropertyContextRefreshedEvent) event).getSource();
             ApplicationContext applicationContext = propertyContext.getApplicationContext();
             for (Map.Entry<String, Object> entry : cached.entrySet()) {
-                if (entry.getValue() instanceof ScopeRefreshed scopeRefreshed) {
-                    scopeRefreshed.onRefreshed(propertyContext);
+                if (entry.getValue() instanceof ScopeRefreshed) {
+                    ((ScopeRefreshed) entry.getValue()).onRefreshed(propertyContext);
                 } else {
                     this.cache.remove(entry.getKey());
                     try {

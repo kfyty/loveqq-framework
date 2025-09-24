@@ -49,7 +49,8 @@ public abstract class JsonUtil {
     /**
      * MAP_TYPE_REFERENCE
      */
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {
+    };
 
     /**
      * DEFAULT_OBJECT_MAPPER
@@ -122,7 +123,7 @@ public abstract class JsonUtil {
     }
 
     public static <T> T toObject(Map<?, ?> map, Type type) {
-        return toObject(map, new TypeReference<>() {
+        return toObject(map, new TypeReference<T>() {
 
             @Override
             public Type getType() {
@@ -146,7 +147,7 @@ public abstract class JsonUtil {
     }
 
     public static <T> T toObject(CharSequence json, Type type) {
-        return toObject(json, new TypeReference<>() {
+        return toObject(json, new TypeReference<T>() {
 
             @Override
             public Type getType() {
@@ -167,11 +168,11 @@ public abstract class JsonUtil {
 
     @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> toList(Object o) {
-        if (o instanceof List<?> list && (list.isEmpty() || list.get(0) instanceof Map<?, ?>)) {
-            return (List<Map<String, Object>>) list;
+        if (o instanceof List<?> && (((List<?>) o).isEmpty() || ((List<?>) o).get(0) instanceof Map<?, ?>)) {
+            return (List<Map<String, Object>>) o;
         }
-        if (o instanceof CharSequence cs) {
-            return (List<Map<String, Object>>) toObject(cs, ArrayList.class);
+        if (o instanceof CharSequence) {
+            return (List<Map<String, Object>>) toObject((CharSequence) o, ArrayList.class);
         }
         return (List<Map<String, Object>>) toObject(toJSONString(o), ArrayList.class);
     }
@@ -198,11 +199,11 @@ public abstract class JsonUtil {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(Object o) {
-        if (o instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
+        if (o instanceof Map<?, ?>) {
+            return (Map<String, Object>) o;
         }
-        if (o instanceof CharSequence cs) {
-            return (Map<String, Object>) toObject(cs, LinkedHashMap.class);
+        if (o instanceof CharSequence) {
+            return (Map<String, Object>) toObject((CharSequence) o, LinkedHashMap.class);
         }
         return DEFAULT_OBJECT_MAPPER.convertValue(o, MAP_TYPE_REFERENCE);
     }

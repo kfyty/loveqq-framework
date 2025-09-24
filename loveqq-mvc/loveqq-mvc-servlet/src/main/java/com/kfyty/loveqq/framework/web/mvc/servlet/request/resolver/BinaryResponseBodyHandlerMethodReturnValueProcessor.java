@@ -37,13 +37,15 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
         ServerRequest request = container.getRequest();
         ServerResponse response = container.getResponse();
         try (OutputStream out = response.getOutputStream()) {
-            if (returnValue instanceof byte[] bytes) {
+            if (returnValue instanceof byte[]) {
+                byte[] bytes = (byte[]) returnValue;
                 if (setContentLength(request, response, bytes.length)) {
                     out.write(bytes);
                 }
                 return;
             }
-            if (returnValue instanceof File file) {
+            if (returnValue instanceof File) {
+                File file = (File) returnValue;
                 if (setContentLength(request, response, file.length())) {
                     try (InputStream fis = new FileInputStream(file)) {
                         IOUtil.copy(fis, out);
@@ -51,7 +53,8 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
                 }
                 return;
             }
-            if (returnValue instanceof InputStream stream) {
+            if (returnValue instanceof InputStream) {
+                InputStream stream = (InputStream) returnValue;
                 if (setContentLength(request, response, stream.available())) {
                     try (InputStream in = stream) {
                         IOUtil.copy(in, out);

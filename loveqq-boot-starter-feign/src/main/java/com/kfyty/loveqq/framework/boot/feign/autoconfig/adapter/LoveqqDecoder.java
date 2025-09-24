@@ -33,7 +33,8 @@ public class LoveqqDecoder extends feign.jackson.JacksonDecoder {
             if (type == byte[].class) {
                 return IOUtil.read(response.body().asInputStream());
             }
-            if (type instanceof Class<?> clazz) {
+            if (type instanceof Class<?>) {
+                Class<?> clazz = (Class<?>) type;
                 if (InputStream.class.isAssignableFrom(clazz)) {
                     return response.body().asInputStream();
                 }

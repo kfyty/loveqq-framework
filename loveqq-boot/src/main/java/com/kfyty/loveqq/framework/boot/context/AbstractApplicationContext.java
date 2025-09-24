@@ -142,11 +142,11 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
     @Override
     protected void invokeAwareMethod(String beanName, Object bean) {
         super.invokeAwareMethod(beanName, bean);
-        if (bean instanceof ApplicationContextAware aware) {
-            aware.setApplicationContext(this);
+        if (bean instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) bean).setApplicationContext(this);
         }
-        if (bean instanceof PropertyContextAware aware) {
-            aware.setPropertyContext(this.propertiesContext);
+        if (bean instanceof PropertyContextAware) {
+            ((PropertyContextAware) bean).setPropertyContext(this.propertiesContext);
         }
     }
 
@@ -185,8 +185,8 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         // 关闭 jar file
         if (!this.isBootstrap()) {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            if (classLoader instanceof JarIndexClassLoader cl) {
-                cl.closeJarFileCache();
+            if (classLoader instanceof JarIndexClassLoader) {
+                ((JarIndexClassLoader) classLoader).closeJarFileCache();
             }
         }
 

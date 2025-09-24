@@ -31,8 +31,8 @@ public class FilterTransformer implements Function<Filter.Continue, Mono<Void>> 
 
         Publisher<Void> publisher = filterChain.doFilter(request, response);
 
-        if (publisher instanceof Mono<Void> mono) {
-            return mono.doFinally(s -> _continue_.finally_run());
+        if (publisher instanceof Mono<?>) {
+            return ((Mono<Void>) publisher).doFinally(s -> _continue_.finally_run());
         }
 
         return Mono.from(publisher).doFinally(s -> _continue_.finally_run());
