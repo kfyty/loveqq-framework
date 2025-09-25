@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
+import com.kfyty.loveqq.framework.web.core.request.support.InputStreamRandomAccessStream;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
 import io.netty.buffer.ByteBuf;
@@ -49,20 +50,20 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
             }
             return null;
         }
-        if (returnValue instanceof ByteBuf byteBuf) {
-            if (setContentLength(request, response, byteBuf.readableBytes())) {
-                return returnValue;
-            }
-            return null;
-        }
         if (returnValue instanceof File file) {
             if (setContentLength(request, response, file.length())) {
                 return returnValue;
             }
             return null;
         }
+        if (returnValue instanceof ByteBuf byteBuf) {
+            if (setContentLength(request, response, byteBuf.readableBytes())) {
+                return returnValue;
+            }
+            return null;
+        }
         if (returnValue instanceof InputStream stream) {
-            returnValue = new RandomAccessStream.InputStreamRandomAccessAdapter(stream);
+            returnValue = new InputStreamRandomAccessStream(stream);
         }
         if (returnValue instanceof RandomAccessStream stream) {
             List<AcceptRange> ranges = prepareRandomAccessStream(request, response, stream);

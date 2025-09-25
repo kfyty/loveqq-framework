@@ -15,6 +15,7 @@ import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.FileRandomAccessStream;
+import com.kfyty.loveqq.framework.web.core.request.support.InputStreamRandomAccessStream;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ReactiveHandlerMethodReturnValueProcessor;
 import lombok.RequiredArgsConstructor;
@@ -115,7 +116,7 @@ public class ResourcesHandler implements ConnectionObserver {
         ServerResponse serverResponse = new NettyServerResponse(response);
 
         // 范围请求头预处理
-        RandomAccessStream stream = url.getProtocol().equals("file") ? new FileRandomAccessStream(contentType, PathUtil.getPath(url).toFile()) : new RandomAccessStream.InputStreamRandomAccessAdapter(contentType, IOUtil.newInputStream(url));
+        RandomAccessStream stream = url.getProtocol().equals("file") ? new FileRandomAccessStream(contentType, PathUtil.getPath(url).toFile()) : new InputStreamRandomAccessStream(contentType, IOUtil.newInputStream(url));
         List<AcceptRange> ranges = AbstractResponseBodyHandlerMethodReturnValueProcessor.prepareRandomAccessStream(serverRequest, serverResponse, stream);
 
         // 预检请求不发送实际数据
