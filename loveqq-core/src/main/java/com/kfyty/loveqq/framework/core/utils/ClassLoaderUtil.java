@@ -129,6 +129,9 @@ public abstract class ClassLoaderUtil {
                                 if (classPath != null && !classPath.isEmpty()) {
                                     String[] nestedClassPath = classPath.split(" ");
                                     for (String url : nestedClassPath) {
+                                        if (JarIndexClassLoader.isJavaSystemResource(url)) {
+                                            continue;
+                                        }
                                         URI uri = URI.create(url);
                                         if (uri.isAbsolute()) {
                                             result.add(uri.toURL());

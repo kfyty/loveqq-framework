@@ -197,6 +197,9 @@ public class JarIndex {
     public List<String> getJarFiles(String name) {
         int lastDot = name.lastIndexOf(name.endsWith(".class") ? '/' : '.');                                            // 为 com/kfyty/demo/Demo.class 提供支持
         if (lastDot < 0) {
+            if (name.charAt(name.length() - 1) == '/') {
+                return this.jarIndex.getOrDefault(name.substring(0, name.length() - 1), Collections.emptyList());       // 为 com/kfyty/demo/ 提供支持
+            }
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
         String path = name.substring(0, lastDot);
@@ -235,7 +238,7 @@ public class JarIndex {
     public static URL getJarURL(String jarFilePath) {
         String path = jarFilePath.charAt(0) == '/' ? jarFilePath : '/' + jarFilePath;
         if (jarFilePath.endsWith(".jar")) {
-            return new URL("file", "", -1, path);                                                     // 必须使用 file 协议，否则读取不到 resources
+            return new URL("file", "", -1, path.replace(File.separatorChar, '/'));             // 必须使用 file 协议，否则读取不到 resources
         }
         String filePath = path.charAt(path.length() - 1) == File.separatorChar ? path : path + File.separatorChar;
         return new URL("file", "", -1, filePath.replace(File.separatorChar, '/'));             // 必须转换为 '/'，否则 toURI 语法错误
