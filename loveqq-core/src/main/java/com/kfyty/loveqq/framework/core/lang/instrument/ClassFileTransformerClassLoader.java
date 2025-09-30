@@ -134,7 +134,7 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
      * @param in 输入流
      * @return 字节数组
      */
-    protected byte[] read(InputStream in) throws IOException {
+    protected static byte[] read(InputStream in) throws IOException {
         // 确定缓冲区大小
         int n = -1;
         int available = in.available();

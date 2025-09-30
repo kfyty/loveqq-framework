@@ -147,7 +147,7 @@ public class BuildJarIndexAntTask {
             if (!entryName.endsWith(".class")) {
                 if (!entryName.startsWith("META-INF/maven")) {
                     if (entryName.charAt(entryName.length() - 1) == '/') {
-                        entryName = entryName.substring(0, entryName.length() - 1);
+                        entryName = entryName.substring(0, entryName.length() - 1);                                     // 这里会影响 JarIndex.getJarFiles()
                     }
                     indexContainer.computeIfAbsent(relativePath, k -> new HashSet<>()).add(entryName);
                 }

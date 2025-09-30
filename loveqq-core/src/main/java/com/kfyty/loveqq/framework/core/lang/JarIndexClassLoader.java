@@ -87,34 +87,6 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 返回是否是自身的 class name
-     *
-     * @param name class name
-     * @return true or false
-     */
-    public boolean isThisClass(String name) {
-        return name.endsWith(".JarIndexClassLoader") || name.endsWith(".ClassFileTransformerClassLoader") || name.endsWith(".core.lang.JarIndex");
-    }
-
-    /**
-     * 返回是否是 java 内部资源
-     *
-     * @param name 资源名称，eg: java/lang/Object.class
-     * @return true if java resources
-     */
-    public boolean isJavaSystemResource(String name) {
-        if (name.startsWith("java/")) {
-            return true;
-        }
-        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-            if (name.startsWith(javaSystemResource)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * 获取 jar file
      *
      * @param jarName jar file name
@@ -215,7 +187,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @Override
     public URL getResource(String name) {
         // java 内部资源
-        if (this.isJavaSystemResource(name)) {
+        if (isJavaSystemResource(name)) {
             return super.getResource(name);
         }
 
@@ -257,7 +229,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        if (this.isJavaSystemResource(name)) {
+        if (isJavaSystemResource(name)) {
             return super.getResources(name);
         }
         List<URL> resources = this.jarIndex.getJarFiles(name).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
@@ -291,7 +263,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         if (name.startsWith("java.") || isThisClass(name)) {
             return super.loadClass(name, resolve);                                                                      // 自身需要走父类，否则会出现强转异常
         }
-        synchronized (name.intern()) {
+        synchronized (super.getClassLoadingLock(name)) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
                 String className = name.replace('.', '/');
@@ -331,11 +303,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param jarURL      jar url
      * @param manifest    jar MANIFEST.MF
      */
-    protected void definePackageIfNecessary(String packageName, URL jarURL, Manifest manifest) {
-        try {
-            super.definePackage(packageName, manifest == null ? new Manifest() : manifest, jarURL);
-        } catch (IllegalArgumentException e) {
-            // ignored
+    protected void definePackageIfNecessary(int lastDot, String packageName, URL jarURL, Manifest manifest) {
+        if (lastDot > -1) {
+            try {
+                super.definePackage(packageName.replace('/', '.'), manifest == null ? new Manifest() : manifest, jarURL);
+            } catch (IllegalArgumentException e) {
+                // ignored
+            }
         }
     }
 
@@ -352,15 +326,17 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
         List<String> jarFiles = this.jarIndex.getJarFiles(className, packageName);
         for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
-            try (JarFile jarFile = this.getJarFile(i.next());
-                 InputStream inputStream = jarFile.getInputStream(new JarEntry(classPath))) {
-                if (inputStream != null) {
-                    if (DEPENDENCY_CHECK && i.hasNext()) {
-                        this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
+            try (JarFile jarFile = this.getJarFile(i.next())) {
+                JarEntry jarEntry = jarFile.getJarEntry(classPath);
+                if (jarEntry != null) {
+                    try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
+                        if (DEPENDENCY_CHECK && i.hasNext()) {
+                            this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
+                        }
+                        byte[] classBytes = this.transform(className, read(inputStream));
+                        this.definePackageIfNecessary(lastDot, packageName, jarFile.getUrl(), jarFile.getManifest());
+                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), jarEntry.getCodeSigners()));
                     }
-                    byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(packageName, jarFile.getUrl(), jarFile.getManifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), (CodeSigner[]) null));
                 }
             } catch (IOException e) {
                 throw new ResolvableException(e);
@@ -381,16 +357,18 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> findExplodedClass(String name, String className, String classPath) throws ClassNotFoundException {
         int lastDot = name.lastIndexOf('.');
         String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
-        List<URL> resources = this.findExplodedResources(classPath);
-        for (URL resource : resources) {
-            File classFile = new File(PathUtil.getPath(resource).toString(), classPath);
-            if (classFile.exists()) {
-                try (InputStream inputStream = new FileInputStream(classFile)) {
-                    byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(packageName, resource, new Manifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
-                } catch (IOException e) {
-                    throw new ResolvableException(e);
+        for (URL resource : this.getURLs()) {
+            String resourceFile = resource.getFile();
+            if (!resourceFile.endsWith(".jar")) {
+                File classFile = new File(resourceFile, classPath);
+                if (classFile.exists()) {
+                    try (InputStream inputStream = new FileInputStream(classFile)) {
+                        byte[] classBytes = this.transform(className, read(inputStream));
+                        this.definePackageIfNecessary(lastDot, packageName, resource, new Manifest());
+                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
+                    } catch (IOException e) {
+                        throw new ResolvableException(e);
+                    }
                 }
             }
         }
@@ -477,5 +455,35 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 super.close();
             }
         }
+    }
+
+    /**
+     * 返回是否是自身的 class name
+     *
+     * @param name class name
+     * @return true or false
+     */
+    public static boolean isThisClass(String name) {
+        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
+    }
+
+    /**
+     * 返回是否是 java 内部资源
+     *
+     * @param name 资源名称，eg: java/lang/Object.class
+     * @return true if java resources
+     */
+    public static boolean isJavaSystemResource(String name) {
+        if (name.startsWith("java/")) {
+            return true;
+        }
+        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+            if (name.contains(javaSystemResource)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
