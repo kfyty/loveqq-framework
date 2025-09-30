@@ -7,9 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.Getter;
-import lombok.SneakyThrows;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,7 +16,6 @@ import java.net.URL;
 import java.net.URLStreamHandlerFactory;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -64,7 +61,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * 应用启动期间使用，避免频繁的创建 {@link JarFile} 对象
      * 启动完成后应调用 {@link #closeJarFileCache()} 关闭
      */
-    protected Map<String, JarFile> jarFileCache;
+    protected volatile Map<String, JarFile> jarFileCache;
 
     public JarIndexClassLoader(JarIndex jarIndex, ClassLoader parent) {
         this(jarIndex, new URL[0], parent);
@@ -125,7 +122,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public JarFile getJarFile(String jarName) throws IOException {
         if (this.jarFileCache == null) {
-            return new CachedJarFile(jarName);
+            return new JarFile(jarName);
         }
         return this.jarFileCache.computeIfAbsent(jarName, k -> {
             try {
@@ -240,18 +237,16 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         if (jarFiles.size() < 2) {
             return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
         }
-        try {
-            for (String jarFile : jarFiles) {
-                try (java.util.jar.JarFile file = IOUtil.newJarFile(jarFile)) {
-                    if (file.getJarEntry(name) != null) {
-                        return newNestedJarURL(jarFile, name);
-                    }
+        for (String jarFile : jarFiles) {
+            try (java.util.jar.JarFile file = IOUtil.newJarFile(jarFile)) {
+                if (file.getJarEntry(name) != null) {
+                    return newNestedJarURL(jarFile, name);
                 }
+            } catch (IOException e) {
+                throw new ResolvableException(e);
             }
-            return null;
-        } catch (IOException e) {
-            throw new ResolvableException(e);
         }
+        return null;
     }
 
     /**
@@ -305,7 +300,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                     loadedClass = this.findExplodedClass(name, className, classPath);
                 }
                 if (loadedClass == null) {
-                    loadedClass = this.findJarClass(name, className, classPath, this.jarIndex.getJarFiles(name));
+                    loadedClass = this.findJarClass(name, className, classPath);
                 }
             }
             if (loadedClass != null) {
@@ -330,16 +325,32 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 如果 class 的包名不存在的则定义包名
+     *
+     * @param packageName package name
+     * @param jarURL      jar url
+     * @param manifest    jar MANIFEST.MF
+     */
+    protected void definePackageIfNecessary(String packageName, URL jarURL, Manifest manifest) {
+        try {
+            super.definePackage(packageName, manifest == null ? new Manifest() : manifest, jarURL);
+        } catch (IllegalArgumentException e) {
+            // ignored
+        }
+    }
+
+    /**
      * 从 jar index 中查找 class
      *
      * @param name      要查找的 class, eg: java.util.List
      * @param className class name, eg: java/util/List
      * @param classPath class path, eg: java/util/List.class
-     * @param jarFiles  jar index 匹配到的 jar 文件
      * @return class
      */
-    @SneakyThrows(IOException.class)
-    protected Class<?> findJarClass(String name, String className, String classPath, List<String> jarFiles) throws ClassNotFoundException {
+    protected Class<?> findJarClass(String name, String className, String classPath) throws ClassNotFoundException {
+        int lastDot = name.lastIndexOf('.');
+        String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
+        List<String> jarFiles = this.jarIndex.getJarFiles(className, packageName);
         for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
             try (JarFile jarFile = this.getJarFile(i.next());
                  InputStream inputStream = jarFile.getInputStream(new JarEntry(classPath))) {
@@ -348,9 +359,11 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                         this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
                     }
                     byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(name, jarFile.getUrl(), jarFile.getManifest());
+                    this.definePackageIfNecessary(packageName, jarFile.getUrl(), jarFile.getManifest());
                     return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), (CodeSigner[]) null));
                 }
+            } catch (IOException e) {
+                throw new ResolvableException(e);
             }
         }
         return null;
@@ -365,16 +378,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param classPath class path, eg: java/util/List.class
      * @return class
      */
-    @SneakyThrows(IOException.class)
     protected Class<?> findExplodedClass(String name, String className, String classPath) throws ClassNotFoundException {
+        int lastDot = name.lastIndexOf('.');
+        String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
         List<URL> resources = this.findExplodedResources(classPath);
         for (URL resource : resources) {
             File classFile = new File(PathUtil.getPath(resource).toString(), classPath);
             if (classFile.exists()) {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
                     byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(name, resource, new Manifest());
+                    this.definePackageIfNecessary(packageName, resource, new Manifest());
                     return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
+                } catch (IOException e) {
+                    throw new ResolvableException(e);
                 }
             }
         }
@@ -407,7 +423,6 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param usedJarFile 使用的 jar file
      * @param jarFiles    匹配的 jar files
      */
-    @SneakyThrows(IOException.class)
     protected void printMatchedMoreJarFiles(String name, JarFile usedJarFile, List<String> jarFiles) {
         boolean matchedMore = false;
         StringBuilder builder = new StringBuilder("More than one jar file found of class: " + name);
@@ -422,53 +437,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                         matchedMore = true;
                     }
                 }
+            } catch (IOException e) {
+                throw new ResolvableException(e);
             }
         }
         if (matchedMore) {
             System.err.println(builder);
         }
-    }
-
-    /**
-     * 如果 class 的包名不存在的则定义包名
-     *
-     * @param className class name
-     * @param jarURL    jar url
-     * @param manifest  jar MANIFEST.MF
-     */
-    protected void definePackageIfNecessary(String className, URL jarURL, Manifest manifest) {
-        int lastDot = className.lastIndexOf('.');
-        if (lastDot < 0) {
-            return;
-        }
-        try {
-            String packageName = className.substring(0, lastDot);
-            super.definePackage(packageName, manifest == null ? new Manifest() : manifest, jarURL);
-        } catch (IllegalArgumentException e) {
-            // ignored
-        }
-    }
-
-    /**
-     * 读取数据到字节数组
-     *
-     * @param in 输入流
-     * @return 字节数组
-     */
-    protected byte[] read(InputStream in) throws IOException {
-        // 确定缓冲区大小
-        int n = -1;
-        int available = in.available();
-        byte[] buffer = new byte[available > 0 ? available : ConstantConfig.IO_STREAM_READ_BUFFER_SIZE];
-
-        // 开始读取
-        available = 0;
-        FastByteArrayOutputStream out = new FastByteArrayOutputStream(buffer.length);
-        while ((n = in.read(buffer)) != -1) {
-            out.write(buffer, 0, n);
-            available += n;
-        }
-        return out.toByteArray(available);
     }
 
     /**
@@ -500,40 +475,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         public void close() throws IOException {
             if (jarFileCache == null) {
                 super.close();
-                return;
             }
-            synchronized (JarIndexClassLoader.this) {
-                if (jarFileCache == null) {
-                    super.close();
-                }
-            }
-        }
-    }
-
-    /**
-     * 快速字节输出流，主要用于类加载，避免字节数组的复制
-     */
-    protected static class FastByteArrayOutputStream extends ByteArrayOutputStream {
-
-        public FastByteArrayOutputStream() {
-        }
-
-        public FastByteArrayOutputStream(int size) {
-            super(size);
-        }
-
-        /**
-         * 当请求字节数组大小与缓冲区大小一致时，直接返回，而不复制
-         * 在类加载时很有用，因为类加载一般可以预知字节数组的大小
-         *
-         * @param targetSize 请求的字节数组大小
-         * @return 字节数组
-         */
-        public byte[] toByteArray(int targetSize) {
-            if (targetSize == buf.length) {
-                return buf;
-            }
-            return Arrays.copyOf(buf, count);
         }
     }
 }

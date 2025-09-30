@@ -102,7 +102,7 @@ public class BuildJarIndexAntTask {
      * @return jar index  key: jar class path, value: package
      */
     public static Map<String, Set<String>> scanJarIndex(List<String> absoluteClassPath, Map<String, Set<String>> indexContainer) throws Exception {
-        return scanJarIndex(null, "", absoluteClassPath, indexContainer);
+        return scanJarIndex(null, null, absoluteClassPath, indexContainer);
     }
 
     /**

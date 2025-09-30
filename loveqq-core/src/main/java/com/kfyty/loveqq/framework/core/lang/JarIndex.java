@@ -191,7 +191,7 @@ public class JarIndex {
     /**
      * 根据资源获取所在 jar 包集合
      *
-     * @param name 资源名称
+     * @param name 资源名称，可能根据该名称获取到包名
      * @return jars
      */
     public List<String> getJarFiles(String name) {
@@ -199,8 +199,19 @@ public class JarIndex {
         if (lastDot < 0) {
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
-        String path = name.substring(0, lastDot).replace('.', '/');
-        List<String> jarFiles = this.jarIndex.get(path);
+        String path = name.substring(0, lastDot);
+        return this.getJarFiles(name, path);
+    }
+
+    /**
+     * 根据资源获取所在 jar 包集合
+     *
+     * @param name        资源名称
+     * @param packageName 包名称
+     * @return jars
+     */
+    public List<String> getJarFiles(String name, String packageName) {
+        List<String> jarFiles = this.jarIndex.get(packageName);
         return jarFiles != null ? jarFiles : this.jarIndex.getOrDefault(name, Collections.emptyList());
     }
 

@@ -1,17 +1,29 @@
 package com.kfyty.loveqq.framework.core.utils;
 
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
+import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
+import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
+import lombok.SneakyThrows;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * 描述: 类加载器工具
@@ -49,6 +61,27 @@ public abstract class ClassLoaderUtil {
      */
     public static boolean isIndexedClassLoader(ClassLoader classLoader) {
         return classLoader.getClass().getName().equals(JarIndexClassLoader.class.getName());
+    }
+
+    /**
+     * 获取类加载器
+     *
+     * @param clazz 启动类
+     * @return 类加载器
+     */
+    @SneakyThrows(Exception.class)
+    @SuppressWarnings("deprecation")
+    public static JarIndexClassLoader getIndexedClassloader(Class<?> clazz) {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if (isIndexedClassLoader(contextClassLoader)) {
+            return (JarIndexClassLoader) contextClassLoader;
+        }
+        Set<URL> urls = resolveClassPath(contextClassLoader);
+        List<String> classPath = urls.stream().map(PathUtil::getPath).map(Path::toString).collect(Collectors.toList());
+        String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
+        Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
+        JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)), classPath);
+        return new JarIndexClassLoader(jarIndex, contextClassLoader);
     }
 
     /**
@@ -107,7 +140,7 @@ public abstract class ClassLoaderUtil {
                     }
                 }
             } catch (IOException e) {
-                throw ExceptionUtil.wrap(e);
+                throw new ResolvableException(e);
             }
         }
 
@@ -116,5 +149,31 @@ public abstract class ClassLoaderUtil {
         }
 
         return result;
+    }
+
+    /**
+     * 使用指定的类加载器启动应用
+     *
+     * @param classLoader 类加载器
+     * @param target      实例，如果是 {@link Class} 类型，则表示静态方法调用
+     * @param args        方法参数
+     */
+    @SneakyThrows(Exception.class)
+    public static void invokeOnClassLoader(ClassLoader classLoader, Object target, String method, Object... args) {
+        Thread.currentThread().setContextClassLoader(classLoader);
+
+        Class<?> invokeClass = Class.forName(target instanceof Class<?> clazz ? clazz.getName() : target.getClass().getName(), false, classLoader);
+
+        Class<?>[] argTypes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            argTypes[i] = Class.forName(args[i].getClass().getName(), false, classLoader);
+            if (args[i] instanceof Class<?> clazz) {
+                args[i] = Class.forName(clazz.getName(), false, classLoader);
+            }
+        }
+
+        Method invokeMethod = invokeClass.getMethod(method, argTypes);
+
+        invokeMethod.invoke(target instanceof Class<?> ? null : target, args);
     }
 }

@@ -3,29 +3,14 @@ package com.kfyty.loveqq.framework.boot;
 import com.kfyty.loveqq.framework.boot.context.factory.ApplicationContextFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
-import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
-import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
-import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil.isIndexedClassLoader;
 
 /**
  * 功能描述: 启动类
@@ -109,7 +94,7 @@ public class K {
      * @param args  命令行参数
      */
     public static void run(Class<?> clazz, String... args) {
-        runOnClassLoader(getIndexedClassloader(clazz), clazz, args);
+        runOnClassLoader(ClassLoaderUtil.getIndexedClassloader(clazz), clazz, args);
     }
 
     /**
@@ -125,27 +110,6 @@ public class K {
         Class<?> primaryClass = Class.forName(clazz.getName(), false, classLoader);
         Thread.currentThread().setContextClassLoader(classLoader);
         bootClass.getMethod("start", Class.class, String[].class).invoke(null, primaryClass, args);
-    }
-
-    /**
-     * 获取类加载器
-     *
-     * @param clazz 启动类
-     * @return 类加载器
-     */
-    @SneakyThrows(Exception.class)
-    @SuppressWarnings("deprecation")
-    public static JarIndexClassLoader getIndexedClassloader(Class<?> clazz) {
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        if (isIndexedClassLoader(contextClassLoader)) {
-            return (JarIndexClassLoader) contextClassLoader;
-        }
-        Set<URL> urls = ClassLoaderUtil.resolveClassPath(contextClassLoader);
-        List<String> classPath = urls.stream().map(PathUtil::getPath).map(Path::toString).collect(Collectors.toList());
-        String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
-        Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
-        JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)), classPath);
-        return new JarIndexClassLoader(jarIndex, contextClassLoader);
     }
 
     /**
