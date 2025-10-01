@@ -44,11 +44,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * 注册并行能力
      */
     static {
-        try {
-            registerAsParallelCapable();
-        } catch (Throwable e) {
-            // ignored
-        }
+        registerAsParallelCapable();
     }
 
     /**
@@ -260,14 +256,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (name.startsWith("java.") || isThisClass(name)) {
-            return super.loadClass(name, resolve);                                                                      // 自身需要走父类，否则会出现强转异常
+        Object lock = super.getClassLoadingLock(name);
+
+        if (lock instanceof Class<?> clazz) {
+            return clazz;
         }
-        synchronized (super.getClassLoadingLock(name)) {
+
+        if (name.startsWith("java.") || isThisClass(name)) {
+            return super.afterLoadClass(name, super.loadClass(name, resolve));                                          // 自身需要走父类，否则会出现强转异常
+        }
+
+        synchronized (lock) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
                 String className = name.replace('.', '/');
-                String classPath = className + ".class";
+                String classPath = className.concat(".class");
                 if (this.isExploded()) {
                     loadedClass = this.findExplodedClass(name, className, classPath);
                 }
@@ -279,9 +282,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 if (resolve) {
                     this.resolveClass(loadedClass);
                 }
-                return loadedClass;
+                return super.afterLoadClass(name, loadedClass);
             }
-            return super.loadClass(name, resolve);
+            return super.afterLoadClass(name, super.loadClass(name, resolve));
         }
     }
 
@@ -425,6 +428,37 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 返回是否是自身的 class name
+     *
+     * @param name class name
+     * @return true or false
+     */
+    public static boolean isThisClass(String name) {
+        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.FastClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
+    }
+
+    /**
+     * 返回是否是 java 内部资源
+     *
+     * @param name 资源名称，eg: java/lang/Object.class
+     * @return true if java resources
+     */
+    public static boolean isJavaSystemResource(String name) {
+        if (name.startsWith("java/")) {
+            return true;
+        }
+        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+            if (name.contains(javaSystemResource)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 缓存的 jar file
      * 可根据 {@link #jarFileCache} 决定是否关闭资源
      */
@@ -455,35 +489,5 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 super.close();
             }
         }
-    }
-
-    /**
-     * 返回是否是自身的 class name
-     *
-     * @param name class name
-     * @return true or false
-     */
-    public static boolean isThisClass(String name) {
-        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
-    }
-
-    /**
-     * 返回是否是 java 内部资源
-     *
-     * @param name 资源名称，eg: java/lang/Object.class
-     * @return true if java resources
-     */
-    public static boolean isJavaSystemResource(String name) {
-        if (name.startsWith("java/")) {
-            return true;
-        }
-        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-            if (name.contains(javaSystemResource)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

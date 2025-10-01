@@ -1,15 +1,13 @@
 package com.kfyty.loveqq.framework.core.lang.instrument;
 
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
+import com.kfyty.loveqq.framework.core.lang.FastClassLoader;
 import lombok.SneakyThrows;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -30,16 +28,12 @@ import java.util.Set;
  * @date 2023/4/17 16:32
  * @email kfyty725@hotmail.com
  */
-public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
+public abstract class ClassFileTransformerClassLoader extends FastClassLoader {
     /**
      * 注册并行能力
      */
     static {
-        try {
-            registerAsParallelCapable();
-        } catch (Throwable e) {
-            // ignored
-        }
+        registerAsParallelCapable();
     }
 
     /**
@@ -126,54 +120,5 @@ public abstract class ClassFileTransformerClassLoader extends URLClassLoader {
             }
         }
         return transformers;
-    }
-
-    /**
-     * 读取数据到字节数组
-     *
-     * @param in 输入流
-     * @return 字节数组
-     */
-    protected static byte[] read(InputStream in) throws IOException {
-        // 确定缓冲区大小
-        int n = -1;
-        int available = in.available();
-        byte[] buffer = new byte[available > 0 ? available : ConstantConfig.IO_STREAM_READ_BUFFER_SIZE];
-
-        // 开始读取
-        available = 0;
-        FastByteArrayOutputStream out = new FastByteArrayOutputStream(buffer.length);
-        while ((n = in.read(buffer)) != -1) {
-            out.write(buffer, 0, n);
-            available += n;
-        }
-        return out.toByteArray(available);
-    }
-
-    /**
-     * 快速字节输出流，主要用于类加载，避免字节数组的复制
-     */
-    protected static class FastByteArrayOutputStream extends ByteArrayOutputStream {
-
-        public FastByteArrayOutputStream() {
-        }
-
-        public FastByteArrayOutputStream(int size) {
-            super(size);
-        }
-
-        /**
-         * 当请求字节数组大小与缓冲区大小一致时，直接返回，而不复制
-         * 在类加载时很有用，因为类加载一般可以预知字节数组的大小
-         *
-         * @param targetSize 请求的字节数组大小
-         * @return 字节数组
-         */
-        public byte[] toByteArray(int targetSize) {
-            if (targetSize == buf.length) {
-                return buf;
-            }
-            return Arrays.copyOf(buf, count);
-        }
     }
 }
