@@ -263,7 +263,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         }
 
         if (name.startsWith("java.") || isThisClass(name)) {
-            return super.afterLoadClass(name, super.loadClass(name, resolve));                                          // 自身需要走父类，否则会出现强转异常
+            return super.loadClass(name, resolve);                                              // 自身需要走父类，否则会出现强转异常
         }
 
         synchronized (lock) {
@@ -280,11 +280,11 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             }
             if (loadedClass != null) {
                 if (resolve) {
-                    this.resolveClass(loadedClass);
+                    super.resolveClass(loadedClass);
                 }
                 return super.afterLoadClass(name, loadedClass);
             }
-            return super.afterLoadClass(name, super.loadClass(name, resolve));
+            return super.loadClass(name, resolve);
         }
     }
 

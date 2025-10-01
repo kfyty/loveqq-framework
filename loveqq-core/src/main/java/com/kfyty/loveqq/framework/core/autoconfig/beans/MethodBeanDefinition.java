@@ -22,7 +22,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Objects;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 import static java.util.Optional.ofNullable;
 
 /**
@@ -45,6 +44,11 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
      * Bean 注解的方法
      */
     private final Method beanMethod;
+
+    /**
+     * 方法参数
+     */
+    private Object[] arguments;
 
     public MethodBeanDefinition(Class<?> beanType, BeanDefinition parentDefinition, Method beanMethod) {
         this(BeanUtil.getBeanName(beanType), beanType, parentDefinition, beanMethod);
@@ -75,11 +79,15 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
         }
         this.ensureAutowiredProcessor(context);
         Object parentInstance = context.registerBean(this.parentDefinition);
-        Object bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, this.prepareMethodArgs());
-        if (context.contains(this.getBeanName())) {
-            return context.getBean(this.getBeanName());
+        try {
+            Object bean = ReflectUtil.invokeMethod(parentInstance, this.beanMethod, this.prepareMethodArgs());
+            if (context.contains(this.getBeanName())) {
+                return context.getBean(this.getBeanName());
+            }
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from bean method: {}", bean), bean);
+        } finally {
+            this.arguments = null;
         }
-        return LogUtil.logIfDebugEnabled(log, log -> log.debug("instantiate bean from bean method: {}", bean), bean);
     }
 
     @Override
@@ -98,19 +106,25 @@ public class MethodBeanDefinition extends GenericBeanDefinition {
     }
 
     protected Object[] prepareMethodArgs() {
+        if (this.arguments != null) {
+            return this.arguments;
+        }
         int index = 0;
+        this.arguments = new Object[this.beanMethod.getParameterCount()];
         AutowiredDescription methodDescription = autowiredProcessor.getResolver().resolve(this.beanMethod);
-        Object[] parameters = new Object[this.beanMethod.getParameterCount()];
         for (Parameter parameter : this.beanMethod.getParameters()) {
-            Value value = findAnnotation(parameter, Value.class);
+            Value value = AnnotationUtil.findAnnotation(parameter, Value.class);
             if (value != null) {
-                parameters[index++] = resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType());
+                this.arguments[index++] = resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType());
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(methodDescription);
-            parameters[index++] = autowiredProcessor.doResolve(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
+            if (description != null && description == methodDescription) {
+                description.markLazied(AnnotationUtil.hasAnnotation(parameter, Lazy.class));
+            }
+            this.arguments[index++] = autowiredProcessor.doResolve(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
         }
-        return parameters;
+        return this.arguments;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

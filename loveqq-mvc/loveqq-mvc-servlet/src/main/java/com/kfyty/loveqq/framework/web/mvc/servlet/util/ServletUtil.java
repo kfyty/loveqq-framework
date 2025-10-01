@@ -37,13 +37,7 @@ public class ServletUtil {
             }
             List<MultipartFile> multipartFiles = new ArrayList<>(parts.size());
             for (Part part : request.getParts()) {
-                Lazy<InputStream> inputStream = new Lazy<>(() -> {
-                    try {
-                        return part.getInputStream();
-                    } catch (IOException e) {
-                        throw new ResolvableException(e);
-                    }
-                });
+                Lazy<InputStream> inputStream = Lazy.of(part::getInputStream);
                 multipartFiles.add(new DefaultMultipartFile(part.getName(), part.getSubmittedFileName(), part.getContentType(), part.getSubmittedFileName() != null, part.getSize(), inputStream));
             }
             return multipartFiles;

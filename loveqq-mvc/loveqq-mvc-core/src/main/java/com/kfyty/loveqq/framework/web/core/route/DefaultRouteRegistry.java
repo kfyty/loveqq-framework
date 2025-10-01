@@ -87,7 +87,7 @@ public class DefaultRouteRegistry implements RouteRegistry {
      * 注册方法映射的路由
      */
     protected Route registryMethodMappedRoute(String url, RequestMethod requestMethod, Object controller, Method mappedMethod) {
-        HandlerMethodRoute route = HandlerMethodRoute.create(url, requestMethod, new Lazy<>(() -> controller), mappedMethod);
+        HandlerMethodRoute route = HandlerMethodRoute.create(url, requestMethod, Lazy.of(() -> controller), mappedMethod);
         this.registryRoute(route);
         return route;
     }

@@ -94,14 +94,14 @@ public class RocketMQMessageListenerRegistry implements BeanPostProcessor, BeanF
 
         // 注册 MessageListener bean
         if (bean instanceof MessageListener) {
-            this.registerRocketMQMessageListener(target.getClass(), new Lazy<>(() -> this.beanFactory.getBean(beanName)), annotation);
+            this.registerRocketMQMessageListener(target.getClass(), Lazy.of(() -> this.beanFactory.getBean(beanName)), annotation);
         }
 
         // 注册方法级监听器
         for (Method method : ReflectUtil.getMethods(target.getClass())) {
             RocketMQMessageListener methodAnnotation = AnnotationUtil.findAnnotation(method, RocketMQMessageListener.class);
             if (methodAnnotation != null) {
-                this.registerRocketMQMessageListener(new Lazy<>(() -> this.beanFactory.getBean(beanName)), method, methodAnnotation);
+                this.registerRocketMQMessageListener(Lazy.of(() -> this.beanFactory.getBean(beanName)), method, methodAnnotation);
             }
         }
         return null;

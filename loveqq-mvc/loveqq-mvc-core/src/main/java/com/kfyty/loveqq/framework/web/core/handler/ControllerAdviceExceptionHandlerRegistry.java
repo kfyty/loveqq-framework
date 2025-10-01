@@ -47,7 +47,7 @@ public class ControllerAdviceExceptionHandlerRegistry implements BeanFactoryPost
                         .addConstructorArgs(PatternMatcher.class, patternMatcher)
                         .addConstructorArgs(String[].class, mergedBasePackages.toArray(new String[0]))
                         .addConstructorArgs(Class[].class, annotations)
-                        .addConstructorArgs(Lazy.class, new Lazy<>(() -> beanFactory.getBean(entry.getKey())))
+                        .addConstructorArgs(Lazy.class, Lazy.of(() -> beanFactory.getBean(entry.getKey())))
                         .getBeanDefinition();
                 beanFactory.registerBeanDefinition(beanDefinition);
             }

@@ -82,7 +82,7 @@ public class MapperScanner implements BeanFactoryPostProcessor, ConfigurableAppl
             }
             BeanDefinition beanDefinition = genericBeanDefinition(mapperScan.factoryBean())
                     .addConstructorArgs(Class.class, clazz)
-                    .addConstructorArgs(Lazy.class, new Lazy<>(() -> this.obtainSqlSession(mapperScan)))
+                    .addConstructorArgs(Lazy.class, Lazy.of(() -> this.obtainSqlSession(mapperScan)))
                     .getBeanDefinition();
             beanFactory.registerBeanDefinition(beanDefinition);
         }

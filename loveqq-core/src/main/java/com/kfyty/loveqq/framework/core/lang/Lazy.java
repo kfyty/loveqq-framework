@@ -1,10 +1,11 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.autoconfig.LaziedObject;
+import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * 描述: 懒加载获取
@@ -14,12 +15,18 @@ import java.util.function.Supplier;
  * @date 2021/9/19 11:08
  * @email kfyty725@hotmail.com
  */
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Lazy<T> implements LaziedObject<T> {
     /**
      * 值提供者
      */
-    private final Supplier<T> provider;
+    private final ThrowableSupplier<T> provider;
+
+    /**
+     * 构建 {@link #provider} 的参数
+     * 主要用于 {@link #equals(Object)}，判断是否是相同的懒加载对象
+     */
+    private final Object[] arguments;
 
     /**
      * 实际值
@@ -37,7 +44,11 @@ public class Lazy<T> implements LaziedObject<T> {
 
     @Override
     public T create() {
-        return this.provider.get();
+        try {
+            return this.provider.get();
+        } catch (Throwable e) {
+            throw new ResolvableException("Create lazy target instance failed.", e);
+        }
     }
 
     @Override
@@ -53,11 +64,6 @@ public class Lazy<T> implements LaziedObject<T> {
     }
 
     @Override
-    public int hashCode() {
-        return this.value == null ? this.provider.hashCode() : this.value.hashCode();
-    }
-
-    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -68,7 +74,7 @@ public class Lazy<T> implements LaziedObject<T> {
         if (this.isCreated() && other.isCreated()) {
             return Objects.equals(this.value, other.value);
         }
-        return Objects.equals(this.provider, other.provider);
+        return Objects.deepEquals(this.arguments, other.arguments);
     }
 
     @Override
@@ -77,12 +83,27 @@ public class Lazy<T> implements LaziedObject<T> {
     }
 
     /**
+     * 可抛出异常的提供者
+     *
+     * @param <T>
+     */
+    public interface ThrowableSupplier<T> {
+        /**
+         * 获取值
+         *
+         * @return 值
+         */
+        T get() throws Throwable;
+    }
+
+    /**
      * 工厂方法
      *
      * @param provider 提供者
+     * @param args     构建 provider 的参数
      * @return 懒加载对象
      */
-    public static <T> Lazy<T> of(Supplier<T> provider) {
-        return new Lazy<>(provider);
+    public static <T> Lazy<T> of(ThrowableSupplier<T> provider, Object... args) {
+        return new Lazy<>(provider, args);
     }
 }

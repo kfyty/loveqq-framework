@@ -23,7 +23,7 @@ import java.util.Vector;
  * @date 2023/4/17 16:32
  * @email kfyty725@hotmail.com
  */
-public abstract class FastClassLoader extends URLClassLoader {
+public class FastClassLoader extends URLClassLoader {
     /**
      * {@link ClassLoader#parallelLockMap} 同一个引用
      */
@@ -93,6 +93,14 @@ public abstract class FastClassLoader extends URLClassLoader {
         } catch (Throwable e) {
             throw new ResolvableException(e);
         }
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (this.parallelLockMap.get(name) instanceof Class<?> clazz) {
+            return clazz;
+        }
+        return this.afterLoadClass(name, super.loadClass(name, resolve));
     }
 
     /**

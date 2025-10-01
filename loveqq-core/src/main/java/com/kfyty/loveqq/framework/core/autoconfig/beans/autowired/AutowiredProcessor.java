@@ -202,7 +202,7 @@ public class AutowiredProcessor {
 
         Object targetBean =
                 simpleGeneric.isGeneric(LaziedObject.class)
-                        ? Lazy.of(() -> doResolveBean(beanName, simpleGeneric, description))
+                        ? Lazy.of(() -> doResolveBean(beanName, simpleGeneric, description), simpleGeneric, description, requiredType)
                         : doResolveBean(beanName, simpleGeneric, description);
 
         if (targetBean != null && isJdkProxy(targetBean) && requiredType.equals(getTargetClass(targetBean))) {

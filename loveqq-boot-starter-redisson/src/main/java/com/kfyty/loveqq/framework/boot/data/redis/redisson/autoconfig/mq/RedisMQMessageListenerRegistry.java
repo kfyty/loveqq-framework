@@ -33,7 +33,7 @@ public class RedisMQMessageListenerRegistry implements BeanPostProcessor {
     /**
      * redis 消息队列
      */
-    private final RedisMessageQueue queue;
+    private final Lazy<RedisMessageQueue> queue;
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
@@ -42,8 +42,8 @@ public class RedisMQMessageListenerRegistry implements BeanPostProcessor {
             for (Method method : ReflectUtil.getMethods(target.getClass())) {
                 RedisMQMessageConsumer annotation = AnnotationUtil.findAnnotation(method, RedisMQMessageConsumer.class);
                 if (annotation != null) {
-                    ReflectiveMessageListener listener = new ReflectiveMessageListener(annotation.mode(), new Lazy<>(() -> this.beanFactory.getBean(beanName)), method);
-                    this.queue.registryMessageListener(annotation.value(), listener);
+                    ReflectiveMessageListener listener = new ReflectiveMessageListener(annotation.mode(), Lazy.of(() -> this.beanFactory.getBean(beanName)), method);
+                    this.queue.get().registryMessageListener(annotation.value(), listener);
                     log.info("Registry RedisMQ message listener: '{}' with '{}' -> {}", annotation.value(), annotation.mode().name(), method);
                 }
             }

@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 import java.lang.reflect.Method;
 
@@ -21,14 +22,14 @@ import static com.kfyty.loveqq.framework.boot.quartz.autoconfig.QuartzAutoConfig
 public class ScheduledAnnotatedTask implements Job {
 
     @Override
-    public void execute(JobExecutionContext context) {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         Object bean = jobDataMap.get(TASK_BEAN_KEY);
         Method method = (Method) jobDataMap.get(TASK_METHOD_KEY);
-        if (bean instanceof Job) {
-            ReflectUtil.invokeMethod(bean, method, context);
-            return;
+        if (bean instanceof Job job) {
+            job.execute(context);
+        } else {
+            ReflectUtil.invokeMethod(bean, method);
         }
-        ReflectUtil.invokeMethod(bean, method);
     }
 }
