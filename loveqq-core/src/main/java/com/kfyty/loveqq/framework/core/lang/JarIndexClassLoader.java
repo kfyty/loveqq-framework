@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
+import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.jar.JarFile;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
@@ -153,6 +154,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
         this.jarIndex.removeJarIndex(jarFiles);
+        for (java.util.jar.JarFile jarFile : jarFiles) {
+            for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
+                if (entry.getName().endsWith(".class")) {
+                    this.parallelLockMap.remove(entry.getName());
+                }
+            }
+        }
     }
 
     /**
@@ -162,6 +170,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public void removeJarIndex(String packageName) {
         this.jarIndex.removeJarIndex(packageName);
+        this.parallelLockMap.entrySet().removeIf(e -> e.getKey().startsWith(packageName));
     }
 
     /**

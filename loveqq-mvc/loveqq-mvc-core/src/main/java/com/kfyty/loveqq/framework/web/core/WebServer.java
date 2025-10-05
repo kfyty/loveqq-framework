@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.web.core;
 
+import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeRefreshed;
+
 /**
  * 描述: web 服务器
  *
@@ -7,7 +9,7 @@ package com.kfyty.loveqq.framework.web.core;
  * @date 2021/5/28 14:49
  * @email kfyty725@hotmail.com
  */
-public interface WebServer {
+public interface WebServer extends ScopeRefreshed {
     /**
      * 启动
      */

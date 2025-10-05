@@ -4,8 +4,11 @@ import com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig.NettyProperti
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.handler.RequestDispatcherHandler;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.handler.ResourcesHandler;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.socket.OioBasedLoopResources;
+import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.support.AntPathMatcher;
 import com.kfyty.loveqq.framework.core.support.PatternMatcher;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.web.core.AbstractDispatcher;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
@@ -22,6 +25,7 @@ import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -140,6 +144,24 @@ public class NettyWebServer implements ReactiveWebServer {
         return this.dispatcherHandler;
     }
 
+    @Override
+    public synchronized void onRefreshed(PropertyContext propertyContext) {
+        ApplicationContext applicationContext = propertyContext.getApplicationContext();
+        NettyProperties nettyProperties = applicationContext.getBean(NettyProperties.class);
+        DispatcherHandler dispatcherHandler = applicationContext.getBean(DispatcherHandler.class);
+        Collection<WebSocketHandler> webSocketHandlers = applicationContext.getBeanOfType(WebSocketHandler.class).values();
+
+        // 更新配置
+        BeanUtil.copyProperties(nettyProperties, this.config);
+        BeanUtil.copyProperties(dispatcherHandler, this.dispatcherHandler);
+
+        this.filters.clear();
+        nettyProperties.getWebFilters().stream().map(FilterRegistrationBean::getFilter).forEach(this.filters::add);
+
+        this.webSocketHandlerMap.clear();
+        webSocketHandlers.forEach(e -> this.webSocketHandlerMap.put(e.getEndPoint(), e));
+    }
+
     protected void configNettyServer() {
         // 先设置属性值，否则会因为静态加载而无效
         // 设置最大 select 线程数
@@ -209,7 +231,7 @@ public class NettyWebServer implements ReactiveWebServer {
     }
 
     protected HttpServer prepareDispatcherHandler(HttpServer server) {
-        return server.handle(new RequestDispatcherHandler(this.patternMatcher, Collections.unmodifiableList(this.filters), this.dispatcherHandler, this.webSocketHandlerMap));
+        return server.handle(new RequestDispatcherHandler(this.patternMatcher, Collections.unmodifiableList(this.filters), this.dispatcherHandler, Collections.unmodifiableMap(this.webSocketHandlerMap)));
     }
 
     /**

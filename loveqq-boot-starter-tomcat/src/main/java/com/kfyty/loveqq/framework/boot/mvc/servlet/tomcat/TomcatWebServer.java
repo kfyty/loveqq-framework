@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.autoconfig.TomcatPrope
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.servlet.DefaultStaticServlet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathDirResourceSet;
 import com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources.ClassPathJarResourceSet;
+import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
@@ -79,15 +80,17 @@ public class TomcatWebServer implements ServletWebServer {
      */
     private Tomcat tomcat;
 
-    @Setter
-    @Getter
-    private TomcatProperties config;
-
-    @Getter
+    /**
+     * host
+     */
     private Host host;
 
     @Getter
     private ServletContext servletContext;
+
+    @Setter
+    @Getter
+    private TomcatProperties config;
 
     @Setter
     @Getter
@@ -143,6 +146,11 @@ public class TomcatWebServer implements ServletWebServer {
     @Override
     public AbstractDispatcher<?> getDispatcher() {
         return this.dispatcherServlet;
+    }
+
+    @Override
+    public void onRefreshed(PropertyContext propertyContext) {
+        throw new UnsupportedOperationException("Tomcat web server refresh");
     }
 
     protected void configTomcatServer() {

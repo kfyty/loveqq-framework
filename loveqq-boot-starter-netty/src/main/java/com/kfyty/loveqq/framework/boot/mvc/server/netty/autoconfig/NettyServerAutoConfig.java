@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.boot.mvc.server.netty.NettyWebServer;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.DefaultResourceResolver;
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.ResourceResolver;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
@@ -58,6 +59,7 @@ public class NettyServerAutoConfig {
         return config;
     }
 
+    @ApplicationScope
     @Bean(destroyMethod = "stop", resolveNested = false, independent = true)
     public NettyWebServer nettyWebServer(NettyProperties config, DispatcherHandler dispatcherHandler, @Autowired(required = false) List<WebSocketHandler> webSocketHandlers) {
         Map<String, WebSocketHandler> webSocketHandlerMap = webSocketHandlers.stream().collect(Collectors.toMap(WebSocketHandler::getEndPoint, v -> v));

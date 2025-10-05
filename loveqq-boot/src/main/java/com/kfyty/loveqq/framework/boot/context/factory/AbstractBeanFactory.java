@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InstantiationAwareBeanPostProcessor;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -16,6 +17,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.InstantiatedBeanDefiniti
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -23,12 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -225,7 +230,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public Map<String, BeanDefinition> getBeanDefinitionWithAnnotation(Class<? extends Annotation> annotationClass) {
-        return this.stream(e -> hasAnnotation(e.getBeanType(), annotationClass)).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), LinkedHashMap::new));
+        return this.stream(e -> hasAnnotation(e.isMethodBean() ? e.getBeanMethod() : e.getBeanType(), annotationClass)).collect(toMap(BeanDefinition::getBeanName, identity(), throwMergeFunction(), LinkedHashMap::new));
     }
 
     @Override
@@ -297,7 +302,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
     @Override
     @SuppressWarnings("unchecked")
     public <T> Map<String, T> getBeanWithAnnotation(Class<? extends Annotation> annotationClass) {
-        Map<String, Object> beans = new LinkedHashMap<>(4);
+        Map<String, Object> beans = new LinkedHashMap<>();
         Map<String, BeanDefinition> beanDefinitions = this.getBeanDefinitionWithAnnotation(annotationClass);
         for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
             beans.put(entry.getKey(), this.registerBean(entry.getValue()));
@@ -390,26 +395,51 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void close() {
+        // ApplicationScope 作用域的 bean
+        List<Map.Entry<String, Object>> applicationScopeBeans = new LinkedList<>();
+
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
-            if (!(entry.getValue() instanceof BeanPostProcessor)) {
-                this.destroyBean(entry.getKey(), entry.getValue());
+            if (entry.getValue() instanceof BeanPostProcessor) {
+                continue;
             }
+            if (this.destroyBean(entry.getKey(), entry.getValue())) {
+                continue;
+            }
+            applicationScopeBeans.add(entry);
         }
+
         for (Iterator<Map.Entry<String, BeanPostProcessor>> i = this.beanPostProcessors.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String, BeanPostProcessor> entry = i.next();
-            this.destroyBean(entry.getKey(), entry.getValue());
+            if (!this.destroyBean(entry.getKey(), entry.getValue())) {
+                applicationScopeBeans.add((Map.Entry) entry);
+            }
             i.remove();
         }
+
         this.beanDefinitions.clear();
         this.beanInstances.clear();
         this.beanReference.clear();
         this.beanDefinitionsForType.clear();
         this.applicationContext = null;
+
+        // ApplicationScope 作用域的 bean 重新放入容器
+        for (Map.Entry<String, Object> applicationScopeBean : applicationScopeBeans) {
+            this.beanInstances.put(applicationScopeBean.getKey(), applicationScopeBean.getValue());
+        }
     }
 
     @Override
-    public void destroyBean(String name, Object bean) {
-        this.destroyBean(this.getBeanDefinition(name), bean);
+    public boolean destroyBean(String name, Object bean) {
+        final boolean isInRefresh = Thread.currentThread() instanceof ContextRefreshThread;
+        final BeanDefinition beanDefinition = this.getBeanDefinition(name);
+        if (isInRefresh) {
+            AnnotatedElement annotatedElement = beanDefinition.isMethodBean() ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
+            if (AnnotationUtil.hasAnnotation(annotatedElement, ApplicationScope.class)) {
+                return false;
+            }
+        }
+        this.destroyBean(beanDefinition, bean);
+        return true;
     }
 
     /**
