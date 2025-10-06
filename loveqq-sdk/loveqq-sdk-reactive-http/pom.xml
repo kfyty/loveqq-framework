@@ -14,11 +14,6 @@
     <name>${project.artifactId}</name>
     <description>sdk 响应式异步实现</description>
 
-    <properties>
-        <maven.source.version>21</maven.source.version>
-        <maven.target.version>21</maven.target.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.kfyty</groupId>

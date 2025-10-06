@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.sdk.api.core.reactive.http.executor;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.sdk.api.core.constant.ApiConstants;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiException;
@@ -45,7 +46,7 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
 
     static {
         HTTP_CLIENT_CACHE = new ConcurrentHashMap<>();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> HTTP_CLIENT_CACHE.values().forEach(HttpClient::close)));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> HTTP_CLIENT_CACHE.values().stream().filter(e -> e instanceof AutoCloseable).forEach(IOUtil::close)));
     }
 
     @Override
