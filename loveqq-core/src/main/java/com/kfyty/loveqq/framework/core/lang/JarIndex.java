@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.support.task.BuildJarIndexAntTask;
+import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
@@ -119,35 +120,40 @@ public class JarIndex {
      *
      * @param jarFiles jar 文件集合
      */
-    @SneakyThrows(IOException.class)
-    public void addJarIndex(List<JarFile> jarFiles) {
-        Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
-        for (JarFile jarFile : jarFiles) {
-            try (JarFile jar = jarFile) {
-                BuildJarIndexAntTask.scanJarIndex(jar.getName(), jar, indexContainer);
+    public synchronized void addJarIndex(List<JarFile> jarFiles) {
+        try {
+            Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
+            for (JarFile jarFile : jarFiles) {
+                BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
             }
+            String index = BuildJarIndexAntTask.buildJarIndex(indexContainer);
+            this.loadJarIndex(this.mainJarPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
+        } finally {
+            jarFiles.forEach(IOUtil::close);
         }
-        String index = BuildJarIndexAntTask.buildJarIndex(indexContainer);
-        this.loadJarIndex(this.mainJarPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
-     * @param packageName 包名
+     * @param packageName 包名，eg: com/kfyty/demo
      * @param jarFile     jar 文件
      */
     public void addJarIndex(String packageName, JarFile jarFile) {
-        this.addJarIndex(packageName, jarFile.getName());
+        try {
+            this.addJarIndex(packageName, jarFile.getName());
+        } finally {
+            IOUtil.close(jarFile);
+        }
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
-     * @param packageName 包名
+     * @param packageName 包名，eg: com/kfyty/demo
      * @param jarFilePath jar 文件绝对路径
      */
-    public void addJarIndex(String packageName, String jarFilePath) {
+    public synchronized void addJarIndex(String packageName, String jarFilePath) {
         this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFilePath);
         this.rebuildURLs();
     }
@@ -157,33 +163,37 @@ public class JarIndex {
      *
      * @param jarFiles jar 文件
      */
-    public void removeJarIndex(List<JarFile> jarFiles) {
-        Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
-        for (JarFile jarFile : jarFiles) {
-            BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
-        }
-        for (Map.Entry<String, Set<String>> entry : indexContainer.entrySet()) {
-            for (String _package_ : entry.getValue()) {
-                List<String> jars = this.jarIndex.get(_package_);
-                if (jars != null && !jars.isEmpty()) {
-                    if (!jars.remove(entry.getKey())) {
-                        System.err.println("remove jar index failed, please check jar file name.");
-                    }
-                    if (jars.isEmpty()) {
-                        this.jarIndex.remove(_package_);
+    public synchronized void removeJarIndex(List<JarFile> jarFiles) {
+        try {
+            Map<String, Set<String>> indexContainer = new HashMap<>(jarFiles.size());
+            for (JarFile jarFile : jarFiles) {
+                BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
+            }
+            for (Map.Entry<String, Set<String>> entry : indexContainer.entrySet()) {
+                for (String _package_ : entry.getValue()) {
+                    List<String> jars = this.jarIndex.get(_package_);
+                    if (jars != null && !jars.isEmpty()) {
+                        if (!jars.remove(entry.getKey())) {
+                            System.err.println("remove jar index failed, please check jar file name.");
+                        }
+                        if (jars.isEmpty()) {
+                            this.jarIndex.remove(_package_);
+                        }
                     }
                 }
             }
+            this.rebuildURLs();
+        } finally {
+            jarFiles.forEach(IOUtil::close);
         }
-        this.rebuildURLs();
     }
 
     /**
      * 动态移除 jar index
      *
-     * @param packageName 包名，该包名下的所有 jar 都将被移除
+     * @param packageName 包名，该包名下的所有 jar 都将被移除，eg: com/kfyty/demo
      */
-    public void removeJarIndex(String packageName) {
+    public synchronized void removeJarIndex(String packageName) {
         this.jarIndex.remove(packageName);
         this.rebuildURLs();
     }
@@ -210,7 +220,7 @@ public class JarIndex {
      * 根据资源获取所在 jar 包集合
      *
      * @param name        资源名称
-     * @param packageName 包名称
+     * @param packageName 包名称，eg: com/kfyty/demo
      * @return jars
      */
     public List<String> getJarFiles(String name, String packageName) {

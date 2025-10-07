@@ -81,7 +81,7 @@ public abstract class ClassLoaderUtil {
         String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
         Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
         JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)), classPath);
-        return new JarIndexClassLoader(jarIndex, contextClassLoader);
+        return new JarIndexClassLoader(jarIndex, ClassLoader.getSystemClassLoader().getParent());
     }
 
     /**
@@ -129,7 +129,7 @@ public abstract class ClassLoaderUtil {
                                 if (classPath != null && !classPath.isEmpty()) {
                                     String[] nestedClassPath = classPath.split(" ");
                                     for (String url : nestedClassPath) {
-                                        if (JarIndexClassLoader.isJavaSystemResource(url)) {
+                                        if (JarIndexClassLoader.isJavaInternalResource(url)) {
                                             continue;
                                         }
                                         URI uri = URI.create(url);

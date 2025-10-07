@@ -19,9 +19,9 @@
       "description": "是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开"
     },
     {
-      "name": "k.java.system.resources",
+      "name": "k.java.internal.resources",
       "type": "java.lang.String",
-      "description": "java 内部资源不在 jar index 内，JarIndexClassLoader#getResource(String) 可能获取不到，可通过该参数设置，多个由英文分号分割"
+      "description": "java 内部资源不在 jar index 内，JarIndexClassLoader#getResource(String) 可能获取不到，可通过该参数设置；些 java 内部 class 希望由 java 内部类加载器加载，也可通过该参数设置；多个由英文分号分割"
     },
     {
       "name": "k.dependency.load-jar-class-path",

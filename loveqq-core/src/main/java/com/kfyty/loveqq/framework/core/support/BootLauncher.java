@@ -70,7 +70,7 @@ public class BootLauncher {
         String mainJarPath = this.resolveMainJarPath(manifest);
 
         JarIndex jarIndex = new JarIndex(mainJarPath, jarIndexStream);
-        JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, Thread.currentThread().getContextClassLoader());
+        JarIndexClassLoader jarIndexClassLoader = new JarIndexClassLoader(jarIndex, ClassLoader.getSystemClassLoader().getParent());
 
         setContextClassLoader(jarIndexClassLoader);
         invokeMainClass(manifest.getMainAttributes().getValue(START_CLASS_KEY), args);

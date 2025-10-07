@@ -25,8 +25,9 @@ public interface ConstantConfig {
 
     /**
      * java 内部资源不在 jar index 内，{@link JarIndexClassLoader#getResource(String)} 可能获取不到，可通过该参数设置
+     * 有些 java 内部 class 希望由 java 内部类加载器加载，也可通过该参数设置
      */
-    String[] JAVA_SYSTEM_RESOURCES = Optional.ofNullable(System.getProperty("k.java.system.resources")).map(e -> e.split(";")).orElse(new String[0]);
+    String[] JAVA_INTERNAL_RESOURCES = Optional.ofNullable(System.getProperty("k.java.internal.resources")).map(e -> e.split(";")).orElse(new String[0]);
 
     /**
      * {@link com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil#resolveClassPath(ClassLoader)} 时，是否读取 jar 内的 Class-Path 属性
