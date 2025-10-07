@@ -7,6 +7,7 @@ import com.kfyty.loveqq.framework.core.support.jar.JarFile;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.PathUtil;
+import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Getter;
 
 import java.io.File;
@@ -84,6 +85,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 关闭所有开启的 jar file，并不再使用缓存
+     */
+    public synchronized void closeJarFileCache() {
+        if (this.jarFileCache != null) {
+            for (JarFile value : this.jarFileCache.values()) {
+                IOUtil.close(value);
+            }
+            this.jarFileCache.clear();
+            this.jarFileCache = null;
+        }
+    }
+
+    /**
      * 获取 jar file
      *
      * @param jarName jar file name
@@ -103,21 +117,6 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 关闭所有开启的 jar file，并不再使用缓存
-     */
-    public void closeJarFileCache() {
-        if (this.jarFileCache != null) {
-            synchronized (this) {
-                for (JarFile value : this.jarFileCache.values()) {
-                    IOUtil.close(value);
-                }
-                this.jarFileCache.clear();
-                this.jarFileCache = null;
-            }
-        }
-    }
-
-    /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
      * @param jarFiles jar 文件集合
@@ -129,21 +128,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
-     * @param packageName 包名
+     * @param packageName 包名，eg: com.kfyty.demo
      * @param jarFile     jar 文件
      */
     public void addJarIndex(String packageName, java.util.jar.JarFile jarFile) {
-        this.jarIndex.addJarIndex(packageName, jarFile);
+        this.jarIndex.addJarIndex(packageName.replace('.', '/'), jarFile);
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
      *
-     * @param packageName 包名
+     * @param packageName 包名，eg: com.kfyty.demo
      * @param jarFilePath jar 文件绝对路径
      */
     public void addJarIndex(String packageName, String jarFilePath) {
-        this.jarIndex.addJarIndex(packageName, jarFilePath);
+        this.jarIndex.addJarIndex(packageName.replace('.', '/'), jarFilePath);
     }
 
     /**
@@ -152,25 +151,37 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      *
      * @param jarFiles jar 文件
      */
-    public void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
-        this.jarIndex.removeJarIndex(jarFiles);
+    public synchronized void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
         for (java.util.jar.JarFile jarFile : jarFiles) {
             for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
-                if (entry.getName().endsWith(".class")) {
-                    this.parallelLockMap.remove(entry.getName());
+                String name = entry.getName();
+                if (name.endsWith(".class")) {
+                    Object removed = this.parallelLockMap.remove(name.substring(0, name.length() - 6).replace('/', '.'));
+                    if (removed instanceof Class<?>) {
+                        ReflectUtil.clearReflectCache((Class<?>) removed);
+                    }
                 }
             }
         }
+        this.jarIndex.removeJarIndex(jarFiles);
     }
 
     /**
      * 动态移除 jar index
      *
-     * @param packageName 包名，该包名下的所有 jar 都将被移除
+     * @param packageName 包名，该包名下的所有 jar 都将被移除，eg: com.demo
      */
-    public void removeJarIndex(String packageName) {
-        this.jarIndex.removeJarIndex(packageName);
-        this.parallelLockMap.entrySet().removeIf(e -> e.getKey().startsWith(packageName));
+    public synchronized void removeJarIndex(String packageName) {
+        for (Iterator<Map.Entry<String, Object>> i = this.parallelLockMap.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, Object> entry = i.next();
+            if (entry.getKey().startsWith(packageName)) {
+                i.remove();
+                if (entry.getValue() instanceof Class<?>) {
+                    ReflectUtil.clearReflectCache((Class<?>) entry.getValue());
+                }
+            }
+        }
+        this.jarIndex.removeJarIndex(packageName.replace('.', '/'));
     }
 
     /**

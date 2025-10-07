@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.boot.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanCustomizer;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.lang.VirtualThreadCallableDecorator;
@@ -46,6 +47,7 @@ public class ThreadPoolExecutorAutoConfig implements InitializingBean, DestroyBe
      *
      * @return 线程池
      */
+    @ApplicationScope
     @Bean(value = DEFAULT_THREAD_POOL_EXECUTOR, resolveNested = false, independent = true)
     public ExecutorService defaultThreadPoolExecutor() {
         if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
@@ -66,6 +68,7 @@ public class ThreadPoolExecutorAutoConfig implements InitializingBean, DestroyBe
      *
      * @return 线程池
      */
+    @ApplicationScope
     @Bean(value = DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR, destroyMethod = "shutdown", resolveNested = false, independent = true)
     public ScheduledExecutorService defaultScheduledThreadPoolExecutor() {
         DecorateScheduledExecutorService executor = new DecorateScheduledExecutorService(CPU_CORE, new NamedThreadFactory("default-scheduled-executor"));

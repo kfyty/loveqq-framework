@@ -7,7 +7,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.MethodBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder;
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
@@ -49,7 +48,7 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
                 continue;
             }
             DubboComponent dubboComponent = AnnotationUtil.findAnnotation(beanDefinition.getBeanType(), DubboComponent.class);
-            AnnotatedElement annotatedElement = beanDefinition instanceof MethodBeanDefinition ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
+            AnnotatedElement annotatedElement = beanDefinition.isMethodBean() ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
             if (dubboComponent != null) {
                 this.resolveDubboReference(beanFactory, beanDefinition);
             }

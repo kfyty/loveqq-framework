@@ -840,4 +840,22 @@ public abstract class ReflectUtil {
             throw new ResolvableException(e);
         }
     }
+
+    /**
+     * 清理反射缓存
+     *
+     * @param clazz class
+     */
+    public static void clearReflectCache(Class<?> clazz) {
+        REFLECT_CACHE.remove(clazz);
+        for (Field field : clazz.getDeclaredFields()) {
+            REFLECT_CACHE.remove(field);
+        }
+        for (Method method : clazz.getDeclaredMethods()) {
+            REFLECT_CACHE.remove(method);
+        }
+        if (AnnotationUtil.isAnnotation(clazz)) {
+
+        }
+    }
 }
