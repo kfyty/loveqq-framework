@@ -746,12 +746,14 @@ public abstract class ReflectUtil {
         for (int i = 0; i < superGenerics.length; i++) {
             parents[i] = new QualifierGeneric(clazz, superGenerics[i]).resolve();
         }
-        stack.add(parents);
         if (superGenericFilter != null) {
-            if (Arrays.stream(superGenerics).anyMatch(e -> e instanceof ParameterizedType && superGenericFilter.test((ParameterizedType) e))) {
+            QualifierGeneric[] filtered = Arrays.stream(parents).filter(e -> e.getResolveType() instanceof ParameterizedType pt && superGenericFilter.test(pt)).toArray(QualifierGeneric[]::new);
+            if (filtered.length > 0) {
+                stack.add(filtered);
                 return stack;
             }
         }
+        stack.add(parents);
         for (Type generic : superGenerics) {
             resolveSuperGeneric(QualifierGeneric.getRawType(generic), superGenericFilter, stack);
         }
