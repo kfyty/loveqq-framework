@@ -87,34 +87,6 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 返回是否是自身的 class name
-     *
-     * @param name class name
-     * @return true or false
-     */
-    public boolean isThisClass(String name) {
-        return name.endsWith(".JarIndexClassLoader") || name.endsWith(".ClassFileTransformerClassLoader") || name.endsWith(".core.lang.JarIndex");
-    }
-
-    /**
-     * 返回是否是 java 内部资源
-     *
-     * @param name 资源名称，eg: java/lang/Object.class
-     * @return true if java resources
-     */
-    public boolean isJavaSystemResource(String name) {
-        if (name.startsWith("java/")) {
-            return true;
-        }
-        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-            if (name.startsWith(javaSystemResource)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * 获取 jar file
      *
      * @param jarName jar file name
@@ -215,7 +187,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     @Override
     public URL getResource(String name) {
         // java 内部资源
-        if (this.isJavaSystemResource(name)) {
+        if (isJavaSystemResource(name)) {
             return super.getResource(name);
         }
 
@@ -257,7 +229,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        if (this.isJavaSystemResource(name)) {
+        if (isJavaSystemResource(name)) {
             return super.getResources(name);
         }
         List<URL> resources = this.jarIndex.getJarFiles(name).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
@@ -331,11 +303,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * @param jarURL      jar url
      * @param manifest    jar MANIFEST.MF
      */
-    protected void definePackageIfNecessary(String packageName, URL jarURL, Manifest manifest) {
-        try {
-            super.definePackage(packageName, manifest == null ? new Manifest() : manifest, jarURL);
-        } catch (IllegalArgumentException e) {
-            // ignored
+    protected void definePackageIfNecessary(int lastDot, String packageName, URL jarURL, Manifest manifest) {
+        if (lastDot > -1) {
+            try {
+                super.definePackage(packageName.replace('/', '.'), manifest == null ? new Manifest() : manifest, jarURL);
+            } catch (IllegalArgumentException e) {
+                // ignored
+            }
         }
     }
 
@@ -359,7 +333,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                         this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
                     }
                     byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(packageName, jarFile.getUrl(), jarFile.getManifest());
+                    this.definePackageIfNecessary(lastDot, packageName, jarFile.getUrl(), jarFile.getManifest());
                     return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), (CodeSigner[]) null));
                 }
             } catch (IOException e) {
@@ -387,7 +361,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             if (classFile.exists()) {
                 try (InputStream inputStream = new FileInputStream(classFile)) {
                     byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(packageName, resource, new Manifest());
+                    this.definePackageIfNecessary(lastDot, packageName, resource, new Manifest());
                     return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
                 } catch (IOException e) {
                     throw new ResolvableException(e);
@@ -477,5 +451,35 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 super.close();
             }
         }
+    }
+
+    /**
+     * 返回是否是自身的 class name
+     *
+     * @param name class name
+     * @return true or false
+     */
+    public static boolean isThisClass(String name) {
+        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
+    }
+
+    /**
+     * 返回是否是 java 内部资源
+     *
+     * @param name 资源名称，eg: java/lang/Object.class
+     * @return true if java resources
+     */
+    public static boolean isJavaSystemResource(String name) {
+        if (name.startsWith("java/")) {
+            return true;
+        }
+        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+            if (name.contains(javaSystemResource)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

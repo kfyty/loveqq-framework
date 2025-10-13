@@ -35,7 +35,8 @@ public class JarFile extends java.util.jar.JarFile {
     }
 
     public JarFile(File file, boolean verify) throws IOException {
-        this(file, verify, ZipFile.OPEN_READ);
+        super(file, verify, ZipFile.OPEN_READ);
+        this.url = JarIndex.getJarURL(this);
     }
 
     public JarFile(File file, boolean verify, int mode) throws IOException {
