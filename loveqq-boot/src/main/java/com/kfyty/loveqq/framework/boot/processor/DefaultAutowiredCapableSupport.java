@@ -82,8 +82,8 @@ public class DefaultAutowiredCapableSupport implements ApplicationContextAware, 
 
     protected BeanDefinition preprocess(String beanName, Object bean) {
         if (this.autowiredProcessor == null) {
-            if (bean instanceof AutowiredDescriptionResolver resolver) {
-                this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, resolver);
+            if (bean instanceof AutowiredDescriptionResolver) {
+                this.autowiredProcessor = new AutowiredProcessor(this.applicationContext, (AutowiredDescriptionResolver) bean);
             }
         }
         return beanName == null ? null : this.applicationContext.getBeanDefinition(beanName);

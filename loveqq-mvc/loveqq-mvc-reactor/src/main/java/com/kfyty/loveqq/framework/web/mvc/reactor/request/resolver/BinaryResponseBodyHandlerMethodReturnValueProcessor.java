@@ -44,29 +44,29 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         ServerRequest request = container.getRequest();
         ServerResponse response = container.getResponse();
-        if (returnValue instanceof byte[] bytes) {
-            if (setContentLength(request, response, bytes.length)) {
+        if (returnValue instanceof byte[]) {
+            if (setContentLength(request, response, ((byte[]) returnValue).length)) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof File file) {
-            if (setContentLength(request, response, file.length())) {
+        if (returnValue instanceof File) {
+            if (setContentLength(request, response, ((File) returnValue).length())) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof ByteBuf byteBuf) {
-            if (setContentLength(request, response, byteBuf.readableBytes())) {
+        if (returnValue instanceof ByteBuf) {
+            if (setContentLength(request, response, ((ByteBuf) returnValue).readableBytes())) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof InputStream stream) {
-            returnValue = new InputStreamRandomAccessStream(stream);
+        if (returnValue instanceof InputStream) {
+            returnValue = new InputStreamRandomAccessStream((InputStream) returnValue);
         }
-        if (returnValue instanceof RandomAccessStream stream) {
-            List<AcceptRange> ranges = prepareRandomAccessStream(request, response, stream);
+        if (returnValue instanceof RandomAccessStream) {
+            List<AcceptRange> ranges = prepareRandomAccessStream(request, response, (RandomAccessStream) returnValue);
             if (RequestMethod.matchRequestMethod(request.getMethod()) == RequestMethod.HEAD) {
                 return null;
             }

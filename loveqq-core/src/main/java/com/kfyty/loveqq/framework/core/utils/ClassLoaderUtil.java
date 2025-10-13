@@ -162,13 +162,13 @@ public abstract class ClassLoaderUtil {
     public static void invokeOnClassLoader(ClassLoader classLoader, Object target, String method, Object... args) {
         Thread.currentThread().setContextClassLoader(classLoader);
 
-        Class<?> invokeClass = Class.forName(target instanceof Class<?> clazz ? clazz.getName() : target.getClass().getName(), false, classLoader);
+        Class<?> invokeClass = Class.forName(target instanceof Class<?> ? ((Class<?>) target).getName() : target.getClass().getName(), false, classLoader);
 
         Class<?>[] argTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
             argTypes[i] = Class.forName(args[i].getClass().getName(), false, classLoader);
-            if (args[i] instanceof Class<?> clazz) {
-                args[i] = Class.forName(clazz.getName(), false, classLoader);
+            if (args[i] instanceof Class<?>) {
+                args[i] = Class.forName(((Class<?>) args[i]).getName(), false, classLoader);
             }
         }
 
