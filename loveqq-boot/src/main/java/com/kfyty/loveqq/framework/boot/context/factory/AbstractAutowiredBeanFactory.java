@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition.BEAN_DEFINITION_COMPARATOR;
 import static com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBuilder.genericBeanDefinition;
 import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.hasAnnotation;
 import static java.util.Collections.unmodifiableMap;
@@ -153,7 +152,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void resolveConditionBeanDefinitionRegistry() {
-        Map<String, ConditionalBeanDefinition> currentConditionalMap = CommonUtil.sort(this.conditionBeanMap, (b1, b2) -> BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
+        Map<String, ConditionalBeanDefinition> currentConditionalMap = CommonUtil.sortBeanDefinition(this.conditionBeanMap);
         for (ConditionalBeanDefinition value : currentConditionalMap.values()) {
             if (!value.isRegistered() && !this.conditionContext.shouldSkip(value)) {
                 value.setRegistered(true);
@@ -179,7 +178,7 @@ public abstract class AbstractAutowiredBeanFactory extends AbstractBeanFactory {
 
     @Override
     public void autowiredBean(String beanName, Object bean) {
-        if (this == bean || bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
+        if (bean instanceof BeanFactoryPreProcessor && !((BeanFactoryPreProcessor) bean).allowAutowired()) {
             return;
         }
         if (this.autowiredCapableSupport == null) {

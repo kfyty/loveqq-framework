@@ -3,14 +3,16 @@ package com.kfyty.loveqq.framework.web.core.autoconfig;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Configuration;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ConfigurationProperties;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.EventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Import;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnProperty;
+import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.web.core.WebServer;
@@ -44,7 +46,7 @@ import static com.kfyty.loveqq.framework.web.core.route.GatewayRoute.DEFAULT_WEB
  */
 @Configuration
 @ConditionalOnBean(WebServer.class)
-@Import(config = {WebServerProperties.class, GatewayRouteProperties.class})
+@Import(config = {WebServerProperties.class, GatewayRouteProperties.class, WebMvcAutoConfig.GatewayRouteRefreshEventListener.class})
 public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
     @Bean
@@ -66,14 +68,6 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
         this.registryControllerRoute(applicationContext);
         this.registryGatewayRoute(applicationContext);
         this.startWebServer(applicationContext);
-    }
-
-    @EventListener
-    public void onPropertyRefreshEvent(PropertyContextRefreshedEvent event) {
-        ApplicationContext applicationContext = event.getSource().getApplicationContext();
-        RouteRegistry routeRegistry = applicationContext.getBean(RouteRegistry.class);
-        routeRegistry.removeRoute(r -> r instanceof GatewayRoute);
-        this.registryGatewayRoute(applicationContext);
     }
 
     protected void registryControllerRoute(ApplicationContext applicationContext) {
@@ -122,6 +116,22 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
         WebServer server = applicationContext.getBean(WebServer.class);
         if (server != null && !server.isStart()) {
             server.start();
+        }
+    }
+
+    /**
+     * 网关路由刷新事件监听器
+     */
+    @Component
+    @Order(Integer.MAX_VALUE)
+    protected class GatewayRouteRefreshEventListener implements ApplicationListener<PropertyContextRefreshedEvent> {
+
+        @Override
+        public void onApplicationEvent(PropertyContextRefreshedEvent event) {
+            ApplicationContext applicationContext = event.getSource().getApplicationContext();
+            RouteRegistry routeRegistry = applicationContext.getBean(RouteRegistry.class);
+            routeRegistry.removeRoute(r -> r instanceof GatewayRoute);
+            WebMvcAutoConfig.this.registryGatewayRoute(applicationContext);
         }
     }
 }

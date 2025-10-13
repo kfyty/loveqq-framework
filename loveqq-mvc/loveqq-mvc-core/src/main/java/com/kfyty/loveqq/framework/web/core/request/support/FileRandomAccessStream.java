@@ -59,7 +59,7 @@ public class FileRandomAccessStream implements RandomAccessStream {
     }
 
     @Override
-    public void seed(long pos) throws IOException {
+    public void seek(long pos) throws IOException {
         this.raf.seek(pos);
     }
 

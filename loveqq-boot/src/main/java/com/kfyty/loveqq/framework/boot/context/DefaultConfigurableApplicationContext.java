@@ -203,8 +203,8 @@ public class DefaultConfigurableApplicationContext extends AbstractApplicationCo
     }
 
     @Override
-    protected void beforeRefresh() {
-        super.beforeRefresh();
+    protected void prepareRefresh() {
+        super.prepareRefresh();
         this.invokeBootstrap();
         this.loadBeanFactoryPreProcessorBeanDefinition();
     }

@@ -26,6 +26,7 @@ import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
+import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 
@@ -85,7 +86,7 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         synchronized (this) {
             try {
                 /* 刷新前的准备，由子类扩展 */
-                this.beforeRefresh();
+                this.prepareRefresh();
 
                 /* 执行 bean 工厂前置处理器 */
                 this.invokeBeanFactoryPreProcessor();
@@ -150,18 +151,19 @@ public abstract class AbstractApplicationContext extends AbstractAutowiredBeanFa
         }
     }
 
-    protected void registerDefaultBean() {
-        this.registerBean(BeanFactory.class, this);
-        this.registerBean(BeanDefinitionRegistry.class, this);
-        this.registerBean(ConditionBeanDefinitionRegistry.class, this);
-
-        this.registerBean(ApplicationContext.class, this);
-        this.registerBean(ConfigurableApplicationContext.class, this);
-    }
-
-    protected void beforeRefresh() {
+    protected void prepareRefresh() {
+        // 先关闭，清理资源
         this.close();
-        this.registerDefaultBean();
+
+        // 注册默认的 bean
+        super.doRegisterBean(BeanUtil.getBeanName(BeanFactory.class), this);
+        super.doRegisterBean(BeanUtil.getBeanName(BeanDefinitionRegistry.class), this);
+        super.doRegisterBean(BeanUtil.getBeanName(ConditionBeanDefinitionRegistry.class), this);
+
+        super.doRegisterBean(BeanUtil.getBeanName(ApplicationContext.class), this);
+        super.doRegisterBean(BeanUtil.getBeanName(ConfigurableApplicationContext.class), this);
+
+        // 移除销毁 hook
         Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
     }
 

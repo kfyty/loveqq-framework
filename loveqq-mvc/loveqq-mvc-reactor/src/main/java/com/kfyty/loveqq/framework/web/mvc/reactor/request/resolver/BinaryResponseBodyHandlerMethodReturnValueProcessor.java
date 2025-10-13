@@ -8,6 +8,7 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
+import com.kfyty.loveqq.framework.web.core.request.support.InputStreamRandomAccessStream;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
 import io.netty.buffer.ByteBuf;
@@ -43,29 +44,29 @@ public class BinaryResponseBodyHandlerMethodReturnValueProcessor extends Abstrac
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         ServerRequest request = container.getRequest();
         ServerResponse response = container.getResponse();
-        if (returnValue instanceof byte[]) {
-            if (setContentLength(request, response, ((byte[]) returnValue).length)) {
+        if (returnValue instanceof byte[] bytes) {
+            if (setContentLength(request, response, bytes.length)) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof ByteBuf) {
-            if (setContentLength(request, response, ((ByteBuf) returnValue).readableBytes())) {
+        if (returnValue instanceof File file) {
+            if (setContentLength(request, response, file.length())) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof File) {
-            if (setContentLength(request, response, ((File) returnValue).length())) {
+        if (returnValue instanceof ByteBuf byteBuf) {
+            if (setContentLength(request, response, byteBuf.readableBytes())) {
                 return returnValue;
             }
             return null;
         }
-        if (returnValue instanceof InputStream) {
-            returnValue = new RandomAccessStream.InputStreamRandomAccessAdapter((InputStream) returnValue);
+        if (returnValue instanceof InputStream stream) {
+            returnValue = new InputStreamRandomAccessStream(stream);
         }
-        if (returnValue instanceof RandomAccessStream) {
-            List<AcceptRange> ranges = prepareRandomAccessStream(request, response, (RandomAccessStream) returnValue);
+        if (returnValue instanceof RandomAccessStream stream) {
+            List<AcceptRange> ranges = prepareRandomAccessStream(request, response, stream);
             if (RequestMethod.matchRequestMethod(request.getMethod()) == RequestMethod.HEAD) {
                 return null;
             }

@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig.condition;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
-import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanFactory;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.ConditionalBeanDefinition;
 import com.kfyty.loveqq.framework.core.support.AnnotationMetadata;
@@ -221,7 +220,7 @@ public class ConditionContext implements AutoCloseable {
             collect.addAll(reference);
             collect.stream().filter(e -> !e.getBeanName().equals(current.getBeanName())).forEach(e -> nested.put(e.getBeanName(), e));
         }
-        return CommonUtil.sort(nested, (b1, b2) -> BeanDefinition.BEAN_DEFINITION_COMPARATOR.compare(b1.getValue(), b2.getValue()));
+        return CommonUtil.sortBeanDefinition(nested);
     }
 
     @Override

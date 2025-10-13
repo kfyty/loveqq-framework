@@ -1,9 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.request.support;
 
-import lombok.SneakyThrows;
-
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * 描述: 随机访问流，主要用于断点续传
@@ -33,7 +30,7 @@ public interface RandomAccessStream extends AutoCloseable {
      *
      * @param pos 指定的位置
      */
-    void seed(long pos) throws IOException;
+    void seek(long pos) throws IOException;
 
     /**
      * 最后修改时间
@@ -65,60 +62,4 @@ public interface RandomAccessStream extends AutoCloseable {
      */
     @Override
     void close() throws IOException;
-
-    /**
-     * {@link InputStream} 适配器
-     * 该适配实现不支持随机访问，仅用于简化逻辑
-     */
-    class InputStreamRandomAccessAdapter implements RandomAccessStream {
-        private final String contentType;
-        private final long length;
-        private final InputStream stream;
-
-        public InputStreamRandomAccessAdapter(InputStream stream) {
-            this("application/octet-stream", stream);
-        }
-
-        @SneakyThrows(IOException.class)
-        public InputStreamRandomAccessAdapter(String contentType, InputStream stream) {
-            this.contentType = contentType;
-            this.length = stream.available();
-            this.stream = stream;
-        }
-
-        @Override
-        public String contentType() {
-            return this.contentType;
-        }
-
-        @Override
-        public long length() {
-            return this.length;
-        }
-
-        @Override
-        public void seed(long pos) throws IOException {
-            // 不支持
-        }
-
-        @Override
-        public long lastModified() {
-            return System.currentTimeMillis();
-        }
-
-        @Override
-        public int read(byte[] bytes, int off, int len) throws IOException {
-            return this.stream.read(bytes, off, len);
-        }
-
-        @Override
-        public boolean refresh() {
-            return false;
-        }
-
-        @Override
-        public void close() throws IOException {
-            this.stream.close();
-        }
-    }
 }

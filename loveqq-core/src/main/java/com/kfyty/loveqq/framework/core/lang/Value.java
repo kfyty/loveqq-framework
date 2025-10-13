@@ -2,9 +2,9 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.NestedConfigurationProperty;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -14,10 +14,9 @@ import java.util.Objects;
  * @date 2021/9/19 11:08
  * @email kfyty725@hotmail.com
  */
-@Setter
-@Getter
+@Data
 @NestedConfigurationProperty
-public class Value<V> {
+public class Value<V> implements Serializable {
     /**
      * value
      */

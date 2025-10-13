@@ -17,13 +17,13 @@ import java.util.Objects;
 @Accessors(chain = true)
 public class PropertyValue {
     /**
-     * 属性值
+     * 字段名称
      */
     private String name;
 
     /**
      * 属性值
-     * 该属性值不会进行类型转换
+     * 该属性值不会进行类型转换，请确保类型正确
      */
     private Object value;
 
@@ -48,7 +48,7 @@ public class PropertyValue {
      * @return true/false
      */
     public boolean isPropertyValue() {
-        Objects.requireNonNull(this.propertyType, "The propertyType field is required");
+        Objects.requireNonNull(this.propertyType, "The propertyType field is required.");
         return this.propertyType == PropertyType.VALUE;
     }
 
@@ -58,7 +58,7 @@ public class PropertyValue {
      * @return true/false
      */
     public boolean isPropertyReference() {
-        Objects.requireNonNull(this.propertyType, "The propertyType field is required");
+        Objects.requireNonNull(this.propertyType, "The propertyType field is required.");
         return this.propertyType == PropertyType.REFERENCE;
     }
 

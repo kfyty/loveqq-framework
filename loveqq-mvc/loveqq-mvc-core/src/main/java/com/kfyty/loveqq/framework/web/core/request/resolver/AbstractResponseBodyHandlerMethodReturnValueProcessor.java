@@ -78,7 +78,7 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
         List<AcceptRange> ranges = AcceptRange.resolve(request.getHeader("Range"), stream.length());
 
         // 没有范围时，设置 200，返回全部数据
-        if (ranges.isEmpty() || stream instanceof RandomAccessStream.InputStreamRandomAccessAdapter) {
+        if (ranges.isEmpty()) {
             response.setStatus(200);
             response.setContentType(stream.contentType());
             response.setHeader("Content-Length", String.valueOf(stream.length()));
@@ -144,7 +144,7 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
             byte[] bytes = new byte[Math.min(ConstantConfig.IO_STREAM_READ_BUFFER_SIZE << 4, (int) range.getLength())];
 
             // 开始从指定位置读取
-            stream.seed(range.getPos());
+            stream.seek(range.getPos());
             while (read > -1 && total < range.getLength()) {
                 read = stream.read(bytes, 0, (int) Math.min(bytes.length, range.getLength() - total));
                 if (byteConsumer.apply(read, bytes)) {
