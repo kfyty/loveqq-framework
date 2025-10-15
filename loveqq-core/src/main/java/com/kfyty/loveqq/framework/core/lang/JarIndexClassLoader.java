@@ -466,6 +466,15 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 关闭类加载器
+     */
+    @Override
+    public void close() throws IOException {
+        this.closeJarFileCache();
+        super.close();
+    }
+
+    /**
      * 返回是否是 java 内部资源
      *
      * @param name 资源名称，eg: java/lang/Object.class

@@ -23,12 +23,11 @@ public class OnMissingClassCondition extends OnClassCondition {
     }
 
     @Override
-    protected boolean conditionClasses(AnnotationMetadata<?> metadata) {
+    protected Class<?>[] conditionClasses(AnnotationMetadata<?> metadata) {
         try {
-            ((ConditionalOnMissingClass) metadata.get()).classes();
-            return true;
+            return ((ConditionalOnMissingClass) metadata.get()).classes();
         } catch (Throwable e) {
-            return false;
+            return null;
         }
     }
 }

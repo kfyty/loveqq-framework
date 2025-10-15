@@ -116,6 +116,15 @@ public class FastClassLoader extends URLClassLoader {
     }
 
     /**
+     * 关闭类加载器
+     */
+    @Override
+    public void close() throws IOException {
+        this.parallelLockMap.clear();
+        super.close();
+    }
+
+    /**
      * 读取数据到字节数组
      *
      * @param in 输入流

@@ -845,6 +845,13 @@ public abstract class ReflectUtil {
 
     /**
      * 清理反射缓存
+     */
+    public static void clearCache() {
+        REFLECT_CACHE.clear();
+    }
+
+    /**
+     * 清理反射缓存
      *
      * @param clazz class
      */
@@ -855,9 +862,6 @@ public abstract class ReflectUtil {
         }
         for (Method method : clazz.getDeclaredMethods()) {
             REFLECT_CACHE.remove(method);
-        }
-        if (AnnotationUtil.isAnnotation(clazz)) {
-
         }
     }
 }

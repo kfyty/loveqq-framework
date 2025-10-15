@@ -121,4 +121,12 @@ public abstract class ClassFileTransformerClassLoader extends FastClassLoader {
         }
         return transformers;
     }
+
+    @Override
+    public void close() throws IOException {
+        if (this.classFileTransformers != null) {
+            this.classFileTransformers.clear();
+        }
+        super.close();
+    }
 }
