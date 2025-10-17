@@ -16,7 +16,7 @@
 
     <properties>
         <grpc.version>1.68.0</grpc.version>
-        <bcpkix.jdk18on.version>1.78.1</bcpkix.jdk18on.version>
+        <bcpkix.jdk18on.version>1.79</bcpkix.jdk18on.version>
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <micrometer.registry.prometheus>1.12.11</micrometer.registry.prometheus>
         <dubbo.version>3.3.4</dubbo.version>
