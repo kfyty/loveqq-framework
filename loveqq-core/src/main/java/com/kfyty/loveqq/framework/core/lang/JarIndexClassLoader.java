@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.agent.HotSwapAgent;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.jar.JarFile;
@@ -132,37 +133,57 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 动态添加 jar index，为动态添加 class 提供支持
+     * 部署 jar file，将会先卸载 jar 内的 class，然后再重定义 class
      *
      * @param jarFiles jar 文件集合
      */
-    public void addJarIndex(List<java.util.jar.JarFile> jarFiles) {
+    public void deploy(List<File> jarFiles) {
+        try {
+            List<java.util.jar.JarFile> removeUse = new LinkedList<>();
+            List<java.util.jar.JarFile> redefineUse = new LinkedList<>();
+            for (File jarFile : jarFiles) {
+                removeUse.add(new java.util.jar.JarFile(jarFile));
+                redefineUse.add(new java.util.jar.JarFile(jarFile));
+            }
+            this.removeJarIndex(removeUse);
+            this.addJarIndex(true, redefineUse);
+        } catch (IOException e) {
+            throw new ResolvableException("Deploy jar failed.", e);
+        }
+    }
+
+    /**
+     * 动态添加 jar index，为动态添加 class 提供支持
+     * 重定义 class 时，默认仅支持修改方法体，不支持新增方法，新增字段；当使用 dcevm 时，可支持新增方法、字段
+     *
+     * @param redefine 是否重定义 class
+     * @param jarFiles jar 文件集合
+     */
+    public void addJarIndex(boolean redefine, List<java.util.jar.JarFile> jarFiles) {
+        if (redefine) {
+            HotSwapAgent.redefine(jarFiles);
+        }
         this.jarIndex.addJarIndex(jarFiles);
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
+     * 重定义 class 时，默认仅支持修改方法体，不支持新增方法，新增字段；当使用 dcevm 时，可支持新增方法、字段
      *
+     * @param redefine    是否重定义 class
      * @param packageName 包名，eg: com.kfyty.demo
      * @param jarFile     jar 文件
      */
-    public void addJarIndex(String packageName, java.util.jar.JarFile jarFile) {
+    public void addJarIndex(boolean redefine, String packageName, java.util.jar.JarFile jarFile) {
+        if (redefine) {
+            HotSwapAgent.redefine(jarFile);
+        }
         this.jarIndex.addJarIndex(packageName.replace('.', '/'), jarFile);
     }
 
     /**
-     * 动态添加 jar index，为动态添加 class 提供支持
-     *
-     * @param packageName 包名，eg: com.kfyty.demo
-     * @param jarFilePath jar 文件绝对路径
-     */
-    public void addJarIndex(String packageName, String jarFilePath) {
-        this.jarIndex.addJarIndex(packageName.replace('.', '/'), jarFilePath);
-    }
-
-    /**
      * 动态移除 jar index
-     * <b>注意：JarFile 必须是 {@link #addJarIndex(List)} 时的同名实例对象，否则无法移除</b>
+     * <b>注意：JarFile 必须是 {@link #addJarIndex(boolean, List)}} 时的同名实例对象，否则无法移除</b>
      *
      * @param jarFiles jar 文件
      */
@@ -173,7 +194,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 if (name.endsWith(".class")) {
                     Object removed = this.parallelLockMap.remove(name.substring(0, name.length() - 6).replace('/', '.'));
                     if (removed instanceof Class<?>) {
-                        ReflectUtil.clearReflectCache((Class<?>) removed);
+                        clearReflectCache(this, removed);
                     }
                 }
             }
@@ -192,7 +213,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             if (entry.getKey().startsWith(packageName)) {
                 i.remove();
                 if (entry.getValue() instanceof Class<?>) {
-                    ReflectUtil.clearReflectCache((Class<?>) entry.getValue());
+                    clearReflectCache(this, entry.getValue());
                 }
             }
         }
@@ -490,6 +511,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             }
         }
         return false;
+    }
+
+    /**
+     * 清理反射缓存
+     * 由于直接调用会使用 {@link ClassLoader#getSystemClassLoader()} 加载的 class，导致清理无效，因此需要使用反射调用
+     *
+     * @param classLoader 类加载器
+     * @param clazz       class
+     */
+    private static void clearReflectCache(JarIndexClassLoader classLoader, Object clazz) {
+        try {
+            classLoader.loadClass(ReflectUtil.class.getName(), false).getMethod("clearReflectCache", Class.class).invoke(null, clazz);
+        } catch (Exception e) {
+            throw ExceptionUtil.wrap(e);
+        }
     }
 
     /**

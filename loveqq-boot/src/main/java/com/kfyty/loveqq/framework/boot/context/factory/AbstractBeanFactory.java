@@ -22,6 +22,7 @@ import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -430,6 +431,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         }
 
         // 清理缓存
+        PackageUtil.clearCache();
         FactoriesLoader.clearCache();
         FactoryBeanDefinition.clearCache();
     }

@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.core.utils;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -97,10 +98,17 @@ public abstract class PackageUtil {
         }
     }
 
+    public static void clearCache() {
+        SCAN_PACKAGE_CACHE.clear();
+    }
+
     private static Set<String> scanClassNameByJar(URL url) {
         try {
             Set<String> classes = new HashSet<>();
             JarURLConnection urlConnection = ((JarURLConnection) url.openConnection());
+            if (Thread.currentThread() instanceof ContextRefreshThread) {
+                urlConnection.setUseCaches(false);
+            }
             if (urlConnection.getEntryName().endsWith(".class")) {
                 classes.add(urlConnection.getEntryName().replace('/', '.').replace(".class", CommonUtil.EMPTY_STRING));
                 return classes;
