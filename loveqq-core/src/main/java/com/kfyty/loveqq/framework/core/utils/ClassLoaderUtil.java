@@ -66,6 +66,19 @@ public abstract class ClassLoaderUtil {
     /**
      * 获取类加载器
      *
+     * @return 类加载器
+     */
+    public static JarIndexClassLoader getIndexedClassloader() {
+        ClassLoader classLoader = classLoader(ClassLoaderUtil.class);
+        if (isIndexedClassLoader(classLoader)) {
+            return (JarIndexClassLoader) classLoader;
+        }
+        throw new IllegalStateException("The thread context class loader doesn't JarIndexClassLoader.");
+    }
+
+    /**
+     * 获取类加载器
+     *
      * @param clazz 启动类
      * @return 类加载器
      */

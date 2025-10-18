@@ -139,23 +139,13 @@ public class JarIndex {
      * @param packageName 包名，eg: com/kfyty/demo
      * @param jarFile     jar 文件
      */
-    public void addJarIndex(String packageName, JarFile jarFile) {
+    public synchronized void addJarIndex(String packageName, JarFile jarFile) {
         try {
-            this.addJarIndex(packageName, jarFile.getName());
+            this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFile.getName());
+            this.rebuildURLs();
         } finally {
             IOUtil.close(jarFile);
         }
-    }
-
-    /**
-     * 动态添加 jar index，为动态添加 class 提供支持
-     *
-     * @param packageName 包名，eg: com/kfyty/demo
-     * @param jarFilePath jar 文件绝对路径
-     */
-    public synchronized void addJarIndex(String packageName, String jarFilePath) {
-        this.jarIndex.computeIfAbsent(packageName, k -> new LinkedList<>()).add(jarFilePath);
-        this.rebuildURLs();
     }
 
     /**

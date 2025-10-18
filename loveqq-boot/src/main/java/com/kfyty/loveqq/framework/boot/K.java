@@ -72,6 +72,15 @@ public class K {
     }
 
     /**
+     * 设置默认的系统属性配置
+     */
+    public static void setDefaultSystemProperties() {
+        System.setProperty("java.awt.headless", "true");
+        System.setProperty("jdk.attach.allowAttachSelf", "true");
+        System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
+    }
+
+    /**
      * 直接启动应用
      * 运行该方法时，如果类加载不是 {@link JarIndexClassLoader}，
      * 则 {@link java.lang.instrument.ClassFileTransformer} 不会直接应用，仍需配置到 javaagent 以及 Pre-Main 才能生效
@@ -82,6 +91,7 @@ public class K {
      * @return {@link ApplicationContext}
      */
     public static ApplicationContext start(Class<?> clazz, String... args) {
+        setDefaultSystemProperties();
         return new K(clazz, args).run();
     }
 
