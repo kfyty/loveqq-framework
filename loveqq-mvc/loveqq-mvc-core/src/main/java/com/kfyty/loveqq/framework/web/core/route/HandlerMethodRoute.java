@@ -29,12 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
+import reactor.util.context.ContextView;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING;
@@ -127,21 +129,25 @@ public class HandlerMethodRoute implements Route {
 
     @Override
     public Publisher<Pair<MethodParameter, Object>> applyRouteAsync(ServerRequest request, ServerResponse response, AbstractDispatcher<?> dispatcher) {
-        Function<MethodParameter, ?> routeFunction = methodParameter -> {
-            MDC.put(ConstantConfig.TRACK_ID, ConstantConfig.traceId());
+        BiFunction<String, MethodParameter, ?> routeFunction = (traceId, parameter) -> {
+            MDC.put(ConstantConfig.TRACK_ID, traceId);
             ServerRequest prevRequest = RequestContextHolder.set(request);
             ServerResponse prevResponse = ResponseContextHolder.set(response);
             try {
-                return ReflectUtil.invokeMethod(this.getController(), this.mappedMethod, methodParameter.getMethodArgs());
+                return ReflectUtil.invokeMethod(this.getController(), this.mappedMethod, parameter.getMethodArgs());
             } finally {
                 RequestContextHolder.set(prevRequest);
                 ResponseContextHolder.set(prevResponse);
                 MDC.remove(ConstantConfig.TRACK_ID);
             }
         };
-        return this.prepareMethodParameterAsync(request, response, dispatcher)
-                .zipWhen(mp -> Mono.fromSupplier(() -> routeFunction.apply(mp)))
-                .map(e -> new Pair<>(e.getT1(), e.getT2()));
+
+        Function<ContextView, Mono<Pair<MethodParameter, Object>>> applyFunction = context ->
+                this.prepareMethodParameterAsync(request, response, dispatcher)
+                        .zipWhen(mp -> Mono.fromSupplier(() -> routeFunction.apply(context.get(ConstantConfig.TRACK_ID), mp)))
+                        .map(e -> new Pair<>(e.getT1(), e.getT2()));
+
+        return Mono.deferContextual(Mono::just).flatMap(applyFunction);
     }
 
     @Override

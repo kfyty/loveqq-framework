@@ -49,8 +49,10 @@ public interface HandlerInterceptor {
      * @param response 响应
      * @param handler  处理器
      * @param retValue 返回值
+     * @return 处理后的返回值
      */
-    default void postHandle(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
+    default Object postHandle(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
+        return retValue;
     }
 
     /**

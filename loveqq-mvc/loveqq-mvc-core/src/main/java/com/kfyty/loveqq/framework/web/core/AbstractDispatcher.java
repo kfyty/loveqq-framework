@@ -197,12 +197,13 @@ public abstract class AbstractDispatcher<T extends AbstractDispatcher<T>> implem
         return true;
     }
 
-    protected void applyPostInterceptor(ServerRequest request, ServerResponse response, Route handler, Object value) {
+    protected Object applyPostInterceptor(ServerRequest request, ServerResponse response, Route handler, Object value) {
         for (HandlerInterceptor interceptor : this.interceptorChains) {
             if (this.shouldApplyInterceptor(request, response, interceptor)) {
-                interceptor.postHandle(request, response, handler, value);
+                value = interceptor.postHandle(request, response, handler, value);
             }
         }
+        return value;
     }
 
     protected void applyCompletionInterceptor(ServerRequest request, ServerResponse response, Route handler, Throwable e) {

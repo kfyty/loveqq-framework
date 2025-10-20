@@ -18,8 +18,8 @@ public interface ReactiveHandlerInterceptor extends HandlerInterceptor {
         return Mono.fromSupplier(() -> this.preHandle(request, response, handler));
     }
 
-    default Mono<Void> postHandleAsync(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
-        return Mono.fromRunnable(() -> this.postHandle(request, response, handler, retValue));
+    default Mono<Object> postHandleAsync(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
+        return Mono.fromSupplier(() -> this.postHandle(request, response, handler, retValue));
     }
 
     default Mono<Void> afterCompletionAsync(ServerRequest request, ServerResponse response, Route handler, Throwable ex) {
