@@ -11,6 +11,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import static com.kfyty.loveqq.framework.web.mvc.reactor.request.support.RequestContextHolder.REQUEST_CONTEXT_ATTRIBUTE;
+import static com.kfyty.loveqq.framework.web.mvc.reactor.request.support.RequestContextHolder.REQUEST_TRACE_ID_ATTRIBUTE;
 import static com.kfyty.loveqq.framework.web.mvc.reactor.request.support.ResponseContextHolder.RESPONSE_CONTEXT_ATTRIBUTE;
 
 /**
@@ -26,10 +27,16 @@ public class RequestResponseContextHolderFilter implements Filter {
 
     @Override
     public Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
+        String traceId = ConstantConfig.traceId();
+
+        request.setAttribute(REQUEST_TRACE_ID_ATTRIBUTE, traceId);
+
         Publisher<Void> publisher = chain.doFilter(request, response);
+
         if (publisher instanceof Mono<Void> mono) {
-            return mono.contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response).put(ConstantConfig.TRACK_ID, ConstantConfig.traceId()));
+            return mono.contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response).put(ConstantConfig.TRACK_ID, traceId));
         }
-        return Mono.from(publisher).contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response).put(ConstantConfig.TRACK_ID, ConstantConfig.traceId()));
+
+        return Mono.from(publisher).contextWrite(context -> context.put(REQUEST_CONTEXT_ATTRIBUTE, request).put(RESPONSE_CONTEXT_ATTRIBUTE, response).put(ConstantConfig.TRACK_ID, traceId));
     }
 }

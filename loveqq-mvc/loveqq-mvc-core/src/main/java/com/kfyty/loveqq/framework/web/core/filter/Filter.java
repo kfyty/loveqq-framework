@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
+import static com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder.callWithTraceId;
+
 /**
  * 描述: mvc 过滤器
  *
@@ -47,7 +49,7 @@ public interface Filter {
      * @param chain    过滤器链
      */
     default Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
-        return Mono.fromSupplier(() -> doFilter(request, response)).flatMap(new FilterTransformer(request, response, chain));
+        return Mono.fromSupplier(() -> callWithTraceId(request, () -> doFilter(request, response))).flatMap(new FilterTransformer(request, response, chain));
     }
 
     /**

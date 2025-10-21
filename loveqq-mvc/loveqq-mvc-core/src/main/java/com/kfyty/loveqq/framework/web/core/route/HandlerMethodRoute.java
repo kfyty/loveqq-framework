@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.web.core.route;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -27,20 +26,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
-import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING_ARRAY;
+import static com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder.callWithTraceId;
 
 /**
  * 功能描述: 处理器方法路由
@@ -129,25 +126,20 @@ public class HandlerMethodRoute implements Route {
 
     @Override
     public Publisher<Pair<MethodParameter, Object>> applyRouteAsync(ServerRequest request, ServerResponse response, AbstractDispatcher<?> dispatcher) {
-        BiFunction<String, MethodParameter, ?> routeFunction = (traceId, parameter) -> {
-            MDC.put(ConstantConfig.TRACK_ID, traceId);
+        Function<MethodParameter, ?> routeFunction = parameter -> {
             ServerRequest prevRequest = RequestContextHolder.set(request);
             ServerResponse prevResponse = ResponseContextHolder.set(response);
             try {
-                return ReflectUtil.invokeMethod(this.getController(), this.mappedMethod, parameter.getMethodArgs());
+                return callWithTraceId(request, () -> ReflectUtil.invokeMethod(this.getController(), this.mappedMethod, parameter.getMethodArgs()));
             } finally {
                 RequestContextHolder.set(prevRequest);
                 ResponseContextHolder.set(prevResponse);
-                MDC.remove(ConstantConfig.TRACK_ID);
             }
         };
 
-        Function<ContextView, Mono<Pair<MethodParameter, Object>>> applyFunction = context ->
-                this.prepareMethodParameterAsync(request, response, dispatcher)
-                        .zipWhen(mp -> Mono.fromSupplier(() -> routeFunction.apply(context.get(ConstantConfig.TRACK_ID), mp)))
-                        .map(e -> new Pair<>(e.getT1(), e.getT2()));
-
-        return Mono.deferContextual(Mono::just).flatMap(applyFunction);
+        return this.prepareMethodParameterAsync(request, response, dispatcher)
+                .zipWhen(mp -> Mono.fromSupplier(() -> routeFunction.apply(mp)))
+                .map(e -> new Pair<>(e.getT1(), e.getT2()));
     }
 
     @Override

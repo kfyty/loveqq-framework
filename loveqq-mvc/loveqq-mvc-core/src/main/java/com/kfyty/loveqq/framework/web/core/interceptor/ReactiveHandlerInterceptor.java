@@ -5,6 +5,9 @@ import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.route.Route;
 import reactor.core.publisher.Mono;
 
+import static com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder.callWithTraceId;
+import static com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder.runWithTraceId;
+
 /**
  * 描述: 响应式拦截器接口
  *
@@ -15,14 +18,14 @@ import reactor.core.publisher.Mono;
 public interface ReactiveHandlerInterceptor extends HandlerInterceptor {
 
     default Mono<Boolean> preHandleAsync(ServerRequest request, ServerResponse response, Route handler) {
-        return Mono.fromSupplier(() -> this.preHandle(request, response, handler));
+        return Mono.fromSupplier(() -> callWithTraceId(request, () -> this.preHandle(request, response, handler)));
     }
 
     default Mono<Object> postHandleAsync(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
-        return Mono.fromSupplier(() -> this.postHandle(request, response, handler, retValue));
+        return Mono.fromSupplier(() -> callWithTraceId(request, () -> this.postHandle(request, response, handler, retValue)));
     }
 
     default Mono<Void> afterCompletionAsync(ServerRequest request, ServerResponse response, Route handler, Throwable ex) {
-        return Mono.fromRunnable(() -> this.afterCompletion(request, response, handler, ex));
+        return Mono.fromRunnable(() -> runWithTraceId(request, () -> this.afterCompletion(request, response, handler, ex)));
     }
 }

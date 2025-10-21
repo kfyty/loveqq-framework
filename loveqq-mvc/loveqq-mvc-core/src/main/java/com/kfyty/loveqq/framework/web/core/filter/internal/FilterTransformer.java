@@ -10,6 +10,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
+import static com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder.runWithTraceId;
+
 /**
  * 描述: 过滤器适配 {@link Publisher} to {@link Mono}，避免 servlet 环境运行异常
  *
@@ -26,15 +28,15 @@ public class FilterTransformer implements Function<Filter.Continue, Mono<Void>> 
     @Override
     public Mono<Void> apply(Filter.Continue _continue_) {
         if (!_continue_._continue_()) {
-            return Mono.<Void>empty().doFinally(s -> _continue_.finally_run());
+            return Mono.<Void>empty().doFinally(s -> runWithTraceId(request, _continue_::finally_run));
         }
 
         Publisher<Void> publisher = filterChain.doFilter(request, response);
 
         if (publisher instanceof Mono<Void> mono) {
-            return mono.doFinally(s -> _continue_.finally_run());
+            return mono.doFinally(s -> runWithTraceId(request, _continue_::finally_run));
         }
 
-        return Mono.from(publisher).doFinally(s -> _continue_.finally_run());
+        return Mono.from(publisher).doFinally(s -> runWithTraceId(request, _continue_::finally_run));
     }
 }

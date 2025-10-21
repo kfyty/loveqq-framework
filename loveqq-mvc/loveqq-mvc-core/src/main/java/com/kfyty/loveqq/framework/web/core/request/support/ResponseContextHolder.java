@@ -15,7 +15,7 @@ public class ResponseContextHolder {
     public static ServerResponse get() {
         ServerResponse request = RESPONSE_LOCAL.get();
         if (request == null) {
-            throw new IllegalStateException("The current thread is not bound to response !");
+            throw new IllegalStateException("The current thread is not bind to response !");
         }
         return request;
     }
