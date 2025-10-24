@@ -68,7 +68,7 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
     @Override
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         final Method method = ((MethodSignature) pjp.getStaticPart().getSignature()).getMethod();
-        final Lazy<Map<String, Object>> context = new Lazy<>(() -> this.buildContext(null, method, pjp.getArgs(), pjp.getTarget()));
+        final Lazy<Map<String, Object>> context = Lazy.of(() -> this.buildContext(null, method, pjp.getArgs(), pjp.getTarget()));
         final Cacheable cacheable = AnnotationUtil.findAnnotation(method, Cacheable.class);
         final CacheClean cacheClean = AnnotationUtil.findAnnotation(method, CacheClean.class);
         final String cacheableName = cacheable == null ? null : cacheable.value().isEmpty() ? this.buildCacheKey(method, pjp.getArgs(), pjp.getTarget()) : this.resolvePlaceholders(cacheable.value(), context.get());

@@ -67,15 +67,15 @@
 
     <properties>
         <!-- 版本号统一管理，只能用 revision -->
-        <revision>1.1.6-M1-java8</revision>
+        <revision>1.1.6-M2-java8</revision>
 
         <aspectj.version>1.9.23</aspectj.version>
         <asm.version>9.6</asm.version>
         <javassist.version>3.30.2-GA</javassist.version>
-        <netty.version>4.1.122.Final</netty.version>
+        <netty.version>4.1.127.Final</netty.version>
         <reactive.streams.version>1.0.4</reactive.streams.version>
-        <reactor.core.version>3.7.7</reactor.core.version>
-        <reactor.netty.version>1.2.7</reactor.netty.version>
+        <reactor.core.version>3.7.12</reactor.core.version>
+        <reactor.netty.version>1.2.11</reactor.netty.version>
         <ognl.version>3.4.5</ognl.version>
         <jackson.version>2.19.1</jackson.version>
         <snakeyaml.version>2.3</snakeyaml.version>
@@ -102,8 +102,8 @@
         <mysql.version>8.0.16</mysql.version>
         <oracle14.version>10.2.0.4.0</oracle14.version>
         <mssql.version>7.4.0.jre8</mssql.version>
-        <redisson-version>3.50.0</redisson-version>
-        <lettuce.version>6.6.0.RELEASE</lettuce.version>
+        <redisson-version>3.52.0</redisson-version>
+        <lettuce.version>6.8.1.RELEASE</lettuce.version>
         <mybatis.version>3.5.19</mybatis.version>
 
         <k-jte.version>1.0.0</k-jte.version>

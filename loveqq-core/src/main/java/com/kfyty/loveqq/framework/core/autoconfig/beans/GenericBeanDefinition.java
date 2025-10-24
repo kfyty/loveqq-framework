@@ -36,7 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.kfyty.loveqq.framework.core.utils.AnnotationUtil.findAnnotation;
 import static com.kfyty.loveqq.framework.core.utils.ConverterUtil.convert;
 import static java.util.Optional.ofNullable;
 
@@ -371,12 +370,15 @@ public class GenericBeanDefinition implements BeanDefinition {
         List<Pair<Class<?>, Object>> constructorArgs = ofNullable(this.defaultConstructorArgs).map(LinkedList::new).orElseGet(LinkedList::new);
         for (int i = constructorArgs.size(); i < parameters.length; i++) {
             Parameter parameter = parameters[i];
-            Value value = findAnnotation(parameter, Value.class);
+            Value value = AnnotationUtil.findAnnotation(parameter, Value.class);
             if (value != null) {
                 constructorArgs.add(new Pair<>(parameter.getType(), resolvePlaceholderValue(value.value(), value.bind(), parameter.getParameterizedType())));
                 continue;
             }
             AutowiredDescription description = ofNullable(autowiredProcessor.getResolver().resolve(parameter)).orElse(constructorDescription);
+            if (description != null && description == constructorDescription) {
+                description.markLazied(AnnotationUtil.hasAnnotation(parameter, Lazy.class));
+            }
             Object resolveBean = autowiredProcessor.doResolve(SimpleGeneric.from(this.beanType, parameter), description, parameter.getType());
             constructorArgs.add(new Pair<>(parameter.getType(), resolveBean));
         }

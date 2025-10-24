@@ -27,7 +27,7 @@ public class ValidTest {
      * 测试类
      */
     private UserService userService = DynamicProxyFactory.create(true)
-            .addInterceptorPoint(new MethodValidationInterceptorProxy(new Lazy<>(() -> validator)))
+            .addInterceptorPoint(new MethodValidationInterceptorProxy(Lazy.of(() -> validator)))
             .createProxy(new UserService());
 
     /**

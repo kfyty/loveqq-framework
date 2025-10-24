@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.IO_STREAM_READ_BUFFER_SIZE;
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_INPUT_STREAM;
@@ -312,7 +311,7 @@ public class NettyServerRequest implements ServerRequest {
             return new Pair<>(form.getName(), new String(getBytes(form)));
         }
         FileUpload upload = (FileUpload) form;
-        Lazy<InputStream> lazyInputStream = new Lazy<>(newInputStream(form));
+        Lazy<InputStream> lazyInputStream = Lazy.of(newInputStream(form));
         return new Pair<>(form.getName(), new DefaultMultipartFile(upload.getName(), upload.getFilename(), upload.getContentType(), true, upload.length(), lazyInputStream));
     }
 
@@ -354,7 +353,7 @@ public class NettyServerRequest implements ServerRequest {
      * @param upload 上传数据
      * @return 输入流提供者
      */
-    public static Supplier<InputStream> newInputStream(HttpData upload) {
+    public static Lazy.ThrowableSupplier<InputStream> newInputStream(HttpData upload) {
         if (upload.isInMemory()) {
             byte[] bytes = getBytes(upload);
             return () -> new ByteArrayInputStream(bytes);

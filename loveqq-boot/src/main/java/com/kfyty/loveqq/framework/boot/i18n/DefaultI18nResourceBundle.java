@@ -10,8 +10,6 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.util.ResourceBundle.getBundle;
-
 /**
  * 描述: 国际化资源包
  *
@@ -61,7 +59,7 @@ public class DefaultI18nResourceBundle implements I18nResourceBundle {
         if (this.resources.isEmpty()) {
             return this.getDefaultMessage(code, args, defaultMessage);
         }
-        ResourceBundle[] resourceBundles = this.resourceBundles.computeIfAbsent(locale, k -> this.resources.stream().map(e -> getBundle(e, k)).toArray(ResourceBundle[]::new));
+        ResourceBundle[] resourceBundles = this.getResourceBundle(locale);
         for (ResourceBundle resourceBundle : resourceBundles) {
             if (resourceBundle.containsKey(code)) {
                 String message = resourceBundle.getString(code);
@@ -69,6 +67,11 @@ public class DefaultI18nResourceBundle implements I18nResourceBundle {
             }
         }
         return this.getDefaultMessage(code, args, defaultMessage);
+    }
+
+    @Override
+    public ResourceBundle[] getResourceBundle(Locale locale) {
+        return this.resourceBundles.computeIfAbsent(locale, k -> this.resources.stream().map(e -> ResourceBundle.getBundle(e, k)).toArray(ResourceBundle[]::new));
     }
 
     protected String getDefaultMessage(String code, Object[] args, String message) {

@@ -36,7 +36,7 @@ public class MapperInterfaceFactoryBean<T> implements FactoryBean<T>, Applicatio
     }
 
     public MapperInterfaceFactoryBean(Class<T> mapperInterface, ConcurrentSqlSession sqlSession) {
-        this(mapperInterface, new Lazy<>(() -> sqlSession));
+        this(mapperInterface, Lazy.of(() -> sqlSession));
     }
 
     public MapperInterfaceFactoryBean(Class<T> mapperInterface, Lazy<ConcurrentSqlSession> sqlSession) {
@@ -70,7 +70,7 @@ public class MapperInterfaceFactoryBean<T> implements FactoryBean<T>, Applicatio
 
     protected void ensureSqlSession() {
         if (this.sqlSession == null) {
-            this.sqlSession = new Lazy<>(() -> this.applicationContext.getBean(ConcurrentSqlSession.class));
+            this.sqlSession = Lazy.of(() -> this.applicationContext.getBean(ConcurrentSqlSession.class));
         }
     }
 }

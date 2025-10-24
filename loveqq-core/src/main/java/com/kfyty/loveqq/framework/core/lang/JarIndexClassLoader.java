@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
+import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.jar.JarFile;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
@@ -44,11 +45,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      * 注册并行能力
      */
     static {
-        try {
-            registerAsParallelCapable();
-        } catch (Throwable e) {
-            // ignored
-        }
+        registerAsParallelCapable();
     }
 
     /**
@@ -157,6 +154,13 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
         this.jarIndex.removeJarIndex(jarFiles);
+        for (java.util.jar.JarFile jarFile : jarFiles) {
+            for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
+                if (entry.getName().endsWith(".class")) {
+                    this.parallelLockMap.remove(entry.getName());
+                }
+            }
+        }
     }
 
     /**
@@ -166,6 +170,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public void removeJarIndex(String packageName) {
         this.jarIndex.removeJarIndex(packageName);
+        this.parallelLockMap.entrySet().removeIf(e -> e.getKey().startsWith(packageName));
     }
 
     /**
@@ -260,14 +265,21 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (name.startsWith("java.") || isThisClass(name)) {
-            return super.loadClass(name, resolve);                                                                      // 自身需要走父类，否则会出现强转异常
+        Object lock = super.getClassLoadingLock(name);
+
+        if (lock instanceof Class<?> clazz) {
+            return clazz;
         }
-        synchronized (name.intern()) {
+
+        if (name.startsWith("java.") || isThisClass(name)) {
+            return super.loadClass(name, resolve);                                              // 自身需要走父类，否则会出现强转异常
+        }
+
+        synchronized (lock) {
             Class<?> loadedClass = this.findLoadedClass(name);
             if (loadedClass == null) {
                 String className = name.replace('.', '/');
-                String classPath = className + ".class";
+                String classPath = className.concat(".class");
                 if (this.isExploded()) {
                     loadedClass = this.findExplodedClass(name, className, classPath);
                 }
@@ -277,9 +289,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             }
             if (loadedClass != null) {
                 if (resolve) {
-                    this.resolveClass(loadedClass);
+                    super.resolveClass(loadedClass);
                 }
-                return loadedClass;
+                return super.afterLoadClass(name, loadedClass);
             }
             return super.loadClass(name, resolve);
         }
@@ -326,15 +338,17 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
         List<String> jarFiles = this.jarIndex.getJarFiles(className, packageName);
         for (Iterator<String> i = jarFiles.iterator(); i.hasNext(); ) {
-            try (JarFile jarFile = this.getJarFile(i.next());
-                 InputStream inputStream = jarFile.getInputStream(new JarEntry(classPath))) {
-                if (inputStream != null) {
-                    if (DEPENDENCY_CHECK && i.hasNext()) {
-                        this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
+            try (JarFile jarFile = this.getJarFile(i.next())) {
+                JarEntry jarEntry = jarFile.getJarEntry(classPath);
+                if (jarEntry != null) {
+                    try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
+                        if (DEPENDENCY_CHECK && i.hasNext()) {
+                            this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
+                        }
+                        byte[] classBytes = this.transform(className, read(inputStream));
+                        this.definePackageIfNecessary(lastDot, packageName, jarFile.getUrl(), jarFile.getManifest());
+                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), jarEntry.getCodeSigners()));
                     }
-                    byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(lastDot, packageName, jarFile.getUrl(), jarFile.getManifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), (CodeSigner[]) null));
                 }
             } catch (IOException e) {
                 throw new ResolvableException(e);
@@ -355,16 +369,18 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> findExplodedClass(String name, String className, String classPath) throws ClassNotFoundException {
         int lastDot = name.lastIndexOf('.');
         String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
-        List<URL> resources = this.findExplodedResources(classPath);
-        for (URL resource : resources) {
-            File classFile = new File(PathUtil.getPath(resource).toString(), classPath);
-            if (classFile.exists()) {
-                try (InputStream inputStream = new FileInputStream(classFile)) {
-                    byte[] classBytes = this.transform(className, this.read(inputStream));
-                    this.definePackageIfNecessary(lastDot, packageName, resource, new Manifest());
-                    return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
-                } catch (IOException e) {
-                    throw new ResolvableException(e);
+        for (URL resource : this.getURLs()) {
+            String resourceFile = resource.getFile();
+            if (!resourceFile.endsWith(".jar")) {
+                File classFile = new File(resourceFile, classPath);
+                if (classFile.exists()) {
+                    try (InputStream inputStream = new FileInputStream(classFile)) {
+                        byte[] classBytes = this.transform(className, read(inputStream));
+                        this.definePackageIfNecessary(lastDot, packageName, resource, new Manifest());
+                        return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(resource, (CodeSigner[]) null));
+                    } catch (IOException e) {
+                        throw new ResolvableException(e);
+                    }
                 }
             }
         }
@@ -421,6 +437,37 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
+     * 返回是否是自身的 class name
+     *
+     * @param name class name
+     * @return true or false
+     */
+    public static boolean isThisClass(String name) {
+        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.FastClassLoader") ||
+                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
+    }
+
+    /**
+     * 返回是否是 java 内部资源
+     *
+     * @param name 资源名称，eg: java/lang/Object.class
+     * @return true if java resources
+     */
+    public static boolean isJavaSystemResource(String name) {
+        if (name.startsWith("java/")) {
+            return true;
+        }
+        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
+            if (name.contains(javaSystemResource)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 缓存的 jar file
      * 可根据 {@link #jarFileCache} 决定是否关闭资源
      */
@@ -451,35 +498,5 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 super.close();
             }
         }
-    }
-
-    /**
-     * 返回是否是自身的 class name
-     *
-     * @param name class name
-     * @return true or false
-     */
-    public static boolean isThisClass(String name) {
-        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
-    }
-
-    /**
-     * 返回是否是 java 内部资源
-     *
-     * @param name 资源名称，eg: java/lang/Object.class
-     * @return true if java resources
-     */
-    public static boolean isJavaSystemResource(String name) {
-        if (name.startsWith("java/")) {
-            return true;
-        }
-        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-            if (name.contains(javaSystemResource)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

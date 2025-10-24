@@ -20,7 +20,7 @@ public interface RequestMappingHandler {
      * @param controller 控制器
      */
     default List<Route> resolveRequestMappingRoute(Object controller) {
-        return this.resolveRequestMappingRoute(controller.getClass(), new Lazy<>(() -> controller));
+        return this.resolveRequestMappingRoute(controller.getClass(), Lazy.of(() -> controller));
     }
 
     /**

@@ -2,12 +2,18 @@ package com.kfyty.loveqq.framework.boot.context;
 
 import com.kfyty.loveqq.framework.boot.context.factory.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
+import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
+import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeRefreshed;
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.IOC;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 /**
  * 描述: 上下文刷新器
@@ -18,6 +24,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ContextRefresher {
+    /**
+     * 刷新上下文
+     */
+    public static void refresh() {
+        refresh(IOC.getApplicationContext());
+    }
+
     /**
      * 刷新上下文
      *
@@ -63,6 +76,14 @@ public class ContextRefresher {
 
                 // 执行刷新
                 context.refresh();
+
+                // 执行应用作用域回调
+                GenericPropertiesContext propertyContext = IOC.getPropertyContext();
+                for (Map.Entry<String, Object> entry : context.getBeanWithAnnotation(ApplicationScope.class).entrySet()) {
+                    if (entry.getValue() instanceof ScopeRefreshed scopeRefreshed) {
+                        scopeRefreshed.onRefreshed(propertyContext);
+                    }
+                }
             } finally {
                 // 结束守护任务
                 daemon.finish();
@@ -99,6 +120,7 @@ public class ContextRefresher {
 
         public void start() {
             Thread daemon = new Thread(this);
+            daemon.setName("ContextRefreshDaemonThread");
             daemon.setDaemon(false);
             daemon.start();
 

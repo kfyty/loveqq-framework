@@ -74,7 +74,7 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
         RouteRegistry routeRegistry = applicationContext.getBean(RouteRegistry.class);
         RequestMappingHandler requestMappingHandler = applicationContext.getBean(RequestMappingHandler.class);
         for (Map.Entry<String, BeanDefinition> entry : applicationContext.getBeanDefinitionWithAnnotation(Controller.class, true).entrySet()) {
-            List<Route> routes = requestMappingHandler.resolveRequestMappingRoute(entry.getValue().getBeanType(), new Lazy<>(() -> applicationContext.getBean(entry.getKey())));
+            List<Route> routes = requestMappingHandler.resolveRequestMappingRoute(entry.getValue().getBeanType(), Lazy.of(() -> applicationContext.getBean(entry.getKey())));
             routeRegistry.registryRoute(routes);
         }
     }

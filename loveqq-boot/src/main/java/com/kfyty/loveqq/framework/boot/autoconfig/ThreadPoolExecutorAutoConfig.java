@@ -12,7 +12,6 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecuto
 import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,7 +28,6 @@ import static com.kfyty.loveqq.framework.core.utils.CommonUtil.CPU_CORE;
  * @date 2022/10/17 21:46
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 @Configuration
 public class ThreadPoolExecutorAutoConfig implements InitializingBean, DestroyBean {
     /**

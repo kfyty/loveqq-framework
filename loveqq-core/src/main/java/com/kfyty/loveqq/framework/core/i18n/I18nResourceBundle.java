@@ -1,6 +1,7 @@
 package com.kfyty.loveqq.framework.core.i18n;
 
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * 描述: 国际化资源包
@@ -49,4 +50,12 @@ public interface I18nResourceBundle {
      * @return i18n message
      */
     String getMessage(String code, String defaultMessage, Locale locale, Object... args);
+
+    /**
+     * 获取资源包
+     *
+     * @param locale 语言环境
+     * @return 资源包
+     */
+    ResourceBundle[] getResourceBundle(Locale locale);
 }

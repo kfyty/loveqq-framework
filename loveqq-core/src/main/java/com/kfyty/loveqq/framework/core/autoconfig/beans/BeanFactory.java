@@ -48,5 +48,5 @@ public interface BeanFactory extends ConditionBeanDefinitionRegistry, AutoClosea
 
     void removeBeanReference(String name);
 
-    void destroyBean(String name, Object bean);
+    boolean destroyBean(String name, Object bean);
 }
