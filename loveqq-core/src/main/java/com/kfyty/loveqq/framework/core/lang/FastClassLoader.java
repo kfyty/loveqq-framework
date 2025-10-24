@@ -97,8 +97,9 @@ public class FastClassLoader extends URLClassLoader {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (this.parallelLockMap.get(name) instanceof Class<?> clazz) {
-            return clazz;
+        Object lock = this.parallelLockMap.get(name);
+        if (lock instanceof Class<?>) {
+            return (Class<?>) lock;
         }
         return this.afterLoadClass(name, super.loadClass(name, resolve));
     }

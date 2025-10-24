@@ -80,8 +80,8 @@ public class ContextRefresher {
                 // 执行应用作用域回调
                 GenericPropertiesContext propertyContext = IOC.getPropertyContext();
                 for (Map.Entry<String, Object> entry : context.getBeanWithAnnotation(ApplicationScope.class).entrySet()) {
-                    if (entry.getValue() instanceof ScopeRefreshed scopeRefreshed) {
-                        scopeRefreshed.onRefreshed(propertyContext);
+                    if (entry.getValue() instanceof ScopeRefreshed) {
+                        ((ScopeRefreshed) entry.getValue()).onRefreshed(propertyContext);
                     }
                 }
             } finally {

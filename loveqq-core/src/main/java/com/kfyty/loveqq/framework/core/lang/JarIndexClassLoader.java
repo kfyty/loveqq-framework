@@ -267,8 +267,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Object lock = super.getClassLoadingLock(name);
 
-        if (lock instanceof Class<?> clazz) {
-            return clazz;
+        if (lock instanceof Class<?>) {
+            return (Class<?>) lock;
         }
 
         if (name.startsWith("java.") || isThisClass(name)) {

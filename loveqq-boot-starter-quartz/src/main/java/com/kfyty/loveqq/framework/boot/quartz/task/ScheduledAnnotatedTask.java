@@ -26,8 +26,8 @@ public class ScheduledAnnotatedTask implements Job {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         Object bean = jobDataMap.get(TASK_BEAN_KEY);
         Method method = (Method) jobDataMap.get(TASK_METHOD_KEY);
-        if (bean instanceof Job job) {
-            job.execute(context);
+        if (bean instanceof Job) {
+            ((Job) bean).execute(context);
         } else {
             ReflectUtil.invokeMethod(bean, method);
         }
