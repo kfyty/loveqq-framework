@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.boot.mvc.servlet.tomcat.webresources;
 
-import lombok.SneakyThrows;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.webresources.JarResource;
@@ -37,25 +37,37 @@ public class ClassPathJarResourceSet extends JarResourceSet {
         super(root, webAppMount, base, internalPath);
     }
 
-    @SneakyThrows(IOException.class)
+    /**
+     * 资源不在主 jar 包时，查询不到，此时需要从类路径查询
+     *
+     * @param pathInArchive The path in the archive of the entry required
+     * @return {@link JarEntry}
+     */
     protected JarEntry getArchiveEntry(String pathInArchive) {
         JarEntry archiveEntry = super.getArchiveEntry(pathInArchive);
         if (archiveEntry == null) {
-            if (pathInArchive.charAt(pathInArchive.length() - 1) == '/') {
-                pathInArchive = pathInArchive.substring(0, pathInArchive.length() - 1);
-            }
-            URL url = this.getClass().getClassLoader().getResource(pathInArchive);
-            if (url != null) {
-                URLConnection urlConnection = url.openConnection();
-                if (urlConnection instanceof JarURLConnection connection) {
-                    archiveEntry = connection.getJarEntry();
-                    JAR_FILE.set(connection.getJarFile());
+            try {
+                URL url = this.getClass().getClassLoader().getResource(pathInArchive);
+                if (url != null) {
+                    URLConnection urlConnection = url.openConnection();
+                    if (urlConnection instanceof JarURLConnection connection) {
+                        if (Thread.currentThread() instanceof ContextRefreshThread) {
+                            urlConnection.setUseCaches(false);
+                        }
+                        archiveEntry = connection.getJarEntry();
+                        JAR_FILE.set(connection.getJarFile());
+                    }
                 }
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
             }
         }
         return archiveEntry;
     }
 
+    /**
+     * 这里要重写 getJarInputStreamWrapper 方法，因为 {@link #getBase()} 不一致
+     */
     @Override
     protected WebResource createArchiveResource(JarEntry jarEntry, String webAppPath, Manifest manifest) {
         try {
@@ -72,11 +84,10 @@ public class ClassPathJarResourceSet extends JarResourceSet {
                     try {
                         InputStream is = jarFile.getInputStream(jarEntry);
                         return new JarInputStreamWrapper(jarEntry, is) {
-
                             @Override
                             public void close() throws IOException {
+                                // jarFile 不关闭，可能还会使用
                                 is.close();
-                                jarFile.close();
                             }
                         };
                     } catch (IOException e) {

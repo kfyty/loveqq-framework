@@ -28,15 +28,15 @@ public class FilterTransformer implements Function<Filter.Continue, Mono<Void>> 
     @Override
     public Mono<Void> apply(Filter.Continue _continue_) {
         if (!_continue_._continue_()) {
-            return Mono.<Void>empty().doFinally(s -> runWithTraceId(request, _continue_::finally_run));
+            return Mono.<Void>empty().doFinally(s -> runWithTraceId(request, _continue_::_finally_));
         }
 
         Publisher<Void> publisher = filterChain.doFilter(request, response);
 
         if (publisher instanceof Mono<Void> mono) {
-            return mono.doFinally(s -> runWithTraceId(request, _continue_::finally_run));
+            return mono.doFinally(s -> runWithTraceId(request, _continue_::_finally_));
         }
 
-        return Mono.from(publisher).doFinally(s -> runWithTraceId(request, _continue_::finally_run));
+        return Mono.from(publisher).doFinally(s -> runWithTraceId(request, _continue_::_finally_));
     }
 }

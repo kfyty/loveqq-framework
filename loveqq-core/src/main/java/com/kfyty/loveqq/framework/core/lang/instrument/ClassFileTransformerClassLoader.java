@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.lang.instrument;
 
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.lang.FastClassLoader;
+import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -37,6 +38,9 @@ public abstract class ClassFileTransformerClassLoader extends FastClassLoader {
     }
 
     /**
+     * 注意，该集合内的实例，都是 {@link ClassLoader#getSystemClassLoader()} 加载的
+     * 因为 {@link JarIndexClassLoader} 遵循了双亲委派机制
+     *
      * @see this#obtainClassFileTransformer()
      */
     private volatile List<ClassFileTransformer> classFileTransformers;

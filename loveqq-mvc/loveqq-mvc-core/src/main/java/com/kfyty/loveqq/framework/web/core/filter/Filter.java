@@ -24,7 +24,7 @@ public interface Filter {
      * @return 匹配路径
      */
     default String[] getPattern() {
-        if (IOC.isServletWeb()) {
+        if (IOC.isServletServer()) {
             return new String[]{"/*"};
         }
         return new String[]{"/**"};
@@ -78,7 +78,7 @@ public interface Filter {
             return _continue_;
         }
 
-        public void finally_run() {
+        public void _finally_() {
             if (_finally_ != null) {
                 _finally_.run();
             }

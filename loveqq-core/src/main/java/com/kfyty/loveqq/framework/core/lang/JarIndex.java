@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,13 +39,15 @@ import java.util.stream.Collectors;
 public class JarIndex {
     /**
      * jar index 文件索引名称
+     * 默认的 INDEX.LIST 名称，启动时只会加载一个 class-path，导致获取 resources 时仅返回第一个资源
+     * 从而导致启动失败，因为自定义名称，自行读取
      */
     public static final String JAR_INDEX_FILE_NAME = "jar.idx";
 
     /**
-     * 启动 jar 包路径
+     * 启动主路径，可以 jar 包，或者项目目录
      */
-    private final String mainJarPath;
+    private final String mainPath;
 
     /**
      * ide 启动类路径
@@ -63,29 +66,34 @@ public class JarIndex {
     private URL[] urls;
 
     /**
+     * jar index 包含的目录 URL
+     */
+    private URL[] explodedUrls;
+
+    /**
      * 构造器
      * 这里使用 {@link ConcurrentSkipListMap} 更多是考虑空间利用率
      *
-     * @param mainJarPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
-     * @param jarIndex    jar index 数据流
+     * @param mainPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
+     * @param jarIndex jar index 数据流
      */
-    public JarIndex(String mainJarPath, InputStream jarIndex) {
-        this(mainJarPath, jarIndex, null);
+    public JarIndex(String mainPath, InputStream jarIndex) {
+        this(mainPath, jarIndex, null);
     }
 
     /**
      * 构造器，主要是支持 ide 启动
      *
-     * @param mainJarPath 启动 jar 包路径，也可以是开发集成环境的启动 class 路径
-     * @param jarIndex    jar index 数据流
-     * @param classpath   类路径，ide 启动支持
+     * @param mainPath  启动 jar 包路径，也可以是开发集成环境的启动 class 路径
+     * @param jarIndex  jar index 数据流
+     * @param classpath 类路径，ide 启动支持
      */
     @Deprecated
-    public JarIndex(String mainJarPath, InputStream jarIndex, List<String> classpath) {
-        this.mainJarPath = mainJarPath;
+    public JarIndex(String mainPath, InputStream jarIndex, List<String> classpath) {
+        this.mainPath = mainPath;
         this.classpath = classpath;
         this.jarIndex = new ConcurrentSkipListMap<>();
-        this.loadJarIndex(mainJarPath, jarIndex);
+        this.loadJarIndex(mainPath, jarIndex);
     }
 
     /**
@@ -94,16 +102,7 @@ public class JarIndex {
      * @return true if from IDE started
      */
     public boolean isExploded() {
-        return !this.mainJarPath.endsWith(".jar");
-    }
-
-    /**
-     * 获取所有的 jar url
-     *
-     * @return jar urls
-     */
-    public URL[] getJarURLs() {
-        return this.urls;
+        return !this.mainPath.endsWith(".jar");
     }
 
     /**
@@ -127,7 +126,7 @@ public class JarIndex {
                 BuildJarIndexAntTask.scanJarIndex(jarFile.getName(), jarFile, indexContainer);
             }
             String index = BuildJarIndexAntTask.buildJarIndex(indexContainer);
-            this.loadJarIndex(this.mainJarPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
+            this.loadJarIndex(this.mainPath, new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)));
         } finally {
             jarFiles.forEach(IOUtil::close);
         }
@@ -190,26 +189,32 @@ public class JarIndex {
 
     /**
      * 根据资源获取所在 jar 包集合
+     * eg:
+     * com.kfyty.demo.Demo
+     * com/kfyty/demo/Demo.class
+     * com/kfyty/demo/
+     * com/kfyty/demo
      *
      * @param name 资源名称，可能根据该名称获取到包名
      * @return jars
      */
     public List<String> getJarFiles(String name) {
-        int lastDot = name.lastIndexOf(name.endsWith(".class") ? '/' : '.');                                            // 为 com/kfyty/demo/Demo.class 提供支持
+        if (name.charAt(name.length() - 1) == '/') {
+            return this.jarIndex.getOrDefault(name.substring(0, name.length() - 1), Collections.emptyList());           // 为 com/kfyty/demo/ 提供支持
+        }
+        boolean isPath = name.endsWith(".class");
+        int lastDot = name.lastIndexOf(isPath ? '/' : '.');                                                             // 为 com/kfyty/demo/Demo.class 提供支持
         if (lastDot < 0) {
-            if (name.charAt(name.length() - 1) == '/') {
-                return this.jarIndex.getOrDefault(name.substring(0, name.length() - 1), Collections.emptyList());       // 为 com/kfyty/demo/ 提供支持
-            }
             return this.jarIndex.getOrDefault(name, Collections.emptyList());
         }
-        String path = name.substring(0, lastDot);
+        String path = isPath ? name.substring(0, lastDot) : name.substring(0, lastDot).replace('.', '/');
         return this.getJarFiles(name, path);
     }
 
     /**
      * 根据资源获取所在 jar 包集合
      *
-     * @param name        资源名称
+     * @param name        原始资源名称
      * @param packageName 包名称，eg: com/kfyty/demo
      * @return jars
      */
@@ -247,22 +252,22 @@ public class JarIndex {
     /**
      * 读取 jar index
      *
-     * @param mainJarPath 启动类所在路径
-     * @param jarIndex    jar index
+     * @param mainPath 启动主路径
+     * @param jarIndex jar index
      */
     @SneakyThrows(IOException.class)
-    protected void loadJarIndex(String mainJarPath, InputStream jarIndex) {
+    protected void loadJarIndex(String mainPath, InputStream jarIndex) {
         String line = null;
-        boolean mainJarResolved = this.isExploded() || !this.jarIndex.isEmpty();
-        String parentPath = Paths.get(mainJarPath).getParent().toString();
+        boolean mainPathResolved = this.isExploded() || !this.jarIndex.isEmpty();
+        String parentPath = Paths.get(mainPath).getParent().toString();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(jarIndex))) {
             while ((line = reader.readLine()) != null) {
-                if (mainJarResolved) {
+                if (mainPathResolved) {
                     this.loadJarIndex(parentPath, line, reader);
                 } else {
                     if (line.equals(BuildJarIndexAntTask.MAIN_JAR_NAME)) {
-                        line = mainJarPath;
-                        mainJarResolved = true;
+                        line = mainPath;
+                        mainPathResolved = true;
                     }
                     this.loadJarIndex(parentPath, line, reader);
                 }
@@ -288,10 +293,15 @@ public class JarIndex {
     }
 
     protected void rebuildURLs() {
-        List<URL> urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(JarIndex::getJarURL).collect(Collectors.toList());
-        if (this.isExploded()) {
-            this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(JarIndex::getJarURL).forEach(urls::add);
+        if (isExploded()) {
+            List<URL> urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(JarIndex::getJarURL).collect(Collectors.toList());
+            this.explodedUrls = this.classpath.stream().filter(e -> !e.endsWith(".jar")).map(JarIndex::getJarURL).toArray(URL[]::new);
+
+            urls.addAll(Arrays.asList(this.explodedUrls));
+            this.urls = urls.toArray(new URL[0]);
+        } else {
+            this.urls = this.jarIndex.values().stream().flatMap(Collection::stream).distinct().map(JarIndex::getJarURL).toArray(URL[]::new);
+            this.explodedUrls = new URL[0];
         }
-        this.urls = urls.toArray(new URL[0]);
     }
 }

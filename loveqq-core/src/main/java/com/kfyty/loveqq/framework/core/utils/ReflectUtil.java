@@ -155,6 +155,13 @@ public abstract class ReflectUtil {
 
     /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
+    public static void initSystemProperty() {
+        System.setProperty("java.awt.headless", "true");
+        System.setProperty("jdk.attach.allowAttachSelf", "true");
+        System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+    }
+
     public static Class<?> load(String className) {
         return load(className, true);
     }

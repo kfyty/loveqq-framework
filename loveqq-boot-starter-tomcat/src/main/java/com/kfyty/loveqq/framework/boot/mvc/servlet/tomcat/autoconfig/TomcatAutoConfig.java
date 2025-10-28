@@ -10,26 +10,19 @@ import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.Condition
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.web.core.RegistrationBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
-import com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder;
-import com.kfyty.loveqq.framework.web.core.request.support.ResponseContextHolder;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.FilterRegistrationBean;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletRegistrationBean;
+import com.kfyty.loveqq.framework.web.mvc.servlet.filter.FilterAdapter;
 import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContextListener;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletRequestListener;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebListener;
-import lombok.RequiredArgsConstructor;
 import org.apache.catalina.LifecycleListener;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -136,22 +129,5 @@ public class TomcatAutoConfig {
         }
 
         return beans.stream().sorted(Comparator.comparing(BeanUtil::getBeanOrder)).collect(Collectors.toList());
-    }
-
-    @RequiredArgsConstructor
-    private static class FilterAdapter implements Filter {
-        private final com.kfyty.loveqq.framework.web.core.filter.Filter filter;
-
-        @Override
-        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-            com.kfyty.loveqq.framework.web.core.filter.Filter.Continue _continue_ = this.filter.doFilter(RequestContextHolder.get(), ResponseContextHolder.get());
-            try {
-                if (_continue_._continue_()) {
-                    chain.doFilter(request, response);
-                }
-            } finally {
-                _continue_.finally_run();
-            }
-        }
     }
 }
