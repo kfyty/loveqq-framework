@@ -79,6 +79,14 @@ public interface Session {
     Publisher<Void> closeAsync();
 
     /**
+     * 关闭 session
+     *
+     * @param status 关闭状态码
+     * @param reason 关闭原因
+     */
+    Publisher<Void> closeAsync(int status, String reason);
+
+    /**
      * 发送文件
      *
      * @param file 文件
@@ -120,5 +128,15 @@ public interface Session {
      */
     default void close() {
         Mono.from(this.closeAsync()).subscribe();
+    }
+
+    /**
+     * 关闭 session
+     *
+     * @param status 关闭状态码
+     * @param reason 关闭原因
+     */
+    default void close(int status, String reason) {
+        Mono.from(this.closeAsync(status, reason)).subscribe();
     }
 }

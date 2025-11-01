@@ -72,6 +72,11 @@ public class DefaultSession implements Session {
     }
 
     @Override
+    public Publisher<Void> closeAsync(int status, String reason) {
+        return this.outbound.sendClose(status, reason);
+    }
+
+    @Override
     public String toString() {
         return this.getRemoteAddress() + " -> " + this.connectRequest.getRawRequest();
     }
