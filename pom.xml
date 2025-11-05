@@ -101,7 +101,7 @@
         <tomcat.jdbc.version>11.0.0-M15</tomcat.jdbc.version>
         <mysql.version>8.0.16</mysql.version>
         <oracle14.version>10.2.0.4.0</oracle14.version>
-        <mssql.version>7.4.0.jre8</mssql.version>
+        <mssql.version>11.1.0.jre8-preview</mssql.version>
         <redisson-version>3.52.0</redisson-version>
         <lettuce.version>6.8.1.RELEASE</lettuce.version>
         <mybatis.version>3.5.19</mybatis.version>
