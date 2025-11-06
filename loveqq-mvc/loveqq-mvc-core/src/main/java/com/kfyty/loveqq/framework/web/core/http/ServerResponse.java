@@ -1,5 +1,9 @@
 package com.kfyty.loveqq.framework.web.core.http;
 
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.io.Flushable;
 import java.io.OutputStream;
 import java.net.HttpCookie;
@@ -107,4 +111,44 @@ public interface ServerResponse extends Flushable {
      * @return 原始响应
      */
     <T> T getRawResponse();
+
+    /*------------------------------------------------- 下面是响应式方法 -------------------------------------------------*/
+
+    /**
+     * 获取写入的响应体
+     * 仅能获取一次，第二次获取为空
+     *
+     * @return response body
+     */
+    default Flux<ByteBuf> getBody() {
+        throw new UnsupportedOperationException("ServerResponse.getBody");
+    }
+
+    /**
+     * 获取聚合数据后的响应体
+     *
+     * @return response body
+     */
+    default Mono<ByteBuf> getAggregateBody() {
+        throw new UnsupportedOperationException("ServerResponse.getAggregateBody");
+    }
+
+    /**
+     * 写入响应体，仅仅写入引用，不会实际发送到客户端
+     *
+     * @param body 响应体，注意该入参设置后不要再外面链式调用，否则会导致响应体被提前订阅，从而无法写出到客户端
+     * @return 响应体，用于链式调用
+     */
+    default Mono<ServerResponse> writeBody(Flux<ByteBuf> body) {
+        throw new UnsupportedOperationException("ServerResponse.writeBody");
+    }
+
+    /**
+     * 发送写入的响应体，会实际发送到客户端
+     *
+     * @return 发布者
+     */
+    default Mono<Void> sendBody() {
+        throw new UnsupportedOperationException("ServerResponse.sendBody");
+    }
 }

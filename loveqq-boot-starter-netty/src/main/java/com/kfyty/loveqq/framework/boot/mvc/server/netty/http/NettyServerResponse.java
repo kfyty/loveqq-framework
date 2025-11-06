@@ -9,7 +9,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.ByteBufFlux;
 import reactor.netty.http.server.HttpServerResponse;
 
 import java.io.ByteArrayOutputStream;
@@ -36,9 +38,15 @@ public class NettyServerResponse implements ServerResponse {
      */
     private final ByteArrayOutputStream outputStream;
 
+    /**
+     * 响应体
+     */
+    private Flux<ByteBuf> body;
+
     public NettyServerResponse(HttpServerResponse response) {
         this.response = response;
         this.outputStream = new ReactorNettyByteArrayOutputStream();
+        this.body = Flux.empty();
     }
 
     @Override
@@ -115,18 +123,49 @@ public class NettyServerResponse implements ServerResponse {
         return this.response;
     }
 
+    @Override
+    public Flux<ByteBuf> getBody() {
+        Flux<ByteBuf> body = this.body;
+        this.body = Flux.empty();
+        return body;
+    }
+
+    @Override
+    public Mono<ByteBuf> getAggregateBody() {
+        Flux<ByteBuf> body = getBody();
+        if (body instanceof ByteBufFlux bufFlux) {
+            return bufFlux.aggregate();
+        }
+        return ByteBufFlux.fromInbound(body).aggregate();
+    }
+
+    @Override
+    public Mono<ServerResponse> writeBody(Flux<ByteBuf> body) {
+        this.body = body;
+        return Mono.just(this);
+    }
+
+    @Override
+    public Mono<Void> sendBody() {
+        Flux<ByteBuf> body = getBody();
+        if (body != this.body) {
+            return Mono.from(this.response.send(body));
+        }
+        return Mono.empty();
+    }
+
     @RequiredArgsConstructor
     private class ReactorNettyByteArrayOutputStream extends ByteArrayOutputStream {
 
         @Override
-        public void flush() {
+        public synchronized void flush() {
             ByteBuf byteBuf = NIOUtil.from(toByteArray());
             NettyServerResponse.this.response.send(Mono.just(byteBuf), e -> true).then().subscribe();
             count = 0;
         }
 
         @Override
-        public void close() {
+        public synchronized void close() {
             if (count > 0) {
                 NettyServerResponse.this.response.sendByteArray(Mono.just(toByteArray())).then().subscribe();
             }
