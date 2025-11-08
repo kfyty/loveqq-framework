@@ -7,7 +7,11 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.core.route.RestfulRouteMatcher,\
     com.kfyty.loveqq.framework.web.core.route.AntPathRouteMatcher,\
     com.kfyty.loveqq.framework.web.core.route.GatewayRouteMatcher,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.HostGatewayPredicate,\
     com.kfyty.loveqq.framework.web.core.route.gateway.PathGatewayPredicate,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.QueryGatewayPredicate,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.HeaderGatewayPredicate,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.CookieGatewayPredicate,\
     com.kfyty.loveqq.framework.web.core.route.gateway.LoadBalanceGatewayFilter,\
     com.kfyty.loveqq.framework.web.core.route.gateway.StripPrefixGatewayFilter,\
     com.kfyty.loveqq.framework.web.core.handler.ControllerAdviceExceptionHandlerRegistry,\

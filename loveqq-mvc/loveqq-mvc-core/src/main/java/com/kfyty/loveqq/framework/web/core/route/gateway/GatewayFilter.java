@@ -6,7 +6,10 @@ import com.kfyty.loveqq.framework.web.core.route.GatewayRoute;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 功能描述: 网关路由过滤器
@@ -96,7 +99,7 @@ public interface GatewayFilter {
         if (!parameters.isEmpty()) {
             newRouteURI.append('?');
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                newRouteURI.append(entry.getKey()).append('=').append(entry.getValue()).append('&');
+                newRouteURI.append(entry.getKey()).append('=').append(URLEncoder.encode(entry.getValue(), UTF_8)).append('&');
             }
             newRouteURI.deleteCharAt(newRouteURI.length() - 1);
         }
