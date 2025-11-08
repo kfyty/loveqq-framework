@@ -37,6 +37,14 @@ public @interface ControllerAdvice {
     String value() default "";
 
     /**
+     * 是否忽略配置的扫描范围，而直接支持全部的异常处理
+     * 默认 false，返回 true 时可同时支持网关异常的处理
+     *
+     * @return true/false
+     */
+    boolean supportAny() default false;
+
+    /**
      * 基础包名
      *
      * @return 基础包名

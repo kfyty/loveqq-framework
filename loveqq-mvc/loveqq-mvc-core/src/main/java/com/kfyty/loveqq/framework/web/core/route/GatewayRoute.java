@@ -85,6 +85,12 @@ public class GatewayRoute implements Route, Ordered {
      */
     private Integer order;
 
+    /**
+     * 网关异常时，异常处理器响应的内容类型
+     */
+    @Getter
+    private String produces;
+
     public void setUri(URI uri) {
         this.uri = uri;
         this.paths = CommonUtil.split(uri.toString(), "[/]").toArray(EMPTY_STRING_ARRAY);

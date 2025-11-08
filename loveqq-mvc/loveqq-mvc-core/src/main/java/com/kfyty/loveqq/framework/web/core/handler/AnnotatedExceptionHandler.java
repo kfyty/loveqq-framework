@@ -40,6 +40,11 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     private final PatternMatcher patternMatcher;
 
     /**
+     * 是否忽略配置的扫描范围，而直接支持全部的异常处理
+     */
+    private final boolean supportAny;
+
+    /**
      * 包名匹配配置
      */
     private final String[] controllerAdviceBasePackages;
@@ -85,7 +90,7 @@ public class AnnotatedExceptionHandler implements ExceptionHandler, Initializing
     public boolean canHandle(Route route, Throwable throwable) {
         Object controller = route.getController();
         if (controller == null) {
-            return false;
+            return this.supportAny;
         }
         Object target = AopUtil.getTarget(controller);
         String targetClassName = target.getClass().getName();
