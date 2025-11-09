@@ -49,11 +49,11 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements ReactiveHan
             container.getModel().forEach((k, v) -> container.getRequest().setAttribute(k, v));
         }
 
-        if (view.startsWith("redirect:")) {
-            return container.getResponse().sendRedirect(removePrefix("redirect:", view));
+        if (view.startsWith(VIEW_REDIRECT)) {
+            return container.getResponse().sendRedirect(removePrefix(VIEW_REDIRECT, view));
         }
 
-        if (view.startsWith("forward:")) {
+        if (view.startsWith(VIEW_FORWARD)) {
             return this.doForward(view, container);
         }
 
@@ -77,7 +77,7 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements ReactiveHan
         ServerRequest prevRequest = RequestContextHolder.set(container.getRequest());
         ServerResponse prevResponse = ResponseContextHolder.set(container.getResponse());
         try {
-            return container.getResponse().sendForward(container.getPrefix() + removePrefix("forward:", view) + container.getSuffix());
+            return container.getResponse().sendForward(container.getPrefix() + removePrefix(VIEW_FORWARD, view) + container.getSuffix());
         } finally {
             RequestContextHolder.set(prevRequest);
             ResponseContextHolder.set(prevResponse);
