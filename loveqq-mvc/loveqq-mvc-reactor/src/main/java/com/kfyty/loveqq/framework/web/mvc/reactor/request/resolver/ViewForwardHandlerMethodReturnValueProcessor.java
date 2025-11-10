@@ -7,7 +7,7 @@ import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
-import com.kfyty.loveqq.framework.web.core.route.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.support.RequestContextHolder;
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.support.ResponseContextHolder;
 
@@ -26,7 +26,7 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements ReactiveHan
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType.getMetadata() instanceof HandlerMethodRoute route) {
+        if (returnType.getMetadata() instanceof Route route) {
             String contentType = route.getProduces();
             if (contentType != null && contentType.contains("text/html")) {
                 return true;

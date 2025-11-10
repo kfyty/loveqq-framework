@@ -6,7 +6,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.request.resolver.HandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
-import com.kfyty.loveqq.framework.web.core.route.HandlerMethodRoute;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements HandlerMeth
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType.getMetadata() instanceof HandlerMethodRoute route) {
+        if (returnType.getMetadata() instanceof Route route) {
             String contentType = route.getProduces();
             if (contentType != null && contentType.contains("text/html")) {
                 return true;
