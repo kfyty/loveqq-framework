@@ -30,7 +30,7 @@ public class TextResponseBodyHandlerMethodReturnValueProcessor extends AbstractR
     @Override
     public void handleReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
         try (OutputStream out = container.getResponse().getOutputStream()) {
-            out.write(String.valueOf(returnValue).getBytes(StandardCharsets.UTF_8));
+            out.write(returnValue instanceof byte[] ? (byte[]) returnValue : String.valueOf(returnValue).getBytes(StandardCharsets.UTF_8));
             out.flush();
         }
     }

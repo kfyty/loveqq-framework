@@ -39,12 +39,19 @@ public class ReactiveNettyWriter implements ReactiveWriter {
         if (retValue == null) {
             return Mono.empty();
         }
+        applyDefaultHeaders(serverResponse);
         HttpServerResponse response = serverResponse.getRawResponse();
         if (retValue instanceof NettyOutbound) {
             return (NettyOutbound) retValue;
         }
         if (retValue instanceof CharSequence str) {
             return response.send(Mono.just(from(str)), e -> isStream);
+        }
+        if (retValue instanceof byte[] bytes) {
+            return response.send(Mono.just(from(bytes)), e -> isStream);
+        }
+        if (retValue instanceof ByteBuf byteBuf) {
+            return response.send(Mono.just(byteBuf), e -> isStream);
         }
         if (retValue instanceof SseEvent sse) {
             return response.send(Mono.just(sse.build()), e -> isStream);
@@ -57,12 +64,6 @@ public class ReactiveNettyWriter implements ReactiveWriter {
                     new ReactiveHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream);
             return response.send(publisher.onBackpressureBuffer(), e -> stream.refresh());
         }
-        if (retValue instanceof byte[] bytes) {
-            return response.send(Mono.just(from(bytes)), e -> isStream);
-        }
-        if (retValue instanceof ByteBuf byteBuf) {
-            return response.send(Mono.just(byteBuf), e -> isStream);
-        }
         if (retValue instanceof File file) {
             return response.sendFile(file.toPath());
         }
@@ -70,5 +71,11 @@ public class ReactiveNettyWriter implements ReactiveWriter {
             return response.sendFile(path);
         }
         throw new IllegalArgumentException("The return value must be CharSequence/SseEvent/byte[]/ByteBuf/RandomAccessStream/File/Path.");
+    }
+
+    protected void applyDefaultHeaders(ServerResponse serverResponse) {
+        if (serverResponse.getHeader("Content-Length") == null) {
+            serverResponse.setHeader("Transfer-Encoding", "chunked");
+        }
     }
 }

@@ -26,6 +26,6 @@ public class TextResponseBodyHandlerMethodReturnValueProcessor extends AbstractR
 
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        return String.valueOf(returnValue);
+        return returnValue instanceof byte[] ? returnValue : String.valueOf(returnValue);
     }
 }
