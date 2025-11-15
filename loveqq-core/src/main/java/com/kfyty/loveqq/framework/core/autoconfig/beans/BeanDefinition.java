@@ -4,7 +4,9 @@ import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.property.PropertyValue;
 import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
+import com.kfyty.loveqq.framework.core.event.PropertyContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.support.Pair;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 
 import java.lang.reflect.Method;
@@ -28,22 +30,30 @@ public interface BeanDefinition {
             .thenComparing(BeanDefinition::getBeanName);
 
     /**
-     * 单例作用域
+     * 应用级单例，即使容器全量刷新，即 {@link ApplicationContext#refresh()} 时也保持单例
+     * 容易刷新时，必须在 {@link ContextRefreshThread} 内，否则无效
+     */
+    String SCOPE_APPLICATION = "application";
+
+    /**
+     * 单例作用域，容器全量刷新时，即 {@link ApplicationContext#refresh()} 时将销毁重建
      */
     String SCOPE_SINGLETON = "singleton";
 
     /**
      * 原型作用域
+     * 不使用代理时，每次获取都是新的实例
+     * 使用代理时，每次获取都是单例，但是每次方法调用都是新的实例，方法调用完毕自动销毁
      */
     String SCOPE_PROTOTYPE = "prototype";
 
     /**
-     * 刷新作用域
+     * 刷新作用域，当属性配置刷新时，即 {@link PropertyContextRefreshedEvent} 发生时，自动销毁重建
      */
     String SCOPE_REFRESH = "refresh";
 
     /**
-     * 线程作用域
+     * 线程作用域，同一个线程内是单例，线程终结时自动销毁
      */
     String SCOPE_THREAD = "thread";
 
@@ -118,6 +128,11 @@ public interface BeanDefinition {
      * @param isLazyProxy 是否代理懒加载
      */
     void setLazyProxy(boolean isLazyProxy);
+
+    /**
+     * 是否应用级别单例
+     */
+    boolean isApplicationSingleton();
 
     /**
      * 是否单例

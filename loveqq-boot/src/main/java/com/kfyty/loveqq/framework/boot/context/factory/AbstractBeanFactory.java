@@ -6,7 +6,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.BeanPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InstantiationAwareBeanPostProcessor;
-import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
@@ -19,7 +18,6 @@ import com.kfyty.loveqq.framework.core.exception.BeansException;
 import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
-import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.PackageUtil;
@@ -28,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -398,7 +395,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public void close() {
-        // ApplicationScope 作用域的 bean
+        // application 作用域的 bean
         List<Map.Entry<String, Object>> applicationScopeBeans = new LinkedList<>();
 
         for (Map.Entry<String, Object> entry : this.beanInstances.entrySet()) {
@@ -425,7 +422,7 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         this.beanDefinitionsForType.clear();
         this.applicationContext = null;
 
-        // ApplicationScope 作用域的 bean 重新放入容器
+        // application 作用域的 bean 重新放入容器
         for (Map.Entry<String, Object> applicationScopeBean : applicationScopeBeans) {
             this.beanInstances.put(applicationScopeBean.getKey(), applicationScopeBean.getValue());
         }
@@ -438,13 +435,9 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     @Override
     public boolean destroyBean(String name, Object bean) {
-        final boolean isInRefresh = Thread.currentThread() instanceof ContextRefreshThread;
         final BeanDefinition beanDefinition = this.getBeanDefinition(name);
-        if (isInRefresh) {
-            AnnotatedElement annotatedElement = beanDefinition.isMethodBean() ? beanDefinition.getBeanMethod() : beanDefinition.getBeanType();
-            if (AnnotationUtil.hasAnnotation(annotatedElement, ApplicationScope.class)) {
-                return false;
-            }
+        if (beanDefinition.isApplicationSingleton() && Thread.currentThread() instanceof ContextRefreshThread) {
+            return false;
         }
         this.destroyBean(beanDefinition, bean);
         return true;

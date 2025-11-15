@@ -207,8 +207,14 @@ public class GenericBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isApplicationSingleton() {
+        return this.getScope().equals(SCOPE_APPLICATION);
+    }
+
+    @Override
     public boolean isSingleton() {
-        return this.getScope().equals(SCOPE_SINGLETON);
+        String scope = this.getScope();
+        return scope.equals(SCOPE_SINGLETON) || scope.equals(SCOPE_APPLICATION);
     }
 
     @Override

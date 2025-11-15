@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.autoconfig.annotation;
 
+import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.lang.annotation.AliasFor;
 
 import java.lang.annotation.Documented;
@@ -16,9 +17,9 @@ import java.lang.annotation.Target;
  * @email kfyty725@hotmail.com
  * @see com.kfyty.loveqq.framework.boot.context.ContextRefresher
  */
-@Scope
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
+@Scope(BeanDefinition.SCOPE_APPLICATION)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface ApplicationScope {
     /**

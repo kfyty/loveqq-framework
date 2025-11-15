@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
 import com.kfyty.loveqq.framework.core.lang.Lazy;
 import com.kfyty.loveqq.framework.core.proxy.aop.MethodAroundAdvice;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
-import com.kfyty.loveqq.framework.core.utils.IOC;
+import com.kfyty.loveqq.framework.core.utils.OgnlUtil;
 import com.kfyty.loveqq.framework.data.cache.core.Cache;
 import com.kfyty.loveqq.framework.data.cache.core.CacheKeyFactory;
 import com.kfyty.loveqq.framework.data.cache.core.annotation.CacheClean;
@@ -14,12 +14,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
-
-import static com.kfyty.loveqq.framework.core.utils.OgnlUtil.compute;
 
 /**
  * 描述:
@@ -95,53 +91,15 @@ public abstract class AbstractCacheInterceptorProxy implements MethodAroundAdvic
      * 解析占位符
      */
     protected String resolvePlaceholders(String value, Map<String, Object> context) {
-        int index = -1;
-        int length = value.length();
-        StringBuilder builder = new StringBuilder();
-        while (++index < length) {
-            char c = value.charAt(index);
-            if (c == '$' && index != length - 1 && value.charAt(index + 1) == '{') {
-                int endIndex = value.indexOf('}', index + 2);
-                String variable = value.substring(index + 2, endIndex);
-                String property = this.propertyContext.getProperty(variable);
-                if (property != null) {
-                    builder.append(property);
-                } else {
-                    String computed = compute(variable, context);
-                    builder.append(computed);
-                }
-                index = endIndex;
-                continue;
-            }
-            builder.append(c);
-        }
-        return builder.toString();
+        return OgnlUtil.computePlaceholders(value, context, this.propertyContext);
     }
 
     /**
      * 构建缓存表达式计算上下文参数
      */
     protected Map<String, Object> buildContext(Object returnValue, Method method, Object[] args, Object target) {
-        // map 上下文
-        Map<String, Object> context = new HashMap<>();
-
-        // BeanFactory
-        context.put("ioc", IOC.getBeanFactory());
-
-        // 方法及参数
-        context.put("this", target);
-        context.put("m", method);
-        context.put("args", args);
-
-        // 详细参数
-        Parameter[] parameters = method.getParameters();
-        for (int i = 0; i < parameters.length; i++) {
-            context.put("p" + i, parameters[i]);
-            if (args != null) {
-                context.put("arg" + i, args[i]);
-                context.put(parameters[i].getName(), args[i]);
-            }
-        }
+        // 构建通用上下文
+        Map<String, Object> context = OgnlUtil.buildContext(target, method, args);
 
         // 返回值
         context.put(OGNL_RETURN_VALUE_KEY, returnValue);

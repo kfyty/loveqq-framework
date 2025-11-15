@@ -129,6 +129,11 @@ public class ConditionalBeanDefinition implements BeanDefinition {
     }
 
     @Override
+    public boolean isApplicationSingleton() {
+        return this.beanDefinition.isApplicationSingleton();
+    }
+
+    @Override
     public boolean isSingleton() {
         return this.beanDefinition.isSingleton();
     }
