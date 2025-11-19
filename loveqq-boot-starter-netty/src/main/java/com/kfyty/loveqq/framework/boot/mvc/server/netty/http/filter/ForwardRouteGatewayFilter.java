@@ -10,10 +10,8 @@ import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilterChain;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.http.server.HttpServerResponse;
 
 import java.net.URI;
 import java.util.Map;
@@ -40,7 +38,7 @@ public class ForwardRouteGatewayFilter implements GatewayFilter {
             return chain.doFilter(request, response);
         }
         final URI routeURI = this.createRouteURI(route, request);
-        final Flux<Void> flux = this.client.headers(headers -> {
+        return this.client.headers(headers -> {
                     for (String headerName : request.getHeaderNames()) {
                         headers.add(headerName, request.getHeaders(headerName));
                     }
@@ -49,13 +47,15 @@ public class ForwardRouteGatewayFilter implements GatewayFilter {
                 .uri(routeURI)
                 .send((req, outbound) -> outbound.send(request.getBody().map(ByteBuf::retain)))
                 .responseConnection((res, connection) -> {
-                    HttpServerResponse nettyResponse = response.getRawResponse();
-                    nettyResponse.status(res.status());
+                    response.setStatus(res.status().code());
                     for (Map.Entry<String, String> entry : res.responseHeaders().entries()) {
-                        nettyResponse.addHeader(entry.getKey(), entry.getValue());
+                        response.addHeader(entry.getKey(), entry.getValue());
                     }
-                    return Mono.from(nettyResponse.send(connection.inbound().receive().retain())).doFinally(s -> connection.dispose());
-                });
-        return flux.then(chain.doFilter(request, response));
+                    return response.writeBody(connection.inbound().receive().retain())
+                            .then(chain.doFilter(request, response))
+                            .then(Mono.defer(response::sendBody))
+                            .doFinally(s -> connection.dispose());
+                })
+                .then();
     }
 }

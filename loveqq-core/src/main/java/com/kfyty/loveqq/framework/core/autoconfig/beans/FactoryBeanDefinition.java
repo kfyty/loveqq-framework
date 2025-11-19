@@ -94,6 +94,13 @@ public class FactoryBeanDefinition extends GenericBeanDefinition {
                 ", factory=" + factoryBeanDefinition + "]";
     }
 
+    /**
+     * 清理缓存
+     */
+    public static void clearCache() {
+        SNAPSHOT_FACTORY_BEAN_CACHE.clear();
+    }
+
     public static FactoryBean<?> getFactoryBeanCache(BeanDefinition beanDefinition) {
         return SNAPSHOT_FACTORY_BEAN_CACHE.computeIfAbsent(beanDefinition.getBeanName(), k -> (FactoryBean<?>) newInstance(beanDefinition.getBeanType(), beanDefinition.getDefaultConstructArgs()));
     }

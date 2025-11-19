@@ -1,12 +1,11 @@
 package com.kfyty.loveqq.framework.boot.context;
 
-import com.kfyty.loveqq.framework.boot.context.factory.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.ApplicationScope;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.scope.ScopeRefreshed;
-import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOC;
 import lombok.Getter;
@@ -48,7 +47,7 @@ public class ContextRefresher {
      */
     public static void refresh(ApplicationContext context, int delay) {
         // start daemon
-        RefreshContextDaemon daemon = new RefreshContextDaemon(context.getClass().getClassLoader(), delay);
+        RefreshContextDaemon daemon = new RefreshContextDaemon(delay);
         daemon.start();
 
         // start refresh
@@ -70,9 +69,6 @@ public class ContextRefresher {
 
                 // 设置线程上下文
                 BootLauncher.setContextClassLoader(context.getClass().getClassLoader());
-
-                // 清空缓存
-                FactoriesLoader.clearCache();
 
                 // 执行刷新
                 context.refresh();
@@ -97,11 +93,6 @@ public class ContextRefresher {
      */
     @RequiredArgsConstructor
     public static class RefreshContextDaemon implements Runnable {
-        /**
-         * 上下文的 classloader
-         */
-        private final ClassLoader classLoader;
-
         /**
          * 延迟刷新毫秒数
          */
@@ -134,9 +125,6 @@ public class ContextRefresher {
 
         @Override
         public void run() {
-            // 设置线程上下文
-            BootLauncher.setContextClassLoader(this.classLoader);
-
             this.start = System.currentTimeMillis();
 
             while (!this.finished) {

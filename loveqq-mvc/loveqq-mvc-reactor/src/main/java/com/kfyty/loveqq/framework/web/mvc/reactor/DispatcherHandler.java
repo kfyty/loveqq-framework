@@ -71,9 +71,9 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 .filterWhen(e -> this.applyPreInterceptorAsync(request, response, e))
                 .flatMap(e -> Mono.from(e.applyRouteAsync(request, response, this)))
                 .flatMap(p -> this.adapterReturnValue(p.getKey(), p.getValue(), route, request, response).map(val -> new Pair<>(p.getKey(), val)))
-                .filterWhen(p -> this.applyPostInterceptorAsync(request, response, route, p.getValue()).thenReturn(true))
+                .flatMap(p -> this.applyPostInterceptorAsync(request, response, route, p.getValue()).map(val -> new Pair<>(p.getKey(), val)))
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getValue(), p.getKey(), request, response)))
-                .onErrorResume(e -> this.handleException(request, response, route, e).flatMap(p -> Mono.from(this.handleReturnValue(p.getValue(), p.getKey(), request, response))))
+                .onErrorResume(ex -> this.handleException(request, response, route, ex).flatMap(p -> Mono.from(this.handleReturnValue(p.getValue(), p.getKey(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
                 .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, route, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
     }

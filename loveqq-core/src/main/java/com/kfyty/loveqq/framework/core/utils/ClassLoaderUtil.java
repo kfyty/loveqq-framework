@@ -66,6 +66,19 @@ public abstract class ClassLoaderUtil {
     /**
      * 获取类加载器
      *
+     * @return 类加载器
+     */
+    public static JarIndexClassLoader getIndexedClassloader() {
+        ClassLoader classLoader = classLoader(ClassLoaderUtil.class);
+        if (isIndexedClassLoader(classLoader)) {
+            return (JarIndexClassLoader) classLoader;
+        }
+        throw new IllegalStateException("The thread context class loader doesn't JarIndexClassLoader.");
+    }
+
+    /**
+     * 获取类加载器
+     *
      * @param clazz 启动类
      * @return 类加载器
      */
@@ -81,7 +94,7 @@ public abstract class ClassLoaderUtil {
         String index = BuildJarIndexAntTask.buildJarIndex(BuildJarIndexAntTask.scanJarIndex(classPath, new HashMap<>()));
         Path mainJarPath = Paths.get(clazz.getProtectionDomain().getCodeSource().getLocation().toURI());
         JarIndex jarIndex = new JarIndex(mainJarPath.toString(), new ByteArrayInputStream(index.getBytes(StandardCharsets.UTF_8)), classPath);
-        return new JarIndexClassLoader(jarIndex, contextClassLoader);
+        return new JarIndexClassLoader(jarIndex, ClassLoader.getSystemClassLoader().getParent());
     }
 
     /**
@@ -129,9 +142,6 @@ public abstract class ClassLoaderUtil {
                                 if (classPath != null && !classPath.isEmpty()) {
                                     String[] nestedClassPath = classPath.split(" ");
                                     for (String url : nestedClassPath) {
-                                        if (JarIndexClassLoader.isJavaSystemResource(url)) {
-                                            continue;
-                                        }
                                         URI uri = URI.create(url);
                                         if (uri.isAbsolute()) {
                                             result.add(uri.toURL());

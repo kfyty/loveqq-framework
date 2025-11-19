@@ -67,7 +67,7 @@
 
     <properties>
         <!-- 版本号统一管理，只能用 revision -->
-        <revision>1.1.6-M2-java8</revision>
+        <revision>1.1.6-M3-java8</revision>
 
         <aspectj.version>1.9.23</aspectj.version>
         <asm.version>9.6</asm.version>

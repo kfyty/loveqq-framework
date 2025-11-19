@@ -52,13 +52,13 @@ public class ViewForwardHandlerMethodReturnValueProcessor implements HandlerMeth
             container.getModel().forEach((k, v) -> container.getRequest().setAttribute(k, v));
         }
 
-        if (view.startsWith("redirect:")) {
-            container.getResponse().sendRedirect(removePrefix("redirect:", view));
+        if (view.startsWith(VIEW_REDIRECT)) {
+            container.getResponse().sendRedirect(removePrefix(VIEW_REDIRECT, view));
             return;
         }
 
-        if (view.startsWith("forward:")) {
-            container.getResponse().sendForward(container.getPrefix() + removePrefix("forward:", view) + container.getSuffix());
+        if (view.startsWith(VIEW_FORWARD)) {
+            container.getResponse().sendForward(container.getPrefix() + removePrefix(VIEW_FORWARD, view) + container.getSuffix());
             return;
         }
 

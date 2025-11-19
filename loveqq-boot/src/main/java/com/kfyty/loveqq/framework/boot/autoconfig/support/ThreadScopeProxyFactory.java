@@ -1,6 +1,6 @@
 package com.kfyty.loveqq.framework.boot.autoconfig.support;
 
-import com.kfyty.loveqq.framework.boot.context.factory.ContextRefreshThread;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.BeanFactoryAware;

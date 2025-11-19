@@ -44,7 +44,7 @@ public abstract class IOC {
      *
      * @return true if servlet based web server
      */
-    public static boolean isServletWeb() {
+    public static boolean isServletServer() {
         if (isServletWeb == null) {
             isServletWeb = ReflectUtil.isPresent("com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer");
             if (isServletWeb) {

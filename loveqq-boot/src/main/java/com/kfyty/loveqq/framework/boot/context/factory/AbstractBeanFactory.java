@@ -16,10 +16,13 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.FactoryBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.InstantiatedBeanDefinition;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.autowired.AutowiredProcessor;
 import com.kfyty.loveqq.framework.core.exception.BeansException;
+import com.kfyty.loveqq.framework.core.io.FactoriesLoader;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
+import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.BeanUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import com.kfyty.loveqq.framework.core.utils.PackageUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -426,6 +429,11 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
         for (Map.Entry<String, Object> applicationScopeBean : applicationScopeBeans) {
             this.beanInstances.put(applicationScopeBean.getKey(), applicationScopeBean.getValue());
         }
+
+        // 清理缓存
+        PackageUtil.clearCache();
+        FactoriesLoader.clearCache();
+        FactoryBeanDefinition.clearCache();
     }
 
     @Override

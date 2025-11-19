@@ -45,6 +45,7 @@ public class ControllerAdviceExceptionHandlerRegistry implements BeanFactoryPost
                 BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(AnnotatedExceptionHandler.class)
                         .setBeanName(entry.getKey() + AnnotatedExceptionHandler.class.getSimpleName())
                         .addConstructorArgs(PatternMatcher.class, patternMatcher)
+                        .addConstructorArgs(boolean.class, annotation.supportAny())
                         .addConstructorArgs(String[].class, mergedBasePackages.toArray(new String[0]))
                         .addConstructorArgs(Class[].class, annotations)
                         .addConstructorArgs(Lazy.class, Lazy.of(() -> beanFactory.getBean(entry.getKey())))

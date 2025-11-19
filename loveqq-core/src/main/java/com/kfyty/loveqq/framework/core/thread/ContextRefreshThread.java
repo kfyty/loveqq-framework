@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.boot.context.factory;
+package com.kfyty.loveqq.framework.core.thread;
 
 /**
  * 描述: 上下文刷新线程

@@ -37,7 +37,11 @@ public class ThymeleafViewHandlerMethodReturnValueProcessor implements BeanFacto
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        return returnValue != null && CharSequence.class.isAssignableFrom(returnValue.getClass());
+        if (returnValue instanceof CharSequence cs) {
+            String view = cs.toString();
+            return !view.startsWith(VIEW_REDIRECT) && !view.startsWith(VIEW_FORWARD);
+        }
+        return false;
     }
 
     @Override

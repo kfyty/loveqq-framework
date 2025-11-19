@@ -118,11 +118,11 @@ public class DispatcherServlet extends AbstractServletDispatcher<DispatcherServl
                 final Object retValue = routeResult.getValue();
 
                 // 应用后置处理器并处理返回值
-                this.applyPostInterceptor(request, response, route, retValue);
+                final Object postValue = this.applyPostInterceptor(request, response, route, retValue);
 
                 // 处理返回值
-                if (retValue != null) {
-                    this.handleReturnValue(retValue, parameter, request, response);
+                if (postValue != null) {
+                    this.handleReturnValue(postValue, parameter, request, response);
                 }
             }
         } catch (Throwable e) {

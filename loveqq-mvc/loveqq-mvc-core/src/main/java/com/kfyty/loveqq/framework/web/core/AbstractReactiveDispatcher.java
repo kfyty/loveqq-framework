@@ -30,7 +30,7 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
         return this.applyPreInterceptorAsync(chains, request, response, handler, 0);
     }
 
-    protected Mono<Void> applyPostInterceptorAsync(ServerRequest request, ServerResponse response, Route handler, Object value) {
+    protected Mono<Object> applyPostInterceptorAsync(ServerRequest request, ServerResponse response, Route handler, Object value) {
         List<HandlerInterceptor> chains = this.interceptorChains.stream().filter(e -> this.shouldApplyInterceptor(request, response, e)).collect(Collectors.toList());
         return this.applyPostInterceptorAsync(chains, request, response, handler, value, 0);
     }
@@ -48,12 +48,12 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
         return interceptor.preHandleAsync(request, response, handler).filterWhen(e -> this.applyPreInterceptorAsync(chains, request, response, handler, index + 1));
     }
 
-    protected Mono<Void> applyPostInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, Route handler, Object value, int index) {
+    protected Mono<Object> applyPostInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, Route handler, Object value, int index) {
         if (index >= chains.size() - 1) {
-            return chains.isEmpty() ? Mono.empty() : toReactiveInterceptor(chains.get(index)).postHandleAsync(request, response, handler, value);
+            return chains.isEmpty() ? Mono.just(value) : toReactiveInterceptor(chains.get(index)).postHandleAsync(request, response, handler, value);
         }
         ReactiveHandlerInterceptor interceptor = toReactiveInterceptor(chains.get(index));
-        return interceptor.postHandleAsync(request, response, handler, value).then(this.applyPostInterceptorAsync(chains, request, response, handler, value, index + 1));
+        return interceptor.postHandleAsync(request, response, handler, value).flatMap(newValue -> this.applyPostInterceptorAsync(chains, request, response, handler, newValue, index + 1));
     }
 
     protected Mono<Void> applyCompletionInterceptorAsync(List<HandlerInterceptor> chains, ServerRequest request, ServerResponse response, Route handler, Throwable ex, int index) {
@@ -76,8 +76,8 @@ public abstract class AbstractReactiveDispatcher<T extends AbstractReactiveDispa
             }
 
             @Override
-            public void postHandle(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
-                interceptor.postHandle(request, response, handler, retValue);
+            public Object postHandle(ServerRequest request, ServerResponse response, Route handler, Object retValue) {
+                return interceptor.postHandle(request, response, handler, retValue);
             }
 
             @Override

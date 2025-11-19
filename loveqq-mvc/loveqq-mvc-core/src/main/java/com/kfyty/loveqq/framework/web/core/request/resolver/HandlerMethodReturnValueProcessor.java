@@ -12,6 +12,16 @@ import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
  */
 public interface HandlerMethodReturnValueProcessor {
     /**
+     * 视图重定向
+     */
+    String VIEW_REDIRECT = "redirect:";
+
+    /**
+     * 视图转发
+     */
+    String VIEW_FORWARD = "forward:";
+
+    /**
      * 是否支持处理该返回值
      *
      * @param returnValue 返回值

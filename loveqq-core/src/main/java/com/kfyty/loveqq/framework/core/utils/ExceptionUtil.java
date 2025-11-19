@@ -53,6 +53,8 @@ public abstract class ExceptionUtil {
     }
 
     public static Throwable unwrap(Throwable throwable) {
-        return wrap(throwable).getCause();
+        ResolvableException wrapped = wrap(throwable);
+        Throwable unwrapped = wrapped.getCause();
+        return unwrapped == null ? wrapped : unwrapped;
     }
 }

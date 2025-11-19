@@ -38,7 +38,7 @@ public class ExceptionHandlerTest {
     @Test
     public void test() {
         Ex proxy = DynamicProxyFactory.create(ExImpl.class).createProxy(new ExImpl());
-        AnnotatedExceptionHandler handler = new AnnotatedExceptionHandler(null, null, null, Lazy.of(() -> proxy));
+        AnnotatedExceptionHandler handler = new AnnotatedExceptionHandler(null, false, null, null, Lazy.of(() -> proxy));
         handler.afterPropertiesSet();
         MethodParameter exceptionAdvice = handler.findControllerExceptionAdvice(null, null, new HandlerMethodRoute(), new RuntimeException());
         Assertions.assertNotNull(exceptionAdvice);

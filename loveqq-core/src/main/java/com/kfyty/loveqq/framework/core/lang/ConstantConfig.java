@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import java.lang.instrument.ClassFileTransformer;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -22,11 +21,6 @@ public interface ConstantConfig {
      * 是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开
      */
     boolean DEPENDENCY_CHECK = Boolean.parseBoolean(System.getProperty("k.dependency.check", "false"));
-
-    /**
-     * java 内部资源不在 jar index 内，{@link JarIndexClassLoader#getResource(String)} 可能获取不到，可通过该参数设置
-     */
-    String[] JAVA_SYSTEM_RESOURCES = Optional.ofNullable(System.getProperty("k.java.system.resources")).map(e -> e.split(";")).orElse(new String[0]);
 
     /**
      * {@link com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil#resolveClassPath(ClassLoader)} 时，是否读取 jar 内的 Class-Path 属性

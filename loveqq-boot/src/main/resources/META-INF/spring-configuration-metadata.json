@@ -19,11 +19,6 @@
       "description": "是否读取进行依赖检查，出现依赖冲突导致启动失败时，可打开"
     },
     {
-      "name": "k.java.system.resources",
-      "type": "java.lang.String",
-      "description": "java 内部资源不在 jar index 内，JarIndexClassLoader#getResource(String) 可能获取不到，可通过该参数设置，多个由英文分号分割"
-    },
-    {
       "name": "k.dependency.load-jar-class-path",
       "type": "java.lang.Boolean",
       "defaultValue" : "false",
@@ -38,14 +33,14 @@
     {
       "name": "k.config.io-buffer-size",
       "type": "java.lang.Integer",
-      "defaultValue" : "4096",
+      "defaultValue" : "8192",
       "description": "IOUtil 读取流缓冲区大小"
     },
     {
       "name": "logging.root",
       "type": "java.lang.String",
       "defaultValue" : "INFO",
-      "description": "日志 root 级别"
+      "description": "日志 root 级别，配置为 -D 参数有效"
     },
     {
       "name": "k.application.name",

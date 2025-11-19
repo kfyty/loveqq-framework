@@ -155,6 +155,13 @@ public abstract class ReflectUtil {
 
     /*------------------------------------------------ 基础方法 ------------------------------------------------*/
 
+    public static void initSystemProperty() {
+        System.setProperty("java.awt.headless", "true");
+        System.setProperty("jdk.attach.allowAttachSelf", "true");
+        System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+    }
+
     public static Class<?> load(String className) {
         return load(className, true);
     }
@@ -746,12 +753,14 @@ public abstract class ReflectUtil {
         for (int i = 0; i < superGenerics.length; i++) {
             parents[i] = new QualifierGeneric(clazz, superGenerics[i]).resolve();
         }
-        stack.add(parents);
         if (superGenericFilter != null) {
-            if (Arrays.stream(superGenerics).anyMatch(e -> e instanceof ParameterizedType && superGenericFilter.test((ParameterizedType) e))) {
+            QualifierGeneric[] filtered = Arrays.stream(parents).filter(e -> e.getResolveType() instanceof ParameterizedType pt && superGenericFilter.test(pt)).toArray(QualifierGeneric[]::new);
+            if (filtered.length > 0) {
+                stack.add(filtered);
                 return stack;
             }
         }
+        stack.add(parents);
         for (Type generic : superGenerics) {
             resolveSuperGeneric(QualifierGeneric.getRawType(generic), superGenericFilter, stack);
         }
@@ -838,6 +847,28 @@ public abstract class ReflectUtil {
             return (Field[]) invokeMethod(clazz, method, false);
         } catch (NoSuchMethodException e) {
             throw new ResolvableException(e);
+        }
+    }
+
+    /**
+     * 清理反射缓存
+     */
+    public static void clearCache() {
+        REFLECT_CACHE.clear();
+    }
+
+    /**
+     * 清理反射缓存
+     *
+     * @param clazz class
+     */
+    public static void clearReflectCache(Class<?> clazz) {
+        REFLECT_CACHE.remove(clazz);
+        for (Field field : clazz.getDeclaredFields()) {
+            REFLECT_CACHE.remove(field);
+        }
+        for (Method method : clazz.getDeclaredMethods()) {
+            REFLECT_CACHE.remove(method);
         }
     }
 }

@@ -12,6 +12,8 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.initSystemProperty;
+
 /**
  * 功能描述: 启动类
  *
@@ -82,6 +84,7 @@ public class K {
      * @return {@link ApplicationContext}
      */
     public static ApplicationContext start(Class<?> clazz, String... args) {
+        initSystemProperty();
         return new K(clazz, args).run();
     }
 

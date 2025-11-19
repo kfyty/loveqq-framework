@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -285,7 +287,7 @@ public abstract class CommonUtil {
         String parameter = index < 0 ? url : url.substring(index + 1);
         String paramPrefix = prefix == null || prefix.isEmpty() ? EMPTY_STRING : prefix + '.';
         Map<String, String> query = new HashMap<>();
-        List<String> split = split(parameter, "&");
+        List<String> split = split(URLDecoder.decode(parameter, StandardCharsets.UTF_8), "&");
         for (String params : split) {
             String[] paramPair = params.split("=");
             if (paramPair.length > 1) {

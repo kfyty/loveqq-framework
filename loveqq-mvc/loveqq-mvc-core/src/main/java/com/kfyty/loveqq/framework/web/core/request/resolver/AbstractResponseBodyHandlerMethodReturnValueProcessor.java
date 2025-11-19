@@ -5,12 +5,13 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.annotation.bind.ResponseBody;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import com.kfyty.loveqq.framework.web.core.route.HandlerMethodRoute;
 import com.kfyty.loveqq.framework.web.core.request.RequestMethod;
 import com.kfyty.loveqq.framework.web.core.request.support.AcceptRange;
 import com.kfyty.loveqq.framework.web.core.request.support.RandomAccessStream;
+import com.kfyty.loveqq.framework.web.core.route.Route;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -37,14 +38,20 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType == null || !(returnType.getMetadata() instanceof HandlerMethodRoute)) {
+        if (returnType == null || !(returnType.getMetadata() instanceof Route route)) {
             return false;
         }
-        String contentType = ((HandlerMethodRoute) returnType.getMetadata()).getProduces();
+
+        String contentType = route.getProduces();
+
         if (contentType == null) {
             return false;
         }
-        boolean isResponseBody = hasAnnotation(returnType.getMethod(), ResponseBody.class) || hasAnnotation(returnType.getMethod().getDeclaringClass(), ResponseBody.class);
+
+        Method method = returnType.getMethod();
+
+        boolean isResponseBody = hasAnnotation(method, ResponseBody.class) || hasAnnotation(method.getDeclaringClass(), ResponseBody.class);
+
         return isResponseBody && this.supportsContentType(contentType);
     }
 

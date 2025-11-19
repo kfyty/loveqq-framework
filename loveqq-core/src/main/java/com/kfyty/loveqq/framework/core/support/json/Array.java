@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -31,7 +32,7 @@ import java.util.stream.Stream;
  * @email kfyty725@hotmail.com
  */
 @RequiredArgsConstructor
-public class Array implements List<Object>, JSONAware {
+public class Array extends AbstractList<Object> implements List<Object>, JSONAware {
     /**
      * 包装
      */
@@ -199,41 +200,6 @@ public class Array implements List<Object>, JSONAware {
     @Override
     public List<Object> subList(int fromIndex, int toIndex) {
         return this.decorate.subList(fromIndex, toIndex);
-    }
-
-    @Override
-    public void addFirst(Object instance) {
-        this.decorate.addFirst(instance);
-    }
-
-    @Override
-    public void addLast(Object instance) {
-        this.decorate.addLast(instance);
-    }
-
-    @Override
-    public Object getFirst() {
-        return this.decorate.getFirst();
-    }
-
-    @Override
-    public Object getLast() {
-        return this.decorate.getLast();
-    }
-
-    @Override
-    public Object removeFirst() {
-        return this.decorate.removeFirst();
-    }
-
-    @Override
-    public Object removeLast() {
-        return this.decorate.removeLast();
-    }
-
-    @Override
-    public List<Object> reversed() {
-        return this.decorate.reversed();
     }
 
     @Override

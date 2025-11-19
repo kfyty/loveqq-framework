@@ -1,12 +1,13 @@
 package com.kfyty.loveqq.framework.core.lang;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.agent.HotSwapAgent;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.jar.JarFile;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
-import com.kfyty.loveqq.framework.core.utils.PathUtil;
+import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import lombok.Getter;
 
 import java.io.File;
@@ -28,11 +29,12 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEPENDENCY_CHECK;
-import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.JAVA_SYSTEM_RESOURCES;
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.LOAD_TRANSFORMER;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.newNestedJarURL;
 
 /**
  * 描述: 支持 jar 索引的类加载器
+ * 该类加载器取代内置的应用类加载器，所以父类加载器必须是平台类加载器
  * 这里不要使用 {@link lombok.extern.slf4j.Slf4j} 打印日志
  *
  * @author kfyty725
@@ -72,6 +74,22 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
         super(urls, parent, factory);
         this.jarIndex = jarIndex;
         this.jarFileCache = new ConcurrentHashMap<>();
+        if (parent != null && parent.getParent() != null) {
+            throw new IllegalStateException("The parent class loader must be platform class loader.");
+        }
+    }
+
+    /**
+     * 初始化
+     * 将自身放入缓存，否则会出现强转异常
+     */
+    @Override
+    protected void init() {
+        super.init();
+        super.afterLoadClass(JarIndex.class.getName(), JarIndex.class);
+        super.afterLoadClass(JarIndexClassLoader.class.getName(), JarIndexClassLoader.class);
+        super.afterLoadClass(ClassFileTransformerClassLoader.class.getName(), ClassFileTransformerClassLoader.class);
+        super.afterLoadClass(FastClassLoader.class.getName(), FastClassLoader.class);
     }
 
     /**
@@ -81,6 +99,19 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public boolean isExploded() {
         return this.jarIndex.isExploded();
+    }
+
+    /**
+     * 关闭所有开启的 jar file，并不再使用缓存
+     */
+    public synchronized void closeJarFileCache() {
+        if (this.jarFileCache != null) {
+            for (JarFile value : this.jarFileCache.values()) {
+                IOUtil.close(value);
+            }
+            this.jarFileCache.clear();
+            this.jarFileCache = null;
+        }
     }
 
     /**
@@ -103,74 +134,91 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 关闭所有开启的 jar file，并不再使用缓存
+     * 部署 jar file，将会先卸载 jar 内的 class，然后再重定义 class
+     *
+     * @param jarFiles jar 文件集合
      */
-    public void closeJarFileCache() {
-        if (this.jarFileCache != null) {
-            synchronized (this) {
-                for (JarFile value : this.jarFileCache.values()) {
-                    IOUtil.close(value);
-                }
-                this.jarFileCache.clear();
-                this.jarFileCache = null;
+    public void deploy(List<File> jarFiles) {
+        try {
+            List<java.util.jar.JarFile> removeUse = new LinkedList<>();
+            List<java.util.jar.JarFile> redefineUse = new LinkedList<>();
+            for (File jarFile : jarFiles) {
+                removeUse.add(new java.util.jar.JarFile(jarFile));
+                redefineUse.add(new java.util.jar.JarFile(jarFile));
             }
+            this.removeJarIndex(removeUse);
+            this.addJarIndex(true, redefineUse);
+        } catch (IOException e) {
+            throw new ResolvableException("Deploy jar failed.", e);
         }
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
+     * 重定义 class 时，默认仅支持修改方法体，不支持新增方法，新增字段；当使用 dcevm 时，可支持新增方法、字段
      *
+     * @param redefine 是否重定义 class
      * @param jarFiles jar 文件集合
      */
-    public void addJarIndex(List<java.util.jar.JarFile> jarFiles) {
+    public void addJarIndex(boolean redefine, List<java.util.jar.JarFile> jarFiles) {
+        if (redefine) {
+            HotSwapAgent.redefine(jarFiles);
+        }
         this.jarIndex.addJarIndex(jarFiles);
     }
 
     /**
      * 动态添加 jar index，为动态添加 class 提供支持
+     * 重定义 class 时，默认仅支持修改方法体，不支持新增方法，新增字段；当使用 dcevm 时，可支持新增方法、字段
      *
-     * @param packageName 包名
+     * @param redefine    是否重定义 class
+     * @param packageName 包名，eg: com.kfyty.demo
      * @param jarFile     jar 文件
      */
-    public void addJarIndex(String packageName, java.util.jar.JarFile jarFile) {
-        this.jarIndex.addJarIndex(packageName, jarFile);
-    }
-
-    /**
-     * 动态添加 jar index，为动态添加 class 提供支持
-     *
-     * @param packageName 包名
-     * @param jarFilePath jar 文件绝对路径
-     */
-    public void addJarIndex(String packageName, String jarFilePath) {
-        this.jarIndex.addJarIndex(packageName, jarFilePath);
+    public void addJarIndex(boolean redefine, String packageName, java.util.jar.JarFile jarFile) {
+        if (redefine) {
+            HotSwapAgent.redefine(jarFile);
+        }
+        this.jarIndex.addJarIndex(packageName.replace('.', '/'), jarFile);
     }
 
     /**
      * 动态移除 jar index
-     * <b>注意：JarFile 必须是 {@link #addJarIndex(List)} 时的同名实例对象，否则无法移除</b>
+     * <b>注意：JarFile 必须是 {@link #addJarIndex(boolean, List)}} 时的同名实例对象，否则无法移除</b>
      *
      * @param jarFiles jar 文件
      */
-    public void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
-        this.jarIndex.removeJarIndex(jarFiles);
+    public synchronized void removeJarIndex(List<java.util.jar.JarFile> jarFiles) {
         for (java.util.jar.JarFile jarFile : jarFiles) {
             for (JarEntry entry : new EnumerationIterator<>(jarFile.entries())) {
-                if (entry.getName().endsWith(".class")) {
-                    this.parallelLockMap.remove(entry.getName());
+                String name = entry.getName();
+                if (name.endsWith(".class")) {
+                    Object removed = this.parallelLockMap.remove(name.substring(0, name.length() - 6).replace('/', '.'));
+                    if (removed instanceof Class<?>) {
+                        clearReflectCache(this, removed);
+                    }
                 }
             }
         }
+        this.jarIndex.removeJarIndex(jarFiles);
     }
 
     /**
      * 动态移除 jar index
      *
-     * @param packageName 包名，该包名下的所有 jar 都将被移除
+     * @param packageName 包名，该包名下的所有 jar 都将被移除，eg: com.demo
      */
-    public void removeJarIndex(String packageName) {
-        this.jarIndex.removeJarIndex(packageName);
-        this.parallelLockMap.entrySet().removeIf(e -> e.getKey().startsWith(packageName));
+    public synchronized void removeJarIndex(String packageName) {
+        for (Iterator<Map.Entry<String, Object>> i = this.parallelLockMap.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry<String, Object> entry = i.next();
+            if (entry.getKey().startsWith(packageName)) {
+                i.remove();
+                if (entry.getValue() instanceof Class<?>) {
+                    clearReflectCache(this, entry.getValue());
+                }
+            }
+        }
+        this.jarIndex.removeJarIndex(packageName.replace('.', '/'));
     }
 
     /**
@@ -180,29 +228,24 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     @Override
     public URL[] getURLs() {
-        return this.jarIndex.getJarURLs();
+        return this.jarIndex.getUrls();
     }
 
     /**
-     * 从 jar index 获取资源
+     * 从 {@link JarIndex} 获取资源
      *
      * @param name The resource name
      * @return resource
      */
     @Override
-    public URL getResource(String name) {
-        // java 内部资源
-        if (isJavaSystemResource(name)) {
-            return super.getResource(name);
-        }
-
+    public URL findResource(String name) {
         // 按规范，类名首字母应大写，不符合规范时，默认是某些三方包(eg:javassist)将包名作为 class 尝试读取，此时直接返回即可
-        if (name.endsWith(".class") && !Character.isUpperCase(name.charAt(name.lastIndexOf('/') + 1))) {
+        if (LOAD_TRANSFORMER && name.endsWith(".class") && !Character.isUpperCase(name.charAt(name.lastIndexOf('/') + 1))) {
             return null;
         }
 
         // ide 集成环境支持
-        if (this.isExploded()) {
+        if (isExploded()) {
             List<URL> resources = this.findExplodedResources(name);
             if (!resources.isEmpty()) {
                 return IOUtil.newURL(resources.get(0).toString() + name);
@@ -211,11 +254,8 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
 
         // jar 包支持
         List<String> jarFiles = this.jarIndex.getJarFiles(name);
-        if (jarFiles.size() < 2) {
-            return jarFiles.isEmpty() ? null : newNestedJarURL(jarFiles.get(0), name);
-        }
         for (String jarFile : jarFiles) {
-            try (java.util.jar.JarFile file = IOUtil.newJarFile(jarFile)) {
+            try (JarFile file = this.getJarFile(jarFile)) {
                 if (file.getJarEntry(name) != null) {
                     return newNestedJarURL(jarFile, name);
                 }
@@ -223,22 +263,20 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
                 throw new ResolvableException(e);
             }
         }
+
         return null;
     }
 
     /**
-     * 从 jar index 获取资源
+     * 从 {@link JarIndex} 获取资源
      *
      * @param name The resource name
      * @return resources
      */
     @Override
-    public Enumeration<URL> getResources(String name) throws IOException {
-        if (isJavaSystemResource(name)) {
-            return super.getResources(name);
-        }
+    public Enumeration<URL> findResources(String name) throws IOException {
         List<URL> resources = this.jarIndex.getJarFiles(name).stream().map(e -> newNestedJarURL(e, name)).collect(Collectors.toList());
-        if (this.isExploded()) {
+        if (isExploded()) {
             resources.addAll(this.findExplodedResources(name).stream().map(e -> IOUtil.newURL(e.toString() + name)).collect(Collectors.toList()));
         }
         return new Enumeration<URL>() {
@@ -257,55 +295,26 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 加载 class，这里不遵循双亲委派机制，因为父类加载器也会搜索类路径，此时 jar index 将失效
+     * 基于 {@link JarIndex} 查找 class
      *
-     * @param name    The <a href="#binary-name">binary name</a> of the class
-     * @param resolve If {@code true} then resolve the class
+     * @param name the name of the class
      * @return class
      */
     @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        Object lock = super.getClassLoadingLock(name);
-
-        if (lock instanceof Class<?>) {
-            return (Class<?>) lock;
-        }
-
-        if (name.startsWith("java.") || isThisClass(name)) {
-            return super.loadClass(name, resolve);                                              // 自身需要走父类，否则会出现强转异常
-        }
-
-        synchronized (lock) {
-            Class<?> loadedClass = this.findLoadedClass(name);
-            if (loadedClass == null) {
-                String className = name.replace('.', '/');
-                String classPath = className.concat(".class");
-                if (this.isExploded()) {
-                    loadedClass = this.findExplodedClass(name, className, classPath);
-                }
-                if (loadedClass == null) {
-                    loadedClass = this.findJarClass(name, className, classPath);
-                }
-            }
-            if (loadedClass != null) {
-                if (resolve) {
-                    super.resolveClass(loadedClass);
-                }
-                return super.afterLoadClass(name, loadedClass);
-            }
-            return super.loadClass(name, resolve);
-        }
-    }
-
-    /**
-     * 查找 class，由于 {@link #loadClass(String, boolean)} 已经优先从 jar index 加载，因此这里无需再查找，直接抛出异常即可
-     *
-     * @param name the name of the class
-     * @return null
-     */
-    @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        throw new ClassNotFoundException(name);
+        Class<?> loadedClass = null;
+        String className = name.replace('.', '/');
+        String classPath = className.concat(".class");
+        if (isExploded()) {
+            loadedClass = this.findExplodedClass(name, className, classPath);
+        }
+        if (loadedClass == null) {
+            loadedClass = this.findJarClass(name, className, classPath);
+        }
+        if (loadedClass == null) {
+            throw new ClassNotFoundException(name);
+        }
+        return loadedClass;
     }
 
     /**
@@ -326,7 +335,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 从 jar index 中查找 class
+     * 从 {@link JarIndex} 中查找 class
      *
      * @param name      要查找的 class, eg: java.util.List
      * @param className class name, eg: java/util/List
@@ -369,7 +378,7 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     protected Class<?> findExplodedClass(String name, String className, String classPath) throws ClassNotFoundException {
         int lastDot = name.lastIndexOf('.');
         String packageName = lastDot < 0 ? className : className.substring(0, lastDot);
-        for (URL resource : this.getURLs()) {
+        for (URL resource : this.jarIndex.getExplodedUrls()) {
             String resourceFile = resource.getFile();
             if (!resourceFile.endsWith(".jar")) {
                 File classFile = new File(resourceFile, classPath);
@@ -395,9 +404,9 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     protected List<URL> findExplodedResources(String resources) {
         List<URL> urls = new LinkedList<>();
-        for (URL url : this.getURLs()) {
+        for (URL url : this.jarIndex.getExplodedUrls()) {
             if (!url.getFile().endsWith(".jar")) {
-                if (new File(PathUtil.getPath(url).toString(), resources).exists()) {
+                if (new File(url.getFile(), resources).exists()) {
                     urls.add(url);
                 }
             }
@@ -437,34 +446,27 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 返回是否是自身的 class name
-     *
-     * @param name class name
-     * @return true or false
+     * 关闭类加载器
      */
-    public static boolean isThisClass(String name) {
-        return name.equals("com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.FastClassLoader") ||
-                name.equals("com.kfyty.loveqq.framework.core.lang.JarIndex");
+    @Override
+    public void close() throws IOException {
+        this.closeJarFileCache();
+        super.close();
     }
 
     /**
-     * 返回是否是 java 内部资源
+     * 清理反射缓存
+     * 由于直接调用会使用 {@link ClassLoader#getSystemClassLoader()} 加载的 class，导致清理无效，因此需要使用反射调用
      *
-     * @param name 资源名称，eg: java/lang/Object.class
-     * @return true if java resources
+     * @param classLoader 类加载器
+     * @param clazz       class
      */
-    public static boolean isJavaSystemResource(String name) {
-        if (name.startsWith("java/")) {
-            return true;
+    private static void clearReflectCache(JarIndexClassLoader classLoader, Object clazz) {
+        try {
+            classLoader.loadClass(ReflectUtil.class.getName(), false).getMethod("clearReflectCache", Class.class).invoke(null, clazz);
+        } catch (Exception e) {
+            throw ExceptionUtil.wrap(e);
         }
-        for (String javaSystemResource : JAVA_SYSTEM_RESOURCES) {
-            if (name.contains(javaSystemResource)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

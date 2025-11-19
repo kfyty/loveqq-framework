@@ -6,7 +6,6 @@ import com.kfyty.loveqq.framework.core.support.io.FilePart;
 import com.kfyty.loveqq.framework.core.support.io.FilePartDescription;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
 import com.kfyty.loveqq.framework.core.utils.reactor.ReactiveIOUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -52,7 +51,6 @@ import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.TEMP_PATH;
  * @date 2022/7/2 11:13
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public abstract class IOUtil {
     /**
      * {@link java.net.http.HttpClient} 是否可用
@@ -208,9 +206,11 @@ public abstract class IOUtil {
                     alreadyWriteManifest = true;
                 }
             }
-            if (!alreadyWriteManifest && in instanceof JarInputStream) {
+
+            // 之所以这里要判断，是因为 JarInputStream 为了读取 Manifest 可能会在构造时就读取条目，从而导致 MANIFEST.MF 条目无法复制
+            if (!alreadyWriteManifest && in instanceof JarInputStream jarInputStream) {
                 out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
-                ((JarInputStream) in).getManifest().write(out);
+                jarInputStream.getManifest().write(out);
                 out.closeEntry();
             }
             out.flush();
@@ -599,7 +599,6 @@ public abstract class IOUtil {
                         FilePartDescription fpd = new FilePartDescription(i, (int) splitSize, length, i + "_" + srcFile.getName(), new RandomAccessFile(srcFile, "r"));
                         splitSize += fpd.getLength();
                         fileParts.add(fpd);
-                        log.info("after split file name: {}, file size: {}", fpd.getName(), fpd.getLength());
                         continue;
                     }
                     File filePart = new File(splitDir, i + "_" + srcFile.getName());
@@ -611,10 +610,8 @@ public abstract class IOUtil {
                         splitSize += filePart.length();
                     }
                     fileParts.add(new FilePart(i, filePart));
-                    log.info("after split file name: {}, file size: {}", filePart.getName(), filePart.length());
                 }
             }
-            log.info("split ok, total: {}, split: {}....", totalSize, splitSize);
             return fileParts;
         } catch (IOException e) {
             throw new ResolvableException(e);
