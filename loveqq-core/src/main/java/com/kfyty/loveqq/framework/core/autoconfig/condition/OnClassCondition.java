@@ -52,8 +52,8 @@ public class OnClassCondition implements Condition {
     protected boolean isPresent(String className) {
         ClassLoader classLoader = ClassLoaderUtil.classLoader(OnClassCondition.class);
 
-        if (classLoader instanceof JarIndexClassLoader jcl) {
-
+        if (classLoader instanceof JarIndexClassLoader) {
+            JarIndexClassLoader jcl = (JarIndexClassLoader) classLoader;
             if (Thread.currentThread() instanceof ContextRefreshThread) {
                 try (JarIndexClassLoader cl = new JarIndexClassLoader(jcl.getJarIndex(), jcl.getParent())) {
                     cl.loadClass(className);

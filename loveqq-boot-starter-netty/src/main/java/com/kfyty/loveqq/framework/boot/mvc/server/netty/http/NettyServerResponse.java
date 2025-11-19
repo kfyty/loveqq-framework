@@ -133,8 +133,8 @@ public class NettyServerResponse implements ServerResponse {
     @Override
     public Mono<ByteBuf> getAggregateBody() {
         Flux<ByteBuf> body = getBody();
-        if (body instanceof ByteBufFlux bufFlux) {
-            return bufFlux.aggregate();
+        if (body instanceof ByteBufFlux) {
+            return ((ByteBufFlux) body).aggregate();
         }
         return ByteBufFlux.fromInbound(body).aggregate();
     }

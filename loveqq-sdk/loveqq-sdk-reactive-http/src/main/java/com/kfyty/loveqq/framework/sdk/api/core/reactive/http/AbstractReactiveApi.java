@@ -34,8 +34,8 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
         return Mono.fromRunnable(this::preProcessor)
                 .then(this.executeInternal())
                 .onErrorMap(throwable -> {
-                    if (throwable instanceof BaseApiException ae) {
-                        return ae;
+                    if (throwable instanceof BaseApiException) {
+                        return throwable;
                     }
                     return new ApiException(format("request api: %s failed: %s", this.requestPath(), throwable.getMessage()), throwable);
                 });
@@ -47,8 +47,8 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
                 .then(this.exchangeInternal())
                 .doOnNext(this::postProcessor)
                 .onErrorMap(throwable -> {
-                    if (throwable instanceof BaseApiException ae) {
-                        return ae;
+                    if (throwable instanceof BaseApiException) {
+                        return throwable;
                     }
                     return new ApiException(format("request api: %s failed: %s", this.requestPath(), throwable.getMessage()), throwable);
                 });
@@ -66,8 +66,8 @@ public abstract class AbstractReactiveApi<T extends AbstractReactiveApi<T, R>, R
 
     public ReactiveHttpRequestExecutor getReactiveRequestExecutor() {
         HttpRequestExecutor requestExecutor = this.getConfiguration().getRequestExecutor();
-        if (requestExecutor instanceof ReactiveHttpRequestExecutor executor) {
-            return executor;
+        if (requestExecutor instanceof ReactiveHttpRequestExecutor) {
+            return (ReactiveHttpRequestExecutor) requestExecutor;
         }
         throw new IllegalArgumentException("Require ReactiveHttpRequestExecutor: " + requestExecutor);
     }

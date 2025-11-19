@@ -208,9 +208,9 @@ public abstract class IOUtil {
             }
 
             // 之所以这里要判断，是因为 JarInputStream 为了读取 Manifest 可能会在构造时就读取条目，从而导致 MANIFEST.MF 条目无法复制
-            if (!alreadyWriteManifest && in instanceof JarInputStream jarInputStream) {
+            if (!alreadyWriteManifest && in instanceof JarInputStream) {
                 out.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
-                jarInputStream.getManifest().write(out);
+                ((JarInputStream) in).getManifest().write(out);
                 out.closeEntry();
             }
             out.flush();

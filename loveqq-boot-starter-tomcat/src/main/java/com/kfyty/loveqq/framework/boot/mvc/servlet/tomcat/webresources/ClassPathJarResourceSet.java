@@ -50,7 +50,8 @@ public class ClassPathJarResourceSet extends JarResourceSet {
                 URL url = this.getClass().getClassLoader().getResource(pathInArchive);
                 if (url != null) {
                     URLConnection urlConnection = url.openConnection();
-                    if (urlConnection instanceof JarURLConnection connection) {
+                    if (urlConnection instanceof JarURLConnection) {
+                        JarURLConnection connection = (JarURLConnection) urlConnection;
                         if (Thread.currentThread() instanceof ContextRefreshThread) {
                             urlConnection.setUseCaches(false);
                         }

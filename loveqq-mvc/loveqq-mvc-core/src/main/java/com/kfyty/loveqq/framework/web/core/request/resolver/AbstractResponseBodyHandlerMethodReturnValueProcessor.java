@@ -38,10 +38,11 @@ public abstract class AbstractResponseBodyHandlerMethodReturnValueProcessor impl
 
     @Override
     public boolean supportsReturnType(Object returnValue, MethodParameter returnType) {
-        if (returnType == null || !(returnType.getMetadata() instanceof Route route)) {
+        if (returnType == null || !(returnType.getMetadata() instanceof Route)) {
             return false;
         }
 
+        Route route = (Route) returnType.getMetadata();
         String contentType = route.getProduces();
 
         if (contentType == null) {

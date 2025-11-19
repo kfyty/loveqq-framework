@@ -103,9 +103,14 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
         builder.header("Content-Type", api.contentType());
 
         switch (api.method()) {
-            case "GET" -> builder.GET();
-            case "DELETE" -> builder.DELETE();
-            case "POST", "PUT" -> {
+            case "GET":
+                builder.GET();
+                break;
+            case "DELETE":
+                builder.DELETE();
+                break;
+            case "POST":
+            case "PUT": {
                 if (api.payload() != null && api.payload().length > 0) {
                     builder.method(api.method(), java.net.http.HttpRequest.BodyPublishers.ofByteArray(api.payload()));
                 } else if (Objects.equals(api.contentType(), ApiConstants.CONTENT_TYPE_JSON)) {
