@@ -23,16 +23,7 @@ public abstract class ConverterUtil {
      * 初始化默认的转换器
      */
     static {
-        PackageUtil.scanInstance(Converter.class)
-                .forEach(e -> {
-                    Converter<?, ?> converter = (Converter<?, ?>) e;
-                    Class<?> source = ReflectUtil.getSuperGeneric(converter.getClass());
-                    registerConverter(converter);
-                    for (Class<?> supportType : converter.supportTypes()) {
-                        //noinspection unchecked,rawtypes
-                        registerConverter((Class) source, (Class) supportType, converter);
-                    }
-                });
+        PackageUtil.scanInstance(Converter.class).forEach(ConverterUtil::registryConverter);
     }
 
     public static Map<Pair<Class<?>, Class<?>>, Converter<?, ?>> getTypeConverters() {
@@ -48,12 +39,12 @@ public abstract class ConverterUtil {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static <S, T> void registerConverter(Converter<S, T> converter) {
+    public static <S, T> void registryConverter(Converter<S, T> converter) {
         Class<? extends Converter> converterClass = converter.getClass();
-        registerConverter((Class<S>) ReflectUtil.getSuperGeneric(converterClass), (Class<T>) ReflectUtil.getSuperGeneric(converterClass, 1), converter);
+        registryConverter((Class<S>) ReflectUtil.getSuperGeneric(converterClass), (Class<T>) ReflectUtil.getSuperGeneric(converterClass, 1), converter);
     }
 
-    public static <S, T> void registerConverter(Class<S> source, Class<T> target, Converter<S, T> converter) {
+    public static <S, T> void registryConverter(Class<S> source, Class<T> target, Converter<S, ? extends T> converter) {
         TYPE_CONVERTER.put(new Pair<>(source, target), converter);
     }
 
@@ -61,7 +52,7 @@ public abstract class ConverterUtil {
     public static <S, T> T convert(S source, Class<T> clazz) {
         Converter<S, T> converter = getTypeConverter((Class<S>) source.getClass(), clazz);
         if (converter == null) {
-            throw new IllegalArgumentException("No suitable converter is available of type: " + source.getClass() + ", " + clazz);
+            throw new IllegalArgumentException("There's no suitable converter is available of type: " + source.getClass() + ", " + clazz);
         }
         if (clazz.isEnum() && String.valueOf(source).indexOf('.') < 0) {
             return converter.apply((S) (clazz.getName() + '.' + source));

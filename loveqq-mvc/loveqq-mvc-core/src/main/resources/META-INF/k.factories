@@ -1,6 +1,8 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
-    com.kfyty.loveqq.framework.web.core.autoconfig.GatewayRouteProperties$StringToPredicatesConverter,\
-    com.kfyty.loveqq.framework.web.core.autoconfig.GatewayRouteProperties$StringToFiltersConverter,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.converter.StringToPredicatesConverter,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.converter.MapToPredicatesConverter,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.converter.StringToFiltersConverter,\
+    com.kfyty.loveqq.framework.web.core.route.gateway.converter.MapToFiltersConverter,\
     com.kfyty.loveqq.framework.web.core.handler.DefaultRequestMappingHandler,\
     com.kfyty.loveqq.framework.web.core.route.DefaultRouteRegistry,\
     com.kfyty.loveqq.framework.web.core.route.AccurateRouteMatcher,\

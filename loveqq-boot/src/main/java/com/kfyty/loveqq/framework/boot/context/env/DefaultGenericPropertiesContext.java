@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Lazy;
 import com.kfyty.loveqq.framework.core.autoconfig.env.DataBinder;
 import com.kfyty.loveqq.framework.core.autoconfig.env.GenericPropertiesContext;
 import com.kfyty.loveqq.framework.core.autoconfig.env.PropertyContext;
+import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.generic.SimpleGeneric;
 import com.kfyty.loveqq.framework.core.support.Instance;
@@ -21,8 +22,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import static com.kfyty.loveqq.framework.core.utils.CommonUtil.EMPTY_STRING;
 import static com.kfyty.loveqq.framework.core.utils.ConverterUtil.convert;
+import static com.kfyty.loveqq.framework.core.utils.ConverterUtil.getTypeConverter;
 import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
 
 /**
@@ -34,6 +39,16 @@ import static com.kfyty.loveqq.framework.core.utils.ReflectUtil.newInstance;
  */
 @Component
 public class DefaultGenericPropertiesContext extends DefaultPropertyContext implements GenericPropertiesContext {
+    /**
+     * 数组下标
+     */
+    public static final Pattern ARRAY_INDEX_PATTERN = Pattern.compile(".+\\[[0-9]+]");
+
+    /**
+     * 全数字
+     */
+    public static final Pattern DIGIT_PATTERN = Pattern.compile("\\[[0-9]+]");
+
     /**
      * 数据绑定器
      */
@@ -194,7 +209,12 @@ public class DefaultGenericPropertiesContext extends DefaultPropertyContext impl
         boolean isBaseType = elementType == Object.class || ReflectUtil.isBaseDataType(elementType);
         for (Map.Entry<String, Map<String, String>> entry : properties.entrySet()) {
             if (isBaseType) {
-                entry.getValue().values().forEach(e -> result.add(convert(e, elementType)));
+                Converter<Map, ?> converter = getTypeConverter(Map.class, elementType);
+                if (converter == null) {
+                    entry.getValue().values().forEach(e -> result.add(convert(e, elementType)));
+                } else {
+                    result.add(converter.apply(entry.getValue()));
+                }
                 continue;
             }
             if (nestedTargetType != null) {
@@ -220,26 +240,38 @@ public class DefaultGenericPropertiesContext extends DefaultPropertyContext impl
      * @return 绑定结果
      */
     public Map<Object, Object> convertAndBind(String prefix, Map<Object, Object> target, Class<?> valueType, SimpleGeneric targetType, SimpleGeneric nestedTargetType) {
-        String replace = prefix + ".";
+        String replace = prefix + '.';
         Class<?> mapKeyType = targetType.getMapKeyType().get();
         Set<String> bind = new HashSet<>(4);
         boolean isBaseType = valueType == Object.class || ReflectUtil.isBaseDataType(valueType);
         Map<String, String> properties = this.searchMapProperties(prefix);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (isBaseType) {
-                target.put(convert(entry.getKey().replace(replace, ""), mapKeyType), convert(entry.getValue(), valueType));
-                continue;
-            }
-
+            // 解析当前绑定的 key
             int keyIndex = entry.getKey().indexOf('.', replace.length());
             String key = keyIndex < 0 ? entry.getKey().substring(replace.length()) : entry.getKey().substring(replace.length(), keyIndex);
 
+            if (isBaseType) {
+                Converter<Map, ?> converter = getTypeConverter(Map.class, valueType);
+                if (converter == null) {
+                    target.put(convert(entry.getKey().replace(replace, EMPTY_STRING), mapKeyType), convert(entry.getValue(), valueType));
+                } else if (!bind.contains(entry.getKey())) {
+                    String keySetPrefix = replace + key;
+                    Map<String, String> keySet = properties.entrySet()
+                            .stream()
+                            .filter(e -> e.getKey().startsWith(keySetPrefix))
+                            .peek(e -> bind.add(e.getKey()))
+                            .collect(Collectors.toMap(k -> k.getKey().length() == keySetPrefix.length() ? k.getKey() : k.getKey().substring(keySetPrefix.length() + 1), Map.Entry::getValue));
+                    target.put(convert(key, mapKeyType), converter.apply(keySet));
+                }
+                continue;
+            }
+
             // 处理嵌套的类型，可能是嵌套集合则去除下标索引，也可能是嵌套 Map
             if (nestedTargetType != null) {
-                if (key.matches(".+\\[[0-9]+]")) {
-                    key = key.replaceAll("\\[[0-9]+]", "");
+                if (ARRAY_INDEX_PATTERN.matcher(key).matches()) {
+                    key = DIGIT_PATTERN.matcher(key).replaceAll(EMPTY_STRING);
                 }
-                target.put(convert(key, mapKeyType), this.getProperty(prefix + "." + key, nestedTargetType));
+                target.put(convert(key, mapKeyType), this.getProperty(replace + key, nestedTargetType));
                 continue;
             }
 

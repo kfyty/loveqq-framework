@@ -1,9 +1,7 @@
 package com.kfyty.loveqq.framework.core.converter;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-
-import java.util.Collections;
-import java.util.List;
+import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 
 /**
  * 描述:
@@ -14,9 +12,8 @@ import java.util.List;
  */
 public class StringToShortConverter implements Converter<String, Short> {
 
-    @Override
-    public List<Class<?>> supportTypes() {
-        return Collections.singletonList(short.class);
+    public StringToShortConverter() {
+        ConverterUtil.registryConverter(String.class, short.class, this);
     }
 
     @Override

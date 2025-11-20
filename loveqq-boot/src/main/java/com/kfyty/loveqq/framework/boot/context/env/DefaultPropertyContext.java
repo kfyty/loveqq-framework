@@ -98,7 +98,7 @@ public class DefaultPropertyContext implements ConfigurableApplicationContextAwa
     @Autowired(required = false)
     public void setConverters(List<Converter<?, ?>> converters) {
         if (CommonUtil.notEmpty(converters)) {
-            converters.forEach(ConverterUtil::registerConverter);
+            converters.forEach(ConverterUtil::registryConverter);
             log.info("registry converters: {}", converters);
         }
     }

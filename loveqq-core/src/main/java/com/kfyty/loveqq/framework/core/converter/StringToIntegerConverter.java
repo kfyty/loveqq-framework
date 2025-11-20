@@ -1,9 +1,7 @@
 package com.kfyty.loveqq.framework.core.converter;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-
-import java.util.Collections;
-import java.util.List;
+import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 
 /**
  * 描述:
@@ -14,9 +12,8 @@ import java.util.List;
  */
 public class StringToIntegerConverter implements Converter<String, Integer> {
 
-    @Override
-    public List<Class<?>> supportTypes() {
-        return Collections.singletonList(int.class);
+    public StringToIntegerConverter() {
+        ConverterUtil.registryConverter(String.class, int.class, this);
     }
 
     @Override

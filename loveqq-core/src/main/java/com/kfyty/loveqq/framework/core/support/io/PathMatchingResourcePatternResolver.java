@@ -38,11 +38,14 @@ public class PathMatchingResourcePatternResolver {
     private final PatternMatcher patternMatcher;
 
     public PathMatchingResourcePatternResolver() {
-        this(new HashSet<>());
+        this.urls = new HashSet<>();
+        this.patternMatcher = new AntPathMatcher();
     }
 
     public PathMatchingResourcePatternResolver(Set<URL> urls) {
-        this(urls, new AntPathMatcher());
+        this.loaded = true;
+        this.urls = urls;
+        this.patternMatcher = new AntPathMatcher();
     }
 
     public Set<URL> findResources(String pattern) {
@@ -50,8 +53,9 @@ public class PathMatchingResourcePatternResolver {
             Set<URL> urls = this.obtainURL();
             Set<URL> resources = new HashSet<>();
             for (URL url : urls) {
-                if (url.getFile().endsWith(".jar")) {
-                    resources.addAll(this.findResourcesByJar(new JarFile(url.getFile().replace("%20", " ")), pattern));
+                String file = url.getFile();
+                if (file.endsWith(".jar")) {
+                    resources.addAll(this.findResourcesByJar(new JarFile(file.replace("%20", " ")), pattern));
                 } else {
                     resources.addAll(this.findResourcesByFile(url, pattern));
                 }

@@ -1,8 +1,5 @@
 package com.kfyty.loveqq.framework.core.converter;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * 描述: 数据类型转换
  *
@@ -11,25 +8,6 @@ import java.util.List;
  * @email kfyty725@hotmail.com
  */
 public interface Converter<S, T> {
-    /**
-     * 是否基本数据类型，默认 true
-     *
-     * @return true if base data type
-     */
-    default boolean isBaseDataType() {
-        return true;
-    }
-
-    /**
-     * 支持的类型
-     * 主要用于支持基本数据类型
-     *
-     * @return 类型
-     */
-    default List<Class<?>> supportTypes() {
-        return Collections.emptyList();
-    }
-
     /**
      * 将 S 转换为 T
      *

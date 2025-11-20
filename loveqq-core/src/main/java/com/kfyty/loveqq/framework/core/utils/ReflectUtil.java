@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.converter.Converter;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.generic.Generic;
 import com.kfyty.loveqq.framework.core.generic.QualifierGeneric;
+import com.kfyty.loveqq.framework.core.lang.Value;
 import com.kfyty.loveqq.framework.core.lang.internal.SunReflectionSupport;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
@@ -268,12 +269,7 @@ public abstract class ReflectUtil {
         if (clazz.isPrimitive() || clazz.isEnum()) {
             return true;
         }
-        return ConverterUtil.getTypeConverters()
-                .entrySet()
-                .stream()
-                .filter(e -> e.getValue().isBaseDataType())
-                .map(e -> e.getKey().getValue())
-                .anyMatch(e -> e == clazz);
+        return ConverterUtil.getTypeConverters().keySet().stream().map(Value::getValue).anyMatch(e -> e == clazz);
     }
 
     /*--------------------------------------------- 创建实例相关方法 ---------------------------------------------*/
