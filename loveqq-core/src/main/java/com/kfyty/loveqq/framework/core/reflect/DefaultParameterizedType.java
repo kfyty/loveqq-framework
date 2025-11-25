@@ -1,7 +1,6 @@
 package com.kfyty.loveqq.framework.core.reflect;
 
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -15,10 +14,14 @@ import java.util.stream.Collectors;
  * @date 2022/7/24 13:18
  * @email kfyty725@hotmail.com
  */
-@RequiredArgsConstructor
 public class DefaultParameterizedType implements ParameterizedType {
     private final Class<?> rawType;
     private final Class<?>[] classes;
+
+    public DefaultParameterizedType(Class<?> rawType, Class<?>... classes) {
+        this.rawType = rawType;
+        this.classes = classes;
+    }
 
     @Override
     public Type[] getActualTypeArguments() {

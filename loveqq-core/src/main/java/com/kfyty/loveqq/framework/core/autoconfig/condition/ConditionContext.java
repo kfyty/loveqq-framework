@@ -48,7 +48,7 @@ public class ConditionContext implements AutoCloseable {
      * key: {@link Bean} 方法标记的 bean type
      * value: parent bean definition
      */
-    protected final Map<Pair<String, Class<?>>, String> nestedConditionReference;
+    private final Map<Pair<String, Class<?>>, String> nestedConditionReference;
 
     /**
      * 已经解析的条件
