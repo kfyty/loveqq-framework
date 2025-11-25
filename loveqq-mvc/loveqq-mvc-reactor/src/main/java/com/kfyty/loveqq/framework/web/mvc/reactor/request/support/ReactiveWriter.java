@@ -2,7 +2,8 @@ package com.kfyty.loveqq.framework.web.mvc.reactor.request.support;
 
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
-import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * 描述: 响应式写出响应
@@ -18,10 +19,11 @@ public interface ReactiveWriter {
      * @param sc http 状态
      * @return 写发布者
      */
-    Publisher<Void> writeStatus(int sc, ServerRequest serverRequest, ServerResponse serverResponse);
+    Mono<Void> writeStatus(int sc, ServerRequest serverRequest, ServerResponse serverResponse);
 
     /**
-     * 写出返回值
+     * 写出响应体
+     * 仅写入 {@link ServerResponse#writeBody(Flux)} 即可
      *
      * @param retValue       返回值
      * @param serverRequest  请求
@@ -29,5 +31,5 @@ public interface ReactiveWriter {
      * @param isStream       是否流式写出
      * @return 写发布者
      */
-    Publisher<Void> writeReturnValue(Object retValue, ServerRequest serverRequest, ServerResponse serverResponse, boolean isStream);
+    Mono<ServerResponse> writeBody(Object retValue, ServerRequest serverRequest, ServerResponse serverResponse, boolean isStream);
 }

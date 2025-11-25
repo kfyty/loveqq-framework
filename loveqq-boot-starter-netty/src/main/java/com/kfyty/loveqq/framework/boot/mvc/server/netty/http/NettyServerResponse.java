@@ -41,7 +41,7 @@ public class NettyServerResponse implements ServerResponse {
     /**
      * 响应体
      */
-    private Flux<ByteBuf> body;
+    private volatile Flux<ByteBuf> body;
 
     public NettyServerResponse(HttpServerResponse response) {
         this.response = response;
@@ -124,7 +124,7 @@ public class NettyServerResponse implements ServerResponse {
     }
 
     @Override
-    public Flux<ByteBuf> getBody() {
+    public synchronized Flux<ByteBuf> getBody() {
         Flux<ByteBuf> body = this.body;
         this.body = Flux.empty();
         return body;

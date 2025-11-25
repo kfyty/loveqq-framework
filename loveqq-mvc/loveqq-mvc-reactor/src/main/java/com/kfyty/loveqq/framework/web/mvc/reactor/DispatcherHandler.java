@@ -95,8 +95,13 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
     @Override
     protected Publisher<Void> handleReturnValue(Object retValue, MethodParameter returnType, ServerRequest request, ServerResponse response) {
         try {
+            boolean shouldFlush = this.shouldFlush(response.getContentType());
             Object processedReturnValue = super.handleReturnValue(retValue, returnType, request, response);
-            return this.reactiveWriter.writeReturnValue(processedReturnValue, request, response, this.shouldFlush(response.getContentType()));
+            Mono<ServerResponse> written = this.reactiveWriter.writeBody(processedReturnValue, request, response, shouldFlush);
+            if (shouldFlush) {
+                return written.flatMap(ServerResponse::sendBody);                                                       // 立即写入到客户端
+            }
+            return written.then();                                                                                      // 订阅完成后由过滤器写入客户端
         } catch (Exception e) {
             throw e instanceof ReactiveServerException ? (ReactiveServerException) e : new ReactiveServerException(unwrap(e));
         }

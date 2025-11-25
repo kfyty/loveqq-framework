@@ -9,6 +9,7 @@ import com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ReactiveHandl
 import com.kfyty.loveqq.framework.web.mvc.reactor.request.support.ReactiveWriter;
 import io.netty.buffer.ByteBuf;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.server.HttpServerResponse;
@@ -29,47 +30,61 @@ import static com.kfyty.loveqq.framework.core.utils.NIOUtil.from;
 public class ReactiveNettyWriter implements ReactiveWriter {
 
     @Override
-    public Publisher<Void> writeStatus(int sc, ServerRequest serverRequest, ServerResponse serverResponse) {
+    public Mono<Void> writeStatus(int sc, ServerRequest serverRequest, ServerResponse serverResponse) {
         HttpServerResponse response = serverResponse.getRawResponse();
         return response.status(sc).send();
     }
 
     @Override
-    public Publisher<Void> writeReturnValue(Object retValue, ServerRequest serverRequest, ServerResponse serverResponse, boolean isStream) {
+    public Mono<ServerResponse> writeBody(Object retValue, ServerRequest serverRequest, ServerResponse serverResponse, boolean isStream) {
         if (retValue == null) {
             return Mono.empty();
         }
-        applyDefaultHeaders(serverResponse);
+
         HttpServerResponse response = serverResponse.getRawResponse();
-        if (retValue instanceof NettyOutbound) {
-            return (NettyOutbound) retValue;
+
+        if (!response.hasSentHeaders()) {
+            this.applyDefaultHeaders(serverResponse);
         }
+
+        if (retValue instanceof NettyOutbound outbound) {
+            return Mono.from(outbound).thenReturn(serverResponse);
+        }
+
         if (retValue instanceof CharSequence str) {
-            return response.send(Mono.just(from(str)), e -> isStream);
+            return serverResponse.writeBody(Flux.just(from(str)));
         }
+
         if (retValue instanceof byte[] bytes) {
-            return response.send(Mono.just(from(bytes)), e -> isStream);
+            return serverResponse.writeBody(Flux.just(from(bytes)));
         }
+
         if (retValue instanceof ByteBuf byteBuf) {
-            return response.send(Mono.just(byteBuf), e -> isStream);
+            return serverResponse.writeBody(Flux.just(byteBuf));
         }
+
         if (retValue instanceof SseEvent sse) {
-            return response.send(Mono.just(sse.build()), e -> isStream);
+            return serverResponse.writeBody(Flux.just(sse.build()));
         }
+
         if (retValue instanceof Publisher<?> publisher) {
-            return response.send((Publisher<? extends ByteBuf>) publisher, e -> isStream);
+            return serverResponse.writeBody(Flux.from((Publisher<? extends ByteBuf>) publisher));
         }
+
         if (retValue instanceof RandomAccessStream stream) {
             ReactiveHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher publisher =
                     new ReactiveHandlerMethodReturnValueProcessor.RandomAccessStreamByteBufPublisher(serverRequest, serverResponse, stream);
-            return response.send(publisher.onBackpressureBuffer(), e -> stream.refresh());
+            return serverResponse.writeBody(publisher.onBackpressureBuffer());
         }
+
         if (retValue instanceof File file) {
-            return response.sendFile(file.toPath());
+            return Mono.from(response.sendFile(file.toPath())).thenReturn(serverResponse);
         }
+
         if (retValue instanceof Path path) {
-            return response.sendFile(path);
+            return Mono.from(response.sendFile(path)).thenReturn(serverResponse);
         }
+
         throw new IllegalArgumentException("The return value must be CharSequence/SseEvent/byte[]/ByteBuf/RandomAccessStream/File/Path.");
     }
 

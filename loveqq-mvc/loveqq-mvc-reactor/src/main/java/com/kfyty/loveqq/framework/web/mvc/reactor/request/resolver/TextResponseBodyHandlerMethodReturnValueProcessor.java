@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
 import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
+import io.netty.buffer.ByteBuf;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
 
@@ -26,6 +27,9 @@ public class TextResponseBodyHandlerMethodReturnValueProcessor extends AbstractR
 
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        return returnValue instanceof byte[] ? returnValue : String.valueOf(returnValue);
+        if (returnValue instanceof byte[] || returnValue instanceof ByteBuf || returnValue instanceof CharSequence) {
+            return returnValue;
+        }
+        return String.valueOf(returnValue);
     }
 }

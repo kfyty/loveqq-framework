@@ -1,5 +1,6 @@
 com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.web.mvc.reactor.filter.RequestResponseContextHolderFilter,\
+    com.kfyty.loveqq.framework.web.mvc.reactor.filter.SendResponseBodyFilter,\
     com.kfyty.loveqq.framework.web.mvc.reactor.autoconfig.WebReactiveMvcAutoConfig,\
     com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.ViewForwardHandlerMethodReturnValueProcessor,\
     com.kfyty.loveqq.framework.web.mvc.reactor.request.resolver.TextResponseBodyHandlerMethodReturnValueProcessor,\

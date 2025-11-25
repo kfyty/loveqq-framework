@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.method.MethodParameter;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
 import com.kfyty.loveqq.framework.web.core.request.resolver.AbstractResponseBodyHandlerMethodReturnValueProcessor;
 import com.kfyty.loveqq.framework.web.core.request.support.ModelViewContainer;
+import io.netty.buffer.ByteBuf;
 
 import static com.kfyty.loveqq.framework.core.autoconfig.annotation.Order.HIGHEST_PRECEDENCE;
 
@@ -28,6 +29,9 @@ public class JSONResponseBodyHandlerMethodReturnValueProcessor extends AbstractR
 
     @Override
     public Object transformReturnValue(Object returnValue, MethodParameter returnType, ModelViewContainer container) throws Exception {
-        return returnValue instanceof CharSequence ? returnValue.toString() : JsonUtil.toJSONString(returnValue);
+        if (returnValue instanceof byte[] || returnValue instanceof ByteBuf || returnValue instanceof CharSequence) {
+            return returnValue;
+        }
+        return JsonUtil.toJSONString(returnValue);
     }
 }
