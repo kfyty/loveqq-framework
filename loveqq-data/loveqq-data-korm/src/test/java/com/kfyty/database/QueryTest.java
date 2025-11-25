@@ -27,13 +27,11 @@ import java.util.Map;
 import java.util.Properties;
 
 public class QueryTest {
-    private static final String PATH = "druid.properties";
-
     private UserMapper userMapper;
 
     @BeforeEach
     public void prepare() throws Exception {
-        Properties load = PropertiesUtil.load(PATH);
+        Properties load = PropertiesUtil.load(JdbcTest.PATH);
         DataSource dataSource = new HikariDataSource(new HikariConfig(load));
         DynamicProvider<?> dynamicProvider = new EnjoyDynamicProvider().setEngine(Engine.create("test"));
         Configuration configuration = new Configuration()

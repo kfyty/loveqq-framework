@@ -131,9 +131,9 @@ public class SqlSession implements InvocationHandler {
                 return this.invokeInterceptorChain(method, annotation.get(), sqlParams, returnType);
             }
             if (annotation.get().annotationType() == Query.class || annotation.get().annotationType() == SubQuery.class) {
-                return JdbcUtil.query(transaction, returnType, sqlParams.getKey(), sqlParams.getValue());
+                return JdbcUtil.query(transaction, returnType, sqlParams.getKey(), Arrays.stream(sqlParams.getValue()).map(MethodParameter::getValue).toArray());
             }
-            return JdbcUtil.execute(transaction, sqlParams.getKey(), sqlParams.getValue());
+            return JdbcUtil.execute(transaction, sqlParams.getKey(), Arrays.stream(sqlParams.getValue()).map(MethodParameter::getValue).toArray());
         } finally {
             TransactionHolder.resetCurrentTransaction(before);
         }

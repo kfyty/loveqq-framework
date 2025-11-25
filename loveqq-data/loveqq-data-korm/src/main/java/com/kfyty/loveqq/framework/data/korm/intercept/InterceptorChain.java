@@ -131,7 +131,7 @@ public class InterceptorChain implements AutoCloseable {
     protected PreparedStatement preparePreparedStatement() {
         if (this.preparedStatement == null) {
             try {
-                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.toArray(MethodParameter[]::new));
+                this.preparedStatement = JdbcUtil.getPreparedStatement(TransactionHolder.currentTransaction().getConnection(), this.sql.get(), this.methodParameters.stream().map(MethodParameter::getValue).toArray());
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }
@@ -154,7 +154,7 @@ public class InterceptorChain implements AutoCloseable {
         if (!this.hasRet) {
             try {
                 this.setRetValue(ResultSetUtil.processObject(this.prepareResultSet(), this.returnType));
-                LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<==         total: {} {}", size(this.retValue), this.retValue == null ? null : this.retValue.getClass()));
+                LogUtil.logIfDebugEnabled(log, log -> log.debug("\t\t<==         total: {} {}", size(this.retValue), this.retValue == null ? null : this.retValue.getClass()));
             } catch (SQLException e) {
                 throw new ExecuteInterceptorException(e);
             }
@@ -169,7 +169,7 @@ public class InterceptorChain implements AutoCloseable {
         try {
             this.preparePreparedStatement().execute();
             this.setRetValue(this.preparePreparedStatement().getUpdateCount());
-            return LogUtil.logIfDebugEnabled(log, log -> log.debug("\r\n<== affected rows: {}", this.retValue), this.retValue);
+            return LogUtil.logIfDebugEnabled(log, log -> log.debug("\t\t<== affected rows: {}", this.retValue), this.retValue);
         } catch (SQLException e) {
             throw new ExecuteInterceptorException(e);
         }
