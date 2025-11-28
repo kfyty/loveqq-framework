@@ -154,6 +154,15 @@ public class NettyServerResponse implements ServerResponse {
         return Mono.empty();
     }
 
+    @Override
+    public Mono<Void> sendBody(boolean flush) {
+        Flux<ByteBuf> body = getBody();
+        if (body != this.body) {
+            return Mono.from(this.response.send(body, e -> flush));
+        }
+        return Mono.empty();
+    }
+
     @RequiredArgsConstructor
     private class ReactorNettyByteArrayOutputStream extends ByteArrayOutputStream {
 

@@ -101,7 +101,7 @@ public class WebSocketForwardRouteGatewayFilter implements GatewayFilter {
                     .flatMap(frame -> outbound.sendObject(Mono.just(frame)))
                     .doOnError(ex -> statusRef.setKeyValue(INTERNAL_SERVER_ERROR, ex))
                     .onErrorComplete()
-                    .doOnComplete(() -> outbound.sendClose(statusRef.getKey().code(), statusRef.getValue().getMessage()).subscribeOn(Schedulers.parallel()).subscribe());
+                    .doOnComplete(() -> outbound.sendClose(statusRef.getKey().code(), statusRef.getValue().getMessage()).subscribeOn(Schedulers.immediate()).subscribe());
         }
     }
 }

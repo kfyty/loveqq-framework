@@ -1,14 +1,15 @@
 package com.kfyty.loveqq.framework.boot.mvc.server.netty.autoconfig;
 
 import com.kfyty.loveqq.framework.boot.mvc.server.netty.resource.ResourceResolver;
+import com.kfyty.loveqq.framework.core.autoconfig.InitializingBean;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.core.filter.Filter;
 import com.kfyty.loveqq.framework.web.mvc.reactor.FilterRegistrationBean;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import reactor.netty.ReactorNetty;
 import reactor.netty.http.HttpProtocol;
-import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.tcp.SslProvider;
 
@@ -28,16 +29,11 @@ import java.util.function.UnaryOperator;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class NettyProperties extends WebServerProperties {
+public class NettyProperties extends WebServerProperties implements InitializingBean {
     /**
      * select 线程数
      */
     private Integer selectThreads = 1;
-
-    /**
-     * 是否启用 {@link HttpClient}
-     */
-    private Boolean enableClient;
 
     /**
      * 是否启用转发
@@ -134,5 +130,22 @@ public class NettyProperties extends WebServerProperties {
 
     public void addWebFilter(FilterRegistrationBean filter) {
         this.webFilters.add(filter);
+    }
+
+    /**
+     * 这里直接先设置属性值，否则会因为静态加载而无效
+     */
+    @Override
+    public void afterPropertiesSet() {
+        // 设置最大 select 线程数
+        System.setProperty(ReactorNetty.IO_SELECT_COUNT, this.getSelectThreads().toString());
+
+        // 设置转发是否严格验证 DefaultHttpForwardedHeaderHandler#FORWARDED_HEADER_VALIDATION
+        System.setProperty("reactor.netty.http.server.forwarded.strictValidation", this.getForwardedStrictValidation().toString());
+
+        // 设置最大工作线程数
+        if (this.getMaxThreads() != null) {
+            System.setProperty(ReactorNetty.IO_WORKER_COUNT, this.getMaxThreads().toString());
+        }
     }
 }

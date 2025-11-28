@@ -151,4 +151,14 @@ public interface ServerResponse extends Flushable {
     default Mono<Void> sendBody() {
         throw new UnsupportedOperationException("ServerResponse.sendBody");
     }
+
+    /**
+     * 发送写入的响应体，会实际发送到客户端
+     *
+     * @param flush 是否立即刷新到客户端，否则的是异步刷新到客户端
+     * @return 发布者
+     */
+    default Mono<Void> sendBody(boolean flush) {
+        throw new UnsupportedOperationException("ServerResponse.sendBody");
+    }
 }

@@ -20,7 +20,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.netty.DisposableServer;
-import reactor.netty.ReactorNetty;
 import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 
@@ -163,18 +162,6 @@ public class NettyWebServer implements ReactiveWebServer {
     }
 
     protected void configNettyServer() {
-        // 先设置属性值，否则会因为静态加载而无效
-        // 设置最大 select 线程数
-        System.setProperty(ReactorNetty.IO_SELECT_COUNT, this.config.getSelectThreads().toString());
-
-        // 设置转发是否严格验证 DefaultHttpForwardedHeaderHandler#FORWARDED_HEADER_VALIDATION
-        System.setProperty("reactor.netty.http.server.forwarded.strictValidation", this.config.getForwardedStrictValidation().toString());
-
-        // 设置最大工作线程数
-        if (this.config.getMaxThreads() != null) {
-            System.setProperty(ReactorNetty.IO_WORKER_COUNT, this.config.getMaxThreads().toString());
-        }
-
         // 再配置服务器
         this.server = HttpServer.create()
                 .port(this.getPort())

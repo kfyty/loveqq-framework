@@ -75,7 +75,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
                 .flatMap(p -> Mono.from(this.handleReturnValue(p.getValue(), p.getKey(), request, response)))
                 .onErrorResume(ex -> this.handleException(request, response, route, ex).flatMap(p -> Mono.from(this.handleReturnValue(p.getValue(), p.getKey(), request, response))))
                 .doOnError(e -> this.onError(throwableReference, e))
-                .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, route, throwableReference.get()).subscribeOn(Schedulers.boundedElastic()).subscribe());
+                .doFinally(s -> this.applyCompletionInterceptorAsync(request, response, route, throwableReference.get()).subscribeOn(Schedulers.immediate()).subscribe());
     }
 
     protected Mono<Pair<MethodParameter, ?>> handleException(ServerRequest request, ServerResponse response, Route route, Throwable throwable) {
@@ -99,7 +99,7 @@ public class DispatcherHandler extends AbstractReactiveDispatcher<DispatcherHand
             Object processedReturnValue = super.handleReturnValue(retValue, returnType, request, response);
             Mono<ServerResponse> written = this.reactiveWriter.writeBody(processedReturnValue, request, response, shouldFlush);
             if (shouldFlush) {
-                return written.flatMap(ServerResponse::sendBody);                                                       // 立即写入到客户端
+                return written.flatMap(e -> e.sendBody(true));                                                          // 立即写入到客户端
             }
             return written.then();                                                                                      // 订阅完成后由过滤器写入客户端
         } catch (Exception e) {
