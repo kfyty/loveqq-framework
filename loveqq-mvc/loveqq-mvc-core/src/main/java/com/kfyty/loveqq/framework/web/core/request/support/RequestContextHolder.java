@@ -52,7 +52,11 @@ public class RequestContextHolder {
             MDC.put(ConstantConfig.TRACK_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
             return supplier.get();
         } finally {
-            MDC.put(ConstantConfig.TRACK_ID, prev);
+            if (prev == null) {
+                MDC.remove(ConstantConfig.TRACK_ID);
+            } else {
+                MDC.put(ConstantConfig.TRACK_ID, prev);
+            }
         }
     }
 
@@ -68,7 +72,11 @@ public class RequestContextHolder {
             MDC.put(ConstantConfig.TRACK_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
             runnable.run();
         } finally {
-            MDC.put(ConstantConfig.TRACK_ID, prev);
+            if (prev == null) {
+                MDC.remove(ConstantConfig.TRACK_ID);
+            } else {
+                MDC.put(ConstantConfig.TRACK_ID, prev);
+            }
         }
     }
 }

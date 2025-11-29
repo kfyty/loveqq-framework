@@ -40,7 +40,7 @@ public interface ConstantConfig {
     /**
      * {@link org.slf4j.MDC} traceId
      */
-    String TRACK_ID = "traceId";
+    String TRACK_ID = "X-LOVEQQ-TRACE_ID";
 
     /**
      * 临时文件夹位置
