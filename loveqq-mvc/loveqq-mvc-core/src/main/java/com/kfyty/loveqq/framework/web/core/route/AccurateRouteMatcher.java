@@ -24,13 +24,11 @@ public class AccurateRouteMatcher implements RouteMatcher {
 
     @Override
     public Route match(RequestMethod method, ServerRequest request) {
-        int length = 0;
         String[] paths = Routes.SLASH_PATTERN.split(request.getRequestURI(), 0);
-        for (String path : paths) {
-            if (!path.isEmpty()) {
-                length++;
-            }
-        }
+
+        // uri 格式为 /demo/get，分割后第一个是 ""，这里为了兼容判断一下
+        final int length = paths[0].isEmpty() ? paths.length - 1 : paths.length;
+
         return this.routeRegistry.getRoutes().getRoutes(length).get(new Routes.RouteKey(request.getRequestURI(), method));
     }
 }

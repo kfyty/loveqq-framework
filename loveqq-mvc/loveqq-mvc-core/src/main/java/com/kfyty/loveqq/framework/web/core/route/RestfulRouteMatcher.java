@@ -30,14 +30,21 @@ public class RestfulRouteMatcher implements RouteMatcher {
 
     @Override
     public Route match(RequestMethod method, ServerRequest request) {
-        List<Route> routes = new ArrayList<>();
-        List<String> paths = CommonUtil.split(request.getRequestURI(), "[/]");
+        List<Route> routes = new ArrayList<>(4);
+
+        String[] paths = Routes.SLASH_PATTERN.split(request.getRequestURI(), 0);
+
+        // uri 格式为 /demo/get，分割后第一个是 ""，这里为了兼容判断一下
+        final int mistake = paths[0].isEmpty() ? 1 : 0;
+        final int length = paths.length - mistake;
+
         loop:
-        for (Route route : this.routeRegistry.getRoutes().getRoutes(paths.size()).values()) {
+        for (Route route : this.routeRegistry.getRoutes().getRoutes(length).values()) {
             if (route.isRestful() && route.getRequestMethod() == method) {
-                for (int i = 0, length = paths.size(); i < length; i++) {
-                    String routePath = route.getPaths()[i];
-                    if (routePath.equals(paths.get(i))) {
+                String[] routePaths = route.getPaths();
+                for (int i = mistake; i < length; i++) {
+                    String routePath = routePaths[i - mistake];
+                    if (routePath.equals(paths[i])) {
                         continue;
                     }
                     if (CommonUtil.SIMPLE_PARAMETERS_PATTERN.matcher(routePath).matches()) {
@@ -48,6 +55,7 @@ public class RestfulRouteMatcher implements RouteMatcher {
                 routes.add(route);
             }
         }
+
         return this.matchBestRestful(method, request.getRequestURI(), routes);
     }
 
