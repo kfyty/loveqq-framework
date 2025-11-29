@@ -1,16 +1,12 @@
 package com.kfyty.loveqq.framework.data.cache.core;
 
-import com.kfyty.loveqq.framework.core.lang.VirtualThreadCallableDecorator;
-import com.kfyty.loveqq.framework.core.lang.VirtualThreadRunnableDecorator;
-import com.kfyty.loveqq.framework.core.lang.util.concurrent.DecorateScheduledExecutorService;
-import com.kfyty.loveqq.framework.core.thread.NamedThreadFactory;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.LogUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,19 +26,14 @@ public class DefaultCache extends AbstractCache {
     /**
      * 缓存超时时间
      */
-    private final DecorateScheduledExecutorService schedule;
+    private final ScheduledExecutorService schedule;
 
     /**
      * 构造器
      */
-    public DefaultCache() {
+    public DefaultCache(ScheduledExecutorService schedule) {
         this.cache = new ConcurrentHashMap<>();
-        this.schedule = new DecorateScheduledExecutorService(1, new NamedThreadFactory("cache-clean-executor"));
-        if (CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
-            this.schedule.setTaskDecorator(VirtualThreadRunnableDecorator.INSTANCE);
-            this.schedule.setCallDecorator(VirtualThreadCallableDecorator.INSTANCE);
-        }
-        Runtime.getRuntime().addShutdownHook(new Thread(this.schedule::shutdown));
+        this.schedule = schedule;
     }
 
     @Override

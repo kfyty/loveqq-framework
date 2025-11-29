@@ -23,6 +23,8 @@ import org.redisson.codec.JsonJacksonCodec;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_THREAD_POOL_EXECUTOR;
+
 /**
  * 描述: redisson 自动配置类
  *
@@ -37,7 +39,7 @@ public class RedissonAutoConfiguration {
     @Value("${k.server.virtualThread:true}")
     private boolean isVirtual;
 
-    @Autowired("defaultThreadPoolExecutor")
+    @Autowired(DEFAULT_THREAD_POOL_EXECUTOR)
     private ExecutorService defaultThreadPoolExecutor;
 
     @Autowired("redisListenerExecutor")

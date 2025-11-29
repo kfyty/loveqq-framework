@@ -6,13 +6,14 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 
 public class DefaultConsoleConfiguration extends BasicConfigurator {
 
     public ExecutionStatus configure(LoggerContext loggerContext) {
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%p) [%t] [%X{traceId}] %boldGreen(%50logger{50} %-4L):  %m %n");
+        encoder.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%p) [%t] [%X{" + ConstantConfig.TRACK_ID + "}] %boldGreen(%50logger{50} %-4L):  %m %n");
         encoder.start();
 
         ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();

@@ -27,7 +27,8 @@ public class RequestResponseContextHolderFilter implements Filter {
 
     @Override
     public Publisher<Void> doFilter(ServerRequest request, ServerResponse response, FilterChain chain) {
-        String traceId = ConstantConfig.traceId();
+        String header = request.getHeader(ConstantConfig.TRACK_ID);
+        String traceId = header != null && !header.isEmpty() ? header : ConstantConfig.traceId();
 
         request.setAttribute(REQUEST_TRACE_ID_ATTRIBUTE, traceId);
 

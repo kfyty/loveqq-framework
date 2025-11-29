@@ -15,6 +15,8 @@ import com.kfyty.loveqq.framework.data.cache.core.reactive.ReactiveCache;
 
 import java.util.concurrent.ScheduledExecutorService;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR;
+
 /**
  * 描述: 缓存自动配置
  * 这里仅配置 {@link ReactiveCache} 即可，因为默认基于内存访问，适配的堵塞操作也不会出现线程异常。
@@ -29,8 +31,8 @@ public class CacheAutoConfiguration {
 
     @ConditionalOnMissingBean
     @Bean(resolveNested = false, independent = true)
-    public ReactiveCache defaultReactiveCache() {
-        return new DefaultReactiveCache();
+    public ReactiveCache defaultReactiveCache(@Autowired(DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR) ScheduledExecutorService executorService) {
+        return new DefaultReactiveCache(executorService);
     }
 
     @ConditionalOnMissingBean
@@ -43,7 +45,7 @@ public class CacheAutoConfiguration {
     public CacheInterceptorProxy cacheInterceptorProxy(PropertyContext propertyContext,
                                                        Cache cache,
                                                        CacheKeyFactory cacheKeyFactory,
-                                                       @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
+                                                       @Autowired(DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR) ScheduledExecutorService executorService) {
         return new CacheInterceptorProxy(propertyContext, cache, cacheKeyFactory, executorService);
     }
 
@@ -51,7 +53,7 @@ public class CacheAutoConfiguration {
     public ReactiveCacheInterceptorProxy reactiveCacheInterceptorProxy(PropertyContext propertyContext,
                                                                        ReactiveCache cache,
                                                                        CacheKeyFactory cacheKeyFactory,
-                                                                       @Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService executorService) {
+                                                                       @Autowired(DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR) ScheduledExecutorService executorService) {
         return new ReactiveCacheInterceptorProxy(propertyContext, cache, cacheKeyFactory, executorService);
     }
 }

@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THREAD_POOL_EXECUTOR;
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_THREAD_POOL_EXECUTOR;
 
 /**
  * 描述: {@link Async}/{@link Async.Await} 注解代理，优先级必须设为最高，否则若其他拦截代理使用了 ThreadLocal 会失效
@@ -119,7 +119,7 @@ public class AsyncMethodInterceptorProxy implements MethodInterceptorChainPoint,
                 }
                 return retValue instanceof Future ? ((Future<?>) retValue).get(Integer.MAX_VALUE, TimeUnit.SECONDS) : null;
             } catch (Throwable throwable) {
-                log.error("execute async method error: {}", throwable.getMessage(), throwable);
+                log.error("Execute async method error: {}", throwable.getMessage(), throwable);
                 throw new AsyncMethodException(throwable);
             }
         };

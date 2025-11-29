@@ -40,7 +40,17 @@ public interface ConstantConfig {
     /**
      * {@link org.slf4j.MDC} traceId
      */
-    String TRACK_ID = "traceId";
+    String TRACK_ID = "X-Loveqq-Trace-Id";
+
+    /**
+     * 框架默认线程池bean名称
+     */
+    String DEFAULT_THREAD_POOL_EXECUTOR = "defaultThreadPoolExecutor";
+
+    /**
+     * 框架默认调度线程池bean名称
+     */
+    String DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR = "defaultScheduledThreadPoolExecutor";
 
     /**
      * 临时文件夹位置

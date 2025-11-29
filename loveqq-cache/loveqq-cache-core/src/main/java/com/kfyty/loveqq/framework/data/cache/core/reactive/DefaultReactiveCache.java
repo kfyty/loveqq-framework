@@ -5,6 +5,7 @@ import com.kfyty.loveqq.framework.data.cache.core.DefaultCache;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,10 +17,13 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class DefaultReactiveCache extends AbstractReactiveCache implements ReactiveCache {
+    /**
+     * 响应式缓存基于内存缓存实现
+     */
     private final Cache cache;
 
-    public DefaultReactiveCache() {
-        this.cache = new DefaultCache();
+    public DefaultReactiveCache(ScheduledExecutorService schedule) {
+        this.cache = new DefaultCache(schedule);
     }
 
     @Override

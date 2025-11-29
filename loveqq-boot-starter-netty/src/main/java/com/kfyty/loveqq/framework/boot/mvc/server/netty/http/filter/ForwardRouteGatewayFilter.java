@@ -2,8 +2,10 @@ package com.kfyty.loveqq.framework.boot.mvc.server.netty.http.filter;
 
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Order;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.web.core.http.ServerRequest;
 import com.kfyty.loveqq.framework.web.core.http.ServerResponse;
+import com.kfyty.loveqq.framework.web.core.request.support.RequestContextHolder;
 import com.kfyty.loveqq.framework.web.core.route.GatewayRoute;
 import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilter;
 import com.kfyty.loveqq.framework.web.core.route.gateway.GatewayFilterChain;
@@ -39,6 +41,10 @@ public class ForwardRouteGatewayFilter implements GatewayFilter {
         }
         final URI routeURI = this.createRouteURI(route, request);
         return this.client.headers(headers -> {
+                    String traceId = (String) request.getAttribute(RequestContextHolder.REQUEST_TRACE_ID_ATTRIBUTE);
+                    if (traceId != null) {
+                        headers.add(ConstantConfig.TRACK_ID, traceId);
+                    }
                     for (String headerName : request.getHeaderNames()) {
                         headers.add(headerName, request.getHeaders(headerName));
                     }

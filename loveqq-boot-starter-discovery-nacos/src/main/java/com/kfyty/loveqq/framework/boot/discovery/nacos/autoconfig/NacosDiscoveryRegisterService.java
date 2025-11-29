@@ -7,7 +7,6 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.pojo.ListView;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 import com.alibaba.nacos.api.utils.NetUtils;
-import com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
@@ -28,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR;
 
 /**
  * 描述: nacos 服务注册
@@ -77,7 +78,7 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
     /**
      * 调度线程池
      */
-    @Autowired(ThreadPoolExecutorAutoConfig.DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR)
+    @Autowired(DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR)
     private ScheduledExecutorService scheduledExecutorService;
 
     @Override

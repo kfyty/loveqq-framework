@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * 描述:
@@ -30,7 +31,7 @@ public class CacheTest {
 
     @Test
     public void cacheTest() {
-        Cache cache = new DefaultCache();
+        Cache cache = new DefaultCache(new ScheduledThreadPoolExecutor(1));
         cache.put("test", 1);
         cache.put("test", 2, 2);
         CommonUtil.sleep(3000);

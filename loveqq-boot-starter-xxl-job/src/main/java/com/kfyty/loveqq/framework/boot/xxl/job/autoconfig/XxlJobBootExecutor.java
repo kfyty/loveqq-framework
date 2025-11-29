@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.ContextAfterRefreshed;
 import com.kfyty.loveqq.framework.core.autoconfig.DestroyBean;
 import com.kfyty.loveqq.framework.core.autoconfig.aware.ApplicationContextAware;
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
+import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.AnnotationUtil;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -42,7 +43,7 @@ public class XxlJobBootExecutor extends XxlJobExecutor implements ApplicationCon
         try {
             if (this.jobCnt > 0) {
                 super.start();
-                ExecutorService executor = this.applicationContext.getBean("defaultThreadPoolExecutor");
+                ExecutorService executor = this.applicationContext.getBean(ConstantConfig.DEFAULT_THREAD_POOL_EXECUTOR);
                 executor.execute(() -> {});
             }
         } catch (Exception e) {

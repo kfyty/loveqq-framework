@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.lang;
+package com.kfyty.loveqq.framework.core.thread;
 
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.VirtualThreadExecutorHolder;
 

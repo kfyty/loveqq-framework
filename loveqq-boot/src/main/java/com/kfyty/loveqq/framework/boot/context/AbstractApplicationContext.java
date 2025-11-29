@@ -33,7 +33,7 @@ import com.kfyty.loveqq.framework.core.utils.CompletableFutureUtil;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-import static com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig.DEFAULT_THREAD_POOL_EXECUTOR;
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_THREAD_POOL_EXECUTOR;
 
 /**
  * 描述: 上下文基础实现

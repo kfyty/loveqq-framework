@@ -1,5 +1,8 @@
 package com.kfyty.loveqq.framework.core.lang.util.concurrent;
 
+import com.kfyty.loveqq.framework.core.thread.TraceCallDecorator;
+import com.kfyty.loveqq.framework.core.thread.TraceTaskDecorator;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,7 +23,12 @@ public abstract class VirtualThreadExecutorHolder {
      * 单例静态初始化
      */
     static {
-        INSTANCE = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
+        ExecutorService executor = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vthread-handler-", 0).factory());
+        DecorateExecutorService decorate = new DecorateExecutorService(executor);
+        decorate.setTaskDecorator(TraceTaskDecorator.INSTANCE);
+        decorate.setCallDecorator(TraceCallDecorator.INSTANCE);
+
+        INSTANCE = decorate;
 
         // 这里不再添加回调，因为需要在 ApplicationContext#close 中销毁。如果不在 loveqq 环境中使用，请手动调用销毁
         // Runtime.getRuntime().addShutdownHook(new Thread(INSTANCE::shutdown));

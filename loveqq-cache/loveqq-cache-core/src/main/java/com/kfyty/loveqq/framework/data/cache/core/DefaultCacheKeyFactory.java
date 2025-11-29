@@ -14,13 +14,13 @@ public class DefaultCacheKeyFactory implements CacheKeyFactory {
 
     @Override
     public String buildKey(Method method, Object[] args, Object target) {
-        StringBuilder key = new StringBuilder(target.getClass().getName()).append('#').append(method.getName()).append(":");
+        StringBuilder key = new StringBuilder(target.getClass().getName()).append('#').append(method.getName()).append(':');
 
         Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
-            key.append(parameters[i].getName()).append("=").append(args[i]);
+            key.append(parameters[i].getName()).append('=').append(args[i]);
             if (i != parameters.length - 1) {
-                key.append(":");
+                key.append(':');
             }
         }
 

@@ -29,6 +29,6 @@ com.kfyty.loveqq.framework.core.autoconfig.annotation.EnableAutoConfiguration=\
     com.kfyty.loveqq.framework.boot.processor.BeanCustomizerBeanPostProcessor,\
     com.kfyty.loveqq.framework.boot.processor.PostConstructProcessor,\
     com.kfyty.loveqq.framework.boot.processor.PreDestroyProcessor,\
-    com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfig,\
+    com.kfyty.loveqq.framework.boot.autoconfig.ThreadPoolExecutorAutoConfiguration,\
     com.kfyty.loveqq.framework.boot.autoconfig.ScopeProxyFactoryAutoConfig,\
     com.kfyty.loveqq.framework.boot.autoconfig.LookupBeanDefinitionAutoConfig

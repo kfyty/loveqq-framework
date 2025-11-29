@@ -13,6 +13,8 @@ import org.reactivestreams.Publisher;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR;
+
 /**
  * 描述: {@link ResponseBodyEmitter} 处理器
  * 该处理器的顺序应该比 {@link JSONResponseBodyHandlerMethodReturnValueProcessor} 高
@@ -34,7 +36,7 @@ public class ResponseBodyEmitterHandlerMethodReturnValueProcessor implements Rea
      *
      * @param scheduledExecutorService 调度器
      */
-    public ResponseBodyEmitterHandlerMethodReturnValueProcessor(@Autowired("defaultScheduledThreadPoolExecutor") ScheduledExecutorService scheduledExecutorService) {
+    public ResponseBodyEmitterHandlerMethodReturnValueProcessor(@Autowired(DEFAULT_SCHEDULED_THREAD_POOL_EXECUTOR) ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
