@@ -17,6 +17,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Server {
+    /**
+     * 服务名称，也是用于注册的服务 id
+     */
     private String name;
+
+    /**
+     * 服务实例
+     */
     private List<ServerInstance> instances;
 }

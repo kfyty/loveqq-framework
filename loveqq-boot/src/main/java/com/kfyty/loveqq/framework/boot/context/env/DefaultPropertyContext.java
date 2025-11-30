@@ -19,7 +19,6 @@ import com.kfyty.loveqq.framework.core.utils.PathUtil;
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.StandardWatchEventKinds;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -322,7 +321,7 @@ public class DefaultPropertyContext implements ConfigurableApplicationContextAwa
                         loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));
                         this.applicationContext.publishEvent(new PropertyContextRefreshedEvent(this));
                     }))
-                    .then(e -> e.register(StandardWatchEventKinds.ENTRY_MODIFY).registry().start())
+                    .then(e -> e.registry().start())
                     .then(this.fileListeners::add);
         }
     }

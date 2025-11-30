@@ -51,7 +51,7 @@ public abstract class AbstractCoreApi<T extends AbstractCoreApi<T, R>, R extends
      * @return this
      */
     public ApiConfiguration cloneConfig() {
-        this.configuration = this.configuration.clone();
+        this.configuration = this.getConfiguration().clone();
         return this.configuration;
     }
 

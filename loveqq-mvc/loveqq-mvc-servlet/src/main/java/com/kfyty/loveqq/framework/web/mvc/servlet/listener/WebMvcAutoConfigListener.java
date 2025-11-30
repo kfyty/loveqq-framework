@@ -14,9 +14,11 @@ import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
 import com.kfyty.loveqq.framework.web.core.WebServer;
 import com.kfyty.loveqq.framework.web.core.autoconfig.WebMvcAutoConfig;
+import com.kfyty.loveqq.framework.web.core.autoconfig.WebServerProperties;
 import com.kfyty.loveqq.framework.web.mvc.servlet.DispatcherServlet;
 import com.kfyty.loveqq.framework.web.mvc.servlet.ServletWebServer;
 import com.kfyty.loveqq.framework.web.mvc.servlet.autoconfig.WebServletMvcAutoConfig;
+import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -99,6 +101,16 @@ public class WebMvcAutoConfigListener extends WebServletMvcAutoConfig implements
     @ConditionalOnMissingBean(WebServer.class)
     public WebMvcAutoConfig tomcatWebMvcAutoConfig() {
         return new WebMvcAutoConfig();
+    }
+
+    /**
+     * 作为 tomcat 内嵌应用时，不应该配置 {@link MultipartConfigElement} bean
+     */
+    @Bean
+    @Override
+    @ConditionalOnMissingClass(classes = Object.class)
+    public MultipartConfigElement multipartConfig(WebServerProperties serverProperties, int maxRequestSize, int fileSizeThreshold) {
+        throw new UnsupportedOperationException();
     }
 
     /**

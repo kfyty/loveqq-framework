@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.sdk.api.core.reactive.http.executor;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.JsonUtil;
+import com.kfyty.loveqq.framework.sdk.api.core.Api;
 import com.kfyty.loveqq.framework.sdk.api.core.constant.ApiConstants;
 import com.kfyty.loveqq.framework.sdk.api.core.exception.ApiException;
 import com.kfyty.loveqq.framework.sdk.api.core.http.HttpRequest;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.net.HttpCookie;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -40,12 +42,17 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
     public static final ReactiveHttpRequestExecutor INSTANCE = new ReactiveHttpClientHttpRequestExecutor();
 
     /**
+     * 这里以 {@link ProxySelector} 作为 key，连接超时则以第一个请求的 {@link Api#connectTimeout()} 为准，
+     * 原因是 jdk http client 不可变，这里仅针对代理维护缓存，连接超时配置不再额外维护缓存
      * {@link HttpClient}
      */
-    protected static final Map<Integer, HttpClient> HTTP_CLIENT_CACHE;
+    protected static final Map<ProxySelector, HttpClient> HTTP_CLIENT_CACHE;
 
+    /**
+     * 这里关闭时过滤是因为有的 jdk 版本实现了 {@link AutoCloseable} 有的没有实现
+     */
     static {
-        HTTP_CLIENT_CACHE = new ConcurrentHashMap<>();
+        HTTP_CLIENT_CACHE = new ConcurrentHashMap<>(4);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> HTTP_CLIENT_CACHE.values().stream().filter(e -> e instanceof AutoCloseable).forEach(IOUtil::close)));
     }
 
@@ -76,14 +83,14 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
     }
 
     protected HttpClient obtainHttpClient(HttpRequest<?> api) {
-        return HTTP_CLIENT_CACHE.computeIfAbsent(api.connectTimeout(), k -> {
-            HttpClient.Builder builder = HttpClient.newBuilder()
-                    .version(HttpClient.Version.HTTP_2)
-                    .connectTimeout(Duration.ofMillis(api.connectTimeout()))
-                    .proxy(api.proxySelector());
-            this.postProcessClient(builder);
-            return builder.build();
-        });
+        return HTTP_CLIENT_CACHE.computeIfAbsent(api.proxySelector(), k ->
+                this.postProcessClient(
+                                HttpClient.newBuilder()
+                                        .version(HttpClient.Version.HTTP_2)
+                                        .connectTimeout(Duration.ofMillis(api.connectTimeout()))
+                                        .proxy(api.proxySelector())
+                        )
+                        .build());
     }
 
     protected java.net.http.HttpRequest buildHttpRequest(HttpRequest<?> api) {
@@ -117,17 +124,15 @@ public class ReactiveHttpClientHttpRequestExecutor implements ReactiveHttpReques
             }
         }
 
-        this.postProcessRequest(builder);
-
-        return builder.build();
+        return this.postProcessRequest(builder).build();
     }
 
-    protected void postProcessClient(HttpClient.Builder builder) {
-
+    protected HttpClient.Builder postProcessClient(HttpClient.Builder builder) {
+        return builder;
     }
 
-    protected void postProcessRequest(java.net.http.HttpRequest.Builder builder) {
-
+    protected java.net.http.HttpRequest.Builder postProcessRequest(java.net.http.HttpRequest.Builder builder) {
+        return builder;
     }
 
     public static class ReactiveHttpResponse implements HttpResponse {

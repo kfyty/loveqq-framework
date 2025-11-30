@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchService;
 import java.util.Objects;
@@ -101,7 +102,14 @@ public class FileListener {
         this.watchService = IOUtil.newWatchService();
     }
 
-    public FileListener register(WatchEvent.Kind<?>... events) {
+    /**
+     * 注册需要监听的事件
+     * 不注册则不监听任何事件
+     *
+     * @param events 事件
+     * @return this
+     */
+    public FileListener registry(WatchEvent.Kind<?>... events) {
         try {
             if (this.path.toFile().isDirectory()) {
                 this.path.register(this.watchService, events);
@@ -119,7 +127,7 @@ public class FileListener {
             throw new ResolvableException("On create is already set for path: " + this.path);
         }
         this.onCreate = Objects.requireNonNull(consumer);
-        return this;
+        return this.registry(StandardWatchEventKinds.ENTRY_CREATE);
     }
 
     public FileListener onOverflow(BiConsumer<Path, WatchEvent<?>> consumer) {
@@ -127,7 +135,7 @@ public class FileListener {
             throw new ResolvableException("On overflow is already set for path: " + this.path);
         }
         this.onOverflow = Objects.requireNonNull(consumer);
-        return this;
+        return this.registry(StandardWatchEventKinds.OVERFLOW);
     }
 
     public FileListener onModify(BiConsumer<Path, WatchEvent<?>> consumer) {
@@ -135,7 +143,7 @@ public class FileListener {
             throw new ResolvableException("On modify is already set for path: " + this.path);
         }
         this.onModify = Objects.requireNonNull(consumer);
-        return this;
+        return this.registry(StandardWatchEventKinds.ENTRY_MODIFY);
     }
 
     public FileListener onDelete(BiConsumer<Path, WatchEvent<?>> consumer) {
@@ -143,10 +151,11 @@ public class FileListener {
             throw new ResolvableException("On delete is already set for path: " + this.path);
         }
         this.onDelete = Objects.requireNonNull(consumer);
-        return this;
+        return this.registry(StandardWatchEventKinds.ENTRY_DELETE);
     }
 
     public FileListener registry() {
+        log.info("Registry file listener: {}", this.path);
         FileListenerTask.INSTANCE.registry(new Triple<>(this.path, this.watchService, this.eventListener));
         return this;
     }

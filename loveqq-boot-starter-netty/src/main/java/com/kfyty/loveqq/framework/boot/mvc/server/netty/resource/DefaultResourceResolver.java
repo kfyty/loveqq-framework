@@ -24,11 +24,15 @@ public class DefaultResourceResolver implements ResourceResolver {
 
     @Override
     public URL resolve(String uri) {
-        URL url = this.getClass().getResource(uri);
+        Class<?> clazz = this.getClass();
+
+        URL url = clazz.getResource(uri);
+
+        // 找不到资源时，尝试搜索 /static 下的资源，因为 uri 一般不包含 /static 路径
         if (url == null && !uri.startsWith(STATIC_PATH_PREFIX)) {
-            String staticUri = STATIC_PATH_PREFIX + uri;
-            url = this.getClass().getResource(staticUri);
+            url = clazz.getResource(STATIC_PATH_PREFIX + uri);
         }
+
         return url;
     }
 

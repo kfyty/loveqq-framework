@@ -33,22 +33,22 @@ public class DecorateScheduledExecutorService extends DecorateExecutorService im
         return delegate;
     }
 
-    public DecorateExecutorService setTaskDecorator(Function<Runnable, Runnable> taskDecorator) {
+    public DecorateScheduledExecutorService setTaskDecorator(Function<Runnable, Runnable> taskDecorator) {
         super.setTaskDecorator(taskDecorator);
         return this;
     }
 
-    public DecorateExecutorService setCallDecorator(Function<Callable<?>, Callable<?>> callDecorator) {
+    public DecorateScheduledExecutorService setCallDecorator(Function<Callable<?>, Callable<?>> callDecorator) {
         super.setCallDecorator(callDecorator);
         return this;
     }
 
-    public DecorateExecutorService andThenDelegateTask(Function<Runnable, Runnable> taskDecorator) {
+    public DecorateScheduledExecutorService andThenDelegateTask(Function<Runnable, Runnable> taskDecorator) {
         super.andThenDelegateTask(taskDecorator);
         return this;
     }
 
-    public DecorateExecutorService andThenDelegateCall(Function<Callable<?>, Callable<?>> callDecorator) {
+    public DecorateScheduledExecutorService andThenDelegateCall(Function<Callable<?>, Callable<?>> callDecorator) {
         super.andThenDelegateCall(callDecorator);
         return this;
     }

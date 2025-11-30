@@ -8,6 +8,7 @@ import com.alibaba.nacos.api.naming.pojo.ListView;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 import com.alibaba.nacos.api.utils.NetUtils;
 import com.kfyty.loveqq.framework.boot.discovery.nacos.autoconfig.listener.NacosNamingEventListener;
+import com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.ServerInstance;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
@@ -17,7 +18,6 @@ import com.kfyty.loveqq.framework.core.autoconfig.beans.builder.BeanDefinitionBu
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.event.ContextRefreshedEvent;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
-import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,10 +133,10 @@ public class NacosDiscoveryRegisterService implements BeanFactoryPostProcessor, 
         instance.setEphemeral(properties.getEphemeral());
         instance.setMetadata(properties.getMetadata());
         if (instance.getMetadata() != null) {
-            instance.getMetadata().put(ConstantConfig.APPLICATION_NAME_KEY, this.applicationName);
+            instance.getMetadata().put(ServerInstance.META_DATA_APPLICATION_NAME, this.applicationName);
         } else {
             Map<String, String> metadata = new HashMap<>(4);
-            instance.getMetadata().put(ConstantConfig.APPLICATION_NAME_KEY, this.applicationName);
+            instance.getMetadata().put(ServerInstance.META_DATA_APPLICATION_NAME, this.applicationName);
             instance.setMetadata(metadata);
         }
         return instance;

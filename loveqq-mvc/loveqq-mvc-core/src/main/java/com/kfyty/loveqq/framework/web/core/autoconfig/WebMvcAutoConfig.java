@@ -87,7 +87,7 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
         final List<GatewayRoute> gatewayRoutesList = new ArrayList<>();
 
-        if (routeProperties.getRoutes() != null) {
+        if (routeProperties != null && routeProperties.getRoutes() != null) {
             for (RouteDefinition routeDefinition : routeProperties.getRoutes()) {
                 gatewayRoutesList.add(GatewayRoute.create(applicationContext, routeDefinition));
             }

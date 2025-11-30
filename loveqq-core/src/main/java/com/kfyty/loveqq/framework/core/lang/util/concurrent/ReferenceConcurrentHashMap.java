@@ -4,7 +4,6 @@ import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.thread.SingleThreadTask;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
-import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -21,7 +20,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static com.kfyty.loveqq.framework.core.lang.ConstantConfig.LOGGING_REFERENCE_MANAGER_LEVEL;
 
 /**
  * 描述: 引用同步 Map
@@ -30,7 +35,7 @@ import java.util.stream.Collectors;
  * @date 2023/7/31 18:10
  * @email kfyty725@hotmail.com
  */
-public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Serializable {
+public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V> {
     /**
      * 包装 Map
      */
@@ -279,6 +284,16 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
 
     private static class ReferenceManager extends SingleThreadTask {
         /**
+         * jdk 内部日志
+         */
+        private static final Logger LOGGER = Logger.getLogger(ReferenceManager.class.getName());
+
+        /**
+         * DEBUG 级别
+         */
+        private static final Level DEBUG_LEVEL = new Level("DEBUG", 500) {};
+
+        /**
          * 单例
          */
         private static final ReferenceManager INSTANCE = new ReferenceManager();
@@ -288,8 +303,22 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
          */
         private final Queue<Pair<ReferenceQueue<?>, Map<?, ?>>> references;
 
+        static {
+            Level level = new Level("ReferenceManagerLevel", Integer.parseInt(LOGGING_REFERENCE_MANAGER_LEVEL)) {};
+
+            Handler[] handlers = LOGGER.getHandlers();
+
+            if (handlers == null || handlers.length == 0) {
+                ConsoleHandler handler = new ConsoleHandler();
+                handler.setLevel(level);
+                LOGGER.addHandler(handler);
+            }
+
+            LOGGER.setLevel(level);
+        }
+
         private ReferenceManager() {
-            super("reference-manager-thread");
+            super("reference-manager");
             this.references = new LinkedBlockingDeque<>();
         }
 
@@ -309,7 +338,8 @@ public class ReferenceConcurrentHashMap<K, V> implements ConcurrentMap<K, V>, Se
                 ReferenceQueue<?> referenceQueue = referencePair.getKey();
                 Map<?, ?> target = referencePair.getValue();
                 while ((reference = referenceQueue.poll()) != null) {
-                    target.remove(reference);
+                    final Object removed = target.remove(reference);
+                    LOGGER.log(DEBUG_LEVEL, () -> "Reference object gc: " + removed);
                 }
             }
         }

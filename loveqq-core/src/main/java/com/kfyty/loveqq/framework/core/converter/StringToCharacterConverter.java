@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.core.converter;
 
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 
 /**
@@ -18,9 +17,12 @@ public class StringToCharacterConverter implements Converter<String, Character> 
 
     @Override
     public Character apply(String source) {
-        if (CommonUtil.empty(source)) {
+        if (source == null || source.isEmpty()) {
             return null;
         }
-        return source.charAt(0);
+        if (source.length() == 1) {
+            return source.charAt(0);
+        }
+        throw new IllegalArgumentException("String length must be 1 when convert to a character: " + source);
     }
 }

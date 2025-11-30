@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.core.lang;
 
+import com.kfyty.loveqq.framework.core.lang.util.concurrent.ReferenceConcurrentHashMap;
+
 import java.lang.instrument.ClassFileTransformer;
 import java.util.UUID;
 
@@ -59,8 +61,15 @@ public interface ConstantConfig {
 
     /**
      * 日志 root 级别
+     * -D 参数有效
      */
     String LOGGING_ROOT_LEVEL = System.getProperty("logging.root", "INFO");
+
+    /**
+     * 日志 {@link ReferenceConcurrentHashMap} 级别
+     * -D 参数有效
+     */
+    String LOGGING_REFERENCE_MANAGER_LEVEL = System.getProperty("logging.referenceManager", "900");
 
     /**
      * 应用名称的配置 key

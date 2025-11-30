@@ -1,7 +1,5 @@
 package com.kfyty.loveqq.framework.core.converter;
 
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-
 /**
  * 描述:
  *
@@ -13,6 +11,6 @@ public class StringToObjectConverter implements Converter<String, Object> {
 
     @Override
     public Object apply(String source) {
-        return CommonUtil.empty(source) ? null : source;
+        return source == null || source.isEmpty() ? null : source;
     }
 }

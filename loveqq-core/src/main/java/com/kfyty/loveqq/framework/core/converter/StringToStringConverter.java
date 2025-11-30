@@ -1,6 +1,5 @@
 package com.kfyty.loveqq.framework.core.converter;
 
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import com.kfyty.loveqq.framework.core.utils.ConverterUtil;
 
 /**
@@ -18,6 +17,6 @@ public class StringToStringConverter implements Converter<String, String> {
 
     @Override
     public String apply(String source) {
-        return CommonUtil.empty(source) ? null : source;
+        return source == null || source.isEmpty() ? null : source;
     }
 }

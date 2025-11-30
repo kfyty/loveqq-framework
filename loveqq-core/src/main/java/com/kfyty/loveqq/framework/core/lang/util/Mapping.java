@@ -152,7 +152,9 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @return this
      */
     public Mapping<T> then(Consumer<T> consumer) {
-        consumer.accept(this.value);
+        if (this.value != null) {
+            consumer.accept(this.value);
+        }
         return this;
     }
 

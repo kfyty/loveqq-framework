@@ -40,7 +40,7 @@ public class FileListenerTask extends SingleThreadTask {
     private final Map<String, Triple<Path, WatchService, FileListener.FileEventListener>> watchServices;
 
     private FileListenerTask() {
-        super("file-listener-thread");
+        super("file-listener");
         this.watchServices = new ConcurrentHashMap<>(4);
     }
 
@@ -85,32 +85,36 @@ public class FileListenerTask extends SingleThreadTask {
                     if (!(context instanceof Path)) {
                         continue;
                     }
-                    final boolean isTargetFileEvent = !isDirectory && Objects.equals(targetFile, ((Path) context).getFileName().toString());
-                    if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-                        watchService.getTriple().onCreate(watchService.getKey(), event);
-                        continue;
-                    }
-                    if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.OVERFLOW) {
-                        watchService.getTriple().onOverflow(watchService.getKey(), event);
-                        continue;
-                    }
-                    if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-                        watchService.getTriple().onModify(watchService.getKey(), event);
-                        continue;
-                    }
-                    if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-                        watchService.getTriple().onDelete(watchService.getKey(), event);
-                        continue;
+                    try {
+                        final boolean isTargetFileEvent = !isDirectory && Objects.equals(targetFile, ((Path) context).getFileName().toString());
+                        if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+                            watchService.getTriple().onCreate(watchService.getKey(), event);
+                            continue;
+                        }
+                        if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.OVERFLOW) {
+                            watchService.getTriple().onOverflow(watchService.getKey(), event);
+                            continue;
+                        }
+                        if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                            watchService.getTriple().onModify(watchService.getKey(), event);
+                            continue;
+                        }
+                        if ((isDirectory || isTargetFileEvent) && event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                            watchService.getTriple().onDelete(watchService.getKey(), event);
+                            continue;
+                        }
+                    } catch (Throwable e) {
+                        log.error("file listener consumer error: {}", e.getMessage(), e);
                     }
                 }
                 if (!watchKey.reset()) {
-                    throw new ResolvableException("Reset failed: " + watchService);
+                    throw new ResolvableException("Reset file listen watch key failed: " + watchService);
                 }
             }
         } catch (InterruptedException e) {
-            throw new ResolvableException("file-listener-task is interrupted.");
-        } catch (Exception e) {
-            log.error("file-listener-task run error.", e);
+            throw new ResolvableException("file listen task is interrupted.", e);
+        } catch (Throwable e) {
+            log.error("file listen task running error.", e);
         }
     }
 }

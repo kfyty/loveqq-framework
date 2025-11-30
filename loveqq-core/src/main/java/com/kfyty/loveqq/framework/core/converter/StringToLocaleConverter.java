@@ -11,7 +11,7 @@ import java.util.Locale;
  * @date 2022/3/12 12:49
  * @email kfyty725@hotmail.com
  */
-public class StringToLocaleToConverter implements Converter<String, Locale> {
+public class StringToLocaleConverter implements Converter<String, Locale> {
 
     @Override
     public Locale apply(String source) {

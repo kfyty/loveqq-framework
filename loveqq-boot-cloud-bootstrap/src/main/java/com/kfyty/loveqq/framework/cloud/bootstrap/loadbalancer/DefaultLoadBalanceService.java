@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer;
 import com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.autoconfig.condition.annotation.ConditionalOnMissingBean;
+import com.kfyty.loveqq.framework.core.autoconfig.internal.InternalPriority;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 
 import java.util.Collection;
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @ConditionalOnMissingBean(LoadBalanceService.class)
-public class DefaultLoadBalanceService implements LoadBalanceService, ApplicationListener<ServerEvent> {
+public class DefaultLoadBalanceService implements LoadBalanceService, ApplicationListener<ServerEvent>, InternalPriority {
     /**
      * 服务
      */

@@ -6,6 +6,7 @@ import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Bean;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Component;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
+import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
@@ -32,7 +33,7 @@ public class NettyClientAutoConfig {
         if (nettyProperties != null && nettyProperties.isVirtualThread() && CommonUtil.VIRTUAL_THREAD_SUPPORTED) {
             builder.configure(client -> client.runOn(new OioBasedLoopResources()));
         }
-        return builder;
+        return builder.configure(client -> client.protocol(HttpProtocol.HTTP11, HttpProtocol.H2));
     }
 
     /**

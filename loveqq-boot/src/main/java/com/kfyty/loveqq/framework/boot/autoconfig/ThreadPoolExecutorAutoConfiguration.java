@@ -54,8 +54,9 @@ public class ThreadPoolExecutorAutoConfiguration implements InitializingBean, De
                 CPU_CORE << 1,
                 60,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(2 << 20),                                 // 100万级别，更多任务请自求多福
-                new NamedThreadFactory("default-task-executor")
+                new LinkedBlockingQueue<>(8192),                                                                // 8192 个任务堆积后就启动新线程
+                new NamedThreadFactory("default-task-executor"),
+                new ThreadPoolExecutor.CallerRunsPolicy()                                                               // 更多任务直接执行
         );
         DecorateExecutorService decorate = new DecorateExecutorService(executor);
         decorate.setTaskDecorator(TraceTaskDecorator.INSTANCE);

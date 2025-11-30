@@ -84,8 +84,7 @@ public class ResourcesHandler implements ConnectionObserver {
 
             // 匹配本地磁盘路径
             for (Pair<String, String> resource : this.config.getResources()) {
-                String pattern = resource.getKey() + "/**";
-                if (this.patternMatcher.matches(pattern, uri)) {
+                if (uri.startsWith(resource.getKey())) {
                     URL resolved = this.config.getResourceResolver().resolveNative(uri, resource);
                     if (resolved != null) {
                         this.sendResource(request, response, operations, resolved);

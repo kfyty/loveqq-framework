@@ -43,6 +43,12 @@
       "description": "日志 root 级别，配置为 -D 参数有效"
     },
     {
+      "name": "logging.referenceManager",
+      "type": "java.lang.Integer",
+      "defaultValue" : "900",
+      "description": "ReferenceConcurrentHashMap.ReferenceManager 日志级别，配置为 -D 参数有效"
+    },
+    {
       "name": "k.application.name",
       "type": "java.lang.String",
       "description": "应用名称的配置"
