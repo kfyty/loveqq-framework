@@ -50,6 +50,11 @@ public class GatewayRoute implements Route, Ordered {
     public static final String GATEWAY_ROUTE_ATTRIBUTE = GatewayRoute.class.getName() + ".GATEWAY_ROUTE_ATTRIBUTE";
 
     /**
+     * 路由目标客户端连接属性
+     */
+    public static final String CLIENT_CONNECTION_ATTRIBUTE = GatewayRoute.class.getName() + ".CLIENT_CONNECTION_ATTRIBUTE";
+
+    /**
      * 默认的转发过滤器 bean name
      */
     public static final String DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME = "defaultWebSocketForwardRouteGatewayFilter";
@@ -58,6 +63,11 @@ public class GatewayRoute implements Route, Ordered {
      * 默认的转发过滤器 bean name
      */
     public static final String DEFAULT_FORWARD_FILTER_NAME = "defaultForwardRouteGatewayFilter";
+
+    /**
+     * 路由目标服务响应超时元数据 key
+     */
+    public static final String METADATA_RESPONSE_TIMEOUT_KEY = "responseTimeout";
 
     /**
      * 路由 uri
@@ -84,6 +94,12 @@ public class GatewayRoute implements Route, Ordered {
      * 排序
      */
     private Integer order;
+
+    /**
+     * 路由元数据
+     */
+    @Getter
+    private Map<String, String> metadata;
 
     /**
      * 网关异常时，异常处理器响应的内容类型
@@ -156,6 +172,7 @@ public class GatewayRoute implements Route, Ordered {
         gatewayRoute.setPredicates(collectGatewayPredicate(beanFactory, routeDefinition.getPredicates()));
         gatewayRoute.setFilters(collectGatewayFilter(beanFactory, routeDefinition.getFilters()));
         gatewayRoute.setOrder(routeDefinition.getOrder());
+        gatewayRoute.setMetadata(routeDefinition.getMetadata());
         return gatewayRoute;
     }
 
@@ -195,7 +212,7 @@ public class GatewayRoute implements Route, Ordered {
             gatewayFilters.add(bean);
         }
 
-        // 添加默认的过滤器
+        // 添加默认的过滤器，注意 WebMvcAutoConfig#registryGatewayRoute
         Mapping.from(beanFactory.getBean(LoadBalanceGatewayFilter.class)).whenNotNull(gatewayFilters::add);
         Mapping.from(beanFactory.getBean(DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME)).whenNotNull(e -> gatewayFilters.add((GatewayFilter) e));
         Mapping.from(beanFactory.getBean(DEFAULT_FORWARD_FILTER_NAME)).whenNotNull(e -> gatewayFilters.add((GatewayFilter) e));

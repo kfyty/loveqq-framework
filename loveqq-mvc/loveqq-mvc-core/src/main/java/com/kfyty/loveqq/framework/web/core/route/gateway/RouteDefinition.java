@@ -43,6 +43,11 @@ public class RouteDefinition {
     private Integer order;
 
     /**
+     * 路由元数据
+     */
+    private Map<String, String> metadata;
+
+    /**
      * 返回一个构建器
      *
      * @return 构建器
@@ -220,6 +225,22 @@ public class RouteDefinition {
 
         public RouteDefinitionBuilder order(Integer order) {
             this.routeDefinition.setOrder(order);
+            return this;
+        }
+
+        public RouteDefinitionBuilder metadata(String key, String value) {
+            if (this.routeDefinition.getMetadata() == null) {
+                this.routeDefinition.setMetadata(new HashMap<>(8));
+            }
+            this.routeDefinition.getMetadata().put(key, value);
+            return this;
+        }
+
+        public RouteDefinitionBuilder metadata(Map<String, String> metadata) {
+            if (this.routeDefinition.getMetadata() == null) {
+                this.routeDefinition.setMetadata(new HashMap<>(8));
+            }
+            this.routeDefinition.setMetadata(metadata);
             return this;
         }
 

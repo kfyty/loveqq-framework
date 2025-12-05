@@ -99,6 +99,7 @@ public class WebMvcAutoConfig implements ContextAfterRefreshed {
 
         // 这里要先判断，避免默认过滤器不存在
         if (!gatewayRoutes.isEmpty()) {
+            // 注意 GatewayRoute#collectGatewayFilter
             final List<GatewayFilter> defaultFilters = Arrays.asList(
                     applicationContext.getBean(LoadBalanceGatewayFilter.class),
                     applicationContext.getBean(DEFAULT_WEB_SOCKET_FORWARD_FILTER_NAME),
