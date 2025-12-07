@@ -15,6 +15,7 @@ import com.kfyty.loveqq.framework.web.core.multipart.DefaultMultipartFile;
 import com.kfyty.loveqq.framework.web.core.multipart.MultipartFile;
 import com.kfyty.loveqq.framework.web.mvc.reactor.exception.ReactiveServerException;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -101,7 +102,7 @@ public class NettyServerRequest implements ServerRequest {
     /**
      * 请求体
      */
-    private final Flux<ByteBuf> body;
+    private final Flux<?> body;
 
     public NettyServerRequest(HttpServerRequest request) {
         this(request, resolveURI(request.uri()), request.receive(), new HashMap<>(), new HashMap<>(), CommonUtil.resolveURLParameters(request.uri()));
@@ -251,7 +252,10 @@ public class NettyServerRequest implements ServerRequest {
 
     @Override
     public Flux<ByteBuf> getBody() {
-        return this.body;
+        if (this.body instanceof ByteBufFlux bufFlux) {
+            return bufFlux;
+        }
+        return this.body.map(e -> e instanceof ByteBufHolder holder ? holder.content() : (ByteBuf) e);
     }
 
     @Override
