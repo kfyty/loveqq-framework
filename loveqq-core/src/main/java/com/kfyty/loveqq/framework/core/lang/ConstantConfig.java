@@ -4,6 +4,7 @@ import com.kfyty.loveqq.framework.core.lang.util.concurrent.ReferenceConcurrentH
 
 import java.lang.instrument.ClassFileTransformer;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * 描述: 系统常量配置
@@ -129,6 +130,33 @@ public interface ConstantConfig {
      * @return id
      */
     static String traceId() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return TraceIdProvider.INSTANCE.get();
+    }
+
+    /**
+     * trace id 提供者
+     * 方便设置外部实现
+     */
+    class TraceIdProvider {
+        /**
+         * 单例
+         */
+        public static final TraceIdProvider INSTANCE = new TraceIdProvider();
+
+        /**
+         * 默认实现
+         */
+        private Supplier<String> provider = () -> UUID.randomUUID().toString();
+
+        private TraceIdProvider() {
+        }
+
+        public String get() {
+            return provider.get();
+        }
+
+        public void set(Supplier<String> provider) {
+            this.provider = provider;
+        }
     }
 }
