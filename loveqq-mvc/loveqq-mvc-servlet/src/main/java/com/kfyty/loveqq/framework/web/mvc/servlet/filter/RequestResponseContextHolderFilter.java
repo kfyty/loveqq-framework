@@ -35,14 +35,14 @@ public class RequestResponseContextHolderFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         ServerRequest prevRequest = null;
         ServerResponse prevResponse = null;
-        String prevTraceId = MDC.get(ConstantConfig.TRACK_ID);
+        String prevTraceId = MDC.get(ConstantConfig.TRACE_ID);
         try {
             if (request instanceof HttpServletRequest) {
                 ServletServerRequest serverRequest = new ServletServerRequest((HttpServletRequest) request);
                 prevRequest = RequestContextHolder.set(serverRequest);
 
-                String header = serverRequest.getHeader(ConstantConfig.TRACK_ID);
-                MDC.put(ConstantConfig.TRACK_ID, header != null && !header.isEmpty() ? header : ConstantConfig.traceId());
+                String header = serverRequest.getHeader(ConstantConfig.TRACE_ID);
+                MDC.put(ConstantConfig.TRACE_ID, header != null && !header.isEmpty() ? header : ConstantConfig.traceId());
             }
             if (response instanceof HttpServletResponse) {
                 ServletServerResponse serverResponse = new ServletServerResponse((HttpServletResponse) response);
@@ -53,9 +53,9 @@ public class RequestResponseContextHolderFilter implements Filter {
             RequestContextHolder.set(prevRequest);
             ResponseContextHolder.set(prevResponse);
             if (prevRequest == null) {
-                MDC.remove(ConstantConfig.TRACK_ID);
+                MDC.remove(ConstantConfig.TRACE_ID);
             } else {
-                MDC.put(ConstantConfig.TRACK_ID, prevTraceId);
+                MDC.put(ConstantConfig.TRACE_ID, prevTraceId);
             }
         }
     }

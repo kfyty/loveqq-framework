@@ -47,15 +47,15 @@ public class RequestContextHolder {
      * @return 返回值
      */
     public static <T> T callWithTraceId(ServerRequest request, Supplier<T> supplier) {
-        String prev = MDC.get(ConstantConfig.TRACK_ID);
+        String prev = MDC.get(ConstantConfig.TRACE_ID);
         try {
-            MDC.put(ConstantConfig.TRACK_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
+            MDC.put(ConstantConfig.TRACE_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
             return supplier.get();
         } finally {
             if (prev == null) {
-                MDC.remove(ConstantConfig.TRACK_ID);
+                MDC.remove(ConstantConfig.TRACE_ID);
             } else {
-                MDC.put(ConstantConfig.TRACK_ID, prev);
+                MDC.put(ConstantConfig.TRACE_ID, prev);
             }
         }
     }
@@ -67,15 +67,15 @@ public class RequestContextHolder {
      * @param runnable 处理器
      */
     public static void runWithTraceId(ServerRequest request, Runnable runnable) {
-        String prev = MDC.get(ConstantConfig.TRACK_ID);
+        String prev = MDC.get(ConstantConfig.TRACE_ID);
         try {
-            MDC.put(ConstantConfig.TRACK_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
+            MDC.put(ConstantConfig.TRACE_ID, (String) request.getAttribute(REQUEST_TRACE_ID_ATTRIBUTE));
             runnable.run();
         } finally {
             if (prev == null) {
-                MDC.remove(ConstantConfig.TRACK_ID);
+                MDC.remove(ConstantConfig.TRACE_ID);
             } else {
-                MDC.put(ConstantConfig.TRACK_ID, prev);
+                MDC.put(ConstantConfig.TRACE_ID, prev);
             }
         }
     }

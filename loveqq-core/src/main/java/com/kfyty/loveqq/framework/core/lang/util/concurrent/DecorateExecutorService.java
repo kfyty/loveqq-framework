@@ -84,7 +84,7 @@ public class DecorateExecutorService implements ExecutorService {
     @SuppressWarnings("unchecked")
     public <V> Callable<V> wrap(Callable<V> task) {
         Function<Callable<?>, Callable<?>> decorator = this.callDecorator;
-        return decorator == null ? null : (Callable<V>) decorator.apply(task);
+        return decorator == null ? task : (Callable<V>) decorator.apply(task);
     }
 
     @Override

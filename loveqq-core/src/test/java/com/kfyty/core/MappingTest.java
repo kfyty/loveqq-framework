@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 /**
  * 描述:
  *
@@ -63,6 +65,9 @@ public class MappingTest {
 
         Mapping.from(null).notEmptyMap(e -> non.getId());
         Mapping.from(null).notEmptyFlatMap(e -> Mapping.from(non.getId()));
+
+        Mapping<Integer> build1 = Mapping.build(Mapping.from(1));
+        Mapping<Integer> build2 = Mapping.build(Optional.of(1));
     }
 
     @Test

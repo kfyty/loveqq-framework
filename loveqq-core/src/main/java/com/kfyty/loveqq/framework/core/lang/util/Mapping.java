@@ -344,13 +344,27 @@ public class Mapping<T> implements Cloneable, Serializable {
         if (value == null) {
             return (Mapping<T>) NULLABLE;
         }
-        if (value instanceof Mapping<?>) {
-            return from((T) ((Mapping<?>) value).get());
-        }
-        if (value instanceof Optional<?>) {
-            return from((T) ((Optional<?>) value).orElse(null));
-        }
         return new Mapping<>(value);
+    }
+
+    /**
+     * 工厂方法
+     *
+     * @param value 值
+     * @return {@link Mapping}
+     */
+    public static <T> Mapping<T> build(Mapping<T> value) {
+        return from(value.get());
+    }
+
+    /**
+     * 工厂方法
+     *
+     * @param value 值
+     * @return {@link Mapping}
+     */
+    public static <T> Mapping<T> build(Optional<T> value) {
+        return from(value.orElse(null));
     }
 
     /**
@@ -360,14 +374,29 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param prev  前一个值
      * @return {@link Mapping}
      */
-    @SuppressWarnings("unchecked")
     public static <T> Mapping<T> from(T value, Mapping<?> prev) {
-        if (value instanceof Mapping<?>) {
-            return from((T) ((Mapping<?>) value).get(), prev);
-        }
-        if (value instanceof Optional<?>) {
-            return from((T) ((Optional<?>) value).orElse(null), prev);
-        }
         return new Mapping<>(value, prev);
+    }
+
+    /**
+     * 工厂方法
+     *
+     * @param value 值
+     * @param prev  前一个值
+     * @return {@link Mapping}
+     */
+    public static <T> Mapping<T> build(Mapping<T> value, Mapping<?> prev) {
+        return from(value.get(), prev);
+    }
+
+    /**
+     * 工厂方法
+     *
+     * @param value 值
+     * @param prev  前一个值
+     * @return {@link Mapping}
+     */
+    public static <T> Mapping<T> build(Optional<T> value, Mapping<?> prev) {
+        return from(value.orElse(null), prev);
     }
 }

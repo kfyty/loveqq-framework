@@ -43,7 +43,7 @@ public interface ConstantConfig {
     /**
      * {@link org.slf4j.MDC} traceId
      */
-    String TRACK_ID = "X-Loveqq-Trace-Id";
+    String TRACE_ID = "X-Loveqq-Trace-Id";
 
     /**
      * 框架默认线程池bean名称

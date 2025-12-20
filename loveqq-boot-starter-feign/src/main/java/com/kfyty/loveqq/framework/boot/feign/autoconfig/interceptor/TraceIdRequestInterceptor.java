@@ -22,9 +22,9 @@ public class TraceIdRequestInterceptor implements RequestInterceptor {
      */
     @Override
     public void apply(RequestTemplate template) {
-        String traceId = MDC.get(ConstantConfig.TRACK_ID);
+        String traceId = MDC.get(ConstantConfig.TRACE_ID);
         if (traceId != null && !traceId.isEmpty()) {
-            template.header(ConstantConfig.TRACK_ID, traceId);
+            template.header(ConstantConfig.TRACE_ID, traceId);
         }
     }
 }

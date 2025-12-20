@@ -13,7 +13,7 @@ public class DefaultConsoleConfiguration extends BasicConfigurator {
     public ExecutionStatus configure(LoggerContext loggerContext) {
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%p) [%t] [%X{" + ConstantConfig.TRACK_ID + "}] %boldGreen(%50logger{50} %-4L):  %m %n");
+        encoder.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%p) [%t] [%X{" + ConstantConfig.TRACE_ID + "}] %boldGreen(%50logger{50} %-4L):  %m %n");
         encoder.start();
 
         ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();

@@ -48,7 +48,7 @@ public class ForwardRouteGatewayFilter implements GatewayFilter {
         final Flux<Void> flux = this.client.headers(headers -> {
                     String traceId = (String) request.getAttribute(RequestContextHolder.REQUEST_TRACE_ID_ATTRIBUTE);
                     if (traceId != null) {
-                        headers.add(ConstantConfig.TRACK_ID, traceId);
+                        headers.add(ConstantConfig.TRACE_ID, traceId);
                     }
                     for (String headerName : request.getHeaderNames()) {
                         headers.add(headerName, request.getHeaders(headerName));

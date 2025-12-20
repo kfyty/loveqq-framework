@@ -24,7 +24,7 @@ public class TraceTaskDecorator implements Function<Runnable, Runnable> {
     @Override
     public Runnable apply(Runnable runnable) {
         // 当前线程 trace_id
-        String traceId = MDC.get(ConstantConfig.TRACK_ID);
+        String traceId = MDC.get(ConstantConfig.TRACE_ID);
 
         // 没有无需包装
         if (traceId == null) {
@@ -34,15 +34,15 @@ public class TraceTaskDecorator implements Function<Runnable, Runnable> {
         // 存在则包装一下
         return () -> {
             // 新线程的 trace_id，用于之后恢复
-            String prev = MDC.get(ConstantConfig.TRACK_ID);
+            String prev = MDC.get(ConstantConfig.TRACE_ID);
             try {
-                MDC.put(ConstantConfig.TRACK_ID, traceId);
+                MDC.put(ConstantConfig.TRACE_ID, traceId);
                 runnable.run();
             } finally {
                 if (prev == null) {
-                    MDC.remove(ConstantConfig.TRACK_ID);
+                    MDC.remove(ConstantConfig.TRACE_ID);
                 } else {
-                    MDC.put(ConstantConfig.TRACK_ID, prev);
+                    MDC.put(ConstantConfig.TRACE_ID, prev);
                 }
             }
         };
