@@ -1,6 +1,7 @@
 package com.kfyty.core;
 
 import com.kfyty.loveqq.framework.core.lang.util.Mapping;
+import com.kfyty.loveqq.framework.core.support.Triple;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -81,5 +82,11 @@ public class MappingTest {
                 .whenNull(() -> arr[1] = 5);
         Assertions.assertEquals(arr[0], 1);
         Assertions.assertEquals(arr[1], 5);
+    }
+
+    @Test
+    public void test4() {
+        Mapping.from(1).then(e -> System.out.println(1));
+        Mapping.from(1).then(e -> System.out.println(1 / 0), new Triple<>(Exception.class, ex -> System.out.println(ex.getClass()), ex -> new RuntimeException(ex)));
     }
 }

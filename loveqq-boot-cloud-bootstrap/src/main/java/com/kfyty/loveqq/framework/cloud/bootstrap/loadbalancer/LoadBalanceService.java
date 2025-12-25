@@ -1,5 +1,7 @@
 package com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer;
 
+import com.kfyty.loveqq.framework.cloud.bootstrap.discovery.ServiceRegistry;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -10,22 +12,7 @@ import java.util.stream.Collectors;
  * @date 2023/9/10 22:00
  * @email kfyty725@hotmail.com
  */
-public interface LoadBalanceService {
-    /**
-     * 注册服务
-     *
-     * @param server 服务
-     */
-    void registry(Server server);
-
-    /**
-     * 注册服务实例
-     *
-     * @param serverId 服务id
-     * @param instance 服务实例
-     */
-    void registry(String serverId, ServerInstance instance);
-
+public interface LoadBalanceService extends ServiceRegistry {
     /**
      * 根据服务id获取服务
      *

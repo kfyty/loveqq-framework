@@ -3,6 +3,7 @@ package com.kfyty.loveqq.framework.boot.feign.autoconfig.listener;
 import com.kfyty.loveqq.framework.cloud.bootstrap.event.ServerEvent;
 import com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.ServerInstance;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Autowired;
+import com.kfyty.loveqq.framework.core.autoconfig.annotation.Value;
 import com.kfyty.loveqq.framework.core.event.ApplicationListener;
 import com.kfyty.loveqq.framework.core.lang.ConstantConfig;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -22,11 +23,32 @@ import java.util.stream.Collectors;
  * @email kfyty725@hotmail.com
  */
 public class CloudServerListener implements ApplicationListener<ServerEvent> {
+    /**
+     * LoadBalanceService class name
+     */
+    private static final String LOAD_BALANCE_SERVICE_CLASS_NAME = "com.kfyty.loveqq.framework.cloud.bootstrap.loadbalancer.LoadBalanceService";
+
+    /**
+     * 是否自动注册
+     * 这里不强制依赖 loveqq-boot-cloud-bootstrap，因此单独控制
+     */
+    @Value("${k.cloud.discovery.register:true}")
+    protected boolean autoRegister;
+
+    /**
+     * 负载均衡器
+     */
     @Autowired
     protected ZoneAwareLoadBalancer<Server> loadBalancer;
 
     @Override
     public void onApplicationEvent(ServerEvent event) {
+        if (this.autoRegister || event.getPublisher() != null && event.getPublisher().getName().equals(LOAD_BALANCE_SERVICE_CLASS_NAME)) {
+            this.updateServersList(event);
+        }
+    }
+
+    protected void updateServersList(ServerEvent event) {
         synchronized (this) {
             List<Server> servers = this.loadBalancer.getAllServers();
             Map<String, ServerInstance> instanceMap = event.getSource().getInstances().stream().collect(Collectors.toMap(e -> e.getIp() + ':' + e.getPort(), v -> v));

@@ -1,5 +1,6 @@
 package com.kfyty.loveqq.framework.core.lang.util;
 
+import com.kfyty.loveqq.framework.core.support.Triple;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -156,6 +157,34 @@ public class Mapping<T> implements Cloneable, Serializable {
             consumer.accept(this.value);
         }
         return this;
+    }
+
+    /**
+     * 消费当前值
+     *
+     * @param consumer      消费逻辑
+     * @param catchConsumer 异常处理
+     * @return this
+     */
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public final <Ex extends Throwable, Rex extends RuntimeException> Mapping<T> then(Consumer<T> consumer, Triple<Class<Ex>, Consumer<Ex>, Function<Ex, Rex>>... catchConsumer) {
+        if (this.value == null) {
+            return this;
+        }
+        try {
+            consumer.accept(this.value);
+            return this;
+        } catch (Throwable e) {
+            for (Triple<Class<Ex>, Consumer<Ex>, Function<Ex, Rex>> triple : catchConsumer) {
+                if (triple.getKey().isInstance(e)) {
+                    Ex ex = (Ex) e;
+                    triple.getValue().accept(ex);
+                    throw triple.getTriple().apply(ex);
+                }
+            }
+            throw e;
+        }
     }
 
     /**
