@@ -28,65 +28,56 @@ public class MappingTest {
     }
 
     @Test
-    public void test() {
-        User user = new User(1, "name");
-        User copy = new User();
-        Mapping.from(user).whenNotNull(e -> copy.setId(e.getId()));
-        Assertions.assertEquals(user.getId(), copy.getId());
-
-        Mapping.from("").whenNotEmpty(copy::setName);
-        Assertions.assertNull(copy.getName());
-
-        Mapping.from(user.getName()).whenNotEmpty(copy::setName);
-        Assertions.assertEquals(copy.getName(), user.getName());
-
-        Mapping.from("123").notNullMap(Integer::parseInt).whenNotNull(copy::setId);
-        Assertions.assertEquals(Integer.valueOf(123), copy.getId());
-
-        Mapping.from("456").notNullFlatMap(e -> Mapping.from(Integer.parseInt(e))).whenNotNull(copy::setId);
-        Assertions.assertEquals(Integer.valueOf(456), copy.getId());
-
-        Mapping<Integer> map1 = Mapping.from("789").map(Integer::parseInt);
-        Mapping<String> back1 = map1.back(String.class);
-        Assertions.assertEquals("789", back1.get());
-
-        Mapping<Integer> map2 = Mapping.from("789").flatMap(e -> Mapping.from(Integer.parseInt(e)));
-        Mapping<String> back2 = map2.back(String.class);
-        Assertions.assertEquals("789", back2.get());
+    public void filterTest() {
+        Integer v1 = Mapping.<Integer>from(null).filter(e -> e.toString().equals("1")).get();
+        Integer v2 = Mapping.from(1).filter(e -> e.toString().equals("1")).get();
+        Integer v3 = Mapping.from(1).filter(e -> e.toString().equals("2")).get();
+        Assertions.assertNull(v1);
+        Assertions.assertEquals(v2, 1);
+        Assertions.assertNull(v3);
     }
 
     @Test
-    public void test2() {
-        User non = null;
-        Mapping.from(null).whenNotNull(e -> non.setId(1));
-        Mapping.from(null).whenNotEmpty(e -> non.setId(1));
-
-        Mapping.from(null).notNullMap(e -> non.getId());
-        Mapping.from(null).notNullFlatMap(e -> Mapping.from(non.getId()));
-
-        Mapping.from(null).notEmptyMap(e -> non.getId());
-        Mapping.from(null).notEmptyFlatMap(e -> Mapping.from(non.getId()));
-
-        Mapping<Integer> build1 = Mapping.build(Mapping.from(1));
-        Mapping<Integer> build2 = Mapping.build(Optional.of(1));
+    public void mapTest() {
+        String v1 = Mapping.<Integer>from(null).map(Object::toString).get();
+        String v2 = Mapping.from(1).map(e -> e == 1, Object::toString).get();
+        String v3 = Mapping.from(1).map(e -> e != 1, Object::toString).get();
+        Assertions.assertNull(v1);
+        Assertions.assertEquals(v2, "1");
+        Assertions.assertNull(v3);
     }
 
     @Test
-    public void test3() {
-        int[] arr = new int[2];
-        Mapping.from(1)
-                .whenNotNull(e -> arr[0] = e)
-                .whenNull(() -> arr[1] = 2);
-        Mapping.from(null)
-                .whenNotNull(e -> arr[0] = 3)
-                .whenNull(() -> arr[1] = 5);
-        Assertions.assertEquals(arr[0], 1);
-        Assertions.assertEquals(arr[1], 5);
+    public void flatMapTest() {
+        String v1 = Mapping.<Integer>from(null).flatMap(e -> Mapping.from(e.toString())).get();
+        String v2 = Mapping.from(1).flatMap(e -> e == 1, e -> Mapping.from(e.toString())).get();
+        String v3 = Mapping.from(1).flatMap(e -> e != 1, e -> Mapping.from(e.toString())).get();
+        Assertions.assertNull(v1);
+        Assertions.assertEquals(v2, "1");
+        Assertions.assertNull(v3);
     }
 
     @Test
-    public void test4() {
-        Mapping.from(1).then(e -> System.out.println(1));
-        Mapping.from(1).then(e -> System.out.println(1 / 0), new Triple<>(Exception.class, ex -> System.out.println(ex.getClass()), ex -> new RuntimeException(ex)));
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void thenTest() {
+        boolean error = false;
+        User user = new User();
+        Mapping.from(null).then(Object::toString);
+        Mapping.from(user).then(e -> e.setId(1));
+        try {
+            Mapping.from(1).then(e -> System.out.println(1 / 0), new Triple<>(Exception.class, ex -> user.setName(ex.getMessage()), RuntimeException::new));
+        } catch (RuntimeException e) {
+            error = true;
+        }
+
+        Assertions.assertEquals(user.getId(), 1);
+        Assertions.assertNotNull(user.getName());
+        Assertions.assertTrue(error);
+    }
+
+    @Test
+    public void buildTest() {
+        Mapping<Integer> v1 = Mapping.build(Optional.of(1));
+        Mapping<Integer> v2 = Mapping.build(Mapping.from(1));
     }
 }

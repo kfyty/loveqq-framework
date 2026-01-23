@@ -2,7 +2,6 @@ package com.kfyty.loveqq.framework.core.lang.util;
 
 import com.kfyty.loveqq.framework.core.support.Triple;
 import com.kfyty.loveqq.framework.core.utils.CommonUtil;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
@@ -20,13 +19,21 @@ import java.util.function.Supplier;
  * @date 2024/8/14 22:08
  * @email kfyty725@hotmail.com
  */
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class Mapping<T> implements Cloneable, Serializable {
     /**
      * 空值
      */
     public static final Mapping<?> NULLABLE = new Mapping<>(null);
+
+    /**
+     * 构造器
+     *
+     * @param value 值
+     */
+    public Mapping(T value) {
+        this(value, null);
+    }
 
     /**
      * 需要映射的值
@@ -36,7 +43,9 @@ public class Mapping<T> implements Cloneable, Serializable {
     /**
      * 前一个值，用于 map 后的回退
      */
-    private Mapping<?> prev;
+    private final Mapping<?> prev;
+
+    /*-------------------------------------------------- 判断获取操作 --------------------------------------------------*/
 
     /**
      * 是否存在
@@ -45,6 +54,17 @@ public class Mapping<T> implements Cloneable, Serializable {
      */
     public boolean exists() {
         return this.value != null;
+    }
+
+    /**
+     * 回退到上一步的值
+     *
+     * @param backType 用于强转泛型
+     * @return this.prev
+     */
+    @SuppressWarnings("unchecked")
+    public <B> Mapping<B> back(Class<B> backType) {
+        return (Mapping<B>) this.prev;
     }
 
     /**
@@ -82,7 +102,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param throwable 异常
      * @return value
      */
-    public <EX extends Throwable> T getThrow(EX throwable) throws EX {
+    public <EX extends Throwable> T getOrThrow(EX throwable) throws EX {
         if (this.value == null) {
             throw throwable;
         }
@@ -95,7 +115,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param throwable 异常
      * @return value
      */
-    public <EX extends Throwable> T getThrow(Supplier<EX> throwable) throws EX {
+    public <EX extends Throwable> T getOrThrow(Supplier<EX> throwable) throws EX {
         if (this.value == null) {
             throw throwable.get();
         }
@@ -113,13 +133,47 @@ public class Mapping<T> implements Cloneable, Serializable {
         return this.value != null ? this.value : (parameter == null ? null : defaultValueMapping.apply(parameter));
     }
 
+    /*---------------------------------------------------- 过滤操作 ----------------------------------------------------*/
+
+    /**
+     * 测试当前值，不符合置为空值
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    public Mapping<T> filter(Predicate<T> test) {
+        if (value == null || test.test(this.value)) {
+            return this;
+        }
+        return from(null, prev);
+    }
+
+    /**
+     * 测试当前值，不符合置为空值
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    public Mapping<T> directFilter(Predicate<T> test) {
+        if (test.test(this.value)) {
+            return this;
+        }
+        return from(null, prev);
+    }
+
+    /*---------------------------------------------------- 映射操作 ----------------------------------------------------*/
+
     /**
      * 当前值映射为另一个值
      *
      * @param mapping 映射关系
      * @return {@link this}
      */
+    @SuppressWarnings("unchecked")
     public <R> Mapping<R> map(Function<T, R> mapping) {
+        if (value == null) {
+            return (Mapping<R>) this;
+        }
         return from(mapping.apply(this.value), this);
     }
 
@@ -129,22 +183,81 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @param mapping 映射关系
      * @return {@link this}
      */
+    @SuppressWarnings("unchecked")
     public <R> Mapping<R> flatMap(Function<T, Mapping<R>> mapping) {
-        Mapping<R> mapped = mapping.apply(this.value);
-        mapped.prev = this;
-        return mapped;
+        if (value == null) {
+            return (Mapping<R>) this;
+        }
+        return from(mapping.apply(this.value).value, this);
     }
 
     /**
-     * 回退到上一步的值
+     * 测试当前值，符合时执行映射
      *
-     * @param backType 用于强转泛型
-     * @return this.prev
+     * @param test 断言逻辑
+     * @return this
      */
-    @SuppressWarnings("unchecked")
-    public <B> Mapping<B> back(Class<B> backType) {
-        return (Mapping<B>) this.prev;
+    public <R> Mapping<R> map(Predicate<T> test, Function<T, R> mapping) {
+        if (value == null || test.test(value)) {
+            return map(mapping);
+        }
+        return from(null, prev);
     }
+
+    /**
+     * 测试当前值，符合时执行映射
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    public <R> Mapping<R> flatMap(Predicate<T> test, Function<T, Mapping<R>> mapping) {
+        if (value == null || test.test(value)) {
+            return flatMap(mapping);
+        }
+        return from(null, prev);
+    }
+
+    /**
+     * 非空时当前值扁平化映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
+    public <R> Mapping<R> notEmptyMap(Function<T, R> mapping) {
+        return map(CommonUtil::notEmpty, mapping);
+    }
+
+    /**
+     * 非空时当前值扁平化映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
+    public <R> Mapping<R> notEmptyFlatMap(Function<T, Mapping<R>> mapping) {
+        return flatMap(CommonUtil::notEmpty, mapping);
+    }
+
+    /**
+     * 当前值直接映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
+    public <R> Mapping<R> directMap(Function<T, R> mapping) {
+        return from(mapping.apply(this.value), this);
+    }
+
+    /**
+     * 当前值直接扁平化映射为另一个值
+     *
+     * @param mapping 映射关系
+     * @return {@link this}
+     */
+    public <R> Mapping<R> directFlatMap(Function<T, Mapping<R>> mapping) {
+        return from(mapping.apply(this.value).value, this);
+    }
+
+    /*---------------------------------------------------- 消费操作 ----------------------------------------------------*/
 
     /**
      * 消费当前值
@@ -163,12 +276,12 @@ public class Mapping<T> implements Cloneable, Serializable {
      * 消费当前值
      *
      * @param consumer      消费逻辑
-     * @param catchConsumer 异常处理
+     * @param catchConsumer 异常处理: <异常类型，异常消费，异常转换抛出>
      * @return this
      */
     @SafeVarargs
     @SuppressWarnings("unchecked")
-    public final <Ex extends Throwable, Rex extends RuntimeException> Mapping<T> then(Consumer<T> consumer, Triple<Class<Ex>, Consumer<Ex>, Function<Ex, Rex>>... catchConsumer) {
+    public final <Ex extends Throwable, RuntimeEx extends RuntimeException> Mapping<T> then(Consumer<T> consumer, Triple<Class<Ex>, Consumer<Ex>, Function<Ex, RuntimeEx>>... catchConsumer) {
         if (this.value == null) {
             return this;
         }
@@ -176,7 +289,7 @@ public class Mapping<T> implements Cloneable, Serializable {
             consumer.accept(this.value);
             return this;
         } catch (Throwable e) {
-            for (Triple<Class<Ex>, Consumer<Ex>, Function<Ex, Rex>> triple : catchConsumer) {
+            for (Triple<Class<Ex>, Consumer<Ex>, Function<Ex, RuntimeEx>> triple : catchConsumer) {
                 if (triple.getKey().isInstance(e)) {
                     Ex ex = (Ex) e;
                     triple.getValue().accept(ex);
@@ -188,94 +301,16 @@ public class Mapping<T> implements Cloneable, Serializable {
     }
 
     /**
-     * 测试当前值，不符合置为空值
-     *
-     * @param test 断言逻辑
-     * @return this
-     */
-    public Mapping<T> filter(Predicate<T> test) {
-        if (test.test(this.value)) {
-            return this;
-        }
-        return from(null);
-    }
-
-    /**
      * 测试当前值，符合时执行回调
      *
      * @param test 断言逻辑
      * @return this
      */
     public Mapping<T> when(Predicate<T> test, Consumer<T> consumer) {
-        if (test.test(this.value)) {
+        if (value != null && test.test(value)) {
             return then(consumer);
         }
-        return from(null);
-    }
-
-    /**
-     * 测试当前值，符合时执行映射
-     *
-     * @param test 断言逻辑
-     * @return this
-     */
-    public <R> Mapping<R> when(Predicate<T> test, Function<T, R> mapping) {
-        if (test.test(this.value)) {
-            return map(mapping);
-        }
-        return from(null);
-    }
-
-    /**
-     * 非空时当前值扁平化映射为另一个值
-     *
-     * @param mapping 映射关系
-     * @return {@link this}
-     */
-    public <R> Mapping<R> notNullMap(Function<T, R> mapping) {
-        if (this.value == null) {
-            return from(null);
-        }
-        return map(mapping);
-    }
-
-    /**
-     * 非空时当前值扁平化映射为另一个值
-     *
-     * @param mapping 映射关系
-     * @return {@link this}
-     */
-    public <R> Mapping<R> notEmptyMap(Function<T, R> mapping) {
-        if (CommonUtil.empty(this.value)) {
-            return from(null);
-        }
-        return map(mapping);
-    }
-
-    /**
-     * 非空时当前值扁平化映射为另一个值
-     *
-     * @param mapping 映射关系
-     * @return {@link this}
-     */
-    public <R> Mapping<R> notNullFlatMap(Function<T, Mapping<R>> mapping) {
-        if (this.value == null) {
-            return from(null);
-        }
-        return flatMap(mapping);
-    }
-
-    /**
-     * 非空时当前值扁平化映射为另一个值
-     *
-     * @param mapping 映射关系
-     * @return {@link this}
-     */
-    public <R> Mapping<R> notEmptyFlatMap(Function<T, Mapping<R>> mapping) {
-        if (CommonUtil.empty(this.value)) {
-            return from(null);
-        }
-        return flatMap(mapping);
+        return this;
     }
 
     /**
@@ -362,19 +397,7 @@ public class Mapping<T> implements Cloneable, Serializable {
         return this.value == null ? "null" : this.value.toString();
     }
 
-    /**
-     * 工厂方法
-     *
-     * @param value 值
-     * @return {@link Mapping}
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> Mapping<T> from(T value) {
-        if (value == null) {
-            return (Mapping<T>) NULLABLE;
-        }
-        return new Mapping<>(value);
-    }
+    /*---------------------------------------------------- 工厂方法 ----------------------------------------------------*/
 
     /**
      * 工厂方法
@@ -394,6 +417,20 @@ public class Mapping<T> implements Cloneable, Serializable {
      */
     public static <T> Mapping<T> build(Optional<T> value) {
         return from(value.orElse(null));
+    }
+
+    /**
+     * 工厂方法
+     *
+     * @param value 值
+     * @return {@link Mapping}
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Mapping<T> from(T value) {
+        if (value == null) {
+            return (Mapping<T>) NULLABLE;
+        }
+        return new Mapping<>(value);
     }
 
     /**

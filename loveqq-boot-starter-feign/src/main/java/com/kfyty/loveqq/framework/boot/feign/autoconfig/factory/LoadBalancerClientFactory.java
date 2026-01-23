@@ -69,7 +69,7 @@ public class LoadBalancerClientFactory {
     }
 
     protected Properties buildRibbonProperties(String clientName) {
-        Map<String, String> ribbon = Mapping.from(this.feignProperties.getRibbon()).notNullMap(e -> e.get(clientName)).getOr(this.feignProperties.getRibbon(), e -> e.get("default"));
+        Map<String, String> ribbon = Mapping.from(this.feignProperties.getRibbon()).map(e -> e.get(clientName)).getOr(this.feignProperties.getRibbon(), e -> e.get("default"));
         if (ribbon == null || ribbon.isEmpty()) {
             return null;
         }

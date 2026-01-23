@@ -2,6 +2,7 @@ package com.kfyty.loveqq.framework.core.utils;
 
 import com.kfyty.loveqq.framework.core.autoconfig.beans.BeanDefinition;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
+import com.kfyty.loveqq.framework.core.lang.util.Mapping;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
@@ -158,6 +159,9 @@ public abstract class CommonUtil {
         }
         if (obj instanceof Optional<?> o) {
             return o.isPresent() ? 1 : 0;
+        }
+        if (obj instanceof Mapping<?> m) {
+            return m.exists() ? 1 : 0;
         }
         return 1;
     }

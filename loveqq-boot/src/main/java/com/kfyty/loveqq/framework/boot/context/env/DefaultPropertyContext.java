@@ -315,7 +315,7 @@ public class DefaultPropertyContext implements ConfigurableApplicationContextAwa
         for (String locationKey : locationKeys) {
             this.addConfig(locationKey);
             Mapping.from(PathUtil.getPath(locationKey))
-                    .notNullMap(FileListener::new)
+                    .map(FileListener::new)
                     .then(e -> e.onModify((path, event) -> {
                         Properties loaded = load(locationKey, classLoader(this.getClass()), before, (p, c) -> include(p, c, before));
                         loaded.forEach((k, v) -> setProperty(k.toString(), v.toString(), true));

@@ -116,7 +116,7 @@ public class FeignFactoryBean<T> implements FactoryBean<T> {
         Mapping.from(this.requestInterceptors).whenNotEmpty(builder::requestInterceptors);
         Mapping.from(this.responseInterceptors).whenNotEmpty(builder::responseInterceptors);
         Mapping.from(BeanUtil.getBeanName(this.feignInterface))
-                .map(e -> Mapping.from(this.feignProperties.getConfig()).notNullMap(c -> c.get(e)).getOr(this.feignProperties.getConfig(), c -> c.get("default")))
+                .map(e -> Mapping.from(this.feignProperties.getConfig()).map(c -> c.get(e)).getOr(this.feignProperties.getConfig(), c -> c.get("default")))
                 .whenNotNull(builder::options);
 
         FeignClient annotation = AnnotationUtil.findAnnotation(this.feignInterface, FeignClient.class);

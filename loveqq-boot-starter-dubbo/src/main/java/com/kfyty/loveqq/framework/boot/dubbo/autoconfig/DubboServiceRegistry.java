@@ -117,16 +117,16 @@ public class DubboServiceRegistry implements BeanFactoryPostProcessor {
     @SuppressWarnings("DuplicatedCode")
     public static String generateServiceBeanName(DubboService dubboService, Class<?> clazz) {
         StringBuilder builder = new StringBuilder("dubbo:service:" + BeanDefinitionBuilder.resolveBeanName(clazz));
-        Mapping.from(dubboService).notNullMap(DubboService::group).whenNotEmpty(g -> builder.append(':').append(g));
-        Mapping.from(dubboService).notNullMap(DubboService::version).whenNotEmpty(v -> builder.append(':').append(v));
+        Mapping.from(dubboService).map(DubboService::group).whenNotEmpty(g -> builder.append(':').append(g));
+        Mapping.from(dubboService).map(DubboService::version).whenNotEmpty(v -> builder.append(':').append(v));
         return builder.toString();
     }
 
     @SuppressWarnings("DuplicatedCode")
     public static String generateReferenceBeanName(DubboReference dubboService, Class<?> clazz) {
         StringBuilder builder = new StringBuilder("dubbo:reference:" + BeanDefinitionBuilder.resolveBeanName(clazz));
-        Mapping.from(dubboService).notNullMap(DubboReference::group).whenNotEmpty(g -> builder.append(':').append(g));
-        Mapping.from(dubboService).notNullMap(DubboReference::version).whenNotEmpty(v -> builder.append(':').append(v));
+        Mapping.from(dubboService).map(DubboReference::group).whenNotEmpty(g -> builder.append(':').append(g));
+        Mapping.from(dubboService).map(DubboReference::version).whenNotEmpty(v -> builder.append(':').append(v));
         return builder.toString();
     }
 }
