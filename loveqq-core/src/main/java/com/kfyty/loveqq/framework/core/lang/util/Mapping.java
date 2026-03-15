@@ -5,12 +5,15 @@ import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * 描述: 值映射工具类
@@ -257,6 +260,68 @@ public class Mapping<T> implements Cloneable, Serializable {
         return from(mapping.apply(this.value).value, this);
     }
 
+    /**
+     * 映射为整型
+     * 大概率主观上调用此操作时，value 是可以转的，所以直接转而不判断
+     *
+     * @return {@link this}
+     */
+    @SuppressWarnings("unchecked")
+    public Mapping<Integer> mapToInt() {
+        if (value == null) {
+            return (Mapping<Integer>) this;
+        }
+        try {
+            return map(Object::toString).map(Integer::parseInt);
+        } catch (Exception e) {
+            return (Mapping<Integer>) NULLABLE;
+        }
+    }
+
+    /**
+     * 映射为整型
+     * 大概率主观上调用此操作时，value 是可以转的，所以直接转而不判断
+     *
+     * @return {@link this}
+     */
+    @SuppressWarnings("unchecked")
+    public Mapping<Long> mapToLong() {
+        if (value == null) {
+            return (Mapping<Long>) this;
+        }
+        try {
+            return map(Object::toString).map(Long::parseLong);
+        } catch (Exception e) {
+            return (Mapping<Long>) NULLABLE;
+        }
+    }
+
+    /**
+     * 如果当前 value 是个集合，则将每个元素都映射为另一个值
+     *
+     * @param clazz   元素类型
+     * @param mapping 映射
+     * @return {@link this}
+     */
+    @SuppressWarnings("unchecked")
+    public <E, R> Mapping<List<R>> eachMap(Class<E> clazz, Function<E, R> mapping) {
+        return when(e -> e instanceof Collection<?>, e -> ((Collection<E>) e).stream().map(mapping).collect(Collectors.toList()));
+    }
+
+    /**
+     * 测试当前值，符合时执行映射
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    @SuppressWarnings("unchecked")
+    public <R> Mapping<R> when(Predicate<T> test, Function<T, R> mapping) {
+        if (value == null || test.test(value)) {
+            return map(mapping);
+        }
+        return (Mapping<R>) NULLABLE;
+    }
+
     /*---------------------------------------------------- 消费操作 ----------------------------------------------------*/
 
     /**
@@ -267,6 +332,19 @@ public class Mapping<T> implements Cloneable, Serializable {
      */
     public Mapping<T> then(Consumer<T> consumer) {
         if (this.value != null) {
+            consumer.accept(this.value);
+        }
+        return this;
+    }
+
+    /**
+     * 测试当前值，符合时执行回调
+     *
+     * @param test 断言逻辑
+     * @return this
+     */
+    public Mapping<T> then(Predicate<T> test, Consumer<T> consumer) {
+        if (value != null && test.test(value)) {
             consumer.accept(this.value);
         }
         return this;
@@ -298,19 +376,6 @@ public class Mapping<T> implements Cloneable, Serializable {
             }
             throw e;
         }
-    }
-
-    /**
-     * 测试当前值，符合时执行回调
-     *
-     * @param test 断言逻辑
-     * @return this
-     */
-    public Mapping<T> when(Predicate<T> test, Consumer<T> consumer) {
-        if (value != null && test.test(value)) {
-            return then(consumer);
-        }
-        return this;
     }
 
     /**
@@ -346,7 +411,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @return this
      */
     public Mapping<T> whenNotNull(Consumer<T> consumer) {
-        return when(Objects::nonNull, consumer);
+        return then(Objects::nonNull, consumer);
     }
 
     /**
@@ -356,7 +421,7 @@ public class Mapping<T> implements Cloneable, Serializable {
      * @return this
      */
     public Mapping<T> whenNotEmpty(Consumer<T> consumer) {
-        return when(CommonUtil::notEmpty, consumer);
+        return then(CommonUtil::notEmpty, consumer);
     }
 
     /**

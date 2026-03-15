@@ -139,9 +139,9 @@ public class RocketMQMessageListenerRegistry implements BeanPostProcessor, BeanF
                 .setClientConfiguration(this.clientConfiguration)
                 .setConsumerGroup(annotation.consumerGroup())
                 .setSubscriptionExpressions(Collections.singletonMap(annotation.value(), new FilterExpression(annotation.filterExpress(), annotation.filterType())));
-        Mapping.from(annotation.maxCacheMessageCount()).when(e -> e > -1, builder::setMaxCacheMessageCount);
-        Mapping.from(annotation.maxCacheMessageSizeInBytes()).when(e -> e > -1, builder::setMaxCacheMessageSizeInBytes);
-        Mapping.from(annotation.consumptionThreadCount()).when(e -> e > -1, builder::setConsumptionThreadCount);
+        Mapping.from(annotation.maxCacheMessageCount()).then(e -> e > -1, builder::setMaxCacheMessageCount);
+        Mapping.from(annotation.maxCacheMessageSizeInBytes()).then(e -> e > -1, builder::setMaxCacheMessageSizeInBytes);
+        Mapping.from(annotation.consumptionThreadCount()).then(e -> e > -1, builder::setConsumptionThreadCount);
         return builder;
     }
 

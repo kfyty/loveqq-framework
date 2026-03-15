@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -55,6 +57,20 @@ public class MappingTest {
         Assertions.assertNull(v1);
         Assertions.assertEquals(v2, "1");
         Assertions.assertNull(v3);
+    }
+
+    @Test
+    public void eachMapTest() {
+        List<String> list = Mapping.from(Arrays.asList(1, 3, 9)).eachMap(Integer.class, e -> (String.valueOf(e * 2))).get();
+        Assertions.assertEquals(list, Arrays.asList("2", "6", "18"));
+    }
+
+    @Test
+    public void mapToIntTest() {
+        Integer i1 = Mapping.from("123").mapToInt().get();
+        Integer i2 = Mapping.from("o123").mapToInt().get();
+        Assertions.assertEquals(i1, 123);
+        Assertions.assertNull(i2);
     }
 
     @Test

@@ -33,7 +33,7 @@ public abstract class ReactiveIOUtil {
         DEFAULT_CLIENT = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .build();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> Mapping.from(client()).when(e -> e instanceof AutoCloseable, IOUtil::close)));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> Mapping.from(client()).then(e -> e instanceof AutoCloseable, IOUtil::close)));
     }
 
     /**
