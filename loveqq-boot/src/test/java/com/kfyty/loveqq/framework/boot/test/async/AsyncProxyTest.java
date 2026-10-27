@@ -1,4 +1,4 @@
-package com.kfyty.async;
+package com.kfyty.loveqq.framework.boot.test.async;
 
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.annotation.Async;

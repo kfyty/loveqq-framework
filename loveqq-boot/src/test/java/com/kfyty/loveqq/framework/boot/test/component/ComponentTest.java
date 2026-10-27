@@ -1,4 +1,4 @@
-package com.kfyty.component;
+package com.kfyty.loveqq.framework.boot.test.component;
 
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;

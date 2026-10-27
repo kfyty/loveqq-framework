@@ -1,4 +1,4 @@
-package com.kfyty.lazy;
+package com.kfyty.loveqq.framework.boot.test.lazy;
 
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;

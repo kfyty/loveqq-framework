@@ -1,4 +1,4 @@
-package com.kfyty.property;
+package com.kfyty.loveqq.framework.boot.test.property;
 
 import com.kfyty.loveqq.framework.boot.K;
 import com.kfyty.loveqq.framework.core.autoconfig.BeanFactoryPostProcessor;

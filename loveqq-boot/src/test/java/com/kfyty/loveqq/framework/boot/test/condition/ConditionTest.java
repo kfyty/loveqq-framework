@@ -1,4 +1,4 @@
-package com.kfyty.condition;
+package com.kfyty.loveqq.framework.boot.test.condition;
 
 import com.kfyty.loveqq.framework.core.autoconfig.ApplicationContext;
 import com.kfyty.loveqq.framework.core.autoconfig.CommandLineRunner;
@@ -96,7 +96,7 @@ interface Inter {}
 
 @Component
 @ConditionalOnBean({CC.class, BB.class})
-@ConditionalOnClass("com.kfyty.condition.ConditionTest")
+@ConditionalOnClass("com.kfyty.loveqq.framework.boot.test.condition.ConditionTest")
 class AA implements Inter {}
 
 @Component
