@@ -4,7 +4,7 @@ import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.agent.HotSwapAgent;
 import com.kfyty.loveqq.framework.core.lang.instrument.ClassFileTransformerClassLoader;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
-import com.kfyty.loveqq.framework.core.support.jar.JarFile;
+import com.kfyty.loveqq.framework.core.lang.util.jar.JarFile;
 import com.kfyty.loveqq.framework.core.utils.ExceptionUtil;
 import com.kfyty.loveqq.framework.core.utils.IOUtil;
 import com.kfyty.loveqq.framework.core.utils.ReflectUtil;
@@ -204,24 +204,6 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
     }
 
     /**
-     * 动态移除 jar index
-     *
-     * @param packageName 包名，该包名下的所有 jar 都将被移除，eg: com.demo
-     */
-    public synchronized void removeJarIndex(String packageName) {
-        for (Iterator<Map.Entry<String, Object>> i = this.parallelLockMap.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry<String, Object> entry = i.next();
-            if (entry.getKey().startsWith(packageName)) {
-                i.remove();
-                if (entry.getValue() instanceof Class<?>) {
-                    clearReflectCache(this, entry.getValue());
-                }
-            }
-        }
-        this.jarIndex.removeJarIndex(packageName.replace('.', '/'));
-    }
-
-    /**
      * 返回所有的 urls
      *
      * @return urls
@@ -350,10 +332,10 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             try (JarFile jarFile = this.getJarFile(i.next())) {
                 JarEntry jarEntry = jarFile.getJarEntry(classPath);
                 if (jarEntry != null) {
+                    if (DEPENDENCY_CHECK && i.hasNext()) {
+                        this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
+                    }
                     try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
-                        if (DEPENDENCY_CHECK && i.hasNext()) {
-                            this.printMatchedMoreJarFiles(classPath, jarFile, jarFiles);
-                        }
                         byte[] classBytes = this.transform(className, read(inputStream));
                         this.definePackageIfNecessary(lastDot, packageName, jarFile.getUrl(), jarFile.getManifest());
                         return super.defineClass(name, classBytes, 0, classBytes.length, new CodeSource(jarFile.getUrl(), jarEntry.getCodeSigners()));

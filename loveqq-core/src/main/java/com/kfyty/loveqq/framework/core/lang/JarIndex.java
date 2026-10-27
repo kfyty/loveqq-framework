@@ -45,6 +45,11 @@ public class JarIndex {
     public static final String JAR_INDEX_FILE_NAME = "jar.idx";
 
     /**
+     * 是否是从开发集成环境启动
+     */
+    private final boolean isExploded;
+
+    /**
      * 启动主路径，可以 jar 包，或者项目目录
      */
     private final String mainPath;
@@ -90,19 +95,11 @@ public class JarIndex {
      */
     @Deprecated
     public JarIndex(String mainPath, InputStream jarIndex, List<String> classpath) {
+        this.isExploded = !mainPath.endsWith(".jar");
         this.mainPath = mainPath;
         this.classpath = classpath;
         this.jarIndex = new ConcurrentSkipListMap<>();
         this.loadJarIndex(mainPath, jarIndex);
-    }
-
-    /**
-     * 返回是否是从开发集成环境启动
-     *
-     * @return true if from IDE started
-     */
-    public boolean isExploded() {
-        return !this.mainPath.endsWith(".jar");
     }
 
     /**
@@ -175,16 +172,6 @@ public class JarIndex {
         } finally {
             jarFiles.forEach(IOUtil::close);
         }
-    }
-
-    /**
-     * 动态移除 jar index
-     *
-     * @param packageName 包名，该包名下的所有 jar 都将被移除，eg: com/kfyty/demo
-     */
-    public synchronized void removeJarIndex(String packageName) {
-        this.jarIndex.remove(packageName);
-        this.rebuildURLs();
     }
 
     /**

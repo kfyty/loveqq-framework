@@ -31,6 +31,6 @@ public class Triple<K, V, T> extends Pair<K, V> {
 
     @Override
     public String toString() {
-        return "key=" + getKey() + ", value=" + getValue() + "triple=" + this.getTriple();
+        return "key=" + getKey() + ", value=" + getValue() + "triple=" + getTriple();
     }
 }

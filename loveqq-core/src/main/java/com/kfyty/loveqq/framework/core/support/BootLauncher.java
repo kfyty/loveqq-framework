@@ -3,7 +3,7 @@ package com.kfyty.loveqq.framework.core.support;
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.lang.JarIndex;
 import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
-import com.kfyty.loveqq.framework.core.support.jar.JarManifest;
+import com.kfyty.loveqq.framework.core.lang.util.jar.JarManifest;
 import lombok.SneakyThrows;
 
 import java.io.File;

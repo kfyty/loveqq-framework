@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.support.jar;
+package com.kfyty.loveqq.framework.core.lang.util.jar;
 
 import lombok.Getter;
 

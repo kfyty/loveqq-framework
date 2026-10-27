@@ -1,4 +1,4 @@
-package com.kfyty.loveqq.framework.core.support.io;
+package com.kfyty.loveqq.framework.core.io;
 
 import com.kfyty.loveqq.framework.core.exception.ResolvableException;
 import com.kfyty.loveqq.framework.core.support.Triple;

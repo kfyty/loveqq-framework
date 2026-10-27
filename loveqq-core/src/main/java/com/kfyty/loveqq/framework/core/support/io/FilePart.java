@@ -18,7 +18,7 @@ import java.io.InputStream;
  */
 @Data
 @RequiredArgsConstructor
-public class FilePart {
+public class FilePart implements AutoCloseable {
     /**
      * 第几个分片
      */
@@ -58,8 +58,9 @@ public class FilePart {
     /**
      * 清理文件
      */
+    @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void clean() {
+    public void close() {
         if (this.file != null) {
             this.file.delete();
         }

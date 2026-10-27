@@ -81,8 +81,8 @@ public class FilePartDescription extends FilePart {
      * 关闭
      */
     @Override
-    public void clean() {
-        super.clean();
+    public void close() {
+        super.close();
         IOUtil.close(this.accessFile);
     }
 }

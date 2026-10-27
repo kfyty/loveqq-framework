@@ -35,7 +35,7 @@
 * 双值包装：com.kfyty.loveqq.framework.core.support.Pair
 * 三值包装：com.kfyty.loveqq.framework.core.support.Triple
 * 事务支持：com.kfyty.loveqq.framework.core.jdbc.transaction.Transaction
-* 文件监听器：com.kfyty.loveqq.framework.core.support.io.FileListener
+* 文件监听器：com.kfyty.loveqq.framework.core.io.FileListener
 * ant 路径匹配器：com.kfyty.loveqq.framework.core.support.PatternMatcher
   * 默认实现：com.kfyty.loveqq.framework.core.support.AntPathMatcher
 * 可命名的线程工厂：com.kfyty.loveqq.framework.core.thread.NamedThreadFactory
