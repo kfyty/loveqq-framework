@@ -9,7 +9,6 @@ import com.kfyty.loveqq.framework.core.lang.internal.SunReflectionSupport;
 import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.Pair;
 import com.kfyty.loveqq.framework.core.support.Triple;
-import lombok.extern.slf4j.Slf4j;
 import sun.misc.Unsafe;
 
 import java.lang.annotation.Annotation;
@@ -64,7 +63,6 @@ import static java.util.Optional.ofNullable;
  * @date 2021/6/3 10:01
  * @email kfyty725@hotmail.com
  */
-@Slf4j
 public abstract class ReflectUtil {
     /**
      * 反射数据过滤器
@@ -186,7 +184,6 @@ public abstract class ReflectUtil {
             if (throwIfFailed) {
                 throw new ResolvableException("load class failed, class doesn't exist: " + className, e);
             }
-            log.error("load class failed, class doesn't exist: [{}]", className);
             return null;
         }
     }

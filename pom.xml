@@ -523,12 +523,17 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>${boot-lib-output}/</classpathPrefix>
+                            <!-- 这里不再自动添加，因为 jar index 已包含，因此仅手动添加前置引导必须的依赖 -->
+                            <!-- 如果项目中存在 ClassFileTransformer SPI 配置，则需要手动配置到 Class-Path -->
+<!--                            <addClasspath>true</addClasspath>-->
+<!--                            <classpathPrefix>${boot-lib-output}/</classpathPrefix>-->
                             <mainClass>${boot-main-class}</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Start-Class>${boot-start-class}</Start-Class>
+                            <Class-Path>
+                                ${boot-lib-output}/loveqq-core-${loveqq.framework.version}.jar ${boot-lib-output}/loveqq-boot-${loveqq.framework.version}.jar ${boot-lib-output}/asm-${asm.version}.jar ${boot-lib-output}/javassist-${javassist.version}.jar
+                            </Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -574,6 +579,7 @@
                                       classpathref="maven.compile.classpath">
                                     <arg value="-OUTPUT_TYPE=${project.packaging}" />
                                     <arg value="-OUTPUT_DIRECTORY=${project.build.directory}" />
+                                    <arg value="-OUTPUT_LIB_DIRECTORY=${boot-lib-output}" />
                                     <arg value="-OUTPUT_JAR=${project.build.finalName}.jar" />
                                     <arg value="-OUTPUT_DEFAULT_JAR=${project.artifactId}-${project.version}.jar" />
                                 </java>

@@ -18,6 +18,7 @@ import java.net.URL;
 import java.net.URLStreamHandlerFactory;
 import java.security.CodeSigner;
 import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -106,11 +107,10 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
      */
     public synchronized void closeJarFileCache() {
         if (this.jarFileCache != null) {
-            for (JarFile value : this.jarFileCache.values()) {
-                IOUtil.close(value);
-            }
+            List<JarFile> jarFiles = new ArrayList<>(this.jarFileCache.values());
             this.jarFileCache.clear();
             this.jarFileCache = null;
+            jarFiles.forEach(IOUtil::close);
         }
     }
 
@@ -461,24 +461,12 @@ public class JarIndexClassLoader extends ClassFileTransformerClassLoader {
             super(name);
         }
 
-        public CachedJarFile(String name, boolean verify) throws IOException {
-            super(name, verify);
-        }
-
-        public CachedJarFile(File file, boolean verify) throws IOException {
-            super(file, verify);
-        }
-
-        public CachedJarFile(File file) throws IOException {
-            super(file);
-        }
-
         /**
          * 当缓存不存在时，则关闭资源
          */
         @Override
         public void close() throws IOException {
-            if (jarFileCache == null) {
+            if (JarIndexClassLoader.this.jarFileCache == null) {
                 super.close();
             }
         }

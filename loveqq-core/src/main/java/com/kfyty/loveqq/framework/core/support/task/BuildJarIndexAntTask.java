@@ -2,12 +2,12 @@ package com.kfyty.loveqq.framework.core.support.task;
 
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
 import com.kfyty.loveqq.framework.core.support.BootLauncher;
-import com.kfyty.loveqq.framework.core.utils.CommonUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import static com.kfyty.loveqq.framework.core.utils.CommonUtil.loadCommandLineProperties;
 import static com.kfyty.loveqq.framework.core.utils.IOUtil.writeJarEntry;
@@ -31,6 +32,11 @@ public class BuildJarIndexAntTask {
      * 项目输出目录
      */
     public static final String OUTPUT_DIRECTORY = "OUTPUT_DIRECTORY";
+
+    /**
+     * 项目依赖输出目录
+     */
+    public static final String OUTPUT_LIB_DIRECTORY = "OUTPUT_LIB_DIRECTORY";
 
     /**
      * 项目最终构建的 jar 文件名称
@@ -55,7 +61,7 @@ public class BuildJarIndexAntTask {
     public static void main(String[] args) throws Exception {
         Map<String, String> properties = loadCommandLineProperties(args, "-");
         JarFile jarFile = obtainJarFile(properties);
-        String jarIndex = buildJarIndex(scanJarIndex(jarFile));
+        String jarIndex = buildJarIndex(scanJarIndex(properties, jarFile));
         writeJarEntry(BootLauncher.JAR_INDEX_LOCATION, jarIndex.getBytes(StandardCharsets.UTF_8), jarFile);
         System.out.println("[INFO] Build jar index succeed");
     }
@@ -87,10 +93,11 @@ public class BuildJarIndexAntTask {
      * @param mainJar 启动类所在 jar 文件
      * @return jar index  key: jar class path, value: package
      */
-    public static Map<String, Set<String>> scanJarIndex(JarFile mainJar) throws Exception {
+    public static Map<String, Set<String>> scanJarIndex(Map<String, String> properties, JarFile mainJar) throws Exception {
         Map<String, Set<String>> index = new HashMap<>();
+        String output = properties.get(OUTPUT_LIB_DIRECTORY);
         String parentPath = Paths.get(mainJar.getName()).getParent().toString();
-        List<String> classPath = CommonUtil.split(mainJar.getManifest().getMainAttributes().getValue("Class-Path"), " ");
+        List<String> classPath = Arrays.stream(new File(parentPath, output).list()).map(e -> output + '/' + e).collect(Collectors.toList());
         return scanJarIndex(mainJar, parentPath, classPath, index);
     }
 
@@ -145,16 +152,17 @@ public class BuildJarIndexAntTask {
 
             // 非 class 文件，不保留 META-INF/maven 资源索引
             if (!entryName.endsWith(".class")) {
-                if (!entryName.startsWith("META-INF/maven")) {
-                    if (entryName.charAt(entryName.length() - 1) == '/') {
-                        int length = entryName.length();
-                        if (length == 1) {
-                            continue;                                                                                   // '/' 忽略
-                        }
-                        entryName = entryName.substring(0, length - 1);                                                 // 这里会影响 JarIndex.getJarFiles()
-                    }
-                    indexContainer.computeIfAbsent(relativePath, k -> new HashSet<>()).add(entryName);
+                if (entryName.equals("META-INF/") || entryName.startsWith("META-INF/maven")) {
+                    continue;
                 }
+                if (entryName.charAt(entryName.length() - 1) == '/') {
+                    int length = entryName.length();
+                    if (length == 1) {
+                        continue;                                                                                   // '/' 忽略
+                    }
+                    entryName = entryName.substring(0, length - 1);                                                 // 这里会影响 JarIndex.getJarFiles()
+                }
+                indexContainer.computeIfAbsent(relativePath, k -> new HashSet<>()).add(entryName);
                 continue;
             }
 
