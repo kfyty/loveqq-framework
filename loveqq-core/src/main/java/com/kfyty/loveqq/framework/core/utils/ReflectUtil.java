@@ -856,12 +856,16 @@ public abstract class ReflectUtil {
      * @param clazz class
      */
     public static void clearReflectCache(Class<?> clazz) {
-        REFLECT_CACHE.remove(clazz);
-        for (Field field : clazz.getDeclaredFields()) {
-            REFLECT_CACHE.remove(field);
+        Triple<Field[], Method[], Annotation[]> removed = REFLECT_CACHE.remove(clazz);
+        if (removed.getKey() != null) {
+            for (Field field : removed.getKey()) {
+                REFLECT_CACHE.remove(field);
+            }
         }
-        for (Method method : clazz.getDeclaredMethods()) {
-            REFLECT_CACHE.remove(method);
+        if (removed.getValue() != null) {
+            for (Method method : removed.getValue()) {
+                REFLECT_CACHE.remove(method);
+            }
         }
     }
 }

@@ -6,7 +6,9 @@ import com.kfyty.loveqq.framework.core.utils.ClassLoaderUtil;
 import com.kfyty.loveqq.framework.core.utils.PropertiesUtil;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -62,7 +64,11 @@ public abstract class FactoriesLoader {
                 Set<Properties> properties = new HashSet<>();
                 Set<URL> urls = loadURLResource(factoriesResourceLocation);
                 for (URL url : urls) {
-                    properties.add(PropertiesUtil.load(url.openStream()));
+                    URLConnection urlConnection = url.openConnection();
+                    urlConnection.setUseCaches(false);                                                                  // 保证释放对应资源
+                    try (InputStream stream = urlConnection.getInputStream()) {
+                        properties.add(PropertiesUtil.load(stream));
+                    }
                 }
                 return properties;
             } catch (IOException e) {

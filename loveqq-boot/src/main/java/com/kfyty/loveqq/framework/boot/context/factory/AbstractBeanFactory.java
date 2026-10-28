@@ -510,8 +510,8 @@ public abstract class AbstractBeanFactory implements ApplicationContextAware, Be
 
     protected void invokeBeanPostProcessAfterInstantiation(String beanName, Object bean, BeanDefinition beanDefinition) {
         for (BeanPostProcessor beanPostProcessor : this.getBeanPostProcessors()) {
-            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
-                Object newBean = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName, beanDefinition);
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor processor) {
+                Object newBean = processor.postProcessAfterInstantiation(bean, beanName, beanDefinition);
                 if (newBean != null && newBean != bean) {
                     bean = newBean;
                     this.replaceBean(beanName, newBean);

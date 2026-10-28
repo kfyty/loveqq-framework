@@ -6,9 +6,11 @@ import com.kfyty.loveqq.framework.core.lang.JarIndexClassLoader;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLStreamHandlerFactory;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -115,11 +117,15 @@ public abstract class ClassFileTransformerClassLoader extends FastClassLoader {
         Enumeration<URL> resources = this.getClass().getClassLoader().getResources("META-INF/k.factories");
         while (resources.hasMoreElements()) {
             URL url = resources.nextElement();
-            Properties properties = new Properties();
-            properties.load(url.openStream());
-            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                if (entry.getKey().toString().equals(key)) {
-                    transformers.addAll(Arrays.asList(entry.getValue().toString().split(",")));
+            URLConnection urlConnection = url.openConnection();
+            urlConnection.setUseCaches(false);
+            try (InputStream stream = urlConnection.getInputStream()) {
+                Properties properties = new Properties();
+                properties.load(stream);
+                for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                    if (entry.getKey().toString().equals(key)) {
+                        transformers.addAll(Arrays.asList(entry.getValue().toString().split(",")));
+                    }
                 }
             }
         }

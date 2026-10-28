@@ -1,9 +1,8 @@
 package com.kfyty.loveqq.framework.core.utils;
 
-import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.lang.util.EnumerationIterator;
+import com.kfyty.loveqq.framework.core.lang.util.concurrent.WeakConcurrentHashMap;
 import com.kfyty.loveqq.framework.core.support.io.PathMatchingResourcePatternResolver;
-import com.kfyty.loveqq.framework.core.thread.ContextRefreshThread;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -17,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 /**
@@ -106,24 +106,29 @@ public abstract class PackageUtil {
         try {
             Set<String> classes = new HashSet<>();
             JarURLConnection urlConnection = ((JarURLConnection) url.openConnection());
-            if (Thread.currentThread() instanceof ContextRefreshThread) {
-                urlConnection.setUseCaches(false);
-            }
-            if (urlConnection.getEntryName().endsWith(".class")) {
-                classes.add(urlConnection.getEntryName().replace('/', '.').replace(".class", CommonUtil.EMPTY_STRING));
+            urlConnection.setUseCaches(false);
+
+            // 匹配到某个 class
+            String entryName = urlConnection.getEntryName();
+            if (entryName.endsWith(".class")) {
+                classes.add(entryName.replace('/', '.').replace(".class", CommonUtil.EMPTY_STRING));
                 return classes;
             }
+
+            // 匹配到某个包
             String path = url.getPath().contains("!") ? url.getPath().split("!")[1] : url.getPath();
             if (path.charAt(0) == '/') {
                 path = path.substring(1);
             }
-            Enumeration<JarEntry> entries = urlConnection.getJarFile().entries();
-            while (entries.hasMoreElements()) {
-                String classPath = entries.nextElement().getName();
-                if (!classPath.startsWith(path) || !classPath.endsWith(".class")) {
-                    continue;
+            try (JarFile jarFile = urlConnection.getJarFile()) {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    String classPath = entries.nextElement().getName();
+                    if (!classPath.startsWith(path) || !classPath.endsWith(".class")) {
+                        continue;
+                    }
+                    classes.add(classPath.replace('/', '.').replace(".class", CommonUtil.EMPTY_STRING));
                 }
-                classes.add(classPath.replace('/', '.').replace(".class", CommonUtil.EMPTY_STRING));
             }
             return classes;
         } catch (Exception e) {
@@ -136,7 +141,7 @@ public abstract class PackageUtil {
             Set<String> classes = new HashSet<>();
             File urlFile = new File(url.getPath());
             File[] files = urlFile.listFiles();
-            if (CommonUtil.empty(files)) {
+            if (files == null || files.length == 0) {
                 if (urlFile.getPath().endsWith(".class")) {
                     String classPath = urlFile.getPath();
                     classPath = classPath.substring(classPath.indexOf("classes" + File.separator) + 8, classPath.lastIndexOf("."));
